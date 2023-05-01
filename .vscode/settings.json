@@ -1,0 +1,22 @@
+{
+    "editor.formatOnSave": true,
+    "rust-analyzer.checkOnSave.command": "clippy",
+    "workbench.colorCustomizations": {
+        "editorInlayHint.foreground": "#a4b3bb",
+        "editorInlayHint.background": "#1e1e1e"
+    },
+    "task.autoDetect": "off",
+    "rust-analyzer.cargo.features": [],
+    "VSCodeCounter.exclude": [
+        "**/.gitignore",
+        "**/.vscode/**",
+        "**/node_modules/**"
+    ],
+    "rust-analyzer.inlayHints.typeHints.enable": false,
+    "files.exclude": {
+        "**/target": true
+    },
+    "rust-analyzer.showUnlinkedFileNotification": false,
+    "rust-analyzer.procMacro.enable": false,
+    "rust-analyzer.cargo.target": "wasm32-unknown-unknown"
+}

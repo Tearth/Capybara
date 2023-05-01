@@ -1,0 +1,10 @@
+[package]
+name = "orion-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+[target.'cfg(target_arch = "x86_64")'.dependencies]
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]

@@ -1,0 +1,111 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "rust: cargo clean",
+            "type": "shell",
+            "command": "cargo clean",
+            "group": {
+                "kind": "build"
+            },
+        },
+        {
+            "label": "rust: cargo fmt",
+            "type": "shell",
+            "command": "cargo fmt -- --check",
+            "group": {
+                "kind": "build"
+            },
+        },
+        {
+            "label": "rust: cargo clippy",
+            "type": "shell",
+            "command": "cargo clippy -- -Dwarnings",
+            "group": {
+                "kind": "build"
+            },
+        },
+        {
+            "label": "build windows debug",
+            "type": "shell",
+            "command": "cargo build --target=x86_64-pc-windows-msvc",
+            "group": {
+                "kind": "build"
+            },
+        },
+        {
+            "label": "build windows release",
+            "type": "shell",
+            "command": "cargo build --release --target=x86_64-pc-windows-msvc",
+            "group": {
+                "kind": "build"
+            },
+        },
+        {
+            "label": "build linux debug",
+            "type": "shell",
+            "command": "cargo build --target=x86_64-unknown-linux-musl",
+            "group": {
+                "kind": "build"
+            },
+        },
+        {
+            "label": "build linux release",
+            "type": "shell",
+            "command": "cargo build --release --target=x86_64-unknown-linux-musl",
+            "group": {
+                "kind": "build"
+            },
+        },
+        {
+            "label": "build web debug",
+            "type": "shell",
+            "command": "wasm-pack build --target web",
+            "options": {
+                "cwd": "${workspaceFolder}/examples/benchmark/"
+            },
+            "group": {
+                "kind": "build"
+            },
+        },
+        {
+            "label": "build web release",
+            "type": "shell",
+            "command": "wasm-pack build --release --target web",
+            "options": {
+                "cwd": "${workspaceFolder}/examples/benchmark/"
+            },
+            "group": {
+                "kind": "build"
+            },
+        },
+        {
+            "label": "build and run windows release",
+            "type": "shell",
+            "command": "${workspaceFolder}/target/release/benchmark.exe",
+            "options": {
+                "cwd": "${workspaceFolder}/examples/benchmark/"
+            },
+            "group": {
+                "kind": "build"
+            },
+            "dependsOn": [
+                "build release windows"
+            ]
+        },
+        {
+            "label": "build and run linux release",
+            "type": "shell",
+            "command": "${workspaceFolder}/target/release/benchmark",
+            "options": {
+                "cwd": "${workspaceFolder}/examples/benchmark/"
+            },
+            "group": {
+                "kind": "build"
+            },
+            "dependsOn": [
+                "build release linux"
+            ]
+        }
+    ],
+}

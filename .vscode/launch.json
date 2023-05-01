@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Windows configuration",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/x86_64-pc-windows-msvc/debug/benchmark.exe",
+            "cwd": "${workspaceFolder}/examples/benchmark/",
+            "console": "integratedTerminal",
+            "preLaunchTask": "build windows debug"
+        },
+        {
+            "name": "Linux configuration",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/target/x86_64-pc-windows-msvc/debug/benchmark",
+            "cwd": "${workspaceFolder}/examples/benchmark/",
+            "console": "integratedTerminal",
+            "preLaunchTask": "build linux debug"
+        }
+    ]
+}

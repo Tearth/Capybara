@@ -1,0 +1,9 @@
+[package]
+name = "benchmark"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+orion-core = { path = "../../orion-core" }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]

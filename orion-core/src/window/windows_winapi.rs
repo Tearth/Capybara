@@ -18,12 +18,7 @@ pub struct Window {
     pub hdc: windef::HDC,
     pub initialized: bool,
 
-    wnd_proc_events: VecDeque<WndProcEvent>,
-}
-
-pub struct WndProcEvent {
-    message: u32,
-    l_param: isize,
+    event_queue: VecDeque<InputEvent>,
 }
 
 impl Window {
@@ -51,7 +46,7 @@ impl Window {
                 bail!("Error while initializing a new window class, GetLastError()={}", errhandlingapi::GetLastError());
             }
 
-            let mut context = Box::new(Self { hwnd: ptr::null_mut(), hdc: ptr::null_mut(), initialized: false, wnd_proc_events: Default::default() });
+            let mut context = Box::new(Self { hwnd: ptr::null_mut(), hdc: ptr::null_mut(), initialized: false, event_queue: Default::default() });
             let title_cstr = CString::new(title).unwrap();
 
             let hwnd = winuser::CreateWindowExA(
@@ -80,11 +75,11 @@ impl Window {
         }
     }
 
-    pub fn poll_event(&mut self) -> Vec<InputEvent> {
+    pub fn poll_event(&mut self) -> Option<InputEvent> {
         unsafe {
             let mut event: winuser::MSG = mem::zeroed();
 
-            if winuser::PeekMessageA(&mut event, ptr::null_mut(), 0, 0, winuser::PM_REMOVE) > 0 {
+            while winuser::PeekMessageA(&mut event, ptr::null_mut(), 0, 0, winuser::PM_REMOVE) > 0 {
                 winuser::TranslateMessage(&event);
                 winuser::DispatchMessageA(&event);
 
@@ -93,19 +88,13 @@ impl Window {
                         let x = (event.lParam as i32) & 0xffff;
                         let y = (event.lParam as i32) >> 16;
 
-                        return vec![InputEvent::MouseMoved(x, y)];
+                        self.event_queue.push_back(InputEvent::MouseMoved(x, y));
                     }
                     _ => {}
                 }
             }
 
-            if let Some(event) = self.wnd_proc_events.pop_back() {
-                match event.message {
-                    _ => return Vec::new(),
-                }
-            }
-
-            Vec::new()
+            self.event_queue.pop_front()
         }
     }
 }
@@ -125,12 +114,12 @@ extern "system" fn wnd_proc(hwnd: windef::HWND, message: u32, w_param: usize, l_
                 window.hdc = hdc;
                 window.initialized = true;
             }
-            winuser::WM_MOVE | winuser::WM_SIZE => {
+            /*winuser::WM_MOVE | winuser::WM_SIZE => {
                 let window_ptr = winuser::GetWindowLongPtrA(hwnd, winuser::GWLP_USERDATA);
                 let window = &mut *(window_ptr as *mut Window);
 
                 window.wnd_proc_events.push_front(WndProcEvent { message, l_param });
-            }
+            }*/
             winuser::WM_CLOSE => {
                 if winuser::DestroyWindow(hwnd) == 0 {
                     panic!("{}", errhandlingapi::GetLastError());

@@ -1,6 +1,7 @@
 use super::*;
 use anyhow::bail;
 use anyhow::Result;
+use log::Level;
 use std::collections::VecDeque;
 use std::ffi::CString;
 use std::mem;
@@ -23,6 +24,8 @@ pub struct Window {
 
 impl Window {
     pub fn new(title: &str) -> Result<Box<Self>> {
+        simple_logger::init_with_level(Level::Debug)?;
+
         unsafe {
             let class_cstr = CString::new("OrionWindow").unwrap();
             let app_icon_cstr = CString::new("APP_ICON").unwrap();

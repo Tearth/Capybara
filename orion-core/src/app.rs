@@ -1,4 +1,4 @@
-use crate::window::InputEvent;
+use log::debug;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -14,7 +14,7 @@ pub struct ApplicationContext {
 
 impl ApplicationContext {
     pub fn new() -> Self {
-        Self { window: Window::new().unwrap() }
+        Self { window: Window::new("Benchmark").unwrap() }
     }
 
     pub fn run(self) {
@@ -31,10 +31,7 @@ impl ApplicationContext {
     pub fn run_internal(&mut self) {
         loop {
             while let Some(event) = self.window.poll_event() {
-                if let InputEvent::MouseMoved(x, y) = event {
-                    unsafe { web_sys::console::log_1(&format!("{} {}", x, y).into()) };
-                    //println!("{} {}", x, y);
-                }
+                debug!("New event: {:?}", event);
             }
 
             #[cfg(target_arch = "wasm32")]

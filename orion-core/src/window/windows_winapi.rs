@@ -19,6 +19,7 @@ pub struct Window {
     pub hdc: windef::HDC,
     pub initialized: bool,
 
+    cursor_in_window: bool,
     event_queue: VecDeque<InputEvent>,
 }
 
@@ -49,8 +50,12 @@ impl Window {
                 bail!("Error while initializing a new window class, GetLastError()={}", errhandlingapi::GetLastError());
             }
 
-            let mut context = Box::new(Self { hwnd: ptr::null_mut(), hdc: ptr::null_mut(), initialized: false, event_queue: Default::default() });
+            let mut context =
+                Box::new(Self { hwnd: ptr::null_mut(), hdc: ptr::null_mut(), initialized: false, cursor_in_window: false, event_queue: Default::default() });
             let title_cstr = CString::new(title).unwrap();
+
+            let mut size = windef::RECT { left: 0, top: 0, right: 800, bottom: 600 };
+            winuser::AdjustWindowRect(&mut size, winuser::WS_OVERLAPPEDWINDOW | winuser::WS_VISIBLE, 0);
 
             let hwnd = winuser::CreateWindowExA(
                 0,
@@ -59,8 +64,8 @@ impl Window {
                 winuser::WS_OVERLAPPEDWINDOW | winuser::WS_VISIBLE,
                 0,
                 0,
-                800,
-                600,
+                size.right - size.left,
+                size.bottom - size.top,
                 ptr::null_mut(),
                 ptr::null_mut(),
                 module_handle,
@@ -91,8 +96,21 @@ impl Window {
                         let x = (event.lParam as i32) & 0xffff;
                         let y = (event.lParam as i32) >> 16;
 
-                        self.event_queue.push_back(InputEvent::MouseMoved(x, y));
+                        if !self.cursor_in_window {
+                            winuser::TrackMouseEvent(&mut winuser::TRACKMOUSEEVENT {
+                                cbSize: mem::size_of::<winuser::TRACKMOUSEEVENT>() as u32,
+                                dwFlags: winuser::TME_LEAVE,
+                                hwndTrack: self.hwnd,
+                                dwHoverTime: 0,
+                            });
+
+                            self.event_queue.push_back(InputEvent::MouseEnter(Coordinates::new(x, y)));
+                            self.cursor_in_window = true;
+                        }
+
+                        self.event_queue.push_back(InputEvent::MouseMove(Coordinates::new(x, y)));
                     }
+                    winuser::WM_QUIT => self.event_queue.push_back(InputEvent::WindowClose),
                     _ => {}
                 }
             }
@@ -117,12 +135,22 @@ extern "system" fn wnd_proc(hwnd: windef::HWND, message: u32, w_param: usize, l_
                 window.hdc = hdc;
                 window.initialized = true;
             }
-            /*winuser::WM_MOVE | winuser::WM_SIZE => {
+            winuser::WM_SIZE => {
                 let window_ptr = winuser::GetWindowLongPtrA(hwnd, winuser::GWLP_USERDATA);
                 let window = &mut *(window_ptr as *mut Window);
 
-                window.wnd_proc_events.push_front(WndProcEvent { message, l_param });
-            }*/
+                let x = (l_param & 0xffff) as i32;
+                let y = (l_param >> 16) as i32;
+
+                window.event_queue.push_back(InputEvent::WindowSizeChange(Coordinates::new(x, y)));
+            }
+            winuser::WM_MOUSELEAVE => {
+                let window_ptr = winuser::GetWindowLongPtrA(hwnd, winuser::GWLP_USERDATA);
+                let window = &mut *(window_ptr as *mut Window);
+
+                window.event_queue.push_back(InputEvent::MouseLeave);
+                window.cursor_in_window = false;
+            }
             winuser::WM_CLOSE => {
                 if winuser::DestroyWindow(hwnd) == 0 {
                     panic!("{}", errhandlingapi::GetLastError());
@@ -136,6 +164,8 @@ extern "system" fn wnd_proc(hwnd: windef::HWND, message: u32, w_param: usize, l_
 
                 window.hwnd = ptr::null_mut();
                 window.hdc = ptr::null_mut();
+
+                winuser::PostQuitMessage(0);
 
                 return 0;
             }

@@ -4,6 +4,7 @@ use std::rc::Rc;
 
 #[cfg(target_arch = "x86_64")]
 use crate::window::windows_winapi::Window;
+use crate::window::InputEvent;
 
 #[cfg(target_arch = "wasm32")]
 use crate::window::web_wasm32::Window;
@@ -31,6 +32,10 @@ impl ApplicationContext {
     pub fn run_internal(&mut self) {
         loop {
             while let Some(event) = self.window.poll_event() {
+                if event == InputEvent::WindowClose {
+                    return;
+                }
+
                 debug!("New event: {:?}", event);
             }
 

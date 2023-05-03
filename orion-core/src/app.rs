@@ -3,19 +3,19 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 #[cfg(target_arch = "x86_64")]
-use crate::window::windows_winapi::Window;
+use crate::window::winapi::WindowContext;
 use crate::window::InputEvent;
 
 #[cfg(target_arch = "wasm32")]
-use crate::window::web_wasm32::Window;
+use crate::window::web::WindowContext;
 
 pub struct ApplicationContext {
-    pub window: Box<Window>,
+    pub window: Box<WindowContext>,
 }
 
 impl ApplicationContext {
     pub fn new() -> Self {
-        Self { window: Window::new("Benchmark").unwrap() }
+        Self { window: WindowContext::new("Benchmark").unwrap() }
     }
 
     pub fn run(self) {

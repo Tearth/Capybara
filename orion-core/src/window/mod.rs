@@ -1,8 +1,8 @@
 #[cfg(target_arch = "x86_64")]
-pub mod windows_winapi;
+pub mod winapi;
 
 #[cfg(target_arch = "wasm32")]
-pub mod web_wasm32;
+pub mod web;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum InputEvent {

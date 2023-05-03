@@ -1,4 +1,11 @@
 use super::*;
+use ::winapi::shared::basetsd;
+use ::winapi::shared::minwindef;
+use ::winapi::shared::windef;
+use ::winapi::um::errhandlingapi;
+use ::winapi::um::libloaderapi;
+use ::winapi::um::winuser;
+use ::winapi::um::winuser::WNDCLASSA;
 use anyhow::bail;
 use anyhow::Result;
 use log::Level;
@@ -6,15 +13,8 @@ use std::collections::VecDeque;
 use std::ffi::CString;
 use std::mem;
 use std::ptr;
-use winapi::shared::basetsd;
-use winapi::shared::minwindef;
-use winapi::shared::windef;
-use winapi::um::errhandlingapi;
-use winapi::um::libloaderapi;
-use winapi::um::winuser;
-use winapi::um::winuser::WNDCLASSA;
 
-pub struct Window {
+pub struct WindowContext {
     pub hwnd: windef::HWND,
     pub hdc: windef::HDC,
     pub initialized: bool,
@@ -23,7 +23,7 @@ pub struct Window {
     event_queue: VecDeque<InputEvent>,
 }
 
-impl Window {
+impl WindowContext {
     pub fn new(title: &str) -> Result<Box<Self>> {
         simple_logger::init_with_level(Level::Debug)?;
 
@@ -125,7 +125,7 @@ extern "system" fn wnd_proc(hwnd: windef::HWND, message: u32, w_param: usize, l_
         match message {
             winuser::WM_CREATE => {
                 let create_struct = &mut *(l_param as *mut winuser::CREATESTRUCTA);
-                let window = &mut *(create_struct.lpCreateParams as *mut Window);
+                let window = &mut *(create_struct.lpCreateParams as *mut WindowContext);
                 let hdc: windef::HDC = winuser::GetDC(hwnd);
 
                 // Save pointer to the window context, so it can be used in all future events
@@ -137,7 +137,7 @@ extern "system" fn wnd_proc(hwnd: windef::HWND, message: u32, w_param: usize, l_
             }
             winuser::WM_SIZE => {
                 let window_ptr = winuser::GetWindowLongPtrA(hwnd, winuser::GWLP_USERDATA);
-                let window = &mut *(window_ptr as *mut Window);
+                let window = &mut *(window_ptr as *mut WindowContext);
 
                 let x = (l_param & 0xffff) as i32;
                 let y = (l_param >> 16) as i32;
@@ -146,7 +146,7 @@ extern "system" fn wnd_proc(hwnd: windef::HWND, message: u32, w_param: usize, l_
             }
             winuser::WM_MOUSELEAVE => {
                 let window_ptr = winuser::GetWindowLongPtrA(hwnd, winuser::GWLP_USERDATA);
-                let window = &mut *(window_ptr as *mut Window);
+                let window = &mut *(window_ptr as *mut WindowContext);
 
                 window.event_queue.push_back(InputEvent::MouseLeave);
                 window.cursor_in_window = false;
@@ -160,7 +160,7 @@ extern "system" fn wnd_proc(hwnd: windef::HWND, message: u32, w_param: usize, l_
             }
             winuser::WM_DESTROY => {
                 let window_ptr = winuser::GetWindowLongPtrA(hwnd, winuser::GWLP_USERDATA);
-                let window = &mut *(window_ptr as *mut Window);
+                let window = &mut *(window_ptr as *mut WindowContext);
 
                 window.hwnd = ptr::null_mut();
                 window.hdc = ptr::null_mut();

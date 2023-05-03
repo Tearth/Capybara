@@ -4,6 +4,7 @@ use ::winapi::shared::minwindef;
 use ::winapi::shared::windef;
 use ::winapi::um::errhandlingapi;
 use ::winapi::um::libloaderapi;
+use ::winapi::um::wingdi;
 use ::winapi::um::winuser;
 use ::winapi::um::winuser::WNDCLASSA;
 use anyhow::bail;
@@ -27,7 +28,7 @@ pub struct WindowContext {
 }
 
 impl WindowContext {
-    pub fn new(title: &str) -> Result<Box<Self>> {
+    pub fn new(title: &str, style: WindowStyle) -> Result<Box<Self>> {
         simple_logger::init_with_level(Level::Debug)?;
 
         unsafe {
@@ -53,9 +54,6 @@ impl WindowContext {
                 bail!("Error while initializing a new window class, GetLastError()={}", errhandlingapi::GetLastError());
             }
 
-            let mut size = windef::RECT { left: 0, top: 0, right: 800, bottom: 600 };
-            winuser::AdjustWindowRect(&mut size, winuser::WS_OVERLAPPEDWINDOW | winuser::WS_VISIBLE, 0);
-
             let mut context = Box::new(Self {
                 hwnd: ptr::null_mut(),
                 hdc: ptr::null_mut(),
@@ -74,8 +72,8 @@ impl WindowContext {
                 winuser::WS_OVERLAPPEDWINDOW | winuser::WS_VISIBLE,
                 0,
                 0,
-                size.right - size.left,
-                size.bottom - size.top,
+                1,
+                1,
                 ptr::null_mut(),
                 ptr::null_mut(),
                 module_handle,
@@ -88,8 +86,69 @@ impl WindowContext {
 
             // Wait for WM_CREATE, where the context is initialized
             while !context.initialized {}
+            context.set_style(style)?;
 
             Ok(context)
+        }
+    }
+
+    pub fn set_style(&mut self, style: WindowStyle) -> Result<()> {
+        unsafe {
+            if let WindowStyle::Fullscreen = style {
+                if winuser::ChangeDisplaySettingsA(ptr::null_mut(), 0) != winuser::DISP_CHANGE_SUCCESSFUL as i32 {
+                    return bail!("Error while changing display data".to_string());
+                }
+            }
+
+            match style {
+                WindowStyle::Window { size } => {
+                    let screen_width = winuser::GetSystemMetrics(winuser::SM_CXSCREEN);
+                    let screen_height = winuser::GetSystemMetrics(winuser::SM_CYSCREEN);
+                    let mut rect = windef::RECT { left: 0, top: 0, right: size.x, bottom: size.y };
+
+                    winuser::SetWindowLongPtrA(self.hwnd, winuser::GWL_STYLE, (winuser::WS_OVERLAPPEDWINDOW | winuser::WS_VISIBLE) as isize);
+                    winuser::AdjustWindowRect(&mut rect, winuser::WS_OVERLAPPEDWINDOW, 0);
+
+                    let width = rect.right - rect.left;
+                    let height = rect.bottom - rect.top;
+
+                    winuser::MoveWindow(self.hwnd, screen_width / 2 - width / 2, screen_height / 2 - height / 2, width, height, 1);
+
+                    self.size = size;
+                }
+                WindowStyle::Borderless => {
+                    let mut rect = mem::zeroed();
+                    winuser::GetWindowRect(winuser::GetDesktopWindow(), &mut rect);
+                    winuser::SetWindowLongPtrA(
+                        self.hwnd,
+                        winuser::GWL_STYLE,
+                        (winuser::WS_SYSMENU | winuser::WS_POPUP | winuser::WS_CLIPCHILDREN | winuser::WS_CLIPSIBLINGS | winuser::WS_VISIBLE) as isize,
+                    );
+                    winuser::MoveWindow(self.hwnd, 0, 0, rect.right - rect.left, rect.bottom - rect.top, 1);
+                }
+                WindowStyle::Fullscreen => {
+                    let mut rect = mem::zeroed();
+                    winuser::GetWindowRect(winuser::GetDesktopWindow(), &mut rect);
+                    winuser::SetWindowLongPtrA(
+                        self.hwnd,
+                        winuser::GWL_STYLE,
+                        (winuser::WS_SYSMENU | winuser::WS_POPUP | winuser::WS_CLIPCHILDREN | winuser::WS_CLIPSIBLINGS | winuser::WS_VISIBLE) as isize,
+                    );
+                    winuser::MoveWindow(self.hwnd, 0, 0, rect.right - rect.left, rect.bottom - rect.top, 1);
+
+                    let mut mode: wingdi::DEVMODEA = mem::zeroed();
+                    mode.dmSize = mem::size_of::<wingdi::DEVMODEA>() as u16;
+                    mode.dmPelsWidth = (rect.right - rect.left) as u32;
+                    mode.dmPelsHeight = (rect.bottom - rect.top) as u32;
+                    mode.dmBitsPerPel = 32;
+                    mode.dmFields = wingdi::DM_PELSWIDTH | wingdi::DM_PELSHEIGHT | wingdi::DM_BITSPERPEL;
+                    if winuser::ChangeDisplaySettingsA(&mut mode, winuser::CDS_FULLSCREEN) != winuser::DISP_CHANGE_SUCCESSFUL as i32 {
+                        return bail!("Error while changing display data".to_string());
+                    }
+                }
+            }
+
+            Ok(())
         }
     }
 

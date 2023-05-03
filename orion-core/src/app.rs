@@ -1,12 +1,15 @@
+use crate::window::{Coordinates, InputEvent, WindowStyle};
 use log::debug;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-#[cfg(target_arch = "x86_64")]
+#[cfg(windows)]
 use crate::window::winapi::WindowContext;
-use crate::window::InputEvent;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(unix)]
+use crate::window::x11::WindowContext;
+
+#[cfg(web)]
 use crate::window::web::WindowContext;
 
 pub struct ApplicationContext {
@@ -15,17 +18,17 @@ pub struct ApplicationContext {
 
 impl ApplicationContext {
     pub fn new() -> Self {
-        Self { window: WindowContext::new("Benchmark").unwrap() }
+        Self { window: WindowContext::new("Benchmark", WindowStyle::Window { size: Coordinates::new(800, 600) }).unwrap() }
     }
 
     pub fn run(self) {
         let app = Rc::new(RefCell::new(self));
         let app_clone = app.clone();
 
-        #[cfg(target_arch = "wasm32")]
+        #[cfg(web)]
         app.borrow_mut().window.init_closures(app.clone(), move || app_clone.borrow_mut().run_internal());
 
-        #[cfg(target_arch = "x86_64")]
+        #[cfg(any(windows, unix))]
         app.borrow_mut().run_internal();
     }
 
@@ -39,7 +42,7 @@ impl ApplicationContext {
                 debug!("New event: {:?}", event);
             }
 
-            #[cfg(target_arch = "wasm32")]
+            #[cfg(web)]
             break;
         }
     }

@@ -40,7 +40,7 @@ pub struct WindowContext {
 }
 
 impl WindowContext {
-    pub fn new(_: &str) -> Result<Box<Self>> {
+    pub fn new(_: &str, _: WindowStyle) -> Result<Box<Self>> {
         console_log::init_with_level(Level::Debug)?;
         panic::set_hook(Box::new(console_error_panic_hook::hook));
 
@@ -70,11 +70,15 @@ impl WindowContext {
             keyup_callback: None,
             keypress_callback: None,
 
-            keys_state: vec![false; Key::Last as usize],
+            keys_state: vec![false; Key::Unknown as usize],
             last_character: None,
             event_queue: Default::default(),
         });
         Ok(context)
+    }
+
+    pub fn set_style(&mut self, _: WindowStyle) -> Result<()> {
+        // Styles are ignored in browser
     }
 
     #[allow(clippy::redundant_clone)]

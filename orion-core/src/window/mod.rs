@@ -1,8 +1,18 @@
-#[cfg(target_arch = "x86_64")]
+#[cfg(windows)]
 pub mod winapi;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(unix)]
+pub mod x11;
+
+#[cfg(web)]
 pub mod web;
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum WindowStyle {
+    Window { size: Coordinates },
+    Borderless,
+    Fullscreen,
+}
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum InputEvent {
@@ -22,7 +32,6 @@ pub enum InputEvent {
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Key {
-    Unknown,
     Enter,
     Escape,
     Backspace,
@@ -98,7 +107,7 @@ pub enum Key {
     Num8,
     Num9,
 
-    Last,
+    Unknown,
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]

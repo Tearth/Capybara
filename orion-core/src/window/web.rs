@@ -9,6 +9,7 @@ use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use web_sys::Document;
 use web_sys::HtmlCanvasElement;
+use web_sys::KeyboardEvent;
 use web_sys::MouseEvent;
 use web_sys::Window;
 
@@ -21,7 +22,12 @@ pub struct WindowContext {
     mousemove_callback: Option<Closure<dyn FnMut(web_sys::MouseEvent)>>,
     mouseenter_callback: Option<Closure<dyn FnMut(web_sys::MouseEvent)>>,
     mouseleave_callback: Option<Closure<dyn FnMut(web_sys::MouseEvent)>>,
+    keydown_callback: Option<Closure<dyn FnMut(web_sys::KeyboardEvent)>>,
+    keyup_callback: Option<Closure<dyn FnMut(web_sys::KeyboardEvent)>>,
+    keypress_callback: Option<Closure<dyn FnMut(web_sys::KeyboardEvent)>>,
 
+    keys_state: Vec<bool>,
+    last_character: Option<char>,
     last_canvas_size: Coordinates,
     event_queue: VecDeque<InputEvent>,
 }
@@ -41,10 +47,17 @@ impl WindowContext {
             window: inner,
             document,
             canvas,
+
             resize_callback: None,
             mousemove_callback: None,
             mouseenter_callback: None,
             mouseleave_callback: None,
+            keydown_callback: None,
+            keyup_callback: None,
+            keypress_callback: None,
+
+            keys_state: vec![false; Key::Last as usize],
+            last_character: None,
             last_canvas_size,
             event_queue: Default::default(),
         });
@@ -60,6 +73,9 @@ impl WindowContext {
         self.init_mousemove_callback(app.clone(), event_loop.clone());
         self.init_mouseenter_callback(app.clone(), event_loop.clone());
         self.init_mouseleave_callback(app.clone(), event_loop.clone());
+        self.init_keydown_callback(app.clone(), event_loop.clone());
+        self.init_keyup_callback(app.clone(), event_loop.clone());
+        self.init_keypress_callback(app.clone(), event_loop.clone());
     }
 
     fn init_resize_callback<F>(&mut self, app: Rc<RefCell<ApplicationContext>>, mut event_loop: F)
@@ -72,7 +88,7 @@ impl WindowContext {
             let canvas_size = Coordinates::new(canvas.scroll_width(), canvas.scroll_height());
 
             if canvas_size != app.window.last_canvas_size {
-                app.window.event_queue.push_back(InputEvent::WindowSizeChange(canvas_size));
+                app.window.event_queue.push_back(InputEvent::WindowSizeChange { size: canvas_size });
             }
             drop(app);
 
@@ -86,7 +102,13 @@ impl WindowContext {
         F: FnMut() + Clone + 'static,
     {
         self.mousemove_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            app.borrow_mut().window.event_queue.push_back(InputEvent::MouseMove(Coordinates::new(event.offset_x(), event.offset_y())));
+            let mut app = app.borrow_mut();
+            let coordinates = Coordinates::new(event.offset_x(), event.offset_y());
+            let modifiers = app.window.get_modifiers();
+
+            app.window.event_queue.push_back(InputEvent::MouseMove { coordinates, modifiers });
+            drop(app);
+
             event_loop();
         }));
         self.canvas.add_event_listener_with_callback("mousemove", self.mousemove_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
@@ -97,7 +119,13 @@ impl WindowContext {
         F: FnMut() + Clone + 'static,
     {
         self.mouseenter_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            app.borrow_mut().window.event_queue.push_back(InputEvent::MouseEnter(Coordinates::new(event.offset_x(), event.offset_y())));
+            let mut app = app.borrow_mut();
+            let coordinates = Coordinates::new(event.offset_x(), event.offset_y());
+            let modifiers = app.window.get_modifiers();
+
+            app.window.event_queue.push_back(InputEvent::MouseEnter { coordinates, modifiers });
+            drop(app);
+
             event_loop();
         }));
         self.canvas.add_event_listener_with_callback("mouseenter", self.mouseenter_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
@@ -114,7 +142,153 @@ impl WindowContext {
         self.canvas.add_event_listener_with_callback("mouseleave", self.mouseleave_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
+    fn init_keydown_callback<F>(&mut self, app: Rc<RefCell<ApplicationContext>>, mut event_loop: F)
+    where
+        F: FnMut() + Clone + 'static,
+    {
+        self.keydown_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
+            let mut app = app.borrow_mut();
+            let key = map_key(event.code());
+            let repeat = app.window.keys_state[key as usize];
+            let modifiers = app.window.get_modifiers();
+
+            app.window.event_queue.push_back(InputEvent::KeyPress { key, repeat, modifiers });
+            app.window.keys_state[key as usize] = true;
+            drop(app);
+
+            event_loop();
+        }));
+        self.canvas.add_event_listener_with_callback("keydown", self.keydown_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
+    }
+
+    fn init_keyup_callback<F>(&mut self, app: Rc<RefCell<ApplicationContext>>, mut event_loop: F)
+    where
+        F: FnMut() + Clone + 'static,
+    {
+        self.keyup_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
+            let mut app = app.borrow_mut();
+            let key = map_key(event.code());
+            let modifiers = app.window.get_modifiers();
+
+            app.window.event_queue.push_back(InputEvent::KeyRelease { key, modifiers });
+            app.window.keys_state[key as usize] = false;
+            app.window.last_character = None;
+            drop(app);
+
+            event_loop();
+        }));
+        self.canvas.add_event_listener_with_callback("keyup", self.keyup_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
+    }
+
+    fn init_keypress_callback<F>(&mut self, app: Rc<RefCell<ApplicationContext>>, mut event_loop: F)
+    where
+        F: FnMut() + Clone + 'static,
+    {
+        self.keypress_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
+            let mut app = app.borrow_mut();
+            let character = event.key();
+            let modifiers = app.window.get_modifiers();
+
+            if character.len() == 1 {
+                let character = character.chars().next().unwrap();
+                let repeat = app.window.last_character.is_some_and(|c| c == character);
+
+                app.window.event_queue.push_back(InputEvent::CharPressed { character, repeat, modifiers });
+                app.window.last_character = Some(character);
+            }
+            drop(app);
+
+            event_loop();
+        }));
+        self.canvas.add_event_listener_with_callback("keypress", self.keypress_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
+    }
+
     pub fn poll_event(&mut self) -> Option<InputEvent> {
         self.event_queue.pop_front()
+    }
+
+    pub fn get_modifiers(&self) -> Modifiers {
+        Modifiers::new(self.keys_state[Key::Control as usize], self.keys_state[Key::Alt as usize], self.keys_state[Key::Shift as usize])
+    }
+}
+
+fn map_key(key: String) -> Key {
+    match key.as_str() {
+        "Enter" | "NumpadEnter" => Key::Enter,
+        "Escape" => Key::Escape,
+        "Backspace" => Key::Backspace,
+        "Space" => Key::Space,
+        "ControlLeft" | "ControlRight" => Key::Control,
+        "ShiftLeft" | "ShiftRight" => Key::Shift,
+        "AltLeft" | "AltRight" => Key::Alt,
+
+        "ArrowLeft" => Key::ArrowLeft,
+        "ArrowUp" => Key::ArrowUp,
+        "ArrowRight" => Key::ArrowRight,
+        "ArrowDown" => Key::ArrowDown,
+
+        "Digit0" => Key::Key0,
+        "Digit1" => Key::Key1,
+        "Digit2" => Key::Key2,
+        "Digit3" => Key::Key3,
+        "Digit4" => Key::Key4,
+        "Digit5" => Key::Key5,
+        "Digit6" => Key::Key6,
+        "Digit7" => Key::Key7,
+        "Digit8" => Key::Key8,
+        "Digit9" => Key::Key9,
+
+        "F1" => Key::F1,
+        "F2" => Key::F2,
+        "F3" => Key::F3,
+        "F4" => Key::F4,
+        "F5" => Key::F5,
+        "F6" => Key::F6,
+        "F7" => Key::F7,
+        "F8" => Key::F8,
+        "F9" => Key::F9,
+        "F10" => Key::F10,
+        "F11" => Key::F11,
+        "F12" => Key::F12,
+
+        "KeyA" => Key::KeyA,
+        "KeyB" => Key::KeyB,
+        "KeyC" => Key::KeyC,
+        "KeyD" => Key::KeyD,
+        "KeyE" => Key::KeyE,
+        "KeyF" => Key::KeyF,
+        "KeyG" => Key::KeyG,
+        "KeyH" => Key::KeyH,
+        "KeyI" => Key::KeyI,
+        "KeyJ" => Key::KeyJ,
+        "KeyK" => Key::KeyK,
+        "KeyL" => Key::KeyL,
+        "KeyM" => Key::KeyM,
+        "KeyN" => Key::KeyN,
+        "KeyO" => Key::KeyO,
+        "KeyP" => Key::KeyP,
+        "KeyQ" => Key::KeyQ,
+        "KeyR" => Key::KeyR,
+        "KeyS" => Key::KeyS,
+        "KeyT" => Key::KeyT,
+        "KeyU" => Key::KeyU,
+        "KeyV" => Key::KeyV,
+        "KeyW" => Key::KeyW,
+        "KeyX" => Key::KeyX,
+        "KeyY" => Key::KeyY,
+        "KeyZ" => Key::KeyZ,
+
+        "Numpad0" => Key::Num0,
+        "Numpad1" => Key::Num1,
+        "Numpad2" => Key::Num2,
+        "Numpad3" => Key::Num3,
+        "Numpad4" => Key::Num4,
+        "Numpad5" => Key::Num5,
+        "Numpad6" => Key::Num6,
+        "Numpad7" => Key::Num7,
+        "Numpad8" => Key::Num8,
+        "Numpad9" => Key::Num9,
+
+        _ => Key::Unknown,
     }
 }

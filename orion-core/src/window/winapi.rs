@@ -92,6 +92,26 @@ impl WindowContext {
                 winuser::DispatchMessageA(&event);
 
                 match event.message {
+                    winuser::WM_KEYDOWN => {
+                        let key = map_key(event.wParam);
+                        let repeat = (event.lParam & (1 << 30)) != 0;
+                        let modifiers = self.get_modifiers();
+
+                        self.event_queue.push_back(InputEvent::KeyPress { key, repeat, modifiers });
+                    }
+                    winuser::WM_KEYUP => {
+                        let key = map_key(event.wParam);
+                        let modifiers = self.get_modifiers();
+
+                        self.event_queue.push_back(InputEvent::KeyRelease { key, modifiers })
+                    }
+                    winuser::WM_CHAR => {
+                        let character = char::from_u32(event.wParam as u32).unwrap();
+                        let repeat = (event.lParam & (1 << 30)) != 0;
+                        let modifiers = self.get_modifiers();
+
+                        self.event_queue.push_back(InputEvent::CharPress { character, repeat, modifiers })
+                    }
                     winuser::WM_MOUSEMOVE => {
                         let x = (event.lParam as i32) & 0xffff;
                         let y = (event.lParam as i32) >> 16;
@@ -104,11 +124,16 @@ impl WindowContext {
                                 dwHoverTime: 0,
                             });
 
-                            self.event_queue.push_back(InputEvent::MouseEnter(Coordinates::new(x, y)));
+                            let coordinates = Coordinates::new(x, y);
+                            let modifiers = self.get_modifiers();
+                            self.event_queue.push_back(InputEvent::MouseEnter { coordinates, modifiers });
+
                             self.cursor_in_window = true;
                         }
 
-                        self.event_queue.push_back(InputEvent::MouseMove(Coordinates::new(x, y)));
+                        let coordinates = Coordinates::new(x, y);
+                        let modifiers = self.get_modifiers();
+                        self.event_queue.push_back(InputEvent::MouseMove { coordinates, modifiers });
                     }
                     winuser::WM_QUIT => self.event_queue.push_back(InputEvent::WindowClose),
                     _ => {}
@@ -116,6 +141,16 @@ impl WindowContext {
             }
 
             self.event_queue.pop_front()
+        }
+    }
+
+    pub fn get_modifiers(&self) -> Modifiers {
+        unsafe {
+            Modifiers::new(
+                (winuser::GetKeyState(winuser::VK_CONTROL) as u16 & 0x8000) != 0,
+                (winuser::GetKeyState(winuser::VK_MENU) as u16 & 0x8000) != 0,
+                (winuser::GetKeyState(winuser::VK_SHIFT) as u16 & 0x8000) != 0,
+            )
         }
     }
 }
@@ -141,8 +176,9 @@ extern "system" fn wnd_proc(hwnd: windef::HWND, message: u32, w_param: usize, l_
 
                 let x = (l_param & 0xffff) as i32;
                 let y = (l_param >> 16) as i32;
+                let size = Coordinates::new(x, y);
 
-                window.event_queue.push_back(InputEvent::WindowSizeChange(Coordinates::new(x, y)));
+                window.event_queue.push_back(InputEvent::WindowSizeChange { size });
             }
             winuser::WM_MOUSELEAVE => {
                 let window_ptr = winuser::GetWindowLongPtrA(hwnd, winuser::GWLP_USERDATA);
@@ -173,5 +209,86 @@ extern "system" fn wnd_proc(hwnd: windef::HWND, message: u32, w_param: usize, l_
         }
 
         winuser::DefWindowProcA(hwnd, message, w_param, l_param)
+    }
+}
+
+pub fn map_key(key: usize) -> Key {
+    match key {
+        0x0d => Key::Enter,
+        0x1b => Key::Escape,
+        0x08 => Key::Backspace,
+        0x20 => Key::Space,
+        0x11 => Key::Control,
+        0x10 => Key::Shift,
+        0x12 => Key::Alt,
+
+        0x25 => Key::ArrowLeft,
+        0x26 => Key::ArrowUp,
+        0x27 => Key::ArrowRight,
+        0x28 => Key::ArrowDown,
+
+        0x30 => Key::Key0,
+        0x31 => Key::Key1,
+        0x32 => Key::Key2,
+        0x33 => Key::Key3,
+        0x34 => Key::Key4,
+        0x35 => Key::Key5,
+        0x36 => Key::Key6,
+        0x37 => Key::Key7,
+        0x38 => Key::Key8,
+        0x39 => Key::Key9,
+
+        0x70 => Key::F1,
+        0x71 => Key::F2,
+        0x72 => Key::F3,
+        0x73 => Key::F4,
+        0x74 => Key::F5,
+        0x75 => Key::F6,
+        0x76 => Key::F7,
+        0x77 => Key::F8,
+        0x78 => Key::F9,
+        0x79 => Key::F10,
+        0x7a => Key::F11,
+        0x7b => Key::F12,
+
+        0x41 => Key::KeyA,
+        0x42 => Key::KeyB,
+        0x43 => Key::KeyC,
+        0x44 => Key::KeyD,
+        0x45 => Key::KeyE,
+        0x46 => Key::KeyF,
+        0x47 => Key::KeyG,
+        0x48 => Key::KeyH,
+        0x49 => Key::KeyI,
+        0x4a => Key::KeyJ,
+        0x4b => Key::KeyK,
+        0x4c => Key::KeyL,
+        0x4d => Key::KeyM,
+        0x4e => Key::KeyN,
+        0x4f => Key::KeyO,
+        0x50 => Key::KeyP,
+        0x51 => Key::KeyQ,
+        0x52 => Key::KeyR,
+        0x53 => Key::KeyS,
+        0x54 => Key::KeyT,
+        0x55 => Key::KeyU,
+        0x56 => Key::KeyV,
+        0x57 => Key::KeyW,
+        0x58 => Key::KeyX,
+        0x59 => Key::KeyY,
+        0x5a => Key::KeyZ,
+
+        0x60 => Key::Num0,
+        0x61 => Key::Num1,
+        0x62 => Key::Num2,
+        0x63 => Key::Num3,
+        0x64 => Key::Num4,
+        0x65 => Key::Num5,
+        0x66 => Key::Num6,
+        0x67 => Key::Num7,
+        0x68 => Key::Num8,
+        0x69 => Key::Num9,
+
+        _ => Key::Unknown,
     }
 }

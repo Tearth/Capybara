@@ -4,20 +4,117 @@ pub mod winapi;
 #[cfg(target_arch = "wasm32")]
 pub mod web;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum InputEvent {
     Unknown,
-    WindowSizeChange(Coordinates),
-    MouseMove(Coordinates),
-    MouseEnter(Coordinates),
+    WindowSizeChange { size: Coordinates },
+    MouseMove { coordinates: Coordinates, modifiers: Modifiers },
+    MouseEnter { coordinates: Coordinates, modifiers: Modifiers },
     MouseLeave,
+    KeyPress { key: Key, repeat: bool, modifiers: Modifiers },
+    KeyRelease { key: Key, modifiers: Modifiers },
+    CharPress { character: char, repeat: bool, modifiers: Modifiers },
     WindowClose,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum Key {
+    Unknown,
+    Enter,
+    Escape,
+    Backspace,
+    Space,
+    Control,
+    Shift,
+    Alt,
+
+    ArrowLeft,
+    ArrowUp,
+    ArrowRight,
+    ArrowDown,
+
+    Key0,
+    Key1,
+    Key2,
+    Key3,
+    Key4,
+    Key5,
+    Key6,
+    Key7,
+    Key8,
+    Key9,
+
+    F1,
+    F2,
+    F3,
+    F4,
+    F5,
+    F6,
+    F7,
+    F8,
+    F9,
+    F10,
+    F11,
+    F12,
+
+    KeyA,
+    KeyB,
+    KeyC,
+    KeyD,
+    KeyE,
+    KeyF,
+    KeyG,
+    KeyH,
+    KeyI,
+    KeyJ,
+    KeyK,
+    KeyL,
+    KeyM,
+    KeyN,
+    KeyO,
+    KeyP,
+    KeyQ,
+    KeyR,
+    KeyS,
+    KeyT,
+    KeyU,
+    KeyV,
+    KeyW,
+    KeyX,
+    KeyY,
+    KeyZ,
+
+    Num0,
+    Num1,
+    Num2,
+    Num3,
+    Num4,
+    Num5,
+    Num6,
+    Num7,
+    Num8,
+    Num9,
+
+    Last,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct Modifiers {
+    pub control: bool,
+    pub alt: bool,
+    pub shift: bool,
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Coordinates {
     pub x: i32,
     pub y: i32,
+}
+
+impl Modifiers {
+    pub fn new(control: bool, alt: bool, shift: bool) -> Self {
+        Self { control, alt, shift }
+    }
 }
 
 impl Coordinates {

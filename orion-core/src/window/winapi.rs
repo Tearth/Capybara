@@ -19,7 +19,9 @@ pub struct WindowContext {
     pub hdc: windef::HDC,
     pub initialized: bool,
 
-    cursor_in_window: bool,
+    pub cursor_position: Coordinates,
+    pub cursor_in_window: bool,
+
     event_queue: VecDeque<InputEvent>,
 }
 
@@ -50,8 +52,14 @@ impl WindowContext {
                 bail!("Error while initializing a new window class, GetLastError()={}", errhandlingapi::GetLastError());
             }
 
-            let mut context =
-                Box::new(Self { hwnd: ptr::null_mut(), hdc: ptr::null_mut(), initialized: false, cursor_in_window: false, event_queue: Default::default() });
+            let mut context = Box::new(Self {
+                hwnd: ptr::null_mut(),
+                hdc: ptr::null_mut(),
+                initialized: false,
+                cursor_position: Default::default(),
+                cursor_in_window: false,
+                event_queue: Default::default(),
+            });
             let title_cstr = CString::new(title).unwrap();
 
             let mut size = windef::RECT { left: 0, top: 0, right: 800, bottom: 600 };
@@ -92,6 +100,61 @@ impl WindowContext {
                 winuser::DispatchMessageA(&event);
 
                 match event.message {
+                    winuser::WM_MOUSEMOVE => {
+                        let x = (event.lParam as i32) & 0xffff;
+                        let y = (event.lParam as i32) >> 16;
+
+                        if !self.cursor_in_window {
+                            winuser::TrackMouseEvent(&mut winuser::TRACKMOUSEEVENT {
+                                cbSize: mem::size_of::<winuser::TRACKMOUSEEVENT>() as u32,
+                                dwFlags: winuser::TME_LEAVE,
+                                hwndTrack: self.hwnd,
+                                dwHoverTime: 0,
+                            });
+
+                            let coordinates = Coordinates::new(x, y);
+                            let modifiers = self.get_modifiers();
+                            self.event_queue.push_back(InputEvent::MouseEnter { position: coordinates, modifiers });
+
+                            self.cursor_in_window = true;
+                        }
+
+                        let coordinates = Coordinates::new(x, y);
+                        let modifiers = self.get_modifiers();
+                        self.event_queue.push_back(InputEvent::MouseMove { position: coordinates, modifiers });
+
+                        self.cursor_position = coordinates;
+                    }
+                    winuser::WM_LBUTTONDOWN | winuser::WM_RBUTTONDOWN | winuser::WM_MBUTTONDOWN => {
+                        let button = match event.message {
+                            winuser::WM_LBUTTONDOWN => MouseButton::Left,
+                            winuser::WM_RBUTTONDOWN => MouseButton::Right,
+                            winuser::WM_MBUTTONDOWN => MouseButton::Middle,
+                            _ => unreachable!(),
+                        };
+                        let position = self.cursor_position;
+                        let modifiers = self.get_modifiers();
+
+                        self.event_queue.push_back(InputEvent::MouseButtonPress { button, position, modifiers });
+                    }
+                    winuser::WM_LBUTTONUP | winuser::WM_RBUTTONUP | winuser::WM_MBUTTONUP => {
+                        let button = match event.message {
+                            winuser::WM_LBUTTONUP => MouseButton::Left,
+                            winuser::WM_RBUTTONUP => MouseButton::Right,
+                            winuser::WM_MBUTTONUP => MouseButton::Middle,
+                            _ => unreachable!(),
+                        };
+                        let position = self.cursor_position;
+                        let modifiers = self.get_modifiers();
+
+                        self.event_queue.push_back(InputEvent::MouseButtonRelease { button, position, modifiers });
+                    }
+                    winuser::WM_MOUSEWHEEL => {
+                        let direction = if ((event.wParam as i32) >> 16) > 0 { MouseWheelDirection::Up } else { MouseWheelDirection::Down };
+                        let modifiers = self.get_modifiers();
+
+                        self.event_queue.push_back(InputEvent::MouseWheelRotated { direction, modifiers });
+                    }
                     winuser::WM_KEYDOWN => {
                         let key = map_key(event.wParam);
                         let repeat = (event.lParam & (1 << 30)) != 0;
@@ -111,29 +174,6 @@ impl WindowContext {
                         let modifiers = self.get_modifiers();
 
                         self.event_queue.push_back(InputEvent::CharPress { character, repeat, modifiers })
-                    }
-                    winuser::WM_MOUSEMOVE => {
-                        let x = (event.lParam as i32) & 0xffff;
-                        let y = (event.lParam as i32) >> 16;
-
-                        if !self.cursor_in_window {
-                            winuser::TrackMouseEvent(&mut winuser::TRACKMOUSEEVENT {
-                                cbSize: mem::size_of::<winuser::TRACKMOUSEEVENT>() as u32,
-                                dwFlags: winuser::TME_LEAVE,
-                                hwndTrack: self.hwnd,
-                                dwHoverTime: 0,
-                            });
-
-                            let coordinates = Coordinates::new(x, y);
-                            let modifiers = self.get_modifiers();
-                            self.event_queue.push_back(InputEvent::MouseEnter { coordinates, modifiers });
-
-                            self.cursor_in_window = true;
-                        }
-
-                        let coordinates = Coordinates::new(x, y);
-                        let modifiers = self.get_modifiers();
-                        self.event_queue.push_back(InputEvent::MouseMove { coordinates, modifiers });
                     }
                     winuser::WM_QUIT => self.event_queue.push_back(InputEvent::WindowClose),
                     _ => {}

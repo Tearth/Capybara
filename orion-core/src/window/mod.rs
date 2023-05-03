@@ -8,9 +8,12 @@ pub mod web;
 pub enum InputEvent {
     Unknown,
     WindowSizeChange { size: Coordinates },
-    MouseMove { coordinates: Coordinates, modifiers: Modifiers },
-    MouseEnter { coordinates: Coordinates, modifiers: Modifiers },
+    MouseMove { position: Coordinates, modifiers: Modifiers },
+    MouseEnter { position: Coordinates, modifiers: Modifiers },
     MouseLeave,
+    MouseButtonPress { button: MouseButton, position: Coordinates, modifiers: Modifiers },
+    MouseButtonRelease { button: MouseButton, position: Coordinates, modifiers: Modifiers },
+    MouseWheelRotated { direction: MouseWheelDirection, modifiers: Modifiers },
     KeyPress { key: Key, repeat: bool, modifiers: Modifiers },
     KeyRelease { key: Key, modifiers: Modifiers },
     CharPress { character: char, repeat: bool, modifiers: Modifiers },
@@ -106,6 +109,21 @@ pub struct Modifiers {
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum MouseButton {
+    Left,
+    Middle,
+    Right,
+    Unknown,
+}
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum MouseWheelDirection {
+    Up,
+    Down,
+    None,
+}
+
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
 pub struct Coordinates {
     pub x: i32,
     pub y: i32,

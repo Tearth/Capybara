@@ -19,6 +19,7 @@ pub struct WindowContext {
     pub hdc: windef::HDC,
     pub initialized: bool,
 
+    pub size: Coordinates,
     pub cursor_position: Coordinates,
     pub cursor_in_window: bool,
 
@@ -52,18 +53,19 @@ impl WindowContext {
                 bail!("Error while initializing a new window class, GetLastError()={}", errhandlingapi::GetLastError());
             }
 
+            let mut size = windef::RECT { left: 0, top: 0, right: 800, bottom: 600 };
+            winuser::AdjustWindowRect(&mut size, winuser::WS_OVERLAPPEDWINDOW | winuser::WS_VISIBLE, 0);
+
             let mut context = Box::new(Self {
                 hwnd: ptr::null_mut(),
                 hdc: ptr::null_mut(),
                 initialized: false,
+                size: Coordinates::new(800, 600),
                 cursor_position: Default::default(),
                 cursor_in_window: false,
                 event_queue: Default::default(),
             });
             let title_cstr = CString::new(title).unwrap();
-
-            let mut size = windef::RECT { left: 0, top: 0, right: 800, bottom: 600 };
-            winuser::AdjustWindowRect(&mut size, winuser::WS_OVERLAPPEDWINDOW | winuser::WS_VISIBLE, 0);
 
             let hwnd = winuser::CreateWindowExA(
                 0,
@@ -112,14 +114,14 @@ impl WindowContext {
                                 dwHoverTime: 0,
                             });
 
-                            let coordinates = Coordinates::new(x, y);
+                            let coordinates = Coordinates::new(x, self.size.y - y);
                             let modifiers = self.get_modifiers();
                             self.event_queue.push_back(InputEvent::MouseEnter { position: coordinates, modifiers });
 
                             self.cursor_in_window = true;
                         }
 
-                        let coordinates = Coordinates::new(x, y);
+                        let coordinates = Coordinates::new(x, self.size.y - y);
                         let modifiers = self.get_modifiers();
                         self.event_queue.push_back(InputEvent::MouseMove { position: coordinates, modifiers });
 
@@ -219,6 +221,7 @@ extern "system" fn wnd_proc(hwnd: windef::HWND, message: u32, w_param: usize, l_
                 let size = Coordinates::new(x, y);
 
                 window.event_queue.push_back(InputEvent::WindowSizeChange { size });
+                window.size = size;
             }
             winuser::WM_MOUSELEAVE => {
                 let window_ptr = winuser::GetWindowLongPtrA(hwnd, winuser::GWLP_USERDATA);

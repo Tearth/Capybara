@@ -23,7 +23,7 @@ impl ApplicationContext {
         let app_clone = app.clone();
 
         #[cfg(target_arch = "wasm32")]
-        app.borrow_mut().window.init_closures(app_clone.clone(), move || app_clone.borrow_mut().run_internal());
+        app.borrow_mut().window.init_closures(app.clone(), move || app_clone.borrow_mut().run_internal());
 
         #[cfg(target_arch = "x86_64")]
         app.borrow_mut().run_internal();

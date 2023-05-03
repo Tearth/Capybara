@@ -19,6 +19,7 @@ pub struct WindowContext {
     pub document: Document,
     pub canvas: HtmlCanvasElement,
 
+    pub size: Coordinates,
     pub cursor_position: Coordinates,
     pub cursor_in_window: bool,
 
@@ -35,7 +36,6 @@ pub struct WindowContext {
 
     keys_state: Vec<bool>,
     last_character: Option<char>,
-    last_canvas_size: Coordinates,
     event_queue: VecDeque<InputEvent>,
 }
 
@@ -55,6 +55,7 @@ impl WindowContext {
             document,
             canvas,
 
+            size: last_canvas_size,
             cursor_position: Default::default(),
             cursor_in_window: false,
 
@@ -71,7 +72,6 @@ impl WindowContext {
 
             keys_state: vec![false; Key::Last as usize],
             last_character: None,
-            last_canvas_size,
             event_queue: Default::default(),
         });
         Ok(context)
@@ -103,8 +103,9 @@ impl WindowContext {
             let canvas = &app.window.canvas;
             let canvas_size = Coordinates::new(canvas.scroll_width(), canvas.scroll_height());
 
-            if canvas_size != app.window.last_canvas_size {
+            if canvas_size != app.window.size {
                 app.window.event_queue.push_back(InputEvent::WindowSizeChange { size: canvas_size });
+                app.window.size = canvas_size;
             }
             drop(app);
 
@@ -119,7 +120,7 @@ impl WindowContext {
     {
         self.mousemove_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
             let mut app = app.borrow_mut();
-            let position = Coordinates::new(event.offset_x(), event.offset_y());
+            let position = Coordinates::new(event.offset_x(), app.window.size.y - event.offset_y());
             let modifiers = app.window.get_modifiers();
 
             app.window.event_queue.push_back(InputEvent::MouseMove { position, modifiers });
@@ -137,7 +138,7 @@ impl WindowContext {
     {
         self.mouseenter_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
             let mut app = app.borrow_mut();
-            let position = Coordinates::new(event.offset_x(), event.offset_y());
+            let position = Coordinates::new(event.offset_x(), app.window.size.y - event.offset_y());
             let modifiers = app.window.get_modifiers();
 
             app.window.event_queue.push_back(InputEvent::MouseEnter { position, modifiers });

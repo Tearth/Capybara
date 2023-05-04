@@ -129,7 +129,7 @@ pub enum MouseButton {
 pub enum MouseWheelDirection {
     Up,
     Down,
-    None,
+    Unknown,
 }
 
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]

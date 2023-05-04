@@ -173,7 +173,7 @@ impl WindowContext {
                 size: Coordinates::new(1, 1),
                 cursor_position: Default::default(),
                 cursor_in_window: false,
-                mouse_state: vec![false; 3],
+                mouse_state: vec![false; MouseButton::Unknown as usize],
                 keyboard_state: vec![false; Key::Unknown as usize],
 
                 delete_window_atom,
@@ -364,7 +364,7 @@ impl WindowContext {
     }
 }
 
-pub fn map_key(key: u32) -> Key {
+fn map_key(key: u32) -> Key {
     match key {
         XK_Return => Key::Enter,
         XK_Escape => Key::Escape,

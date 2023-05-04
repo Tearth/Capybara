@@ -1,4 +1,5 @@
-use crate::window::{Coordinates, InputEvent, WindowStyle};
+use crate::window::{Coordinates, InputEvent, Key, WindowStyle};
+use glow::HasContext;
 use log::debug;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -35,8 +36,17 @@ impl ApplicationContext {
     pub fn run_internal(&mut self) {
         loop {
             while let Some(event) = self.window.poll_event() {
-                if event == InputEvent::WindowClose {
-                    return;
+                match event {
+                    InputEvent::KeyPress { key, repeat: _, modifiers: _ } => {
+                        if key == Key::Space {
+                            let context = self.window.load_gl_pointers();
+                            println!("GL version: {:?}", context.version());
+                        }
+                    }
+                    InputEvent::WindowClose => {
+                        return;
+                    }
+                    _ => {}
                 }
 
                 debug!("New event: {:?}", event);

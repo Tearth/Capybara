@@ -16,7 +16,6 @@ pub enum WindowStyle {
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum InputEvent {
-    Unknown,
     WindowSizeChange { size: Coordinates },
     MouseMove { position: Coordinates, modifiers: Modifiers },
     MouseEnter { position: Coordinates, modifiers: Modifiers },
@@ -28,6 +27,7 @@ pub enum InputEvent {
     KeyRelease { key: Key, modifiers: Modifiers },
     CharPress { character: char, repeat: bool, modifiers: Modifiers },
     WindowClose,
+    Unknown,
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]

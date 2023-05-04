@@ -22,19 +22,20 @@ pub struct WindowContext {
     pub size: Coordinates,
     pub cursor_position: Coordinates,
     pub cursor_in_window: bool,
+    pub mouse_state: Vec<bool>,
+    pub keyboard_state: Vec<bool>,
 
     resize_callback: Option<Closure<dyn FnMut()>>,
-    mousemove_callback: Option<Closure<dyn FnMut(web_sys::MouseEvent)>>,
-    mouseenter_callback: Option<Closure<dyn FnMut(web_sys::MouseEvent)>>,
-    mouseleave_callback: Option<Closure<dyn FnMut(web_sys::MouseEvent)>>,
-    mousedown_callback: Option<Closure<dyn FnMut(web_sys::MouseEvent)>>,
-    mouseup_callback: Option<Closure<dyn FnMut(web_sys::MouseEvent)>>,
-    wheel_callback: Option<Closure<dyn FnMut(web_sys::WheelEvent)>>,
-    keydown_callback: Option<Closure<dyn FnMut(web_sys::KeyboardEvent)>>,
-    keyup_callback: Option<Closure<dyn FnMut(web_sys::KeyboardEvent)>>,
-    keypress_callback: Option<Closure<dyn FnMut(web_sys::KeyboardEvent)>>,
+    mousemove_callback: Option<Closure<dyn FnMut(MouseEvent)>>,
+    mouseenter_callback: Option<Closure<dyn FnMut(MouseEvent)>>,
+    mouseleave_callback: Option<Closure<dyn FnMut(MouseEvent)>>,
+    mousedown_callback: Option<Closure<dyn FnMut(MouseEvent)>>,
+    mouseup_callback: Option<Closure<dyn FnMut(MouseEvent)>>,
+    wheel_callback: Option<Closure<dyn FnMut(WheelEvent)>>,
+    keydown_callback: Option<Closure<dyn FnMut(KeyboardEvent)>>,
+    keyup_callback: Option<Closure<dyn FnMut(KeyboardEvent)>>,
+    keypress_callback: Option<Closure<dyn FnMut(KeyboardEvent)>>,
 
-    keys_state: Vec<bool>,
     last_character: Option<char>,
     event_queue: VecDeque<InputEvent>,
 }
@@ -44,20 +45,22 @@ impl WindowContext {
         console_log::init_with_level(Level::Debug)?;
         panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-        let inner = web_sys::window().unwrap();
-        let document = inner.document().unwrap();
+        let window = web_sys::window().unwrap();
+        let document = window.document().unwrap();
         let canvas = document.get_element_by_id("canvas").unwrap();
         let canvas = canvas.dyn_into::<HtmlCanvasElement>().map_err(|_| ()).unwrap();
         let last_canvas_size = Coordinates::new(canvas.scroll_width(), canvas.scroll_height());
 
-        let context = Box::new(Self {
-            window: inner,
+        Ok(Box::new(Self {
+            window,
             document,
             canvas,
 
             size: last_canvas_size,
             cursor_position: Default::default(),
             cursor_in_window: false,
+            mouse_state: vec![false; MouseButton::Unknown as usize],
+            keyboard_state: vec![false; Key::Unknown as usize],
 
             resize_callback: None,
             mousemove_callback: None,
@@ -70,15 +73,14 @@ impl WindowContext {
             keyup_callback: None,
             keypress_callback: None,
 
-            keys_state: vec![false; Key::Unknown as usize],
             last_character: None,
             event_queue: Default::default(),
-        });
-        Ok(context)
+        }))
     }
 
     pub fn set_style(&mut self, _: WindowStyle) -> Result<()> {
-        // Styles are ignored in browser
+        // Styles are ignored in a browser
+        Ok(())
     }
 
     #[allow(clippy::redundant_clone)]
@@ -103,15 +105,16 @@ impl WindowContext {
         F: FnMut() + Clone + 'static,
     {
         self.resize_callback = Some(Closure::<dyn FnMut()>::new(move || {
-            let mut app = app.borrow_mut();
-            let canvas = &app.window.canvas;
-            let canvas_size = Coordinates::new(canvas.scroll_width(), canvas.scroll_height());
+            {
+                let mut app = app.borrow_mut();
+                let canvas = &app.window.canvas;
+                let size = Coordinates::new(canvas.scroll_width(), canvas.scroll_height());
 
-            if canvas_size != app.window.size {
-                app.window.event_queue.push_back(InputEvent::WindowSizeChange { size: canvas_size });
-                app.window.size = canvas_size;
+                if size != app.window.size {
+                    app.window.event_queue.push_back(InputEvent::WindowSizeChange { size });
+                    app.window.size = size;
+                }
             }
-            drop(app);
 
             event_loop();
         }));
@@ -123,13 +126,14 @@ impl WindowContext {
         F: FnMut() + Clone + 'static,
     {
         self.mousemove_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            let mut app = app.borrow_mut();
-            let position = Coordinates::new(event.offset_x(), app.window.size.y - event.offset_y());
-            let modifiers = app.window.get_modifiers();
+            {
+                let mut app = app.borrow_mut();
+                let position = Coordinates::new(event.offset_x(), app.window.size.y - event.offset_y());
+                let modifiers = app.window.get_modifiers();
 
-            app.window.event_queue.push_back(InputEvent::MouseMove { position, modifiers });
-            app.window.cursor_position = position;
-            drop(app);
+                app.window.event_queue.push_back(InputEvent::MouseMove { position, modifiers });
+                app.window.cursor_position = position;
+            }
 
             event_loop();
         }));
@@ -141,13 +145,14 @@ impl WindowContext {
         F: FnMut() + Clone + 'static,
     {
         self.mouseenter_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            let mut app = app.borrow_mut();
-            let position = Coordinates::new(event.offset_x(), app.window.size.y - event.offset_y());
-            let modifiers = app.window.get_modifiers();
+            {
+                let mut app = app.borrow_mut();
+                let position = Coordinates::new(event.offset_x(), app.window.size.y - event.offset_y());
+                let modifiers = app.window.get_modifiers();
 
-            app.window.event_queue.push_back(InputEvent::MouseEnter { position, modifiers });
-            app.window.cursor_in_window = true;
-            drop(app);
+                app.window.event_queue.push_back(InputEvent::MouseEnter { position, modifiers });
+                app.window.cursor_in_window = true;
+            }
 
             event_loop();
         }));
@@ -159,11 +164,12 @@ impl WindowContext {
         F: FnMut() + Clone + 'static,
     {
         self.mouseleave_callback = Some(Closure::<dyn FnMut(_)>::new(move |_: MouseEvent| {
-            let mut app = app.borrow_mut();
+            {
+                let mut app = app.borrow_mut();
 
-            app.window.event_queue.push_back(InputEvent::MouseLeave);
-            app.window.cursor_in_window = false;
-            drop(app);
+                app.window.event_queue.push_back(InputEvent::MouseLeave);
+                app.window.cursor_in_window = false;
+            }
 
             event_loop();
         }));
@@ -175,18 +181,23 @@ impl WindowContext {
         F: FnMut() + Clone + 'static,
     {
         self.mousedown_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            let mut app = app.borrow_mut();
-            let button = match event.button() {
-                0 => MouseButton::Left,
-                1 => MouseButton::Middle,
-                2 => MouseButton::Right,
-                _ => MouseButton::Unknown,
-            };
-            let position = app.window.cursor_position;
-            let modifiers = app.window.get_modifiers();
+            {
+                let mut app = app.borrow_mut();
+                let button = match event.button() {
+                    0 => MouseButton::Left,
+                    1 => MouseButton::Middle,
+                    2 => MouseButton::Right,
+                    _ => MouseButton::Unknown,
+                };
 
-            app.window.event_queue.push_back(InputEvent::MouseButtonPress { button, position, modifiers });
-            drop(app);
+                if button != MouseButton::Unknown {
+                    let position = app.window.cursor_position;
+                    let modifiers = app.window.get_modifiers();
+
+                    app.window.event_queue.push_back(InputEvent::MouseButtonPress { button, position, modifiers });
+                    app.window.mouse_state[button as usize] = true;
+                }
+            }
 
             event_loop();
         }));
@@ -198,18 +209,23 @@ impl WindowContext {
         F: FnMut() + Clone + 'static,
     {
         self.mouseup_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            let mut app = app.borrow_mut();
-            let button = match event.button() {
-                0 => MouseButton::Left,
-                1 => MouseButton::Middle,
-                2 => MouseButton::Right,
-                _ => MouseButton::Unknown,
-            };
-            let position = app.window.cursor_position;
-            let modifiers = app.window.get_modifiers();
+            {
+                let mut app = app.borrow_mut();
+                let button = match event.button() {
+                    0 => MouseButton::Left,
+                    1 => MouseButton::Middle,
+                    2 => MouseButton::Right,
+                    _ => MouseButton::Unknown,
+                };
 
-            app.window.event_queue.push_back(InputEvent::MouseButtonRelease { button, position, modifiers });
-            drop(app);
+                if button != MouseButton::Unknown {
+                    let position = app.window.cursor_position;
+                    let modifiers = app.window.get_modifiers();
+
+                    app.window.event_queue.push_back(InputEvent::MouseButtonRelease { button, position, modifiers });
+                    app.window.mouse_state[button as usize] = false;
+                }
+            }
 
             event_loop();
         }));
@@ -221,12 +237,13 @@ impl WindowContext {
         F: FnMut() + Clone + 'static,
     {
         self.wheel_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: WheelEvent| {
-            let mut app = app.borrow_mut();
-            let direction = if event.delta_y() < 0.0 { MouseWheelDirection::Up } else { MouseWheelDirection::Down };
-            let modifiers = app.window.get_modifiers();
+            {
+                let mut app = app.borrow_mut();
+                let direction = if event.delta_y() < 0.0 { MouseWheelDirection::Up } else { MouseWheelDirection::Down };
+                let modifiers = app.window.get_modifiers();
 
-            app.window.event_queue.push_back(InputEvent::MouseWheelRotated { direction, modifiers });
-            drop(app);
+                app.window.event_queue.push_back(InputEvent::MouseWheelRotated { direction, modifiers });
+            }
 
             event_loop();
         }));
@@ -238,14 +255,18 @@ impl WindowContext {
         F: FnMut() + Clone + 'static,
     {
         self.keydown_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
-            let mut app = app.borrow_mut();
-            let key = map_key(event.code());
-            let repeat = app.window.keys_state[key as usize];
-            let modifiers = app.window.get_modifiers();
+            {
+                let mut app = app.borrow_mut();
+                let key = map_key(event.code());
 
-            app.window.event_queue.push_back(InputEvent::KeyPress { key, repeat, modifiers });
-            app.window.keys_state[key as usize] = true;
-            drop(app);
+                if key != Key::Unknown {
+                    let repeat = app.window.keyboard_state[key as usize];
+                    let modifiers = app.window.get_modifiers();
+
+                    app.window.event_queue.push_back(InputEvent::KeyPress { key, repeat, modifiers });
+                    app.window.keyboard_state[key as usize] = true;
+                }
+            }
 
             event_loop();
         }));
@@ -257,14 +278,18 @@ impl WindowContext {
         F: FnMut() + Clone + 'static,
     {
         self.keyup_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
-            let mut app = app.borrow_mut();
-            let key = map_key(event.code());
-            let modifiers = app.window.get_modifiers();
+            {
+                let mut app = app.borrow_mut();
+                let key = map_key(event.code());
 
-            app.window.event_queue.push_back(InputEvent::KeyRelease { key, modifiers });
-            app.window.keys_state[key as usize] = false;
-            app.window.last_character = None;
-            drop(app);
+                if key != Key::Unknown {
+                    let modifiers = app.window.get_modifiers();
+
+                    app.window.event_queue.push_back(InputEvent::KeyRelease { key, modifiers });
+                    app.window.keyboard_state[key as usize] = false;
+                    app.window.last_character = None;
+                }
+            }
 
             event_loop();
         }));
@@ -276,18 +301,19 @@ impl WindowContext {
         F: FnMut() + Clone + 'static,
     {
         self.keypress_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
-            let mut app = app.borrow_mut();
-            let character = event.key();
-            let modifiers = app.window.get_modifiers();
+            {
+                let mut app = app.borrow_mut();
+                let character = event.key();
+                let modifiers = app.window.get_modifiers();
 
-            if character.len() == 1 {
-                let character = character.chars().next().unwrap();
-                let repeat = app.window.last_character.is_some_and(|c| c == character);
+                if character.len() == 1 {
+                    let character = character.chars().next().unwrap();
+                    let repeat = app.window.last_character.is_some_and(|c| c == character);
 
-                app.window.event_queue.push_back(InputEvent::CharPress { character, repeat, modifiers });
-                app.window.last_character = Some(character);
+                    app.window.event_queue.push_back(InputEvent::CharPress { character, repeat, modifiers });
+                    app.window.last_character = Some(character);
+                }
             }
-            drop(app);
 
             event_loop();
         }));
@@ -299,7 +325,7 @@ impl WindowContext {
     }
 
     pub fn get_modifiers(&self) -> Modifiers {
-        Modifiers::new(self.keys_state[Key::Control as usize], self.keys_state[Key::Alt as usize], self.keys_state[Key::Shift as usize])
+        Modifiers::new(self.keyboard_state[Key::Control as usize], self.keyboard_state[Key::Alt as usize], self.keyboard_state[Key::Shift as usize])
     }
 }
 

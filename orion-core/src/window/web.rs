@@ -1,6 +1,8 @@
 use super::*;
 use crate::app::ApplicationContext;
+use anyhow::Error;
 use anyhow::Result;
+use glow::Context;
 use log::Level;
 use std::cell::RefCell;
 use std::collections::VecDeque;
@@ -11,6 +13,7 @@ use web_sys::Document;
 use web_sys::HtmlCanvasElement;
 use web_sys::KeyboardEvent;
 use web_sys::MouseEvent;
+use web_sys::WebGl2RenderingContext;
 use web_sys::WheelEvent;
 use web_sys::Window;
 
@@ -18,6 +21,7 @@ pub struct WindowContext {
     pub window: Window,
     pub document: Document,
     pub canvas: HtmlCanvasElement,
+    pub webgl_context: Option<WebGl2RenderingContext>,
 
     pub size: Coordinates,
     pub cursor_position: Coordinates,
@@ -51,10 +55,11 @@ impl WindowContext {
         let canvas = canvas.dyn_into::<HtmlCanvasElement>().map_err(|_| ()).unwrap();
         let last_canvas_size = Coordinates::new(canvas.scroll_width(), canvas.scroll_height());
 
-        Ok(Box::new(Self {
+        let mut context = Box::new(Self {
             window,
             document,
             canvas,
+            webgl_context: None,
 
             size: last_canvas_size,
             cursor_position: Default::default(),
@@ -75,7 +80,23 @@ impl WindowContext {
 
             last_character: None,
             event_queue: Default::default(),
-        }))
+        });
+        context.init_gl_context()?;
+
+        Ok(context)
+    }
+
+    fn init_gl_context(&mut self) -> Result<()> {
+        self.webgl_context = Some(
+            self.canvas
+                .get_context("webgl2")
+                .map_err(|e| Error::msg(format!("{:?}", e)).context("Failed to initialize WebGL context"))?
+                .ok_or_else(|| Error::msg("Failed to initialize WebGL context"))?
+                .dyn_into::<web_sys::WebGl2RenderingContext>()
+                .unwrap(),
+        );
+
+        Ok(())
     }
 
     pub fn set_style(&mut self, _: WindowStyle) {
@@ -325,6 +346,10 @@ impl WindowContext {
 
     pub fn get_modifiers(&self) -> Modifiers {
         Modifiers::new(self.keyboard_state[Key::Control as usize], self.keyboard_state[Key::Alt as usize], self.keyboard_state[Key::Shift as usize])
+    }
+
+    pub fn load_gl_pointers(&self) -> Context {
+        Context::from_webgl2_context(self.webgl_context.as_ref().unwrap().clone())
     }
 }
 

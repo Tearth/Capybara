@@ -40,7 +40,7 @@ impl ApplicationContext {
                     InputEvent::KeyPress { key, repeat: _, modifiers: _ } => {
                         if key == Key::Space {
                             let context = self.window.load_gl_pointers();
-                            println!("GL version: {:?}", context.version());
+                            debug!("GL version: {:?}", context.version());
                         }
                     }
                     InputEvent::WindowClose => {

@@ -60,7 +60,7 @@ impl WindowContext {
                 hwnd: ptr::null_mut(),
                 hdc: ptr::null_mut(),
 
-                size: Coordinates::new(800, 600),
+                size: Coordinates::new(1, 1),
                 cursor_position: Default::default(),
                 cursor_in_window: false,
                 mouse_state: vec![false; MouseButton::Unknown as usize],
@@ -91,17 +91,15 @@ impl WindowContext {
             // Wait for WM_CREATE, where the context is initialized
             while context.hdc.is_null() {}
 
-            context.set_style(style)?;
+            context.set_style(style);
             Ok(context)
         }
     }
 
-    pub fn set_style(&mut self, style: WindowStyle) -> Result<()> {
+    pub fn set_style(&mut self, style: WindowStyle) {
         unsafe {
             if let WindowStyle::Fullscreen = style {
-                if winuser::ChangeDisplaySettingsA(ptr::null_mut(), 0) != DISP_CHANGE_SUCCESSFUL {
-                    bail!("ChangeDisplaySettingsA error");
-                }
+                winuser::ChangeDisplaySettingsA(ptr::null_mut(), 0);
             }
 
             match style {
@@ -143,9 +141,7 @@ impl WindowContext {
                     mode.dmBitsPerPel = 32;
                     mode.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL;
 
-                    if winuser::ChangeDisplaySettingsA(&mut mode, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL {
-                        bail!("ChangeDisplaySettingsA error");
-                    }
+                    winuser::ChangeDisplaySettingsA(&mut mode, CDS_FULLSCREEN);
                 }
             }
 

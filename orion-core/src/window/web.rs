@@ -78,9 +78,8 @@ impl WindowContext {
         }))
     }
 
-    pub fn set_style(&mut self, _: WindowStyle) -> Result<()> {
+    pub fn set_style(&mut self, _: WindowStyle) {
         // Styles are ignored in a browser
-        Ok(())
     }
 
     #[allow(clippy::redundant_clone)]

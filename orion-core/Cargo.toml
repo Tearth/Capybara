@@ -7,6 +7,7 @@ edition = "2021"
 anyhow = { version = "1.0.70" }
 log = { version = "0.4.17" }
 glow = { version = "0.12.1" }
+chrono = { version = "0.4.23" } # temporary
 
 [build-dependencies]
 cfg_aliases = { version = "0.1.1" }

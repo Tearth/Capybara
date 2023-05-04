@@ -421,6 +421,12 @@ impl WindowContext {
         }
     }
 
+    pub fn swap_buffers(&mut self) {
+        unsafe {
+            winapi::SwapBuffers(self.hdc);
+        }
+    }
+
     pub fn get_modifiers(&self) -> Modifiers {
         Modifiers::new(self.keyboard_state[Key::Control as usize], self.keyboard_state[Key::Alt as usize], self.keyboard_state[Key::Shift as usize])
     }

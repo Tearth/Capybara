@@ -1,4 +1,5 @@
 use crate::window::{Coordinates, InputEvent, Key, WindowStyle};
+use chrono::{DateTime, Utc};
 use glow::HasContext;
 use log::debug;
 use std::cell::RefCell;
@@ -15,11 +16,14 @@ use crate::window::web::WindowContext;
 
 pub struct ApplicationContext {
     pub window: Box<WindowContext>,
+
+    fps_timestamp: DateTime<Utc>,
+    fps_count: u32,
 }
 
 impl ApplicationContext {
     pub fn new() -> Self {
-        Self { window: WindowContext::new("Benchmark", WindowStyle::Window { size: Coordinates::new(800, 600) }).unwrap() }
+        Self { window: WindowContext::new("Benchmark", WindowStyle::Window { size: Coordinates::new(800, 600) }).unwrap(), fps_timestamp: Utc::now(), fps_count: 0 }
     }
 
     pub fn run(self) {
@@ -51,6 +55,16 @@ impl ApplicationContext {
 
                 debug!("New event: {:?}", event);
             }
+
+            self.fps_count += 1;
+
+            if (Utc::now() - self.fps_timestamp).num_seconds() >= 1 {
+                debug!("FPS: {}", self.fps_count);
+                self.fps_timestamp = Utc::now();
+                self.fps_count = 0;
+            }
+
+            self.window.swap_buffers();
 
             #[cfg(web)]
             break;

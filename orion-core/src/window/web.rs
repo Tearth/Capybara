@@ -29,6 +29,7 @@ pub struct WindowContext {
     pub mouse_state: Vec<bool>,
     pub keyboard_state: Vec<bool>,
 
+    frame_callback: Option<Closure<dyn FnMut()>>,
     resize_callback: Option<Closure<dyn FnMut()>>,
     mousemove_callback: Option<Closure<dyn FnMut(MouseEvent)>>,
     mouseenter_callback: Option<Closure<dyn FnMut(MouseEvent)>>,
@@ -67,6 +68,7 @@ impl WindowContext {
             mouse_state: vec![false; MouseButton::Unknown as usize],
             keyboard_state: vec![false; Key::Unknown as usize],
 
+            frame_callback: None,
             resize_callback: None,
             mousemove_callback: None,
             mouseenter_callback: None,
@@ -108,240 +110,185 @@ impl WindowContext {
     where
         F: FnMut() + Clone + 'static,
     {
-        self.init_resize_callback(app.clone(), event_loop.clone());
-        self.init_mousemove_callback(app.clone(), event_loop.clone());
-        self.init_mouseenter_callback(app.clone(), event_loop.clone());
-        self.init_mouseleave_callback(app.clone(), event_loop.clone());
-        self.init_mousedown_callback(app.clone(), event_loop.clone());
-        self.init_mouseup_callback(app.clone(), event_loop.clone());
-        self.init_scroll_callback(app.clone(), event_loop.clone());
-        self.init_keydown_callback(app.clone(), event_loop.clone());
-        self.init_keyup_callback(app.clone(), event_loop.clone());
-        self.init_keypress_callback(app.clone(), event_loop.clone());
+        self.init_frame_callback(event_loop.clone());
+        self.init_resize_callback(app.clone());
+        self.init_mousemove_callback(app.clone());
+        self.init_mouseenter_callback(app.clone());
+        self.init_mouseleave_callback(app.clone());
+        self.init_mousedown_callback(app.clone());
+        self.init_mouseup_callback(app.clone());
+        self.init_scroll_callback(app.clone());
+        self.init_keydown_callback(app.clone());
+        self.init_keyup_callback(app.clone());
+        self.init_keypress_callback(app.clone());
     }
 
-    fn init_resize_callback<F>(&mut self, app: Rc<RefCell<ApplicationContext>>, mut event_loop: F)
+    fn init_frame_callback<F>(&mut self, mut event_loop: F)
     where
         F: FnMut() + Clone + 'static,
     {
-        self.resize_callback = Some(Closure::<dyn FnMut()>::new(move || {
-            {
-                let mut app = app.borrow_mut();
-                let canvas = &app.window.canvas;
-                let size = Coordinates::new(canvas.scroll_width(), canvas.scroll_height());
-
-                if size != app.window.size {
-                    app.window.event_queue.push_back(InputEvent::WindowSizeChange { size });
-                    app.window.size = size;
-                }
-            }
-
+        self.frame_callback = Some(Closure::<dyn FnMut()>::new(move || {
             event_loop();
+        }));
+        self.window.request_animation_frame(self.frame_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
+    }
+
+    fn init_resize_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+        self.resize_callback = Some(Closure::<dyn FnMut()>::new(move || {
+            let mut app = app.borrow_mut();
+            let canvas = &app.window.canvas;
+            let size = Coordinates::new(canvas.scroll_width(), canvas.scroll_height());
+
+            if size != app.window.size {
+                app.window.event_queue.push_back(InputEvent::WindowSizeChange { size });
+                app.window.size = size;
+            }
         }));
         self.window.add_event_listener_with_callback("resize", self.resize_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_mousemove_callback<F>(&mut self, app: Rc<RefCell<ApplicationContext>>, mut event_loop: F)
-    where
-        F: FnMut() + Clone + 'static,
-    {
+    fn init_mousemove_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
         self.mousemove_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            {
-                let mut app = app.borrow_mut();
-                let position = Coordinates::new(event.offset_x(), app.window.size.y - event.offset_y());
-                let modifiers = app.window.get_modifiers();
+            let mut app = app.borrow_mut();
+            let position = Coordinates::new(event.offset_x(), app.window.size.y - event.offset_y());
+            let modifiers = app.window.get_modifiers();
 
-                app.window.event_queue.push_back(InputEvent::MouseMove { position, modifiers });
-                app.window.cursor_position = position;
-            }
-
-            event_loop();
+            app.window.event_queue.push_back(InputEvent::MouseMove { position, modifiers });
+            app.window.cursor_position = position;
         }));
         self.canvas.add_event_listener_with_callback("mousemove", self.mousemove_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_mouseenter_callback<F>(&mut self, app: Rc<RefCell<ApplicationContext>>, mut event_loop: F)
-    where
-        F: FnMut() + Clone + 'static,
-    {
+    fn init_mouseenter_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
         self.mouseenter_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            {
-                let mut app = app.borrow_mut();
-                let position = Coordinates::new(event.offset_x(), app.window.size.y - event.offset_y());
-                let modifiers = app.window.get_modifiers();
+            let mut app = app.borrow_mut();
+            let position = Coordinates::new(event.offset_x(), app.window.size.y - event.offset_y());
+            let modifiers = app.window.get_modifiers();
 
-                app.window.event_queue.push_back(InputEvent::MouseEnter { position, modifiers });
-                app.window.cursor_in_window = true;
-            }
-
-            event_loop();
+            app.window.event_queue.push_back(InputEvent::MouseEnter { position, modifiers });
+            app.window.cursor_in_window = true;
         }));
         self.canvas.add_event_listener_with_callback("mouseenter", self.mouseenter_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_mouseleave_callback<F>(&mut self, app: Rc<RefCell<ApplicationContext>>, mut event_loop: F)
-    where
-        F: FnMut() + Clone + 'static,
-    {
+    fn init_mouseleave_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
         self.mouseleave_callback = Some(Closure::<dyn FnMut(_)>::new(move |_: MouseEvent| {
-            {
-                let mut app = app.borrow_mut();
+            let mut app = app.borrow_mut();
 
-                app.window.event_queue.push_back(InputEvent::MouseLeave);
-                app.window.cursor_in_window = false;
-            }
-
-            event_loop();
+            app.window.event_queue.push_back(InputEvent::MouseLeave);
+            app.window.cursor_in_window = false;
         }));
         self.canvas.add_event_listener_with_callback("mouseleave", self.mouseleave_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_mousedown_callback<F>(&mut self, app: Rc<RefCell<ApplicationContext>>, mut event_loop: F)
-    where
-        F: FnMut() + Clone + 'static,
-    {
+    fn init_mousedown_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
         self.mousedown_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            {
-                let mut app = app.borrow_mut();
-                let button = match event.button() {
-                    0 => MouseButton::Left,
-                    1 => MouseButton::Middle,
-                    2 => MouseButton::Right,
-                    _ => MouseButton::Unknown,
-                };
+            let mut app = app.borrow_mut();
+            let button = match event.button() {
+                0 => MouseButton::Left,
+                1 => MouseButton::Middle,
+                2 => MouseButton::Right,
+                _ => MouseButton::Unknown,
+            };
 
-                if button != MouseButton::Unknown {
-                    let position = app.window.cursor_position;
-                    let modifiers = app.window.get_modifiers();
+            if button != MouseButton::Unknown {
+                let position = app.window.cursor_position;
+                let modifiers = app.window.get_modifiers();
 
-                    app.window.event_queue.push_back(InputEvent::MouseButtonPress { button, position, modifiers });
-                    app.window.mouse_state[button as usize] = true;
-                }
+                app.window.event_queue.push_back(InputEvent::MouseButtonPress { button, position, modifiers });
+                app.window.mouse_state[button as usize] = true;
             }
-
-            event_loop();
         }));
         self.canvas.add_event_listener_with_callback("mousedown", self.mousedown_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_mouseup_callback<F>(&mut self, app: Rc<RefCell<ApplicationContext>>, mut event_loop: F)
-    where
-        F: FnMut() + Clone + 'static,
-    {
+    fn init_mouseup_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
         self.mouseup_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
-            {
-                let mut app = app.borrow_mut();
-                let button = match event.button() {
-                    0 => MouseButton::Left,
-                    1 => MouseButton::Middle,
-                    2 => MouseButton::Right,
-                    _ => MouseButton::Unknown,
-                };
+            let mut app = app.borrow_mut();
+            let button = match event.button() {
+                0 => MouseButton::Left,
+                1 => MouseButton::Middle,
+                2 => MouseButton::Right,
+                _ => MouseButton::Unknown,
+            };
 
-                if button != MouseButton::Unknown {
-                    let position = app.window.cursor_position;
-                    let modifiers = app.window.get_modifiers();
+            if button != MouseButton::Unknown {
+                let position = app.window.cursor_position;
+                let modifiers = app.window.get_modifiers();
 
-                    app.window.event_queue.push_back(InputEvent::MouseButtonRelease { button, position, modifiers });
-                    app.window.mouse_state[button as usize] = false;
-                }
+                app.window.event_queue.push_back(InputEvent::MouseButtonRelease { button, position, modifiers });
+                app.window.mouse_state[button as usize] = false;
             }
-
-            event_loop();
         }));
         self.canvas.add_event_listener_with_callback("mouseup", self.mouseup_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_scroll_callback<F>(&mut self, app: Rc<RefCell<ApplicationContext>>, mut event_loop: F)
-    where
-        F: FnMut() + Clone + 'static,
-    {
+    fn init_scroll_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
         self.wheel_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: WheelEvent| {
-            {
-                let mut app = app.borrow_mut();
-                let direction = if event.delta_y() < 0.0 { MouseWheelDirection::Up } else { MouseWheelDirection::Down };
-                let modifiers = app.window.get_modifiers();
+            let mut app = app.borrow_mut();
+            let direction = if event.delta_y() < 0.0 { MouseWheelDirection::Up } else { MouseWheelDirection::Down };
+            let modifiers = app.window.get_modifiers();
 
-                app.window.event_queue.push_back(InputEvent::MouseWheelRotated { direction, modifiers });
-            }
-
-            event_loop();
+            app.window.event_queue.push_back(InputEvent::MouseWheelRotated { direction, modifiers });
         }));
         self.canvas.add_event_listener_with_callback("wheel", self.wheel_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_keydown_callback<F>(&mut self, app: Rc<RefCell<ApplicationContext>>, mut event_loop: F)
-    where
-        F: FnMut() + Clone + 'static,
-    {
+    fn init_keydown_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
         self.keydown_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
-            {
-                let mut app = app.borrow_mut();
-                let key = map_key(event.code());
+            let mut app = app.borrow_mut();
+            let key = map_key(event.code());
 
-                if key != Key::Unknown {
-                    let repeat = app.window.keyboard_state[key as usize];
-                    let modifiers = app.window.get_modifiers();
+            if key != Key::Unknown {
+                let repeat = app.window.keyboard_state[key as usize];
+                let modifiers = app.window.get_modifiers();
 
-                    app.window.event_queue.push_back(InputEvent::KeyPress { key, repeat, modifiers });
-                    app.window.keyboard_state[key as usize] = true;
-                }
+                app.window.event_queue.push_back(InputEvent::KeyPress { key, repeat, modifiers });
+                app.window.keyboard_state[key as usize] = true;
             }
-
-            event_loop();
         }));
         self.canvas.add_event_listener_with_callback("keydown", self.keydown_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_keyup_callback<F>(&mut self, app: Rc<RefCell<ApplicationContext>>, mut event_loop: F)
-    where
-        F: FnMut() + Clone + 'static,
-    {
+    fn init_keyup_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
         self.keyup_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
-            {
-                let mut app = app.borrow_mut();
-                let key = map_key(event.code());
+            let mut app = app.borrow_mut();
+            let key = map_key(event.code());
 
-                if key != Key::Unknown {
-                    let modifiers = app.window.get_modifiers();
+            if key != Key::Unknown {
+                let modifiers = app.window.get_modifiers();
 
-                    app.window.event_queue.push_back(InputEvent::KeyRelease { key, modifiers });
-                    app.window.keyboard_state[key as usize] = false;
-                    app.window.last_character = None;
-                }
+                app.window.event_queue.push_back(InputEvent::KeyRelease { key, modifiers });
+                app.window.keyboard_state[key as usize] = false;
+                app.window.last_character = None;
             }
-
-            event_loop();
         }));
         self.canvas.add_event_listener_with_callback("keyup", self.keyup_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_keypress_callback<F>(&mut self, app: Rc<RefCell<ApplicationContext>>, mut event_loop: F)
-    where
-        F: FnMut() + Clone + 'static,
-    {
+    fn init_keypress_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
         self.keypress_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
-            {
-                let mut app = app.borrow_mut();
-                let character = event.key();
-                let modifiers = app.window.get_modifiers();
+            let mut app = app.borrow_mut();
+            let character = event.key();
+            let modifiers = app.window.get_modifiers();
 
-                if character.len() == 1 {
-                    let character = character.chars().next().unwrap();
-                    let repeat = app.window.last_character.is_some_and(|c| c == character);
+            if character.len() == 1 {
+                let character = character.chars().next().unwrap();
+                let repeat = app.window.last_character.is_some_and(|c| c == character);
 
-                    app.window.event_queue.push_back(InputEvent::CharPress { character, repeat, modifiers });
-                    app.window.last_character = Some(character);
-                }
+                app.window.event_queue.push_back(InputEvent::CharPress { character, repeat, modifiers });
+                app.window.last_character = Some(character);
             }
-
-            event_loop();
         }));
         self.canvas.add_event_listener_with_callback("keypress", self.keypress_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
     pub fn poll_event(&mut self) -> Option<InputEvent> {
         self.event_queue.pop_front()
+    }
+
+    pub fn swap_buffers(&mut self) {
+        self.window.request_animation_frame(self.frame_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
     pub fn get_modifiers(&self) -> Modifiers {

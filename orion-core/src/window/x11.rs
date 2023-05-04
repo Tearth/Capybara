@@ -8,19 +8,22 @@ use ::x11::xlib;
 use ::x11::xlib::*;
 use anyhow::bail;
 use anyhow::Result;
+use glow::Context;
 use log::Level;
 use std::collections::VecDeque;
-use std::ffi::c_void;
-use std::ffi::CString;
+use std::ffi::*;
 use std::mem;
 use std::ptr;
 use std::slice;
+
+pub type GLXCREATECONTEXTATTRIBSARB = unsafe extern "C" fn(_: *mut Display, _: GLXFBConfig, _: GLXContext, _: c_int, _: *const c_int) -> GLXContext;
 
 pub struct WindowContext {
     pub window: u64,
     pub display: *mut _XDisplay,
     pub screen: i32,
     pub frame_buffer_config: *mut __GLXFBConfigRec,
+    pub glx_context: Option<GLXContext>,
 
     pub size: Coordinates,
     pub cursor_position: Coordinates,
@@ -169,6 +172,7 @@ impl WindowContext {
                 display,
                 screen,
                 frame_buffer_config: best_frame_buffer_config,
+                glx_context: None,
 
                 size: Coordinates::new(1, 1),
                 cursor_position: Default::default(),
@@ -179,10 +183,43 @@ impl WindowContext {
                 delete_window_atom,
                 event_queue: Default::default(),
             });
+            context.init_gl_context()?;
             context.set_style(style);
 
             Ok(context)
         }
+    }
+
+    fn init_gl_context(&mut self) -> Result<()> {
+        unsafe {
+            let glx_create_context_attribs_arb_cstr = CString::new("glXCreateContextAttribsARB").unwrap();
+            let glx_create_context_attribs_arb_proc = glx::glXGetProcAddressARB(glx_create_context_attribs_arb_cstr.as_ptr() as *const u8);
+            let glx_create_context_attribs_arb = mem::transmute_copy::<_, GLXCREATECONTEXTATTRIBSARB>(&glx_create_context_attribs_arb_proc);
+
+            let context_attributes = [
+                arb::GLX_CONTEXT_MAJOR_VERSION_ARB,
+                3,
+                arb::GLX_CONTEXT_MINOR_VERSION_ARB,
+                3,
+                arb::GLX_CONTEXT_FLAGS_ARB,
+                arb::GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+                0,
+            ];
+
+            let context_attributes_ptr = context_attributes.as_ptr() as *const i32;
+            let glx_context = (glx_create_context_attribs_arb)(self.display, self.frame_buffer_config, ptr::null_mut(), 1, context_attributes_ptr);
+
+            if glx_context.is_null() {
+                bail!("glXCreateContextAttribsARB error");
+            }
+
+            self.glx_context = Some(glx_context);
+
+            x11::XSync(self.display, 0);
+            glx::glXMakeCurrent(self.display, self.window, self.glx_context.unwrap());
+        }
+
+        Ok(())
     }
 
     pub fn set_style(&mut self, style: WindowStyle) {
@@ -361,6 +398,15 @@ impl WindowContext {
 
     pub fn get_modifiers(&self) -> Modifiers {
         Modifiers::new(self.keyboard_state[Key::Control as usize], self.keyboard_state[Key::Alt as usize], self.keyboard_state[Key::Shift as usize])
+    }
+
+    pub fn load_gl_pointers(&self) -> Context {
+        unsafe {
+            glow::Context::from_loader_function(|name| {
+                let name_cstr = CString::new(name).unwrap();
+                glx::glXGetProcAddressARB(name_cstr.as_ptr() as *const u8).unwrap() as *const _
+            })
+        }
     }
 }
 

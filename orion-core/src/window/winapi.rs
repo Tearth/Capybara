@@ -99,8 +99,8 @@ impl WindowContext {
             // Wait for WM_CREATE, where the context is initialized
             while context.hdc.is_null() {}
 
-            context.set_style(style);
             context.init_gl_context()?;
+            context.set_style(style);
 
             winapi::SetForegroundWindow(context.hwnd);
 

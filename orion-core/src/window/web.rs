@@ -273,8 +273,12 @@ impl WindowContext {
     fn init_keypress_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
         self.keypress_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
             let mut app = app.borrow_mut();
-            let character = event.key();
+            let mut character = event.key();
             let modifiers = app.window.get_modifiers();
+
+            if character == "Enter" {
+                character = "\r".to_string();
+            }
 
             if character.len() == 1 {
                 let character = character.chars().next().unwrap();

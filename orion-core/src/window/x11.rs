@@ -432,6 +432,24 @@ impl WindowContext {
             glx::glXSwapBuffers(self.display, self.window);
         }
     }
+
+    pub fn close(&self) {
+        unsafe {
+            let wm_protocols_cstr = CString::new("WM_PROTOCOLS").unwrap();
+            let wm_protocols_atom = xlib::XInternAtom(self.display, wm_protocols_cstr.as_ptr(), 0);
+
+            let mut event: XEvent = mem::zeroed();
+            event.client_message.type_ = ClientMessage;
+            event.client_message.serial = 0;
+            event.client_message.send_event = 1;
+            event.client_message.message_type = wm_protocols_atom;
+            event.client_message.format = 32;
+            event.client_message.window = self.window;
+            event.client_message.data.set_long(0, self.delete_window_atom as i64);
+
+            xlib::XSendEvent(self.display, self.window, 1, NoEventMask, &mut event);
+        }
+    }
 }
 
 impl GlxExtensions {

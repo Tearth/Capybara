@@ -222,6 +222,15 @@ impl WindowContext {
         Ok(())
     }
 
+    pub fn load_gl_pointers(&self) -> Context {
+        unsafe {
+            glow::Context::from_loader_function(|name| {
+                let name_cstr = CString::new(name).unwrap();
+                glx::glXGetProcAddressARB(name_cstr.as_ptr() as *const u8).unwrap() as *const _
+            })
+        }
+    }
+
     pub fn set_style(&mut self, style: WindowStyle) {
         unsafe {
             match style {
@@ -404,15 +413,6 @@ impl WindowContext {
 
     pub fn get_modifiers(&self) -> Modifiers {
         Modifiers::new(self.keyboard_state[Key::Control as usize], self.keyboard_state[Key::Alt as usize], self.keyboard_state[Key::Shift as usize])
-    }
-
-    pub fn load_gl_pointers(&self) -> Context {
-        unsafe {
-            glow::Context::from_loader_function(|name| {
-                let name_cstr = CString::new(name).unwrap();
-                glx::glXGetProcAddressARB(name_cstr.as_ptr() as *const u8).unwrap() as *const _
-            })
-        }
     }
 }
 

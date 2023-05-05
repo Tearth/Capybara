@@ -38,6 +38,8 @@ impl ApplicationContext {
     }
 
     pub fn run_internal(&mut self) {
+        self.window.set_swap_interval(1);
+
         loop {
             while let Some(event) = self.window.poll_event() {
                 match event {

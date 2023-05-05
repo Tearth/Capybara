@@ -18,11 +18,13 @@ use std::ptr;
 
 pub type WGLCHOOSEPIXELFORMATARB = unsafe extern "C" fn(_: HDC, _: *const INT, _: *const FLOAT, _: UINT, _: *mut INT, _: *mut UINT) -> BOOL;
 pub type WGLCREATECONTEXTATTRIBSARB = unsafe extern "C" fn(_: HDC, _: HGLRC, _: *const INT) -> HGLRC;
+pub type WGLSWAPINTERVALEXT = unsafe extern "C" fn(interval: INT) -> BOOL;
 
 pub struct WindowContext {
     pub hwnd: HWND,
     pub hdc: HDC,
     pub wgl_context: Option<HGLRC>,
+    pub wgl_extensions: Option<WglExtensions>,
 
     pub size: Coordinates,
     pub cursor_position: Coordinates,
@@ -32,6 +34,12 @@ pub struct WindowContext {
 
     phantom: bool,
     event_queue: VecDeque<InputEvent>,
+}
+
+pub struct WglExtensions {
+    pub wgl_choose_pixel_format_arb: WGLCHOOSEPIXELFORMATARB,
+    pub wgl_create_context_attribs_arb: WGLCREATECONTEXTATTRIBSARB,
+    pub wgl_swap_interval_ext: WGLSWAPINTERVALEXT,
 }
 
 impl WindowContext {
@@ -66,6 +74,7 @@ impl WindowContext {
                 hwnd: ptr::null_mut(),
                 hdc: ptr::null_mut(),
                 wgl_context: None,
+                wgl_extensions: None,
 
                 size: Coordinates::new(1, 1),
                 cursor_position: Default::default(),
@@ -135,6 +144,7 @@ impl WindowContext {
                 hwnd: ptr::null_mut(),
                 hdc: ptr::null_mut(),
                 wgl_context: None,
+                wgl_extensions: None,
 
                 size: Coordinates::new(1, 1),
                 cursor_position: Default::default(),
@@ -207,13 +217,7 @@ impl WindowContext {
                 bail!("wglMakeCurrent error: {}", errhandlingapi::GetLastError());
             }
 
-            let wgl_choose_pixel_format_arb_cstr = CString::new("wglChoosePixelFormatARB").unwrap();
-            let wgl_choose_pixel_format_arb_proc = winapi::wglGetProcAddress(wgl_choose_pixel_format_arb_cstr.as_ptr());
-            let wgl_choose_pixel_format_arb = mem::transmute_copy::<_, WGLCHOOSEPIXELFORMATARB>(&wgl_choose_pixel_format_arb_proc);
-
-            let wgl_create_context_attribs_arb_cstr = CString::new("wglCreateContextAttribsARB").unwrap();
-            let wgl_create_context_attribs_arb_proc = winapi::wglGetProcAddress(wgl_create_context_attribs_arb_cstr.as_ptr());
-            let wgl_create_context_attribs_arb = mem::transmute_copy::<_, WGLCREATECONTEXTATTRIBSARB>(&wgl_create_context_attribs_arb_proc);
+            let phantom_wgl_extensions = WglExtensions::new();
 
             winapi::wglDeleteContext(phantom_gl_context);
             winapi::DestroyWindow(phantom_hwnd);
@@ -244,7 +248,7 @@ impl WindowContext {
             let mut formats_count = 0;
             let wgl_attributes_ptr = wgl_attributes.as_mut_ptr() as *const i32;
 
-            if (wgl_choose_pixel_format_arb)(self.hdc, wgl_attributes_ptr, ptr::null_mut(), 1, &mut pixel_format, &mut formats_count) == 0 {
+            if (phantom_wgl_extensions.wgl_choose_pixel_format_arb)(self.hdc, wgl_attributes_ptr, ptr::null_mut(), 1, &mut pixel_format, &mut formats_count) == 0 {
                 bail!("wglChoosePixelFormatARB error");
             }
 
@@ -254,16 +258,35 @@ impl WindowContext {
 
             let mut wgl_context_attributes = [8337 /* wgl::WGL_CONTEXT_MAJOR_VERSION_ARB */, 3, 8338 /* wgl::WGL_CONTEXT_MINOR_VERSION_ARB */, 3, 0];
             let wgl_context_attributes_ptr = wgl_context_attributes.as_mut_ptr() as *const i32;
-            let wgl_context = (wgl_create_context_attribs_arb)(self.hdc, ptr::null_mut(), wgl_context_attributes_ptr);
+            let wgl_context = (phantom_wgl_extensions.wgl_create_context_attribs_arb)(self.hdc, ptr::null_mut(), wgl_context_attributes_ptr);
 
             if winapi::wglMakeCurrent(self.hdc, wgl_context) == 0 {
                 bail!("wglMakeCurrent error: {}", errhandlingapi::GetLastError());
             }
 
             self.wgl_context = Some(wgl_context);
+            self.wgl_extensions = Some(WglExtensions::new());
         }
 
         Ok(())
+    }
+
+    pub fn load_gl_pointers(&self) -> Context {
+        unsafe {
+            let opengl32_dll_cstr = CString::new("opengl32.dll").unwrap();
+            let opengl32_dll_handle = libloaderapi::LoadLibraryA(opengl32_dll_cstr.as_ptr());
+
+            glow::Context::from_loader_function(|name| {
+                let name_cstr = CString::new(name).unwrap();
+                let mut proc = winapi::wglGetProcAddress(name_cstr.as_ptr());
+
+                if proc.is_null() {
+                    proc = libloaderapi::GetProcAddress(opengl32_dll_handle, name_cstr.as_ptr());
+                }
+
+                proc as *const _
+            })
+        }
     }
 
     pub fn set_style(&mut self, style: WindowStyle) {
@@ -421,6 +444,12 @@ impl WindowContext {
         }
     }
 
+    pub fn set_swap_interval(&self, interval: u32) {
+        unsafe {
+            (self.wgl_extensions.as_ref().unwrap().wgl_swap_interval_ext)(interval as i32);
+        }
+    }
+
     pub fn swap_buffers(&mut self) {
         unsafe {
             winapi::SwapBuffers(self.hdc);
@@ -429,24 +458,6 @@ impl WindowContext {
 
     pub fn get_modifiers(&self) -> Modifiers {
         Modifiers::new(self.keyboard_state[Key::Control as usize], self.keyboard_state[Key::Alt as usize], self.keyboard_state[Key::Shift as usize])
-    }
-
-    pub fn load_gl_pointers(&self) -> Context {
-        unsafe {
-            let opengl32_dll_cstr = CString::new("opengl32.dll").unwrap();
-            let opengl32_dll_handle = libloaderapi::LoadLibraryA(opengl32_dll_cstr.as_ptr());
-
-            glow::Context::from_loader_function(|name| {
-                let name_cstr = CString::new(name).unwrap();
-                let mut proc = winapi::wglGetProcAddress(name_cstr.as_ptr());
-
-                if proc.is_null() {
-                    proc = libloaderapi::GetProcAddress(opengl32_dll_handle, name_cstr.as_ptr());
-                }
-
-                proc as *const _
-            })
-        }
     }
 }
 
@@ -499,6 +510,31 @@ extern "system" fn wnd_proc(hwnd: HWND, message: u32, w_param: usize, l_param: i
         }
 
         winuser::DefWindowProcA(hwnd, message, w_param, l_param)
+    }
+}
+
+impl WglExtensions {
+    pub fn new() -> Self {
+        Self {
+            wgl_choose_pixel_format_arb: load_extension::<WGLCHOOSEPIXELFORMATARB>("wglChoosePixelFormatARB"),
+            wgl_create_context_attribs_arb: load_extension::<WGLCREATECONTEXTATTRIBSARB>("wglCreateContextAttribsARB"),
+            wgl_swap_interval_ext: load_extension::<WGLSWAPINTERVALEXT>("wglSwapIntervalEXT"),
+        }
+    }
+}
+
+impl Default for WglExtensions {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+fn load_extension<T>(name: &str) -> T {
+    unsafe {
+        let extension_cstr = CString::new(name).unwrap();
+        let extension_proc = winapi::wglGetProcAddress(extension_cstr.as_ptr());
+
+        mem::transmute_copy::<_, T>(&extension_proc)
     }
 }
 

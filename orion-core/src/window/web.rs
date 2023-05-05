@@ -101,8 +101,12 @@ impl WindowContext {
         Ok(())
     }
 
+    pub fn load_gl_pointers(&self) -> Context {
+        Context::from_webgl2_context(self.webgl_context.as_ref().unwrap().clone())
+    }
+
     pub fn set_style(&mut self, _: WindowStyle) {
-        // Styles are ignored in a browser
+        // Styles are not supported by browsers
     }
 
     #[allow(clippy::redundant_clone)]
@@ -287,16 +291,16 @@ impl WindowContext {
         self.event_queue.pop_front()
     }
 
+    pub fn set_swap_interval(&self, _: u32) {
+        // Swap interval is not supported by browsers
+    }
+
     pub fn swap_buffers(&mut self) {
         self.window.request_animation_frame(self.frame_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
     pub fn get_modifiers(&self) -> Modifiers {
         Modifiers::new(self.keyboard_state[Key::Control as usize], self.keyboard_state[Key::Alt as usize], self.keyboard_state[Key::Shift as usize])
-    }
-
-    pub fn load_gl_pointers(&self) -> Context {
-        Context::from_webgl2_context(self.webgl_context.as_ref().unwrap().clone())
     }
 }
 

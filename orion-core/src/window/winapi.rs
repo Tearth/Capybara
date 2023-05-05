@@ -453,6 +453,10 @@ impl WindowContext {
         }
     }
 
+    pub fn get_modifiers(&self) -> Modifiers {
+        Modifiers::new(self.keyboard_state[Key::Control as usize], self.keyboard_state[Key::Alt as usize], self.keyboard_state[Key::Shift as usize])
+    }
+
     pub fn set_swap_interval(&self, interval: u32) {
         unsafe {
             if let Some(wgl_swap_interval_ext) = self.wgl_extensions.as_ref().unwrap().wgl_swap_interval_ext {
@@ -461,14 +465,16 @@ impl WindowContext {
         }
     }
 
-    pub fn swap_buffers(&mut self) {
+    pub fn swap_buffers(&self) {
         unsafe {
             winapi::SwapBuffers(self.hdc);
         }
     }
 
-    pub fn get_modifiers(&self) -> Modifiers {
-        Modifiers::new(self.keyboard_state[Key::Control as usize], self.keyboard_state[Key::Alt as usize], self.keyboard_state[Key::Shift as usize])
+    pub fn close(&self) {
+        unsafe {
+            winapi::DestroyWindow(self.hwnd);
+        }
     }
 }
 

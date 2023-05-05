@@ -291,16 +291,20 @@ impl WindowContext {
         self.event_queue.pop_front()
     }
 
+    pub fn get_modifiers(&self) -> Modifiers {
+        Modifiers::new(self.keyboard_state[Key::Control as usize], self.keyboard_state[Key::Alt as usize], self.keyboard_state[Key::Shift as usize])
+    }
+
     pub fn set_swap_interval(&self, _: u32) {
         // Swap interval is not supported by browsers
     }
 
-    pub fn swap_buffers(&mut self) {
+    pub fn swap_buffers(&self) {
         self.window.request_animation_frame(self.frame_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    pub fn get_modifiers(&self) -> Modifiers {
-        Modifiers::new(self.keyboard_state[Key::Control as usize], self.keyboard_state[Key::Alt as usize], self.keyboard_state[Key::Shift as usize])
+    pub fn close(&self) {
+        // Window closing is not supported by browsers
     }
 }
 

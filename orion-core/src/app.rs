@@ -44,7 +44,9 @@ impl ApplicationContext {
             while let Some(event) = self.window.poll_event() {
                 match event {
                     InputEvent::KeyPress { key, repeat: _, modifiers: _ } => {
-                        if key == Key::Space {
+                        if key == Key::Escape {
+                            self.window.close();
+                        } else if key == Key::Space {
                             let context = self.window.load_gl_pointers();
                             debug!("GL version: {:?}", context.version());
                         }

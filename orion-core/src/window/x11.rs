@@ -4,6 +4,7 @@ use super::*;
 use ::x11::glx;
 use ::x11::glx::*;
 use ::x11::keysym::*;
+use ::x11::xfixes;
 use ::x11::xlib;
 use ::x11::xlib::*;
 use anyhow::bail;
@@ -28,6 +29,7 @@ pub struct WindowContext {
     pub glx_extensions: Option<GlxExtensions>,
 
     pub size: Coordinates,
+    pub cursor_visible: bool,
     pub cursor_position: Coordinates,
     pub cursor_in_window: bool,
     pub mouse_state: Vec<bool>,
@@ -184,6 +186,7 @@ impl WindowContext {
                 glx_extensions: None,
 
                 size: Coordinates::new(1, 1),
+                cursor_visible: true,
                 cursor_position: Default::default(),
                 cursor_in_window: false,
                 mouse_state: vec![false; MouseButton::Unknown as usize],
@@ -430,6 +433,17 @@ impl WindowContext {
 
     pub fn get_modifiers(&self) -> Modifiers {
         Modifiers::new(self.keyboard_state[Key::Control as usize], self.keyboard_state[Key::Alt as usize], self.keyboard_state[Key::Shift as usize])
+    }
+
+    pub fn set_cursor_visibility(&mut self, visible: bool) {
+        unsafe {
+            match visible {
+                true => xfixes::XFixesShowCursor(self.display, self.window),
+                false => xfixes::XFixesHideCursor(self.display, self.window),
+            };
+
+            self.cursor_visible = visible;
+        }
     }
 
     pub fn set_swap_interval(&self, interval: u32) {

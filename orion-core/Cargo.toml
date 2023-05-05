@@ -23,6 +23,7 @@ simple_logger = { version = "4.1.0", default-features = false, features = [ "tim
 [target.'cfg(all(target_os = "linux", target_arch = "x86_64"))'.dependencies]
 x11 = { version = "2.21.0", features = [
     "xlib",
+    "xfixes",
     "glx" 
 ]}
 simple_logger = { version = "4.1.0", default-features = false, features = [ "timestamps" ]}

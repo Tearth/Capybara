@@ -18,7 +18,7 @@ use std::ptr;
 
 pub type WGLCHOOSEPIXELFORMATARB = unsafe extern "C" fn(_: HDC, _: *const INT, _: *const FLOAT, _: UINT, _: *mut INT, _: *mut UINT) -> BOOL;
 pub type WGLCREATECONTEXTATTRIBSARB = unsafe extern "C" fn(_: HDC, _: HGLRC, _: *const INT) -> HGLRC;
-pub type WGLSWAPINTERVALEXT = unsafe extern "C" fn(interval: INT) -> BOOL;
+pub type WGLSWAPINTERVALEXT = unsafe extern "C" fn(_: INT) -> BOOL;
 
 pub struct WindowContext {
     pub hwnd: HWND,
@@ -27,6 +27,7 @@ pub struct WindowContext {
     pub wgl_extensions: Option<WglExtensions>,
 
     pub size: Coordinates,
+    pub cursor_visible: bool,
     pub cursor_position: Coordinates,
     pub cursor_in_window: bool,
     pub mouse_state: Vec<bool>,
@@ -77,6 +78,7 @@ impl WindowContext {
                 wgl_extensions: None,
 
                 size: Coordinates::new(1, 1),
+                cursor_visible: true,
                 cursor_position: Default::default(),
                 cursor_in_window: false,
                 mouse_state: vec![false; MouseButton::Unknown as usize],
@@ -147,6 +149,7 @@ impl WindowContext {
                 wgl_extensions: None,
 
                 size: Coordinates::new(1, 1),
+                cursor_visible: true,
                 cursor_position: Default::default(),
                 cursor_in_window: false,
                 mouse_state: Vec::new(),
@@ -455,6 +458,17 @@ impl WindowContext {
 
     pub fn get_modifiers(&self) -> Modifiers {
         Modifiers::new(self.keyboard_state[Key::Control as usize], self.keyboard_state[Key::Alt as usize], self.keyboard_state[Key::Shift as usize])
+    }
+
+    pub fn set_cursor_visibility(&mut self, visible: bool) {
+        unsafe {
+            match visible {
+                true => while winapi::ShowCursor(1) < 0 {},
+                false => while winapi::ShowCursor(0) >= 0 {},
+            };
+
+            self.cursor_visible = visible;
+        }
     }
 
     pub fn set_swap_interval(&self, interval: u32) {

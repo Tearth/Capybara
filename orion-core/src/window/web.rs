@@ -24,6 +24,7 @@ pub struct WindowContext {
     pub webgl_context: Option<WebGl2RenderingContext>,
 
     pub size: Coordinates,
+    pub cursor_visible: bool,
     pub cursor_position: Coordinates,
     pub cursor_in_window: bool,
     pub mouse_state: Vec<bool>,
@@ -63,6 +64,7 @@ impl WindowContext {
             webgl_context: None,
 
             size: last_canvas_size,
+            cursor_visible: true,
             cursor_position: Default::default(),
             cursor_in_window: false,
             mouse_state: vec![false; MouseButton::Unknown as usize],
@@ -300,6 +302,15 @@ impl WindowContext {
 
     pub fn get_modifiers(&self) -> Modifiers {
         Modifiers::new(self.keyboard_state[Key::Control as usize], self.keyboard_state[Key::Alt as usize], self.keyboard_state[Key::Shift as usize])
+    }
+
+    pub fn set_cursor_visibility(&mut self, visible: bool) {
+        match visible {
+            true => self.canvas.style().set_property("cursor", "default").unwrap(),
+            false => self.canvas.style().set_property("cursor", "none").unwrap(),
+        };
+
+        self.cursor_visible = visible;
     }
 
     pub fn set_swap_interval(&self, _: u32) {

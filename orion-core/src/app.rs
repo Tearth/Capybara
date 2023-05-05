@@ -49,6 +49,8 @@ impl ApplicationContext {
                         } else if key == Key::Space {
                             let context = self.window.load_gl_pointers();
                             debug!("GL version: {:?}", context.version());
+
+                            self.window.set_cursor_visibility(!self.window.cursor_visible);
                         }
                     }
                     InputEvent::WindowClose => {

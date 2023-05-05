@@ -37,9 +37,9 @@ pub struct WindowContext {
 }
 
 pub struct WglExtensions {
-    pub wgl_choose_pixel_format_arb: WGLCHOOSEPIXELFORMATARB,
-    pub wgl_create_context_attribs_arb: WGLCREATECONTEXTATTRIBSARB,
-    pub wgl_swap_interval_ext: WGLSWAPINTERVALEXT,
+    pub wgl_choose_pixel_format_arb: Option<WGLCHOOSEPIXELFORMATARB>,
+    pub wgl_create_context_attribs_arb: Option<WGLCREATECONTEXTATTRIBSARB>,
+    pub wgl_swap_interval_ext: Option<WGLSWAPINTERVALEXT>,
 }
 
 impl WindowContext {
@@ -248,7 +248,11 @@ impl WindowContext {
             let mut formats_count = 0;
             let wgl_attributes_ptr = wgl_attributes.as_mut_ptr() as *const i32;
 
-            if (phantom_wgl_extensions.wgl_choose_pixel_format_arb)(self.hdc, wgl_attributes_ptr, ptr::null_mut(), 1, &mut pixel_format, &mut formats_count) == 0 {
+            if let Some(wgl_choose_pixel_format_arb) = phantom_wgl_extensions.wgl_choose_pixel_format_arb {
+                if (wgl_choose_pixel_format_arb)(self.hdc, wgl_attributes_ptr, ptr::null_mut(), 1, &mut pixel_format, &mut formats_count) == 0 {
+                    bail!("wglChoosePixelFormatARB error");
+                }
+            } else {
                 bail!("wglChoosePixelFormatARB error");
             }
 
@@ -258,7 +262,12 @@ impl WindowContext {
 
             let mut wgl_context_attributes = [8337 /* wgl::WGL_CONTEXT_MAJOR_VERSION_ARB */, 3, 8338 /* wgl::WGL_CONTEXT_MINOR_VERSION_ARB */, 3, 0];
             let wgl_context_attributes_ptr = wgl_context_attributes.as_mut_ptr() as *const i32;
-            let wgl_context = (phantom_wgl_extensions.wgl_create_context_attribs_arb)(self.hdc, ptr::null_mut(), wgl_context_attributes_ptr);
+
+            let wgl_context = if let Some(wgl_create_context_attribs_arb) = phantom_wgl_extensions.wgl_create_context_attribs_arb {
+                (wgl_create_context_attribs_arb)(self.hdc, ptr::null_mut(), wgl_context_attributes_ptr)
+            } else {
+                bail!("wglCreateContextAttribsARB error");
+            };
 
             if winapi::wglMakeCurrent(self.hdc, wgl_context) == 0 {
                 bail!("wglMakeCurrent error: {}", errhandlingapi::GetLastError());
@@ -446,7 +455,9 @@ impl WindowContext {
 
     pub fn set_swap_interval(&self, interval: u32) {
         unsafe {
-            (self.wgl_extensions.as_ref().unwrap().wgl_swap_interval_ext)(interval as i32);
+            if let Some(wgl_swap_interval_ext) = self.wgl_extensions.as_ref().unwrap().wgl_swap_interval_ext {
+                (wgl_swap_interval_ext)(interval as i32);
+            }
         }
     }
 
@@ -516,9 +527,9 @@ extern "system" fn wnd_proc(hwnd: HWND, message: u32, w_param: usize, l_param: i
 impl WglExtensions {
     pub fn new() -> Self {
         Self {
-            wgl_choose_pixel_format_arb: load_extension::<WGLCHOOSEPIXELFORMATARB>("wglChoosePixelFormatARB"),
-            wgl_create_context_attribs_arb: load_extension::<WGLCREATECONTEXTATTRIBSARB>("wglCreateContextAttribsARB"),
-            wgl_swap_interval_ext: load_extension::<WGLSWAPINTERVALEXT>("wglSwapIntervalEXT"),
+            wgl_choose_pixel_format_arb: load_extension::<_>("wglChoosePixelFormatARB"),
+            wgl_create_context_attribs_arb: load_extension::<_>("wglCreateContextAttribsARB"),
+            wgl_swap_interval_ext: load_extension::<_>("wglSwapIntervalEXT"),
         }
     }
 }
@@ -529,12 +540,16 @@ impl Default for WglExtensions {
     }
 }
 
-fn load_extension<T>(name: &str) -> T {
+fn load_extension<T>(name: &str) -> Option<T> {
     unsafe {
         let extension_cstr = CString::new(name).unwrap();
         let extension_proc = winapi::wglGetProcAddress(extension_cstr.as_ptr());
 
-        mem::transmute_copy::<_, T>(&extension_proc)
+        if extension_proc.is_null() {
+            return None;
+        }
+
+        Some(mem::transmute_copy::<_, T>(&extension_proc))
     }
 }
 

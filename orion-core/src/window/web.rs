@@ -278,7 +278,10 @@ impl WindowContext {
 
             if character.len() == 1 {
                 let character = character.chars().next().unwrap();
-                let repeat = app.window.last_character.is_some_and(|c| c == character);
+                let repeat = match app.window.last_character {
+                    Some(c) => c == character,
+                    None => false,
+                };
 
                 app.window.event_queue.push_back(InputEvent::CharPress { character, repeat, modifiers });
                 app.window.last_character = Some(character);

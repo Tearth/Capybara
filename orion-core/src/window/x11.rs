@@ -34,6 +34,7 @@ pub struct WindowContext {
     pub keyboard_state: Vec<bool>,
 
     delete_window_atom: u64,
+    last_character: Option<char>,
     event_queue: VecDeque<InputEvent>,
 }
 
@@ -189,6 +190,7 @@ impl WindowContext {
                 keyboard_state: vec![false; Key::Unknown as usize],
 
                 delete_window_atom,
+                last_character: None,
                 event_queue: Default::default(),
             });
             context.init_gl_context()?;
@@ -323,17 +325,26 @@ impl WindowContext {
                         let buffer_ptr = buffer.as_mut_ptr() as *mut i8;
                         xlib::XLookupString(&mut event.key, buffer_ptr, 1, ptr::null_mut(), ptr::null_mut());
 
+                        let character = char::from_u32(buffer[0] as u32).unwrap();
                         let keysym = xlib::XLookupKeysym(&event.key as *const _ as *mut XKeyEvent, 0);
                         let key = map_key(keysym as u32);
+                        let modifiers = self.get_modifiers();
 
                         if key != Key::Unknown {
-                            let character = char::from_u32(buffer[0] as u32).unwrap();
                             let repeat = self.keyboard_state[key as usize];
-                            let modifiers = self.get_modifiers();
 
                             self.event_queue.push_back(InputEvent::KeyPress { key, repeat, modifiers });
-                            self.event_queue.push_back(InputEvent::CharPress { character, repeat, modifiers });
                             self.keyboard_state[key as usize] = true;
+                        }
+
+                        if character != '\0' {
+                            let repeat = match self.last_character {
+                                Some(c) => c == character,
+                                None => false,
+                            };
+
+                            self.event_queue.push_back(InputEvent::CharPress { character, repeat, modifiers });
+                            self.last_character = Some(character);
                         }
                     }
                     KeyRelease => {
@@ -354,6 +365,8 @@ impl WindowContext {
                             self.event_queue.push_back(InputEvent::KeyRelease { key, modifiers });
                             self.keyboard_state[key as usize] = false;
                         }
+
+                        self.last_character = None;
                     }
                     ButtonPress => {
                         let position = self.cursor_position;

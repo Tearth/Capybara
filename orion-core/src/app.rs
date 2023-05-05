@@ -1,5 +1,8 @@
+use crate::renderer::context::RendererContext;
 use crate::window::{Coordinates, InputEvent, Key, WindowStyle};
+use anyhow::Result;
 use chrono::{DateTime, Utc};
+use glam::Vec2;
 use glow::HasContext;
 use log::debug;
 use std::cell::RefCell;
@@ -16,14 +19,18 @@ use crate::window::web::WindowContext;
 
 pub struct ApplicationContext {
     pub window: Box<WindowContext>,
+    pub renderer: RendererContext,
 
     fps_timestamp: DateTime<Utc>,
     fps_count: u32,
 }
 
 impl ApplicationContext {
-    pub fn new() -> Self {
-        Self { window: WindowContext::new("Benchmark", WindowStyle::Window { size: Coordinates::new(800, 600) }).unwrap(), fps_timestamp: Utc::now(), fps_count: 0 }
+    pub fn new() -> Result<Self> {
+        let window = WindowContext::new("Benchmark", WindowStyle::Window { size: Coordinates::new(800, 600) })?;
+        let renderer = RendererContext::new(window.load_gl_pointers());
+
+        Ok(Self { window, renderer, fps_timestamp: Utc::now(), fps_count: 0 })
     }
 
     pub fn run(self) {
@@ -47,11 +54,12 @@ impl ApplicationContext {
                         if key == Key::Escape {
                             self.window.close();
                         } else if key == Key::Space {
-                            let context = self.window.load_gl_pointers();
-                            debug!("GL version: {:?}", context.version());
-
+                            debug!("GL version: {:?}", self.renderer.get_version());
                             self.window.set_cursor_visibility(!self.window.cursor_visible);
                         }
+                    }
+                    InputEvent::WindowSizeChange { size } => {
+                        self.renderer.set_viewport(Vec2::new(size.x as f32, size.y as f32));
                     }
                     InputEvent::WindowClose => {
                         return;
@@ -62,15 +70,15 @@ impl ApplicationContext {
                 debug!("New event: {:?}", event);
             }
 
+            self.renderer.clear();
             self.fps_count += 1;
+            self.window.swap_buffers();
 
             if (Utc::now() - self.fps_timestamp).num_seconds() >= 1 {
                 debug!("FPS: {}", self.fps_count);
                 self.fps_timestamp = Utc::now();
                 self.fps_count = 0;
             }
-
-            self.window.swap_buffers();
 
             #[cfg(web)]
             break;

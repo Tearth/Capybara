@@ -17,6 +17,7 @@ use std::ptr;
 use std::slice;
 
 pub type GLXCREATECONTEXTATTRIBSARB = unsafe extern "C" fn(_: *mut Display, _: GLXFBConfig, _: GLXContext, _: c_int, _: *const c_int) -> GLXContext;
+pub type GLXSWAPINTERVALEXT = unsafe extern "C" fn(_: *mut Display, _: GLXDrawable);
 
 pub struct WindowContext {
     pub window: u64,
@@ -24,6 +25,7 @@ pub struct WindowContext {
     pub screen: i32,
     pub frame_buffer_config: *mut __GLXFBConfigRec,
     pub glx_context: Option<GLXContext>,
+    pub glx_extensions: Option<GlxExtensions>,
 
     pub size: Coordinates,
     pub cursor_position: Coordinates,
@@ -33,6 +35,11 @@ pub struct WindowContext {
 
     delete_window_atom: u64,
     event_queue: VecDeque<InputEvent>,
+}
+
+pub struct GlxExtensions {
+    pub glx_create_context_attribs_arb: GLXCREATECONTEXTATTRIBSARB,
+    pub glx_swap_interval_ext: GLXSWAPINTERVALEXT,
 }
 
 impl WindowContext {
@@ -173,6 +180,7 @@ impl WindowContext {
                 screen,
                 frame_buffer_config: best_frame_buffer_config,
                 glx_context: None,
+                glx_extensions: None,
 
                 size: Coordinates::new(1, 1),
                 cursor_position: Default::default(),
@@ -192,10 +200,7 @@ impl WindowContext {
 
     fn init_gl_context(&mut self) -> Result<()> {
         unsafe {
-            let glx_create_context_attribs_arb_cstr = CString::new("glXCreateContextAttribsARB").unwrap();
-            let glx_create_context_attribs_arb_proc = glx::glXGetProcAddressARB(glx_create_context_attribs_arb_cstr.as_ptr() as *const u8);
-            let glx_create_context_attribs_arb = mem::transmute_copy::<_, GLXCREATECONTEXTATTRIBSARB>(&glx_create_context_attribs_arb_proc);
-
+            let glx_extensions = GlxExtensions::new();
             let context_attributes = [
                 arb::GLX_CONTEXT_MAJOR_VERSION_ARB,
                 3,
@@ -207,16 +212,17 @@ impl WindowContext {
             ];
 
             let context_attributes_ptr = context_attributes.as_ptr() as *const i32;
-            let glx_context = (glx_create_context_attribs_arb)(self.display, self.frame_buffer_config, ptr::null_mut(), 1, context_attributes_ptr);
+            let glx_context = (glx_extensions.glx_create_context_attribs_arb)(self.display, self.frame_buffer_config, ptr::null_mut(), 1, context_attributes_ptr);
 
             if glx_context.is_null() {
                 bail!("glXCreateContextAttribsARB error");
             }
 
-            self.glx_context = Some(glx_context);
-
             x11::XSync(self.display, 0);
-            glx::glXMakeCurrent(self.display, self.window, self.glx_context.unwrap());
+            glx::glXMakeCurrent(self.display, self.window, glx_context);
+
+            self.glx_context = Some(glx_context);
+            self.glx_extensions = Some(glx_extensions);
         }
 
         Ok(())
@@ -405,6 +411,12 @@ impl WindowContext {
         }
     }
 
+    pub fn set_swap_interval(&self, interval: u32) {
+        unsafe {
+            (self.glx_extensions.as_ref().unwrap().glx_swap_interval_ext)(self.display, interval as u64);
+        }
+    }
+
     pub fn swap_buffers(&mut self) {
         unsafe {
             glx::glXSwapBuffers(self.display, self.window);
@@ -413,6 +425,30 @@ impl WindowContext {
 
     pub fn get_modifiers(&self) -> Modifiers {
         Modifiers::new(self.keyboard_state[Key::Control as usize], self.keyboard_state[Key::Alt as usize], self.keyboard_state[Key::Shift as usize])
+    }
+}
+
+impl GlxExtensions {
+    pub fn new() -> Self {
+        Self {
+            glx_create_context_attribs_arb: load_extension::<GLXCREATECONTEXTATTRIBSARB>("glXCreateContextAttribsARB"),
+            glx_swap_interval_ext: load_extension::<GLXSWAPINTERVALEXT>("glXSwapIntervalEXT"),
+        }
+    }
+}
+
+impl Default for GlxExtensions {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+fn load_extension<T>(name: &str) -> T {
+    unsafe {
+        let extension_cstr = CString::new(name).unwrap();
+        let extension_proc = glx::glXGetProcAddressARB(extension_cstr.as_ptr() as *const u8);
+
+        mem::transmute_copy::<_, T>(&extension_proc)
     }
 }
 

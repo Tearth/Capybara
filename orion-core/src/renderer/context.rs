@@ -12,7 +12,7 @@ pub struct RendererContext {
 impl RendererContext {
     pub fn new(gl: Context) -> Self {
         let mut context = Self { clear_color: Default::default(), gl: Rc::new(gl) };
-        context.set_clear_color(Vec4::new(0.2, 0.2, 0.2, 0.2));
+        context.set_clear_color(Vec4::new(0.0, 0.0, 0.0, 1.0));
 
         context
     }

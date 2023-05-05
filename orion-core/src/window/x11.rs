@@ -136,7 +136,7 @@ impl WindowContext {
 
             let mut window_attributes = XSetWindowAttributes {
                 background_pixmap: 0,
-                background_pixel: xlib::XWhitePixel(display, screen),
+                background_pixel: xlib::XBlackPixel(display, screen),
                 border_pixmap: 0,
                 border_pixel: xlib::XBlackPixel(display, screen),
                 bit_gravity: 0,

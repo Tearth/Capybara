@@ -4,6 +4,7 @@ use ::winapi::shared::minwindef::*;
 use ::winapi::shared::windef::*;
 use ::winapi::um::errhandlingapi;
 use ::winapi::um::libloaderapi;
+use ::winapi::um::wingdi;
 use ::winapi::um::wingdi::*;
 use ::winapi::um::winuser;
 use ::winapi::um::winuser::*;
@@ -57,7 +58,7 @@ impl WindowContext {
             let window_class = WNDCLASSA {
                 lpfnWndProc: Some(wnd_proc),
                 hInstance: module_handle,
-                hbrBackground: COLOR_BACKGROUND as HBRUSH,
+                hbrBackground: wingdi::CreateSolidBrush(0x00000000),
                 lpszClassName: class_cstr.as_ptr(),
                 style: CS_OWNDC,
                 cbClsExtra: 0,

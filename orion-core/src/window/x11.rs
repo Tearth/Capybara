@@ -38,8 +38,8 @@ pub struct WindowContext {
 }
 
 pub struct GlxExtensions {
-    pub glx_create_context_attribs_arb: GLXCREATECONTEXTATTRIBSARB,
-    pub glx_swap_interval_ext: GLXSWAPINTERVALEXT,
+    pub glx_create_context_attribs_arb: Option<GLXCREATECONTEXTATTRIBSARB>,
+    pub glx_swap_interval_ext: Option<GLXSWAPINTERVALEXT>,
 }
 
 impl WindowContext {
@@ -210,9 +210,13 @@ impl WindowContext {
                 arb::GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
                 0,
             ];
-
             let context_attributes_ptr = context_attributes.as_ptr() as *const i32;
-            let glx_context = (glx_extensions.glx_create_context_attribs_arb)(self.display, self.frame_buffer_config, ptr::null_mut(), 1, context_attributes_ptr);
+
+            let glx_context = if let Some(glx_create_context_attribs_arb) = glx_extensions.glx_create_context_attribs_arb {
+                (glx_create_context_attribs_arb)(self.display, self.frame_buffer_config, ptr::null_mut(), 1, context_attributes_ptr)
+            } else {
+                bail!("glXCreateContextAttribsARB error");
+            };
 
             if glx_context.is_null() {
                 bail!("glXCreateContextAttribsARB error");
@@ -413,7 +417,9 @@ impl WindowContext {
 
     pub fn set_swap_interval(&self, interval: u32) {
         unsafe {
-            (self.glx_extensions.as_ref().unwrap().glx_swap_interval_ext)(self.display, interval as u64);
+            if let Some(glx_swap_interval_ext) = self.glx_extensions.as_ref().unwrap().glx_swap_interval_ext {
+                (glx_swap_interval_ext)(self.display, interval as u64);
+            }
         }
     }
 
@@ -430,10 +436,7 @@ impl WindowContext {
 
 impl GlxExtensions {
     pub fn new() -> Self {
-        Self {
-            glx_create_context_attribs_arb: load_extension::<GLXCREATECONTEXTATTRIBSARB>("glXCreateContextAttribsARB"),
-            glx_swap_interval_ext: load_extension::<GLXSWAPINTERVALEXT>("glXSwapIntervalEXT"),
-        }
+        Self { glx_create_context_attribs_arb: load_extension::<_>("glXCreateContextAttribsARB"), glx_swap_interval_ext: load_extension::<_>("glXSwapIntervalEXT") }
     }
 }
 
@@ -443,12 +446,16 @@ impl Default for GlxExtensions {
     }
 }
 
-fn load_extension<T>(name: &str) -> T {
+fn load_extension<T>(name: &str) -> Option<T> {
     unsafe {
         let extension_cstr = CString::new(name).unwrap();
         let extension_proc = glx::glXGetProcAddressARB(extension_cstr.as_ptr() as *const u8);
 
-        mem::transmute_copy::<_, T>(&extension_proc)
+        if let Some(extension_proc) = extension_proc {
+            return Some(mem::transmute_copy::<_, T>(&extension_proc));
+        }
+
+        None
     }
 }
 

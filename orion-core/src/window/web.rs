@@ -10,6 +10,7 @@ use std::panic;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use web_sys::Document;
+use web_sys::Event;
 use web_sys::HtmlCanvasElement;
 use web_sys::KeyboardEvent;
 use web_sys::MouseEvent;
@@ -127,6 +128,8 @@ impl WindowContext {
         self.init_keydown_callback(app.clone());
         self.init_keyup_callback(app.clone());
         self.init_keypress_callback(app.clone());
+
+        self.window.set_timeout_with_callback_and_timeout_and_arguments_0(self.resize_callback.as_ref().unwrap().as_ref().unchecked_ref(), 0).unwrap();
     }
 
     fn init_frame_callback<F>(&mut self, mut event_loop: F)
@@ -145,10 +148,8 @@ impl WindowContext {
             let canvas = &app.window.canvas;
             let size = Coordinates::new(canvas.scroll_width(), canvas.scroll_height());
 
-            if size != app.window.size {
-                app.window.event_queue.push_back(InputEvent::WindowSizeChange { size });
-                app.window.size = size;
-            }
+            app.window.event_queue.push_back(InputEvent::WindowSizeChange { size });
+            app.window.size = size;
         }));
         self.window.add_event_listener_with_callback("resize", self.resize_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }

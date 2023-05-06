@@ -28,7 +28,7 @@ pub struct ApplicationContext {
 impl ApplicationContext {
     pub fn new() -> Result<Self> {
         let window = WindowContext::new("Benchmark", WindowStyle::Window { size: Coordinates::new(800, 600) })?;
-        let renderer = RendererContext::new(window.load_gl_pointers());
+        let renderer = RendererContext::new(window.load_gl_pointers())?;
 
         Ok(Self { window, renderer, fps_timestamp: Utc::now(), fps_count: 0 })
     }

@@ -50,8 +50,13 @@ impl RendererContext {
         self.update_viewport()?;
 
         unsafe {
-            let vertices = [0.0f32, 0.0f32, 0.0f32, 300.0f32, 0.0f32, 0.0f32, 150.0f32, 300.0f32, 0.0f32];
-            let vertices_u8 = core::slice::from_raw_parts(vertices.as_ptr() as *const u8, vertices.len() * core::mem::size_of::<f32>());
+            let f32_size = core::mem::size_of::<f32>() as i32;
+            let vertices = [
+                0.0f32, 0.0f32, 0.0f32, 1.0, 0.0, 0.0, 1.0, 0.0f32, 0.0f32, /* 1 */
+                300.0f32, 0.0f32, 0.0f32, 1.0, 0.0, 0.0, 1.0, 0.0f32, 1.0f32, /* 2 */
+                150.0f32, 300.0f32, 0.0f32, 1.0, 0.0, 0.0, 1.0, 1.0f32, 1.0f32, /* 3 */
+            ];
+            let vertices_u8 = core::slice::from_raw_parts(vertices.as_ptr() as *const u8, vertices.len() * f32_size as usize);
 
             let vao = self.gl.create_vertex_array().unwrap();
             self.gl.bind_vertex_array(Some(vao));
@@ -60,8 +65,13 @@ impl RendererContext {
             self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(vbo));
             self.gl.buffer_data_u8_slice(glow::ARRAY_BUFFER, vertices_u8, glow::STATIC_DRAW);
 
-            self.gl.vertex_attrib_pointer_f32(0, 3, glow::FLOAT, false, 3 * core::mem::size_of::<f32>() as i32, 0);
+            self.gl.vertex_attrib_pointer_f32(0, 3, glow::FLOAT, false, 9 * f32_size, 0);
+            self.gl.vertex_attrib_pointer_f32(1, 4, glow::FLOAT, false, 9 * f32_size, 3 * f32_size);
+            self.gl.vertex_attrib_pointer_f32(2, 2, glow::FLOAT, false, 9 * f32_size, 7 * f32_size);
+
             self.gl.enable_vertex_attrib_array(0);
+            self.gl.enable_vertex_attrib_array(1);
+            self.gl.enable_vertex_attrib_array(2);
         }
 
         Ok(())

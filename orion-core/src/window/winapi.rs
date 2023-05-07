@@ -21,7 +21,7 @@ pub type WGLCHOOSEPIXELFORMATARB = unsafe extern "C" fn(_: HDC, _: *const INT, _
 pub type WGLCREATECONTEXTATTRIBSARB = unsafe extern "C" fn(_: HDC, _: HGLRC, _: *const INT) -> HGLRC;
 pub type WGLSWAPINTERVALEXT = unsafe extern "C" fn(_: INT) -> BOOL;
 
-pub struct WindowContext {
+pub struct WindowContextWinApi {
     pub hwnd: HWND,
     pub hdc: HDC,
     pub wgl_context: Option<HGLRC>,
@@ -44,7 +44,7 @@ pub struct WglExtensions {
     pub wgl_swap_interval_ext: Option<WGLSWAPINTERVALEXT>,
 }
 
-impl WindowContext {
+impl WindowContextWinApi {
     pub fn new(title: &str, style: WindowStyle) -> Result<Box<Self>> {
         simple_logger::init_with_level(Level::Debug)?;
 

@@ -10,7 +10,6 @@ use std::panic;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use web_sys::Document;
-use web_sys::Event;
 use web_sys::HtmlCanvasElement;
 use web_sys::KeyboardEvent;
 use web_sys::MouseEvent;
@@ -18,7 +17,7 @@ use web_sys::WebGl2RenderingContext;
 use web_sys::WheelEvent;
 use web_sys::Window;
 
-pub struct WindowContext {
+pub struct WindowContextWeb {
     pub window: Window,
     pub document: Document,
     pub canvas: HtmlCanvasElement,
@@ -47,7 +46,7 @@ pub struct WindowContext {
     event_queue: VecDeque<InputEvent>,
 }
 
-impl WindowContext {
+impl WindowContextWeb {
     pub fn new(_: &str, _: WindowStyle) -> Result<Box<Self>> {
         console_log::init_with_level(Level::Debug)?;
         panic::set_hook(Box::new(console_error_panic_hook::hook));
@@ -113,8 +112,9 @@ impl WindowContext {
     }
 
     #[allow(clippy::redundant_clone)]
-    pub fn init_closures<F>(&mut self, app: Rc<RefCell<ApplicationContext>>, event_loop: F)
+    pub fn init_closures<U, F>(&mut self, app: Rc<RefCell<ApplicationContext<U>>>, event_loop: F)
     where
+        U: 'static,
         F: FnMut() + Clone + 'static,
     {
         self.init_frame_callback(event_loop.clone());
@@ -142,7 +142,10 @@ impl WindowContext {
         self.window.request_animation_frame(self.frame_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_resize_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_resize_callback<U>(&mut self, app: Rc<RefCell<ApplicationContext<U>>>)
+    where
+        U: 'static,
+    {
         self.resize_callback = Some(Closure::<dyn FnMut()>::new(move || {
             let mut app = app.borrow_mut();
             let canvas = &app.window.canvas;
@@ -154,7 +157,10 @@ impl WindowContext {
         self.window.add_event_listener_with_callback("resize", self.resize_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_mousemove_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_mousemove_callback<U>(&mut self, app: Rc<RefCell<ApplicationContext<U>>>)
+    where
+        U: 'static,
+    {
         self.mousemove_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
             let mut app = app.borrow_mut();
             let position = Coordinates::new(event.offset_x(), event.offset_y());
@@ -166,7 +172,10 @@ impl WindowContext {
         self.canvas.add_event_listener_with_callback("mousemove", self.mousemove_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_mouseenter_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_mouseenter_callback<U>(&mut self, app: Rc<RefCell<ApplicationContext<U>>>)
+    where
+        U: 'static,
+    {
         self.mouseenter_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
             let mut app = app.borrow_mut();
             let position = Coordinates::new(event.offset_x(), event.offset_y());
@@ -178,7 +187,10 @@ impl WindowContext {
         self.canvas.add_event_listener_with_callback("mouseenter", self.mouseenter_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_mouseleave_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_mouseleave_callback<U>(&mut self, app: Rc<RefCell<ApplicationContext<U>>>)
+    where
+        U: 'static,
+    {
         self.mouseleave_callback = Some(Closure::<dyn FnMut(_)>::new(move |_: MouseEvent| {
             let mut app = app.borrow_mut();
 
@@ -188,7 +200,10 @@ impl WindowContext {
         self.canvas.add_event_listener_with_callback("mouseleave", self.mouseleave_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_mousedown_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_mousedown_callback<U>(&mut self, app: Rc<RefCell<ApplicationContext<U>>>)
+    where
+        U: 'static,
+    {
         self.mousedown_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
             let mut app = app.borrow_mut();
             let button = match event.button() {
@@ -209,7 +224,10 @@ impl WindowContext {
         self.canvas.add_event_listener_with_callback("mousedown", self.mousedown_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_mouseup_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_mouseup_callback<U>(&mut self, app: Rc<RefCell<ApplicationContext<U>>>)
+    where
+        U: 'static,
+    {
         self.mouseup_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
             let mut app = app.borrow_mut();
             let button = match event.button() {
@@ -230,7 +248,10 @@ impl WindowContext {
         self.canvas.add_event_listener_with_callback("mouseup", self.mouseup_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_scroll_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_scroll_callback<U>(&mut self, app: Rc<RefCell<ApplicationContext<U>>>)
+    where
+        U: 'static,
+    {
         self.wheel_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: WheelEvent| {
             let mut app = app.borrow_mut();
             let direction = if event.delta_y() < 0.0 { MouseWheelDirection::Up } else { MouseWheelDirection::Down };
@@ -241,7 +262,10 @@ impl WindowContext {
         self.canvas.add_event_listener_with_callback("wheel", self.wheel_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_keydown_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_keydown_callback<U>(&mut self, app: Rc<RefCell<ApplicationContext<U>>>)
+    where
+        U: 'static,
+    {
         self.keydown_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
             let mut app = app.borrow_mut();
             let key = map_key(event.code());
@@ -257,7 +281,10 @@ impl WindowContext {
         self.canvas.add_event_listener_with_callback("keydown", self.keydown_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_keyup_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_keyup_callback<U>(&mut self, app: Rc<RefCell<ApplicationContext<U>>>)
+    where
+        U: 'static,
+    {
         self.keyup_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
             let mut app = app.borrow_mut();
             let key = map_key(event.code());
@@ -273,7 +300,10 @@ impl WindowContext {
         self.canvas.add_event_listener_with_callback("keyup", self.keyup_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
-    fn init_keypress_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_keypress_callback<U>(&mut self, app: Rc<RefCell<ApplicationContext<U>>>)
+    where
+        U: 'static,
+    {
         self.keypress_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
             let mut app = app.borrow_mut();
             let mut character = event.key();

@@ -3,7 +3,10 @@
 pub mod app;
 pub mod renderer;
 pub mod ui;
+pub mod user;
 pub mod utils;
 pub mod window;
 
 pub use anyhow;
+pub use egui;
+pub use log;

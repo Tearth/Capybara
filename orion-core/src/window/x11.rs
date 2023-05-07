@@ -20,7 +20,7 @@ use std::slice;
 pub type GLXCREATECONTEXTATTRIBSARB = unsafe extern "C" fn(_: *mut Display, _: GLXFBConfig, _: GLXContext, _: c_int, _: *const c_int) -> GLXContext;
 pub type GLXSWAPINTERVALEXT = unsafe extern "C" fn(_: *mut Display, _: GLXDrawable);
 
-pub struct WindowContext {
+pub struct WindowContextX11 {
     pub window: u64,
     pub display: *mut _XDisplay,
     pub screen: i32,
@@ -45,7 +45,7 @@ pub struct GlxExtensions {
     pub glx_swap_interval_ext: Option<GLXSWAPINTERVALEXT>,
 }
 
-impl WindowContext {
+impl WindowContextX11 {
     pub fn new(title: &str, style: WindowStyle) -> Result<Box<Self>> {
         simple_logger::init_with_level(Level::Debug)?;
 

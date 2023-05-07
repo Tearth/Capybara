@@ -1,11 +1,17 @@
 #[cfg(windows)]
 pub mod winapi;
+#[cfg(windows)]
+pub type WindowContext = winapi::WindowContextWinApi;
 
 #[cfg(unix)]
 pub mod x11;
+#[cfg(unix)]
+pub type WindowContext = unix::WindowContextX11;
 
 #[cfg(web)]
 pub mod web;
+#[cfg(web)]
+pub type WindowContext = web::WindowContextWeb;
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum WindowStyle {

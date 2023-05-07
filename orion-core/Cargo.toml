@@ -9,6 +9,7 @@ log = { version = "0.4.17" }
 glow = { version = "0.12.1" }
 chrono = { version = "0.4.23" } # temporary
 glam = { version = "0.24.0" }
+egui = { version = "0.21.0" }
 
 [build-dependencies]
 cfg_aliases = { version = "0.1.1" }

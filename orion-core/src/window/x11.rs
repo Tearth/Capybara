@@ -412,7 +412,7 @@ impl WindowContext {
                         }
                     }
                     MotionNotify => {
-                        let position = Coordinates::new(event.motion.x, self.size.y - event.motion.y);
+                        let position = Coordinates::new(event.motion.x, event.motion.y);
                         let modifiers = self.get_modifiers();
 
                         self.event_queue.push_back(InputEvent::MouseMove { position, modifiers });

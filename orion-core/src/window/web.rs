@@ -157,7 +157,7 @@ impl WindowContext {
     fn init_mousemove_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
         self.mousemove_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
             let mut app = app.borrow_mut();
-            let position = Coordinates::new(event.offset_x(), app.window.size.y - event.offset_y());
+            let position = Coordinates::new(event.offset_x(), event.offset_y());
             let modifiers = app.window.get_modifiers();
 
             app.window.event_queue.push_back(InputEvent::MouseMove { position, modifiers });
@@ -169,7 +169,7 @@ impl WindowContext {
     fn init_mouseenter_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
         self.mouseenter_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
             let mut app = app.borrow_mut();
-            let position = Coordinates::new(event.offset_x(), app.window.size.y - event.offset_y());
+            let position = Coordinates::new(event.offset_x(), event.offset_y());
             let modifiers = app.window.get_modifiers();
 
             app.window.event_queue.push_back(InputEvent::MouseEnter { position, modifiers });

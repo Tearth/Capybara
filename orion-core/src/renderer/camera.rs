@@ -7,16 +7,25 @@ pub struct Camera {
 
     pub position: Vec2,
     pub size: Vec2,
+    pub origin: CameraOrigin,
     pub dirty: bool,
 }
 
+pub enum CameraOrigin {
+    LeftTop,
+    LeftBottom,
+}
+
 impl Camera {
-    pub fn new(position: Vec2, size: Vec2) -> Self {
-        Self { id: 0, name: None, position, size, dirty: false }
+    pub fn new(position: Vec2, size: Vec2, origin: CameraOrigin) -> Self {
+        Self { id: 0, name: None, position, size, origin, dirty: false }
     }
 
     pub fn get_projection_matrix(&self) -> Mat4 {
-        Mat4::orthographic_rh(0.0, self.size.x, 0.0, self.size.y, 0.1, 100.0)
+        match self.origin {
+            CameraOrigin::LeftTop => Mat4::orthographic_rh(0.0, self.size.x, self.size.y, 0.0, 0.1, 100.0),
+            CameraOrigin::LeftBottom => Mat4::orthographic_rh(0.0, self.size.x, 0.0, self.size.y, 0.1, 100.0),
+        }
     }
 
     pub fn get_view_matrix(&self) -> Mat4 {

@@ -1,11 +1,13 @@
-use super::{
-    camera::Camera,
-    shader::{Shader, *},
-};
+use super::camera::Camera;
+use super::camera::CameraOrigin;
+use super::shader::Shader;
+use super::shader::*;
 use crate::utils::storage::Storage;
 use anyhow::Result;
-use glam::{Vec2, Vec4};
-use glow::{Context, HasContext};
+use glam::Vec2;
+use glam::Vec4;
+use glow::Context;
+use glow::HasContext;
 use std::rc::Rc;
 
 pub struct RendererContext {
@@ -39,9 +41,14 @@ impl RendererContext {
     }
 
     fn init(&mut self) -> Result<()> {
+        unsafe {
+            self.gl.enable(glow::BLEND);
+            self.gl.blend_func(glow::SRC_ALPHA, glow::ONE_MINUS_SRC_ALPHA);
+        }
+
         self.set_clear_color(Vec4::new(0.0, 0.0, 0.0, 1.0));
 
-        let camera_id = self.cameras.store(Camera::new(Default::default(), Default::default()));
+        let camera_id = self.cameras.store(Camera::new(Default::default(), Default::default(), CameraOrigin::LeftTop));
         self.activate_camera(camera_id)?;
 
         let shader_id = self.shaders.store(Shader::new(self, DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER)?);
@@ -123,7 +130,7 @@ impl RendererContext {
     pub fn clear(&self) {
         unsafe {
             self.gl.clear(glow::COLOR_BUFFER_BIT);
-            self.gl.draw_arrays(glow::TRIANGLES, 0, 3);
+            // self.gl.draw_arrays(glow::TRIANGLES, 0, 3);
         }
     }
 

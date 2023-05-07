@@ -1,9 +1,9 @@
 use crate::renderer::context::RendererContext;
+use crate::ui::context::UiContext;
 use crate::window::{Coordinates, InputEvent, Key, WindowStyle};
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use glam::Vec2;
-use glow::HasContext;
 use log::debug;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -20,17 +20,20 @@ use crate::window::web::WindowContext;
 pub struct ApplicationContext {
     pub window: Box<WindowContext>,
     pub renderer: RendererContext,
+    pub ui: UiContext,
 
     fps_timestamp: DateTime<Utc>,
     fps_count: u32,
+    fps: u32,
 }
 
 impl ApplicationContext {
     pub fn new() -> Result<Self> {
         let window = WindowContext::new("Benchmark", WindowStyle::Window { size: Coordinates::new(800, 600) })?;
-        let renderer = RendererContext::new(window.load_gl_pointers())?;
+        let mut renderer = RendererContext::new(window.load_gl_pointers())?;
+        let ui = UiContext::new(&mut renderer);
 
-        Ok(Self { window, renderer, fps_timestamp: Utc::now(), fps_count: 0 })
+        Ok(Self { window, renderer, ui, fps_timestamp: Utc::now(), fps_count: 0, fps: 0 })
     }
 
     pub fn run(self) {
@@ -67,16 +70,26 @@ impl ApplicationContext {
                     _ => {}
                 }
 
+                self.ui.collect_event(&event);
                 debug!("New event: {:?}", event);
             }
 
             self.renderer.clear();
             self.fps_count += 1;
+
+            let ui_input = self.ui.get_input();
+            let ui_output = self.ui.inner.run(ui_input, |ctx| {
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    ui.label(egui::RichText::new(format!("FPS: {}", self.fps)).heading().color(egui::Color32::from_rgb(255, 255, 255)));
+                });
+            });
+
+            self.ui.draw(&mut self.renderer, ui_output);
             self.window.swap_buffers();
 
             if (Utc::now() - self.fps_timestamp).num_seconds() >= 1 {
-                debug!("FPS: {}", self.fps_count);
                 self.fps_timestamp = Utc::now();
+                self.fps = self.fps_count;
                 self.fps_count = 0;
             }
 

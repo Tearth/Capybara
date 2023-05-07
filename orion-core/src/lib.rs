@@ -2,6 +2,7 @@
 
 pub mod app;
 pub mod renderer;
+pub mod ui;
 pub mod utils;
 pub mod window;
 

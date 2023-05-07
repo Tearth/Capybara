@@ -375,14 +375,14 @@ impl WindowContext {
                                 dwHoverTime: 0,
                             });
 
-                            let coordinates = Coordinates::new(x, self.size.y - y);
+                            let coordinates = Coordinates::new(x, y);
                             let modifiers = self.get_modifiers();
 
                             self.event_queue.push_back(InputEvent::MouseEnter { position: coordinates, modifiers });
                             self.cursor_in_window = true;
                         }
 
-                        let coordinates = Coordinates::new(x, self.size.y - y);
+                        let coordinates = Coordinates::new(x, y);
                         let modifiers = self.get_modifiers();
 
                         self.event_queue.push_back(InputEvent::MouseMove { position: coordinates, modifiers });

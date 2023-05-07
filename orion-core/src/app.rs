@@ -1,7 +1,6 @@
 use crate::renderer::context::RendererContext;
 use crate::ui::context::UiContext;
 use crate::user::UserSpace;
-use crate::window::Coordinates;
 use crate::window::InputEvent;
 use crate::window::WindowContext;
 use crate::window::WindowStyle;

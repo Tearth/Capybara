@@ -151,6 +151,9 @@ impl WindowContextWeb {
             let canvas = &app.window.canvas;
             let size = Coordinates::new(canvas.scroll_width(), canvas.scroll_height());
 
+            canvas.set_width(size.x as u32);
+            canvas.set_height(size.y as u32);
+
             app.window.event_queue.push_back(InputEvent::WindowSizeChange { size });
             app.window.size = size;
         }));

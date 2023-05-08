@@ -46,9 +46,9 @@ pub struct WglExtensions {
 
 impl WindowContextWinApi {
     pub fn new(title: &str, style: WindowStyle) -> Result<Box<Self>> {
-        simple_logger::init_with_level(Level::Debug)?;
-
         unsafe {
+            simple_logger::init_with_level(Level::Debug)?;
+
             let title_cstr = CString::new(title).unwrap();
             let class_cstr = CString::new("OrionWindow").unwrap();
             let app_icon_cstr = CString::new("APP_ICON").unwrap();
@@ -279,9 +279,9 @@ impl WindowContextWinApi {
 
             self.wgl_context = Some(wgl_context);
             self.wgl_extensions = Some(WglExtensions::new());
-        }
 
-        Ok(())
+            Ok(())
+        }
     }
 
     pub fn load_gl_pointers(&self) -> Context {

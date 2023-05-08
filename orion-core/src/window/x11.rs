@@ -47,9 +47,9 @@ pub struct GlxExtensions {
 
 impl WindowContextX11 {
     pub fn new(title: &str, style: WindowStyle) -> Result<Box<Self>> {
-        simple_logger::init_with_level(Level::Debug)?;
-
         unsafe {
+            simple_logger::init_with_level(Level::Debug)?;
+
             let display = xlib::XOpenDisplay(ptr::null());
             if display.is_null() {
                 bail!("XOpenDisplay error");
@@ -232,9 +232,9 @@ impl WindowContextX11 {
 
             self.glx_context = Some(glx_context);
             self.glx_extensions = Some(glx_extensions);
-        }
 
-        Ok(())
+            Ok(())
+        }
     }
 
     pub fn load_gl_pointers(&self) -> Context {

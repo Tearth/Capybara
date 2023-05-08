@@ -15,6 +15,9 @@ use std::slice;
 pub const DEFAULT_VERTEX_SHADER: &str = include_str!("./shaders/default.vert");
 pub const DEFAULT_FRAGMENT_SHADER: &str = include_str!("./shaders/default.frag");
 
+pub const DEFAULT_VERTEX_SHADER_UI: &str = include_str!("./shaders/default_ui.vert");
+pub const DEFAULT_FRAGMENT_SHADER_UI: &str = include_str!("./shaders/default_ui.frag");
+
 pub struct Shader {
     pub id: usize,
     pub name: Option<String>,
@@ -31,9 +34,9 @@ pub struct ShaderParameter {
 
 impl Shader {
     pub fn new(renderer: &RendererContext, vertex_shader_source: &str, fragment_shader_source: &str) -> Result<Self> {
-        let gl = renderer.gl.clone();
-
         unsafe {
+            let gl = renderer.gl.clone();
+
             let vertex_shader = gl.create_shader(glow::VERTEX_SHADER).map_err(Error::msg)?;
             gl.shader_source(vertex_shader, preprocess_shader_source(vertex_shader_source).as_str());
             gl.compile_shader(vertex_shader);
@@ -91,7 +94,7 @@ impl Shader {
         unsafe {
             let parameter = match self.uniforms.get(name) {
                 Some(parameter) => parameter,
-                None => bail!("Shader parameter with name {} not found", name),
+                None => return Ok(()),
             };
 
             match parameter.r#type {

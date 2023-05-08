@@ -31,7 +31,7 @@ where
     pub fn new(user: U, title: &str, style: WindowStyle) -> Result<Self> {
         let window = WindowContext::new(title, style)?;
         let mut renderer = RendererContext::new(window.load_gl_pointers())?;
-        let ui = UiContext::new(&mut renderer);
+        let ui = UiContext::new(&mut renderer)?;
 
         Ok(Self { window, renderer, ui, user, frame_timestamp: Instant::now() })
     }
@@ -70,7 +70,7 @@ where
                 self.user.input(ApplicationState::new(&mut self.window, &mut self.renderer), event);
             }
 
-            self.renderer.begin_frame();
+            self.renderer.begin_frame()?;
 
             let ui_input = self.ui.get_input();
             let ui_output = self.ui.inner.run(ui_input, |context| {
@@ -82,7 +82,7 @@ where
             self.frame_timestamp = now;
 
             self.user.frame(ApplicationState::new(&mut self.window, &mut self.renderer), delta);
-            self.ui.draw(&mut self.renderer, ui_output);
+            self.ui.draw(&mut self.renderer, ui_output)?;
 
             self.renderer.end_frame();
             self.window.swap_buffers();

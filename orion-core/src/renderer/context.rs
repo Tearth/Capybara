@@ -15,7 +15,9 @@ pub struct RendererContext {
     pub clear_color: Vec4,
     pub viewport_size: Vec2,
 
+    pub default_camera_id: usize,
     pub active_camera_id: usize,
+    pub default_shader_id: usize,
     pub active_shader_id: usize,
 
     pub cameras: Storage<Camera>,
@@ -33,7 +35,9 @@ impl RendererContext {
             clear_color: Default::default(),
             viewport_size: Default::default(),
 
+            default_camera_id: usize::MAX,
             active_camera_id: usize::MAX,
+            default_shader_id: usize::MAX,
             active_shader_id: usize::MAX,
 
             cameras: Default::default(),
@@ -53,49 +57,31 @@ impl RendererContext {
         unsafe {
             self.gl.enable(glow::BLEND);
             self.gl.blend_func(glow::SRC_ALPHA, glow::ONE_MINUS_SRC_ALPHA);
+            self.set_clear_color(Vec4::new(0.0, 0.0, 0.0, 1.0));
+
+            self.default_camera_id = self.cameras.store(Camera::new(Default::default(), Default::default(), CameraOrigin::LeftTop));
+            self.activate_camera(self.default_camera_id)?;
+
+            self.default_shader_id = self.shaders.store(Shader::new(self, DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER)?);
+            self.activate_shader(self.default_shader_id)?;
+
+            Ok(())
         }
-
-        self.set_clear_color(Vec4::new(0.0, 0.0, 0.0, 1.0));
-
-        let camera_id = self.cameras.store(Camera::new(Default::default(), Default::default(), CameraOrigin::LeftTop));
-        self.activate_camera(camera_id)?;
-
-        let shader_id = self.shaders.store(Shader::new(self, DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER)?);
-        self.activate_shader(shader_id)?;
-
-        self.update_viewport()?;
-
-        unsafe {
-            let f32_size = core::mem::size_of::<f32>() as i32;
-            let vertices = [
-                0.0f32, 0.0f32, 0.0f32, 1.0, 0.0, 0.0, 1.0, 0.0f32, 0.0f32, /* 1 */
-                300.0f32, 0.0f32, 0.0f32, 1.0, 0.0, 0.0, 1.0, 0.0f32, 1.0f32, /* 2 */
-                150.0f32, 300.0f32, 0.0f32, 1.0, 0.0, 0.0, 1.0, 1.0f32, 1.0f32, /* 3 */
-            ];
-            let vertices_u8 = core::slice::from_raw_parts(vertices.as_ptr() as *const u8, vertices.len() * f32_size as usize);
-
-            let vao = self.gl.create_vertex_array().unwrap();
-            self.gl.bind_vertex_array(Some(vao));
-
-            let vbo = self.gl.create_buffer().unwrap();
-            self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(vbo));
-            self.gl.buffer_data_u8_slice(glow::ARRAY_BUFFER, vertices_u8, glow::STATIC_DRAW);
-
-            self.gl.vertex_attrib_pointer_f32(0, 3, glow::FLOAT, false, 9 * f32_size, 0);
-            self.gl.vertex_attrib_pointer_f32(1, 4, glow::FLOAT, false, 9 * f32_size, 3 * f32_size);
-            self.gl.vertex_attrib_pointer_f32(2, 2, glow::FLOAT, false, 9 * f32_size, 7 * f32_size);
-
-            self.gl.enable_vertex_attrib_array(0);
-            self.gl.enable_vertex_attrib_array(1);
-            self.gl.enable_vertex_attrib_array(2);
-        }
-
-        Ok(())
     }
 
-    pub fn begin_frame(&mut self) {
+    pub fn begin_frame(&mut self) -> Result<()> {
         unsafe {
             self.gl.clear(glow::COLOR_BUFFER_BIT);
+
+            if self.active_camera_id != self.default_camera_id {
+                self.activate_camera(self.default_camera_id)?;
+            }
+
+            if self.active_shader_id != self.default_shader_id {
+                self.activate_shader(self.default_shader_id)?;
+            }
+
+            Ok(())
         }
     }
 
@@ -110,46 +96,51 @@ impl RendererContext {
         }
     }
 
-    pub fn update_viewport(&mut self) -> Result<()> {
-        let camera = self.cameras.get_mut(self.active_camera_id)?;
-        camera.size = self.viewport_size;
-
-        if self.active_shader_id != usize::MAX {
-            let shader = self.shaders.get(self.active_shader_id)?;
-            shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr())?;
-            shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr())?;
-        }
-
-        unsafe { self.gl.viewport(0, 0, self.viewport_size.x as i32, self.viewport_size.y as i32) };
-
-        Ok(())
-    }
-
     pub fn activate_camera(&mut self, camera_id: usize) -> Result<()> {
         let camera = self.cameras.get_mut(camera_id)?;
-        camera.size = self.viewport_size;
         self.active_camera_id = camera_id;
+
+        camera.size = self.viewport_size;
+        camera.dirty = true;
 
         Ok(())
     }
 
     pub fn activate_shader(&mut self, shader_id: usize) -> Result<()> {
-        let shader = self.shaders.get(shader_id)?;
-        self.active_shader_id = shader_id;
-        unsafe { self.gl.use_program(Some(shader.program)) };
+        unsafe {
+            let shader = self.shaders.get(shader_id)?;
+            self.active_shader_id = shader_id;
+            self.gl.use_program(Some(shader.program));
 
-        Ok(())
+            let mut camera = self.cameras.get_mut(self.active_camera_id)?;
+            shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr())?;
+            shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr())?;
+
+            camera.dirty = false;
+
+            Ok(())
+        }
     }
 
     pub fn set_viewport(&mut self, size: Vec2) -> Result<()> {
-        self.viewport_size = size;
-        self.update_viewport()?;
+        unsafe {
+            self.gl.viewport(0, 0, size.x as i32, size.y as i32);
+            self.viewport_size = size;
 
-        Ok(())
+            let camera = self.cameras.get_mut(self.active_camera_id)?;
+            camera.size = self.viewport_size;
+
+            let shader = self.shaders.get(self.active_shader_id)?;
+            shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr())?;
+
+            Ok(())
+        }
     }
 
     pub fn set_clear_color(&mut self, color: Vec4) {
-        unsafe { self.gl.clear_color(color.x, color.y, color.z, color.w) };
-        self.clear_color = color;
+        unsafe {
+            self.gl.clear_color(color.x, color.y, color.z, color.w);
+            self.clear_color = color;
+        }
     }
 }

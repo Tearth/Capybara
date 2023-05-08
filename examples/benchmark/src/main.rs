@@ -39,6 +39,6 @@ impl UserSpace for User {
     }
 }
 
-fn main() -> Result<()> {
-    ApplicationContext::new(User::default(), "Benchmark", WindowStyle::Window { size: Coordinates::new(800, 600) })?.run()
+fn main() {
+    ApplicationContext::new(User::default(), "Benchmark", WindowStyle::Window { size: Coordinates::new(800, 600) }).unwrap().run().unwrap();
 }

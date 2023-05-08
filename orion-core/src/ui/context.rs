@@ -1,6 +1,8 @@
 use crate::renderer::camera::{Camera, CameraOrigin};
 use crate::renderer::context::RendererContext;
+use crate::renderer::shader::{Shader, DEFAULT_FRAGMENT_SHADER_UI, DEFAULT_VERTEX_SHADER_UI};
 use crate::window::InputEvent;
+use anyhow::Result;
 use egui::epaint::ahash::HashMap;
 use egui::epaint::Primitive;
 use egui::FullOutput;
@@ -21,33 +23,33 @@ pub struct UiContext {
     pub vao: VertexArray,
     pub vbo: Buffer,
     pub ebo: Buffer,
-    pub camera_id: usize,
+    pub shader_id: usize,
     pub textures: HashMap<TextureId, Texture>,
 
     gl: Rc<glow::Context>,
 }
 
 impl UiContext {
-    pub fn new(renderer: &mut RendererContext) -> Self {
+    pub fn new(renderer: &mut RendererContext) -> Result<Self> {
         unsafe {
             let mut context = Self {
                 inner: Default::default(),
                 screen_size: Default::default(),
                 collected_events: Default::default(),
-                camera_id: renderer.cameras.store(Camera::new(Vec2::new(0.0, 0.0), renderer.viewport_size, CameraOrigin::LeftTop)),
+                shader_id: renderer.shaders.store(Shader::new(&renderer, DEFAULT_VERTEX_SHADER_UI, DEFAULT_FRAGMENT_SHADER_UI)?),
                 vao: renderer.gl.create_vertex_array().unwrap(),
                 vbo: renderer.gl.create_buffer().unwrap(),
                 ebo: renderer.gl.create_buffer().unwrap(),
                 textures: Default::default(),
                 gl: renderer.gl.clone(),
             };
-            context.init();
+            context.init(renderer)?;
 
-            context
+            Ok(context)
         }
     }
 
-    fn init(&mut self) {
+    fn init(&mut self, renderer: &mut RendererContext) -> Result<()> {
         unsafe {
             let f32_size = core::mem::size_of::<f32>() as i32;
 
@@ -61,6 +63,8 @@ impl UiContext {
             self.gl.enable_vertex_attrib_array(0);
             self.gl.enable_vertex_attrib_array(1);
             self.gl.enable_vertex_attrib_array(2);
+
+            Ok(())
         }
     }
 
@@ -75,23 +79,24 @@ impl UiContext {
     }
 
     pub fn get_input(&mut self) -> RawInput {
-        let mut input = RawInput::default();
-        input.screen_rect = Some(Rect::from_two_pos(Pos2::new(0.0, 0.0), Pos2::new(self.screen_size.x, self.screen_size.y)));
-        input.events = self.collected_events.clone();
-        input.max_texture_side = unsafe { Some(self.gl.get_parameter_i32(glow::MAX_TEXTURE_SIZE) as usize) };
+        unsafe {
+            let mut input = RawInput::default();
+            input.screen_rect = Some(Rect::from_two_pos(Pos2::new(0.0, 0.0), Pos2::new(self.screen_size.x, self.screen_size.y)));
+            input.events = self.collected_events.clone();
+            input.max_texture_side = Some(self.gl.get_parameter_i32(glow::MAX_TEXTURE_SIZE) as usize);
 
-        self.collected_events.clear();
+            self.collected_events.clear();
 
-        input
+            input
+        }
     }
 
-    pub fn draw(&mut self, renderer: &mut RendererContext, output: FullOutput) {
-        let clipped_primitives = self.inner.tessellate(output.shapes);
-        renderer.activate_camera(self.camera_id);
+    pub fn draw(&mut self, renderer: &mut RendererContext, output: FullOutput) -> Result<()> {
+        unsafe {
+            renderer.activate_shader(self.shader_id)?;
 
-        for (id, delta) in output.textures_delta.set {
-            if let ImageData::Font(font) = delta.image {
-                unsafe {
+            for (id, delta) in output.textures_delta.set {
+                if let ImageData::Font(font) = delta.image {
                     let texture_id = self.gl.create_texture().unwrap();
                     let data: Vec<u8> = font.srgba_pixels(None).flat_map(|a| a.to_array()).collect();
 
@@ -115,24 +120,22 @@ impl UiContext {
                     self.textures.insert(id, texture_id);
                 }
             }
-        }
 
-        for shape in clipped_primitives {
-            if let Primitive::Mesh(mesh) = shape.primitive {
-                let mut data = Vec::new();
-                for vertice in mesh.vertices {
-                    data.push(vertice.pos.x);
-                    data.push(vertice.pos.y);
-                    data.push(-1.0);
-                    data.push(vertice.color.r() as f32 / 255.0);
-                    data.push(vertice.color.g() as f32 / 255.0);
-                    data.push(vertice.color.b() as f32 / 255.0);
-                    data.push(vertice.color.a() as f32 / 255.0);
-                    data.push(vertice.uv.x);
-                    data.push(vertice.uv.y);
-                }
+            for shape in self.inner.tessellate(output.shapes) {
+                if let Primitive::Mesh(mesh) = shape.primitive {
+                    let mut data = Vec::new();
+                    for vertice in mesh.vertices {
+                        data.push(vertice.pos.x);
+                        data.push(vertice.pos.y);
+                        data.push(-1.0);
+                        data.push(vertice.color.r() as f32 / 255.0);
+                        data.push(vertice.color.g() as f32 / 255.0);
+                        data.push(vertice.color.b() as f32 / 255.0);
+                        data.push(vertice.color.a() as f32 / 255.0);
+                        data.push(vertice.uv.x);
+                        data.push(vertice.uv.y);
+                    }
 
-                unsafe {
                     let f32_size = core::mem::size_of::<f32>() as i32;
                     let vertices_u8 = core::slice::from_raw_parts(data.as_ptr() as *const u8, data.len() * f32_size as usize);
                     let indices_u8 = core::slice::from_raw_parts(mesh.indices.as_ptr() as *const u8, mesh.indices.len() * f32_size as usize);
@@ -148,6 +151,8 @@ impl UiContext {
                     self.gl.draw_elements(glow::TRIANGLES, mesh.indices.len() as i32, glow::UNSIGNED_INT, 0);
                 }
             }
+
+            Ok(())
         }
     }
 }

@@ -23,6 +23,7 @@ pub struct UiContext {
     pub vao: VertexArray,
     pub vbo: Buffer,
     pub ebo: Buffer,
+    pub camera_id: usize,
     pub shader_id: usize,
     pub textures: HashMap<TextureId, Texture>,
 
@@ -36,11 +37,14 @@ impl UiContext {
                 inner: Default::default(),
                 screen_size: Default::default(),
                 collected_events: Default::default(),
-                shader_id: renderer.shaders.store(Shader::new(&renderer, DEFAULT_VERTEX_SHADER_UI, DEFAULT_FRAGMENT_SHADER_UI)?),
+
+                camera_id: renderer.cameras.store(Camera::new(Default::default(), renderer.viewport_size, CameraOrigin::LeftTop)),
+                shader_id: renderer.shaders.store(Shader::new(renderer, DEFAULT_VERTEX_SHADER_UI, DEFAULT_FRAGMENT_SHADER_UI)?),
                 vao: renderer.gl.create_vertex_array().unwrap(),
                 vbo: renderer.gl.create_buffer().unwrap(),
                 ebo: renderer.gl.create_buffer().unwrap(),
                 textures: Default::default(),
+
                 gl: renderer.gl.clone(),
             };
             context.init(renderer)?;
@@ -93,6 +97,7 @@ impl UiContext {
 
     pub fn draw(&mut self, renderer: &mut RendererContext, output: FullOutput) -> Result<()> {
         unsafe {
+            renderer.activate_camera(self.camera_id)?;
             renderer.activate_shader(self.shader_id)?;
 
             for (id, delta) in output.textures_delta.set {

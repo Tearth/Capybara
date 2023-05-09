@@ -5,5 +5,6 @@ edition = "2021"
 
 [dependencies]
 orion-core = { path = "../../orion-core" }
+fastrand = { version = "1.9.0" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

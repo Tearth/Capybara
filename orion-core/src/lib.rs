@@ -9,4 +9,5 @@ pub mod window;
 
 pub use anyhow;
 pub use egui;
+pub use glam;
 pub use log;

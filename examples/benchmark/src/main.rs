@@ -15,12 +15,10 @@ use orion_core::window::Key;
 use orion_core::window::WindowStyle;
 
 #[no_mangle]
-#[cfg(windows)]
 #[cfg(not(debug_assertions))]
 pub static NvOptimusEnablement: i32 = 1;
 
 #[no_mangle]
-#[cfg(windows)]
 #[cfg(not(debug_assertions))]
 pub static AmdPowerXpressRequestHighPerformance: i32 = 1;
 

@@ -1,3 +1,4 @@
+use crate::assets::bundler;
 use crate::renderer::context::RendererContext;
 use crate::ui::context::UiContext;
 use crate::user::UserSpace;

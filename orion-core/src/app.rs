@@ -1,4 +1,4 @@
-use crate::assets::bundler;
+use crate::assets::loader::AssetsLoader;
 use crate::renderer::context::RendererContext;
 use crate::ui::context::UiContext;
 use crate::user::UserSpace;
@@ -14,6 +14,7 @@ use std::rc::Rc;
 pub struct ApplicationContext<U> {
     pub window: Box<WindowContext>,
     pub renderer: RendererContext,
+    pub assets: AssetsLoader,
     pub ui: UiContext,
     pub user: U,
 
@@ -23,6 +24,7 @@ pub struct ApplicationContext<U> {
 pub struct ApplicationState<'a> {
     pub window: &'a mut Box<WindowContext>,
     pub renderer: &'a mut RendererContext,
+    pub assets: &'a mut AssetsLoader,
 }
 
 impl<U> ApplicationContext<U>
@@ -32,9 +34,10 @@ where
     pub fn new(user: U, title: &str, style: WindowStyle) -> Result<Self> {
         let window = WindowContext::new(title, style)?;
         let mut renderer = RendererContext::new(window.load_gl_pointers())?;
+        let assets = AssetsLoader::new();
         let ui = UiContext::new(&mut renderer)?;
 
-        Ok(Self { window, renderer, ui, user, frame_timestamp: Instant::now() })
+        Ok(Self { window, renderer, assets, ui, user, frame_timestamp: Instant::now() })
     }
 
     pub fn run(self) -> Result<()> {
@@ -68,21 +71,21 @@ where
                 }
 
                 self.ui.collect_event(&event);
-                self.user.input(ApplicationState::new(&mut self.window, &mut self.renderer), event);
+                self.user.input(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets), event);
             }
 
             self.renderer.begin_frame()?;
 
             let ui_input = self.ui.get_input();
             let ui_output = self.ui.inner.run(ui_input, |context| {
-                self.user.ui(ApplicationState::new(&mut self.window, &mut self.renderer), context);
+                self.user.ui(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets), context);
             });
 
             let now = Instant::now();
             let delta = (now - self.frame_timestamp).as_secs_f32();
             self.frame_timestamp = now;
 
-            self.user.frame(ApplicationState::new(&mut self.window, &mut self.renderer), delta);
+            self.user.frame(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets), delta);
             self.ui.draw(&mut self.renderer, ui_output)?;
 
             self.renderer.end_frame();
@@ -95,7 +98,7 @@ where
 }
 
 impl<'a> ApplicationState<'a> {
-    pub fn new(window: &'a mut Box<WindowContext>, renderer: &'a mut RendererContext) -> Self {
-        Self { window, renderer }
+    pub fn new(window: &'a mut Box<WindowContext>, renderer: &'a mut RendererContext, assets: &'a mut AssetsLoader) -> Self {
+        Self { window, renderer, assets }
     }
 }

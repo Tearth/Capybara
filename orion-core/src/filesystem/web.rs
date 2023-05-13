@@ -50,6 +50,10 @@ impl FileSystem {
     pub fn load(&mut self, input: &str) -> Result<FileLoadingStatus> {
         let status = *self.status.borrow_mut();
 
+        if status == FileLoadingStatus::Finished && *self.input.borrow() != input {
+            *self.status.borrow_mut() = FileLoadingStatus::Idle;
+        }
+
         if let FileLoadingStatus::Idle = status {
             let mut opts = RequestInit::new();
             opts.method("GET");

@@ -3,6 +3,7 @@ use super::camera::CameraOrigin;
 use super::shader::Shader;
 use super::shader::*;
 use super::sprite::Sprite;
+use super::texture::Texture;
 use crate::utils::storage::Storage;
 use anyhow::Result;
 use glam::Vec2;
@@ -25,6 +26,7 @@ pub struct RendererContext {
 
     pub cameras: Storage<Camera>,
     pub shaders: Storage<Shader>,
+    pub textures: Storage<Texture>,
     pub gl: Rc<Context>,
 
     square_vao: VertexArray,
@@ -54,6 +56,7 @@ impl RendererContext {
 
                 cameras: Default::default(),
                 shaders: Default::default(),
+                textures: Default::default(),
                 gl: Rc::new(gl),
 
                 square_vao,
@@ -87,10 +90,10 @@ impl RendererContext {
                 let u32_size = core::mem::size_of::<u32>() as i32;
 
                 let vertices = [
-                    0.0f32, 0.0f32, 0.0f32, 1.0f32, 0.0f32, 0.0f32, 1.0f32, 0.0f32, 0.0f32, /* 1 */
-                    1.0f32, 0.0f32, 0.0f32, 1.0f32, 0.0f32, 0.0f32, 1.0f32, 1.0f32, 0.0f32, /* 2 */
-                    1.0f32, 1.0f32, 0.0f32, 1.0f32, 0.0f32, 0.0f32, 1.0f32, 1.0f32, 1.0f32, /* 3 */
-                    0.0f32, 1.0f32, 0.0f32, 1.0f32, 0.0f32, 0.0f32, 1.0f32, 0.0f32, 1.0f32, /* 4 */
+                    0.0f32, 0.0f32, 0.0f32, 1.0f32, 1.0f32, 1.0f32, 1.0f32, 0.0f32, 1.0f32, /* 1 */
+                    1.0f32, 0.0f32, 0.0f32, 1.0f32, 1.0f32, 1.0f32, 1.0f32, 1.0f32, 1.0f32, /* 2 */
+                    1.0f32, 1.0f32, 0.0f32, 1.0f32, 1.0f32, 1.0f32, 1.0f32, 1.0f32, 0.0f32, /* 3 */
+                    0.0f32, 1.0f32, 0.0f32, 1.0f32, 1.0f32, 1.0f32, 1.0f32, 0.0f32, 0.0f32, /* 4 */
                 ];
                 let vertices_u8 = core::slice::from_raw_parts(vertices.as_ptr() as *const u8, vertices.len() * f32_size as usize);
 
@@ -150,9 +153,12 @@ impl RendererContext {
         let shader = self.shaders.get(self.active_shader_id)?;
         shader.set_uniform("model", model.as_ref().as_ptr())?;
 
+        if let Ok(texture) = self.textures.get(0) {
+            texture.activate();
+        }
+
         unsafe {
             self.gl.bind_vertex_array(Some(self.square_vao));
-            self.gl.bind_texture(glow::TEXTURE_2D, None);
             self.gl.draw_elements(glow::TRIANGLES, 6, glow::UNSIGNED_INT, 0);
         }
 

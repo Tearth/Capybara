@@ -102,27 +102,45 @@ impl UiContext {
 
             for (id, delta) in output.textures_delta.set {
                 if let ImageData::Font(font) = delta.image {
-                    let texture_id = self.gl.create_texture().unwrap();
                     let data: Vec<u8> = font.srgba_pixels(None).flat_map(|a| a.to_array()).collect();
 
-                    self.gl.bind_texture(glow::TEXTURE_2D, Some(texture_id));
-                    self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, glow::MIRRORED_REPEAT as i32);
-                    self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_T, glow::MIRRORED_REPEAT as i32);
-                    self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MIN_FILTER, glow::NEAREST_MIPMAP_NEAREST as i32);
-                    self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MAG_FILTER, glow::NEAREST as i32);
-                    self.gl.tex_image_2d(
-                        glow::TEXTURE_2D,
-                        0,
-                        glow::RGBA8 as i32,
-                        font.size[0] as i32,
-                        font.size[1] as i32,
-                        0,
-                        glow::RGBA,
-                        glow::UNSIGNED_BYTE,
-                        Some(&data),
-                    );
-                    self.gl.generate_mipmap(glow::TEXTURE_2D);
-                    self.textures.insert(id, texture_id);
+                    if let Some(position) = delta.pos {
+                        let texture = self.textures.get(&id).unwrap();
+
+                        self.gl.bind_texture(glow::TEXTURE_2D, Some(*texture));
+                        self.gl.tex_sub_image_2d(
+                            glow::TEXTURE_2D,
+                            0,
+                            position[0] as i32,
+                            position[1] as i32,
+                            font.size[0] as i32,
+                            font.size[1] as i32,
+                            glow::RGBA,
+                            glow::UNSIGNED_BYTE,
+                            glow::PixelUnpackData::Slice(&data),
+                        );
+                        self.gl.generate_mipmap(glow::TEXTURE_2D);
+                    } else {
+                        let texture_id = self.gl.create_texture().unwrap();
+                        self.gl.bind_texture(glow::TEXTURE_2D, Some(texture_id));
+                        self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, glow::MIRRORED_REPEAT as i32);
+                        self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_T, glow::MIRRORED_REPEAT as i32);
+                        self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MIN_FILTER, glow::NEAREST_MIPMAP_NEAREST as i32);
+                        self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MAG_FILTER, glow::NEAREST as i32);
+                        self.gl.tex_image_2d(
+                            glow::TEXTURE_2D,
+                            0,
+                            glow::RGBA8 as i32,
+                            font.size[0] as i32,
+                            font.size[1] as i32,
+                            0,
+                            glow::RGBA,
+                            glow::UNSIGNED_BYTE,
+                            Some(&data),
+                        );
+                        self.gl.generate_mipmap(glow::TEXTURE_2D);
+                        self.textures.insert(id, texture_id);
+                    }
                 }
             }
 
@@ -132,7 +150,7 @@ impl UiContext {
                     for vertice in mesh.vertices {
                         data.push(vertice.pos.x);
                         data.push(vertice.pos.y);
-                        data.push(-1.0);
+                        data.push(0.0);
                         data.push(vertice.color.r() as f32 / 255.0);
                         data.push(vertice.color.g() as f32 / 255.0);
                         data.push(vertice.color.b() as f32 / 255.0);

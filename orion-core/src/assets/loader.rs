@@ -15,11 +15,18 @@ pub struct AssetsLoader {
     pub filesystem: FileSystem,
 
     pub raw_textures: Vec<RawTexture>,
+    pub raw_fonts: Vec<RawFont>,
 }
 
 impl AssetsLoader {
     pub fn new() -> Self {
-        Self { input: Default::default(), status: AssetsLoadingStatus::Idle, filesystem: Default::default(), raw_textures: Default::default() }
+        Self {
+            input: Default::default(),
+            status: AssetsLoadingStatus::Idle,
+            filesystem: Default::default(),
+            raw_textures: Default::default(),
+            raw_fonts: Default::default(),
+        }
     }
 
     pub fn load(&mut self, input: &str) -> Result<AssetsLoadingStatus> {
@@ -62,6 +69,8 @@ impl AssetsLoader {
                                 let size = Vec2::new(info.width as f32, info.height as f32);
 
                                 self.raw_textures.push(RawTexture::new(name, size, data));
+                            } else if extension == "ttf" {
+                                self.raw_fonts.push(RawFont::new(name, data));
                             }
                         }
                     }

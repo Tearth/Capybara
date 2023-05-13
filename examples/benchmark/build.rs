@@ -1,12 +1,14 @@
 use orion_core::assets::bundler;
 
 fn main() {
-    #[cfg(not(any(debug_assertions, target_os = "unknown", target_arch = "wasm32")))]
-    println!("cargo:rustc-link-arg=/EXPORT:NvOptimusEnablement");
+    let profile = std::env::var("PROFILE").unwrap();
+    let target = std::env::var("TARGET").unwrap();
 
-    #[cfg(not(any(debug_assertions, target_os = "unknown", target_arch = "wasm32")))]
-    println!("cargo:rustc-link-arg=/EXPORT:AmdPowerXpressRequestHighPerformance");
+    if profile == "release" && target == "x86_64-pc-windows-msvc" {
+        println!("cargo:rustc-link-arg=/EXPORT:NvOptimusEnablement");
+        println!("cargo:rustc-link-arg=/EXPORT:AmdPowerXpressRequestHighPerformance");
+    }
 
-    bundler::pack("./assets/", "./target/assets.zip").unwrap();
+    bundler::pack("./assets/", "./data/data0.zip").unwrap();
     println!("cargo:rerun-if-changed=./assets/");
 }

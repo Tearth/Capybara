@@ -1,6 +1,8 @@
+use crate::assets::RawTexture;
 use crate::renderer::camera::{Camera, CameraOrigin};
 use crate::renderer::context::RendererContext;
-use crate::renderer::shader::{Shader, DEFAULT_FRAGMENT_SHADER_UI, DEFAULT_VERTEX_SHADER_UI};
+use crate::renderer::sprite::{Shape, ShapeData, Sprite};
+use crate::renderer::texture::Texture;
 use crate::window::InputEvent;
 use anyhow::Result;
 use egui::epaint::ahash::HashMap;
@@ -12,7 +14,7 @@ use egui::Rect;
 use egui::TextureId;
 use egui::{Event, ImageData};
 use glam::Vec2;
-use glow::{Buffer, HasContext, Texture, VertexArray};
+use glow::HasContext;
 use std::rc::Rc;
 
 pub struct UiContext {
@@ -20,12 +22,8 @@ pub struct UiContext {
     pub screen_size: Vec2,
     pub collected_events: Vec<Event>,
 
-    pub vao: VertexArray,
-    pub vbo: Buffer,
-    pub ebo: Buffer,
     pub camera_id: usize,
-    pub shader_id: usize,
-    pub textures: HashMap<TextureId, Texture>,
+    pub textures: HashMap<TextureId, usize>,
 
     gl: Rc<glow::Context>,
 }
@@ -39,10 +37,6 @@ impl UiContext {
                 collected_events: Default::default(),
 
                 camera_id: renderer.cameras.store(Camera::new(Default::default(), renderer.viewport_size, CameraOrigin::LeftTop)),
-                shader_id: renderer.shaders.store(Shader::new(renderer, DEFAULT_VERTEX_SHADER_UI, DEFAULT_FRAGMENT_SHADER_UI)?),
-                vao: renderer.gl.create_vertex_array().unwrap(),
-                vbo: renderer.gl.create_buffer().unwrap(),
-                ebo: renderer.gl.create_buffer().unwrap(),
                 textures: Default::default(),
 
                 gl: renderer.gl.clone(),
@@ -54,22 +48,7 @@ impl UiContext {
     }
 
     fn init(&mut self, renderer: &mut RendererContext) -> Result<()> {
-        unsafe {
-            let f32_size = core::mem::size_of::<f32>() as i32;
-
-            self.gl.bind_vertex_array(Some(self.vao));
-            self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.vbo));
-
-            self.gl.vertex_attrib_pointer_f32(0, 3, glow::FLOAT, false, 9 * f32_size, 0);
-            self.gl.vertex_attrib_pointer_f32(1, 4, glow::FLOAT, false, 9 * f32_size, 3 * f32_size);
-            self.gl.vertex_attrib_pointer_f32(2, 2, glow::FLOAT, false, 9 * f32_size, 7 * f32_size);
-
-            self.gl.enable_vertex_attrib_array(0);
-            self.gl.enable_vertex_attrib_array(1);
-            self.gl.enable_vertex_attrib_array(2);
-
-            Ok(())
-        }
+        unsafe { Ok(()) }
     }
 
     pub fn collect_event(&mut self, event: &InputEvent) {
@@ -96,86 +75,52 @@ impl UiContext {
     }
 
     pub fn draw(&mut self, renderer: &mut RendererContext, output: FullOutput) -> Result<()> {
-        unsafe {
-            renderer.activate_camera(self.camera_id)?;
-            renderer.activate_shader(self.shader_id)?;
+        renderer.activate_camera(self.camera_id)?;
 
-            for (id, delta) in output.textures_delta.set {
-                if let ImageData::Font(font) = delta.image {
-                    let data: Vec<u8> = font.srgba_pixels(None).flat_map(|a| a.to_array()).collect();
+        for (id, delta) in output.textures_delta.set {
+            if let ImageData::Font(font) = delta.image {
+                let data: Vec<u8> = font.srgba_pixels(None).flat_map(|a| a.to_array()).collect();
 
-                    if let Some(position) = delta.pos {
-                        let texture = self.textures.get(&id).unwrap();
-
-                        self.gl.bind_texture(glow::TEXTURE_2D, Some(*texture));
-                        self.gl.tex_sub_image_2d(
-                            glow::TEXTURE_2D,
-                            0,
-                            position[0] as i32,
-                            position[1] as i32,
-                            font.size[0] as i32,
-                            font.size[1] as i32,
-                            glow::RGBA,
-                            glow::UNSIGNED_BYTE,
-                            glow::PixelUnpackData::Slice(&data),
-                        );
-                        self.gl.generate_mipmap(glow::TEXTURE_2D);
-                    } else {
-                        let texture_id = self.gl.create_texture().unwrap();
-                        self.gl.bind_texture(glow::TEXTURE_2D, Some(texture_id));
-                        self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, glow::MIRRORED_REPEAT as i32);
-                        self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_T, glow::MIRRORED_REPEAT as i32);
-                        self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MIN_FILTER, glow::NEAREST_MIPMAP_NEAREST as i32);
-                        self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MAG_FILTER, glow::NEAREST as i32);
-                        self.gl.tex_image_2d(
-                            glow::TEXTURE_2D,
-                            0,
-                            glow::RGBA8 as i32,
-                            font.size[0] as i32,
-                            font.size[1] as i32,
-                            0,
-                            glow::RGBA,
-                            glow::UNSIGNED_BYTE,
-                            Some(&data),
-                        );
-                        self.gl.generate_mipmap(glow::TEXTURE_2D);
-                        self.textures.insert(id, texture_id);
-                    }
+                if let Some(position) = delta.pos {
+                    let texture_id = self.textures.get(&id).unwrap();
+                    let texture = renderer.textures.get(*texture_id)?;
+                    texture.update(Vec2::new(position[0] as f32, position[1] as f32), Vec2::new(font.size[0] as f32, font.size[1] as f32), data);
+                } else {
+                    let raw = RawTexture::new("".to_string(), Vec2::new(font.size[0] as f32, font.size[1] as f32), data);
+                    let texture_id = renderer.textures.store(Texture::new(self.gl.clone(), &raw));
+                    self.textures.insert(id, texture_id);
                 }
             }
-
-            for shape in self.inner.tessellate(output.shapes) {
-                if let Primitive::Mesh(mesh) = shape.primitive {
-                    let mut data = Vec::new();
-                    for vertice in mesh.vertices {
-                        data.push(vertice.pos.x);
-                        data.push(vertice.pos.y);
-                        data.push(0.0);
-                        data.push(vertice.color.r() as f32 / 255.0);
-                        data.push(vertice.color.g() as f32 / 255.0);
-                        data.push(vertice.color.b() as f32 / 255.0);
-                        data.push(vertice.color.a() as f32 / 255.0);
-                        data.push(vertice.uv.x);
-                        data.push(vertice.uv.y);
-                    }
-
-                    let f32_size = core::mem::size_of::<f32>() as i32;
-                    let vertices_u8 = core::slice::from_raw_parts(data.as_ptr() as *const u8, data.len() * f32_size as usize);
-                    let indices_u8 = core::slice::from_raw_parts(mesh.indices.as_ptr() as *const u8, mesh.indices.len() * f32_size as usize);
-
-                    self.gl.bind_vertex_array(Some(self.vao));
-                    self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.vbo));
-                    self.gl.buffer_data_u8_slice(glow::ARRAY_BUFFER, vertices_u8, glow::STATIC_DRAW);
-
-                    self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.ebo));
-                    self.gl.buffer_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, indices_u8, glow::STATIC_DRAW);
-
-                    self.gl.bind_texture(glow::TEXTURE_2D, Some(*self.textures.get(&mesh.texture_id).unwrap()));
-                    self.gl.draw_elements(glow::TRIANGLES, mesh.indices.len() as i32, glow::UNSIGNED_INT, 0);
-                }
-            }
-
-            Ok(())
         }
+
+        for shape in self.inner.tessellate(output.shapes) {
+            if let Primitive::Mesh(mesh) = shape.primitive {
+                let mut vertices = Vec::new();
+                for vertice in mesh.vertices {
+                    vertices.push(vertice.pos.x);
+                    vertices.push(vertice.pos.y);
+                    vertices.push(vertice.color.r() as f32 / 255.0);
+                    vertices.push(vertice.color.g() as f32 / 255.0);
+                    vertices.push(vertice.color.b() as f32 / 255.0);
+                    vertices.push(vertice.color.a() as f32 / 255.0);
+                    vertices.push(vertice.uv.x);
+                    vertices.push(vertice.uv.y);
+                }
+
+                let mut sprite = Sprite::new();
+                sprite.shape = Shape::Custom(ShapeData::new(vertices, mesh.indices));
+                sprite.texture_id = *self.textures.get(&mesh.texture_id).unwrap();
+
+                renderer.draw(&sprite)?;
+                renderer.flush()?;
+            }
+        }
+
+        for id in output.textures_delta.free {
+            let texture_id = self.textures.get(&id).unwrap();
+            renderer.textures.remove(*texture_id)?;
+        }
+
+        Ok(())
     }
 }

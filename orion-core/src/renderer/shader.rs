@@ -15,9 +15,6 @@ use std::slice;
 pub const DEFAULT_VERTEX_SHADER: &str = include_str!("./shaders/default.vert");
 pub const DEFAULT_FRAGMENT_SHADER: &str = include_str!("./shaders/default.frag");
 
-pub const DEFAULT_VERTEX_SHADER_UI: &str = include_str!("./shaders/default_ui.vert");
-pub const DEFAULT_FRAGMENT_SHADER_UI: &str = include_str!("./shaders/default_ui.frag");
-
 pub struct Shader {
     pub id: usize,
     pub name: Option<String>,

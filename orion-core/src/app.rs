@@ -85,7 +85,7 @@ where
 
             self.renderer.begin_user_frame()?;
             self.user.frame(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets), delta);
-            self.renderer.end_user_frame();
+            self.renderer.end_user_frame()?;
 
             self.ui.draw(&mut self.renderer, ui_output)?;
             self.window.swap_buffers();

@@ -13,7 +13,10 @@ use glow::Buffer;
 use glow::Context;
 use glow::HasContext;
 use glow::VertexArray;
+use glow::STATIC_DRAW;
 use instant::Instant;
+use std::cmp;
+use std::ptr;
 use std::rc::Rc;
 
 pub struct RendererContext {
@@ -39,6 +42,7 @@ pub struct RendererContext {
     buffer_vertices_count: usize,
     buffer_indices_count: usize,
     buffer_indices_max: u32,
+    buffer_resized: bool,
     buffer_metadata: Option<BufferMetadata>,
 
     fps_timestamp: Instant,
@@ -81,6 +85,7 @@ impl RendererContext {
                 buffer_vertices_count: 0,
                 buffer_indices_count: 0,
                 buffer_indices_max: 0,
+                buffer_resized: true,
                 buffer_metadata: None,
 
                 fps_timestamp: Instant::now(),
@@ -182,10 +187,12 @@ impl RendererContext {
             Shape::Standard => {
                 if v_base + 32 >= self.buffer_vertices_queue.len() {
                     self.buffer_vertices_queue.resize(v_base * 2, 0.0);
+                    self.buffer_resized = true;
                 }
 
                 if i_base + 6 >= self.buffer_indices_queue.len() {
                     self.buffer_indices_queue.resize(i_base * 2, 0);
+                    self.buffer_resized = true;
                 }
 
                 let model = sprite.get_model();
@@ -241,7 +248,40 @@ impl RendererContext {
                 self.buffer_indices_count = i_base + 6;
                 self.buffer_indices_max += 4;
             }
-            Shape::Custom(data) => {}
+            Shape::Custom(data) => {
+                loop {
+                    let mut sufficient_space = true;
+
+                    if v_base + data.vertices.len() >= self.buffer_vertices_queue.len() {
+                        self.buffer_vertices_queue.resize(v_base * 2, 0.0);
+                        self.buffer_resized = true;
+                        sufficient_space = false;
+                    }
+
+                    if i_base + data.indices.len() >= self.buffer_indices_queue.len() {
+                        self.buffer_indices_queue.resize(i_base * 2, 0);
+                        self.buffer_resized = true;
+                        sufficient_space = false;
+                    }
+
+                    if sufficient_space {
+                        break;
+                    }
+                }
+
+                unsafe {
+                    ptr::copy(data.vertices.as_ptr(), (self.buffer_vertices_queue.as_mut_ptr()).add(v_base), data.vertices.len());
+                }
+
+                let base_indice = self.buffer_indices_max;
+                for i in 0..data.indices.len() {
+                    self.buffer_indices_queue[i_base + i] = base_indice + data.indices[i];
+                    self.buffer_indices_max = cmp::max(self.buffer_indices_max, base_indice + data.indices[i]);
+                }
+
+                self.buffer_vertices_count = v_base + data.vertices.len();
+                self.buffer_indices_count = i_base + data.indices.len();
+            }
         }
 
         Ok(())
@@ -250,23 +290,38 @@ impl RendererContext {
     pub fn flush(&mut self) -> Result<()> {
         unsafe {
             if let Some(metadata) = &self.buffer_metadata {
-                self.gl.bind_vertex_array(Some(self.buffer_vao));
-                self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.buffer_vbo));
+                if self.buffer_indices_count > 0 {
+                    let mut camera = self.cameras.get_mut(self.active_camera_id)?;
 
-                let f32_size = core::mem::size_of::<f32>() as i32;
-                let models_u8 = core::slice::from_raw_parts(self.buffer_vertices_queue.as_ptr() as *const u8, self.buffer_vertices_count * f32_size as usize);
-                self.gl.buffer_data_u8_slice(glow::ARRAY_BUFFER, models_u8, glow::STATIC_DRAW);
+                    if camera.dirty {
+                        let shader = self.shaders.get(self.active_shader_id)?;
+                        shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr())?;
+                        shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr())?;
 
-                self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.buffer_ebo));
-                let indices_u8 = core::slice::from_raw_parts(self.buffer_indices_queue.as_ptr() as *const u8, self.buffer_indices_count * f32_size as usize);
-                self.gl.buffer_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, indices_u8, glow::STATIC_DRAW);
+                        camera.dirty = false;
+                    }
 
-                self.textures.get(metadata.texture_id)?.activate();
-                self.gl.draw_elements(glow::TRIANGLES, self.buffer_indices_count as i32, glow::UNSIGNED_INT, 0);
+                    let f32_size = core::mem::size_of::<f32>() as i32;
+                    if self.buffer_resized {
+                        self.gl.buffer_data_size(glow::ARRAY_BUFFER, self.buffer_vertices_count as i32 * f32_size, glow::STATIC_DRAW);
+                        self.gl.buffer_data_size(glow::ELEMENT_ARRAY_BUFFER, self.buffer_indices_count as i32 * f32_size, glow::STATIC_DRAW);
+                        self.buffer_resized = false;
+                    }
 
-                self.buffer_vertices_count = 0;
-                self.buffer_indices_count = 0;
-                self.buffer_indices_max = 0;
+                    let models_u8 = core::slice::from_raw_parts(self.buffer_vertices_queue.as_ptr() as *const u8, self.buffer_vertices_count * f32_size as usize);
+                    let indices_u8 = core::slice::from_raw_parts(self.buffer_indices_queue.as_ptr() as *const u8, self.buffer_indices_count * f32_size as usize);
+
+                    self.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, 0, models_u8);
+                    self.gl.buffer_sub_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, 0, indices_u8);
+
+                    self.textures.get(metadata.texture_id)?.activate();
+                    self.gl.draw_elements(glow::TRIANGLES, self.buffer_indices_count as i32, glow::UNSIGNED_INT, 0);
+
+                    self.buffer_vertices_count = 0;
+                    self.buffer_indices_count = 0;
+                    self.buffer_indices_max = 0;
+                }
+
                 self.buffer_metadata = None;
             }
 
@@ -286,15 +341,10 @@ impl RendererContext {
 
     pub fn activate_shader(&mut self, shader_id: usize) -> Result<()> {
         unsafe {
-            let shader = self.shaders.get(shader_id)?;
             self.active_shader_id = shader_id;
-            self.gl.use_program(Some(shader.program));
 
-            let mut camera = self.cameras.get_mut(self.active_camera_id)?;
-            shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr())?;
-            shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr())?;
-
-            camera.dirty = false;
+            self.gl.use_program(Some(self.shaders.get(shader_id)?.program));
+            self.cameras.get_mut(self.active_camera_id)?.dirty = false;
 
             Ok(())
         }

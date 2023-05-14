@@ -1,4 +1,5 @@
 use crate::{assets::RawTexture, utils::storage::StorageItem};
+use glam::Vec2;
 use glow::HasContext;
 use std::rc::Rc;
 
@@ -23,6 +24,24 @@ impl Texture {
             gl.generate_mipmap(glow::TEXTURE_2D);
 
             Self { id: 0, name: None, inner, gl }
+        }
+    }
+
+    pub fn update(&self, position: Vec2, size: Vec2, data: Vec<u8>) {
+        unsafe {
+            self.gl.bind_texture(glow::TEXTURE_2D, Some(self.inner));
+            self.gl.tex_sub_image_2d(
+                glow::TEXTURE_2D,
+                0,
+                position.x as i32,
+                position.y as i32,
+                size.x as i32,
+                size.y as i32,
+                glow::RGBA,
+                glow::UNSIGNED_BYTE,
+                glow::PixelUnpackData::Slice(&data),
+            );
+            self.gl.generate_mipmap(glow::TEXTURE_2D);
         }
     }
 

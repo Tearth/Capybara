@@ -110,21 +110,17 @@ impl RendererContext {
             self.default_shader_id = self.shaders.store(Shader::new(self, DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER)?);
             self.activate_shader(self.default_shader_id)?;
 
-            {
-                let f32_size = core::mem::size_of::<f32>() as i32;
+            self.gl.bind_vertex_array(Some(self.buffer_vao));
+            self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.buffer_vbo));
+            self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.buffer_ebo));
 
-                self.gl.bind_vertex_array(Some(self.buffer_vao));
-                self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.buffer_vbo));
-                self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.buffer_ebo));
+            self.gl.vertex_attrib_pointer_f32(0, 2, glow::FLOAT, false, 8 * 4, 0);
+            self.gl.vertex_attrib_pointer_f32(1, 4, glow::FLOAT, false, 8 * 4, 2 * 4);
+            self.gl.vertex_attrib_pointer_f32(2, 2, glow::FLOAT, false, 8 * 4, 6 * 4);
 
-                self.gl.vertex_attrib_pointer_f32(0, 2, glow::FLOAT, false, 8 * f32_size, 0);
-                self.gl.vertex_attrib_pointer_f32(1, 4, glow::FLOAT, false, 8 * f32_size, 2 * f32_size);
-                self.gl.vertex_attrib_pointer_f32(2, 2, glow::FLOAT, false, 8 * f32_size, 6 * f32_size);
-
-                self.gl.enable_vertex_attrib_array(0);
-                self.gl.enable_vertex_attrib_array(1);
-                self.gl.enable_vertex_attrib_array(2);
-            }
+            self.gl.enable_vertex_attrib_array(0);
+            self.gl.enable_vertex_attrib_array(1);
+            self.gl.enable_vertex_attrib_array(2);
 
             Ok(())
         }
@@ -186,12 +182,12 @@ impl RendererContext {
         match &sprite.shape {
             Shape::Standard => {
                 if v_base + 32 >= self.buffer_vertices_queue.len() {
-                    self.buffer_vertices_queue.resize(v_base * 2, 0.0);
+                    self.buffer_vertices_queue.resize(self.buffer_vertices_queue.len() * 2, 0.0);
                     self.buffer_resized = true;
                 }
 
                 if i_base + 6 >= self.buffer_indices_queue.len() {
-                    self.buffer_indices_queue.resize(i_base * 2, 0);
+                    self.buffer_indices_queue.resize(self.buffer_indices_queue.len() * 2, 0);
                     self.buffer_resized = true;
                 }
 
@@ -253,13 +249,13 @@ impl RendererContext {
                     let mut sufficient_space = true;
 
                     if v_base + data.vertices.len() >= self.buffer_vertices_queue.len() {
-                        self.buffer_vertices_queue.resize(v_base * 2, 0.0);
+                        self.buffer_vertices_queue.resize(self.buffer_vertices_queue.len() * 2, 0.0);
                         self.buffer_resized = true;
                         sufficient_space = false;
                     }
 
                     if i_base + data.indices.len() >= self.buffer_indices_queue.len() {
-                        self.buffer_indices_queue.resize(i_base * 2, 0);
+                        self.buffer_indices_queue.resize(self.buffer_indices_queue.len() * 2, 0);
                         self.buffer_resized = true;
                         sufficient_space = false;
                     }
@@ -301,15 +297,14 @@ impl RendererContext {
                         camera.dirty = false;
                     }
 
-                    let f32_size = core::mem::size_of::<f32>() as i32;
                     if self.buffer_resized {
-                        self.gl.buffer_data_size(glow::ARRAY_BUFFER, self.buffer_vertices_count as i32 * f32_size, glow::STATIC_DRAW);
-                        self.gl.buffer_data_size(glow::ELEMENT_ARRAY_BUFFER, self.buffer_indices_count as i32 * f32_size, glow::STATIC_DRAW);
+                        self.gl.buffer_data_size(glow::ARRAY_BUFFER, self.buffer_vertices_queue.len() as i32 * 4, glow::STATIC_DRAW);
+                        self.gl.buffer_data_size(glow::ELEMENT_ARRAY_BUFFER, self.buffer_indices_queue.len() as i32 * 4, glow::STATIC_DRAW);
                         self.buffer_resized = false;
                     }
 
-                    let models_u8 = core::slice::from_raw_parts(self.buffer_vertices_queue.as_ptr() as *const u8, self.buffer_vertices_count * f32_size as usize);
-                    let indices_u8 = core::slice::from_raw_parts(self.buffer_indices_queue.as_ptr() as *const u8, self.buffer_indices_count * f32_size as usize);
+                    let models_u8 = core::slice::from_raw_parts(self.buffer_vertices_queue.as_ptr() as *const u8, self.buffer_vertices_count * 4 as usize);
+                    let indices_u8 = core::slice::from_raw_parts(self.buffer_indices_queue.as_ptr() as *const u8, self.buffer_indices_count * 4 as usize);
 
                     self.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, 0, models_u8);
                     self.gl.buffer_sub_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, 0, indices_u8);

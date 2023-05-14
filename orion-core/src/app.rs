@@ -74,8 +74,6 @@ where
                 self.user.input(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets), event);
             }
 
-            self.renderer.begin_frame()?;
-
             let ui_input = self.ui.get_input();
             let ui_output = self.ui.inner.run(ui_input, |context| {
                 self.user.ui(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets), context);
@@ -85,10 +83,11 @@ where
             let delta = (now - self.frame_timestamp).as_secs_f32();
             self.frame_timestamp = now;
 
+            self.renderer.begin_user_frame()?;
             self.user.frame(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets), delta);
-            self.ui.draw(&mut self.renderer, ui_output)?;
+            self.renderer.end_user_frame();
 
-            self.renderer.end_frame();
+            self.ui.draw(&mut self.renderer, ui_output)?;
             self.window.swap_buffers();
 
             #[cfg(web)]

@@ -116,6 +116,12 @@ impl Shader {
             Ok(())
         }
     }
+
+    pub fn activate(&self) {
+        unsafe {
+            self.gl.use_program(Some(self.program));
+        }
+    }
 }
 
 impl StorageItem for Shader {

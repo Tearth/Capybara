@@ -13,7 +13,6 @@ use glow::Buffer;
 use glow::Context;
 use glow::HasContext;
 use glow::VertexArray;
-use glow::STATIC_DRAW;
 use instant::Instant;
 use std::cmp;
 use std::ptr;
@@ -299,8 +298,8 @@ impl RendererContext {
                     }
 
                     if self.buffer_resized {
-                        self.gl.buffer_data_size(glow::ARRAY_BUFFER, self.buffer_vertices_queue.len() as i32 * 4, glow::STATIC_DRAW);
-                        self.gl.buffer_data_size(glow::ELEMENT_ARRAY_BUFFER, self.buffer_indices_queue.len() as i32 * 4, glow::STATIC_DRAW);
+                        self.gl.buffer_data_size(glow::ARRAY_BUFFER, self.buffer_vertices_queue.len() as i32 * 4, glow::DYNAMIC_DRAW);
+                        self.gl.buffer_data_size(glow::ELEMENT_ARRAY_BUFFER, self.buffer_indices_queue.len() as i32 * 4, glow::DYNAMIC_DRAW);
                         self.buffer_resized = false;
                     }
 
@@ -336,14 +335,12 @@ impl RendererContext {
     }
 
     pub fn activate_shader(&mut self, shader_id: usize) -> Result<()> {
-        unsafe {
-            self.active_shader_id = shader_id;
+        self.active_shader_id = shader_id;
 
-            self.gl.use_program(Some(self.shaders.get(shader_id)?.program));
-            self.cameras.get_mut(self.active_camera_id)?.dirty = false;
+        self.shaders.get(shader_id)?.activate();
+        self.cameras.get_mut(self.active_camera_id)?.dirty = true;
 
-            Ok(())
-        }
+        Ok(())
     }
 
     pub fn set_viewport(&mut self, size: Vec2) -> Result<()> {
@@ -353,9 +350,7 @@ impl RendererContext {
 
             let camera = self.cameras.get_mut(self.active_camera_id)?;
             camera.size = self.viewport_size;
-
-            let shader = self.shaders.get(self.active_shader_id)?;
-            shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr())?;
+            camera.dirty = true;
 
             Ok(())
         }

@@ -18,7 +18,7 @@ pub enum CameraOrigin {
 
 impl Camera {
     pub fn new(position: Vec2, size: Vec2, origin: CameraOrigin) -> Self {
-        Self { id: 0, name: None, position, size, origin, dirty: false }
+        Self { id: 0, name: None, position, size, origin, dirty: true }
     }
 
     pub fn get_projection_matrix(&self) -> Mat4 {

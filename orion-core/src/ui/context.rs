@@ -5,8 +5,8 @@ use crate::renderer::context::RendererContext;
 use crate::renderer::sprite::Shape;
 use crate::renderer::sprite::ShapeData;
 use crate::renderer::sprite::Sprite;
-use crate::renderer::texture::Filter;
 use crate::renderer::texture::Texture;
+use crate::renderer::texture::TextureFilter;
 use crate::window::InputEvent;
 use crate::window::Key;
 use crate::window::Modifiers;
@@ -23,7 +23,6 @@ use egui::PointerButton;
 use egui::Pos2;
 use egui::RawInput;
 use egui::Rect;
-use egui::TextureFilter;
 use egui::TextureId;
 use egui::TextureOptions;
 use glam::Vec2;
@@ -217,17 +216,17 @@ impl UiContext {
         };
 
         if !font {
-            let texture = renderer.textures.get(texture_id)?;
-
             let minification = match options.minification {
-                TextureFilter::Linear => Filter::Linear,
-                TextureFilter::Nearest => Filter::Nearest,
+                egui::TextureFilter::Linear => TextureFilter::Linear,
+                egui::TextureFilter::Nearest => TextureFilter::Nearest,
             };
+
             let magnification = match options.magnification {
-                TextureFilter::Linear => Filter::Linear,
-                TextureFilter::Nearest => Filter::Nearest,
+                egui::TextureFilter::Linear => TextureFilter::Linear,
+                egui::TextureFilter::Nearest => TextureFilter::Nearest,
             };
-            texture.set_filters(minification, magnification);
+
+            renderer.textures.get(texture_id)?.set_filters(minification, magnification);
         }
 
         Ok(())

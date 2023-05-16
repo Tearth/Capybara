@@ -11,7 +11,7 @@ pub struct Texture {
     gl: Rc<glow::Context>,
 }
 
-pub enum Filter {
+pub enum TextureFilter {
     Linear,
     Nearest,
 }
@@ -45,21 +45,21 @@ impl Texture {
                 size.y as i32,
                 glow::RGBA,
                 glow::UNSIGNED_BYTE,
-                glow::PixelUnpackData::Slice(&data),
+                glow::PixelUnpackData::Slice(data),
             );
             self.gl.generate_mipmap(glow::TEXTURE_2D);
         }
     }
 
-    pub fn set_filters(&self, minification: Filter, magnification: Filter) {
+    pub fn set_filters(&self, minification: TextureFilter, magnification: TextureFilter) {
         let minification_value = match minification {
-            Filter::Linear => glow::LINEAR_MIPMAP_LINEAR,
-            Filter::Nearest => glow::NEAREST_MIPMAP_NEAREST,
+            TextureFilter::Linear => glow::LINEAR_MIPMAP_LINEAR,
+            TextureFilter::Nearest => glow::NEAREST_MIPMAP_NEAREST,
         } as i32;
 
         let magnification_value = match magnification {
-            Filter::Linear => glow::LINEAR,
-            Filter::Nearest => glow::NEAREST,
+            TextureFilter::Linear => glow::LINEAR,
+            TextureFilter::Nearest => glow::NEAREST,
         } as i32;
 
         unsafe {

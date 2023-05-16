@@ -199,37 +199,37 @@ impl RendererContext {
 
                 self.buffer_vertices_queue[v_base + 0] = v1.x;
                 self.buffer_vertices_queue[v_base + 1] = v1.y;
-                self.buffer_vertices_queue[v_base + 2] = 1.0;
-                self.buffer_vertices_queue[v_base + 3] = 1.0;
-                self.buffer_vertices_queue[v_base + 4] = 1.0;
-                self.buffer_vertices_queue[v_base + 5] = 1.0;
+                self.buffer_vertices_queue[v_base + 2] = sprite.color.x;
+                self.buffer_vertices_queue[v_base + 3] = sprite.color.y;
+                self.buffer_vertices_queue[v_base + 4] = sprite.color.z;
+                self.buffer_vertices_queue[v_base + 5] = sprite.color.w;
                 self.buffer_vertices_queue[v_base + 6] = 0.0;
                 self.buffer_vertices_queue[v_base + 7] = 1.0;
 
                 self.buffer_vertices_queue[v_base + 8] = v2.x;
                 self.buffer_vertices_queue[v_base + 9] = v2.y;
-                self.buffer_vertices_queue[v_base + 10] = 1.0;
-                self.buffer_vertices_queue[v_base + 11] = 1.0;
-                self.buffer_vertices_queue[v_base + 12] = 1.0;
-                self.buffer_vertices_queue[v_base + 13] = 1.0;
+                self.buffer_vertices_queue[v_base + 10] = sprite.color.x;
+                self.buffer_vertices_queue[v_base + 11] = sprite.color.y;
+                self.buffer_vertices_queue[v_base + 12] = sprite.color.z;
+                self.buffer_vertices_queue[v_base + 13] = sprite.color.w;
                 self.buffer_vertices_queue[v_base + 14] = 1.0;
                 self.buffer_vertices_queue[v_base + 15] = 1.0;
 
                 self.buffer_vertices_queue[v_base + 16] = v3.x;
                 self.buffer_vertices_queue[v_base + 17] = v3.y;
-                self.buffer_vertices_queue[v_base + 18] = 1.0;
-                self.buffer_vertices_queue[v_base + 19] = 1.0;
-                self.buffer_vertices_queue[v_base + 20] = 1.0;
-                self.buffer_vertices_queue[v_base + 21] = 1.0;
+                self.buffer_vertices_queue[v_base + 18] = sprite.color.x;
+                self.buffer_vertices_queue[v_base + 19] = sprite.color.y;
+                self.buffer_vertices_queue[v_base + 20] = sprite.color.z;
+                self.buffer_vertices_queue[v_base + 21] = sprite.color.w;
                 self.buffer_vertices_queue[v_base + 22] = 1.0;
                 self.buffer_vertices_queue[v_base + 23] = 0.0;
 
                 self.buffer_vertices_queue[v_base + 24] = v4.x;
                 self.buffer_vertices_queue[v_base + 25] = v4.y;
-                self.buffer_vertices_queue[v_base + 26] = 1.0;
-                self.buffer_vertices_queue[v_base + 27] = 1.0;
-                self.buffer_vertices_queue[v_base + 28] = 1.0;
-                self.buffer_vertices_queue[v_base + 29] = 1.0;
+                self.buffer_vertices_queue[v_base + 26] = sprite.color.x;
+                self.buffer_vertices_queue[v_base + 27] = sprite.color.y;
+                self.buffer_vertices_queue[v_base + 28] = sprite.color.z;
+                self.buffer_vertices_queue[v_base + 29] = sprite.color.w;
                 self.buffer_vertices_queue[v_base + 30] = 0.0;
                 self.buffer_vertices_queue[v_base + 31] = 0.0;
 

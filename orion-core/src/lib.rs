@@ -1,4 +1,11 @@
-#![allow(clippy::while_immutable_condition, clippy::never_loop, clippy::not_unsafe_ptr_arg_deref, clippy::type_complexity)]
+#![allow(
+    clippy::while_immutable_condition,
+    clippy::never_loop,
+    clippy::not_unsafe_ptr_arg_deref,
+    clippy::type_complexity,
+    clippy::identity_op,
+    clippy::too_many_arguments
+)]
 
 pub mod app;
 pub mod assets;

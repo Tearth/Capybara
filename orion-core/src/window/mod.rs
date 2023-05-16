@@ -116,7 +116,7 @@ pub enum Key {
     Unknown,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
 pub struct Modifiers {
     pub control: bool,
     pub alt: bool,

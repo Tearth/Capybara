@@ -68,7 +68,7 @@ impl AssetsLoader {
                                 let info = reader.next_frame(&mut data)?;
                                 let size = Vec2::new(info.width as f32, info.height as f32);
 
-                                self.raw_textures.push(RawTexture::new(name, size, data));
+                                self.raw_textures.push(RawTexture::new(name, size, &data));
                             } else if extension == "ttf" {
                                 self.raw_fonts.push(RawFont::new(name, data));
                             }

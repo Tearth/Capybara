@@ -101,7 +101,8 @@ impl RendererContext {
     fn init(&mut self) -> Result<()> {
         unsafe {
             self.gl.enable(glow::BLEND);
-            self.gl.blend_func(glow::SRC_ALPHA, glow::ONE_MINUS_SRC_ALPHA);
+            self.gl.blend_equation_separate(glow::FUNC_ADD, glow::FUNC_ADD);
+            self.gl.blend_func_separate(glow::ONE, glow::ONE_MINUS_SRC_ALPHA, glow::ONE_MINUS_DST_ALPHA, glow::ONE);
             self.set_clear_color(Vec4::new(0.0, 0.0, 0.0, 1.0));
 
             self.default_camera_id = self.cameras.store(Camera::new(Default::default(), Default::default(), CameraOrigin::LeftBottom));
@@ -364,6 +365,19 @@ impl RendererContext {
         unsafe {
             self.gl.clear_color(color.x, color.y, color.z, color.w);
             self.clear_color = color;
+        }
+    }
+
+    pub fn enable_scissor(&self, position: Vec2, size: Vec2) {
+        unsafe {
+            self.gl.enable(glow::SCISSOR_TEST);
+            self.gl.scissor(position.x as i32, position.y as i32, size.x as i32, size.y as i32);
+        }
+    }
+
+    pub fn disable_scissor(&self) {
+        unsafe {
+            self.gl.disable(glow::SCISSOR_TEST);
         }
     }
 }

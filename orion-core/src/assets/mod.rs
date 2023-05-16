@@ -23,8 +23,8 @@ pub struct RawFont {
 }
 
 impl RawTexture {
-    pub fn new(name: String, size: Vec2, data: Vec<u8>) -> Self {
-        Self { name, size, data }
+    pub fn new(name: String, size: Vec2, data: &[u8]) -> Self {
+        Self { name, size, data: data.to_vec() }
     }
 }
 

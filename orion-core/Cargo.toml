@@ -56,3 +56,6 @@ wasm-bindgen = { version = "0.2.84" }
 console_log = { version = "1.0.0" }
 console_error_panic_hook = { version = "0.1.7" }
 instant = { version = "0.1.12", features = [ "wasm-bindgen" ] }
+
+[profile.release]
+debug = true

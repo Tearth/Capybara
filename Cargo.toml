@@ -2,4 +2,5 @@
 members = [
     "orion-core",
     "examples/benchmark",
+    "examples/ui",
 ]

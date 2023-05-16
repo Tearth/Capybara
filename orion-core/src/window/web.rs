@@ -130,6 +130,7 @@ impl WindowContextWeb {
         self.init_keypress_callback(app.clone());
 
         self.window.set_timeout_with_callback_and_timeout_and_arguments_0(self.resize_callback.as_ref().unwrap().as_ref().unchecked_ref(), 0).unwrap();
+        self.window.request_animation_frame(self.frame_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
     fn init_frame_callback<F>(&mut self, mut event_loop: F)
@@ -139,7 +140,6 @@ impl WindowContextWeb {
         self.frame_callback = Some(Closure::<dyn FnMut()>::new(move || {
             event_loop();
         }));
-        self.window.request_animation_frame(self.frame_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
     }
 
     fn init_resize_callback<U>(&mut self, app: Rc<RefCell<ApplicationContext<U>>>)

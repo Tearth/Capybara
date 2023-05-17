@@ -25,6 +25,7 @@ pub struct ApplicationState<'a> {
     pub window: &'a mut Box<WindowContext>,
     pub renderer: &'a mut RendererContext,
     pub assets: &'a mut AssetsLoader,
+    pub ui: &'a mut UiContext,
 }
 
 impl<U> ApplicationContext<U>
@@ -71,20 +72,18 @@ where
                 }
 
                 self.ui.collect_event(&event);
-                self.user.input(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets), event);
+                self.user.input(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui), event)?;
             }
 
             let ui_input = self.ui.get_input();
-            let ui_output = self.ui.inner.run(ui_input, |context| {
-                self.user.ui(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets), context);
-            });
+            let ui_output = self.user.ui(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui), ui_input)?;
 
             let now = Instant::now();
             let delta = (now - self.frame_timestamp).as_secs_f32();
             self.frame_timestamp = now;
 
             self.renderer.begin_user_frame()?;
-            self.user.frame(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets), delta);
+            self.user.frame(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui), delta)?;
             self.renderer.end_user_frame()?;
 
             self.ui.draw(&mut self.renderer, ui_output)?;
@@ -97,7 +96,7 @@ where
 }
 
 impl<'a> ApplicationState<'a> {
-    pub fn new(window: &'a mut Box<WindowContext>, renderer: &'a mut RendererContext, assets: &'a mut AssetsLoader) -> Self {
-        Self { window, renderer, assets }
+    pub fn new(window: &'a mut Box<WindowContext>, renderer: &'a mut RendererContext, assets: &'a mut AssetsLoader, ui: &'a mut UiContext) -> Self {
+        Self { window, renderer, assets, ui }
     }
 }

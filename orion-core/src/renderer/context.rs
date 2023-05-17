@@ -5,6 +5,7 @@ use super::shader::*;
 use super::sprite::Shape;
 use super::sprite::Sprite;
 use super::texture::Texture;
+use crate::assets::loader::AssetsLoader;
 use crate::utils::storage::Storage;
 use anyhow::Result;
 use glam::Vec2;
@@ -124,6 +125,14 @@ impl RendererContext {
 
             Ok(())
         }
+    }
+
+    pub fn instantiate_assets(&mut self, assets: &AssetsLoader) -> Result<()> {
+        for texture in &assets.raw_textures {
+            self.textures.store_with_name(&texture.name, Texture::new(self.gl.clone(), texture))?;
+        }
+
+        Ok(())
     }
 
     pub fn begin_user_frame(&mut self) -> Result<()> {
@@ -303,8 +312,8 @@ impl RendererContext {
                         self.buffer_resized = false;
                     }
 
-                    let models_u8 = core::slice::from_raw_parts(self.buffer_vertices_queue.as_ptr() as *const u8, self.buffer_vertices_count * 4 as usize);
-                    let indices_u8 = core::slice::from_raw_parts(self.buffer_indices_queue.as_ptr() as *const u8, self.buffer_indices_count * 4 as usize);
+                    let models_u8 = core::slice::from_raw_parts(self.buffer_vertices_queue.as_ptr() as *const u8, self.buffer_vertices_count * 4);
+                    let indices_u8 = core::slice::from_raw_parts(self.buffer_indices_queue.as_ptr() as *const u8, self.buffer_indices_count * 4);
 
                     self.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, 0, models_u8);
                     self.gl.buffer_sub_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, 0, indices_u8);

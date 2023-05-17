@@ -1,3 +1,4 @@
+use crate::assets::loader::AssetsLoader;
 use crate::assets::RawTexture;
 use crate::renderer::camera::Camera;
 use crate::renderer::camera::CameraOrigin;
@@ -17,6 +18,9 @@ use core::slice;
 use egui::epaint::ahash::HashMap;
 use egui::epaint::Primitive;
 use egui::Event;
+use egui::FontData;
+use egui::FontDefinitions;
+use egui::FontFamily;
 use egui::FullOutput;
 use egui::ImageData;
 use egui::PointerButton;
@@ -54,6 +58,18 @@ impl UiContext {
 
             gl: renderer.gl.clone(),
         })
+    }
+
+    pub fn instantiate_assets(&mut self, assets: &AssetsLoader) -> Result<()> {
+        for font in &assets.raw_fonts {
+            let mut fonts = FontDefinitions::default();
+            fonts.font_data.insert(font.name.clone(), FontData::from_owned(font.data.clone()));
+            fonts.families.insert(FontFamily::Name(font.name.clone().into()), vec![font.name.clone()]);
+
+            self.inner.set_fonts(fonts);
+        }
+
+        Ok(())
     }
 
     pub fn collect_event(&mut self, event: &InputEvent) {
@@ -125,7 +141,7 @@ impl UiContext {
                 screen_rect: Some(Rect::from_two_pos(Pos2::new(0.0, 0.0), Pos2::new(self.screen_size.x, self.screen_size.y))),
                 events: self.collected_events.clone(),
                 max_texture_side: Some(self.gl.get_parameter_i32(glow::MAX_TEXTURE_SIZE) as usize),
-                modifiers: egui::Modifiers { ctrl: self.modifiers.control, alt: self.modifiers.alt, shift: self.modifiers.shift, command: false, mac_cmd: false },
+                modifiers: map_modifiers(self.modifiers),
                 ..Default::default()
             };
             self.collected_events.clear();
@@ -208,7 +224,7 @@ impl UiContext {
 
             *texture_id
         } else {
-            let raw = RawTexture::new("".to_string(), size, data);
+            let raw = RawTexture::new("", size, data);
             let texture_id = renderer.textures.store(Texture::new(self.gl.clone(), &raw));
             self.textures.insert(id, texture_id);
 

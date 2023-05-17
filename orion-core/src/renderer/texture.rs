@@ -1,5 +1,4 @@
 use crate::{assets::RawTexture, utils::storage::StorageItem};
-use egui::plot::Text;
 use glam::Vec2;
 use glow::HasContext;
 use std::rc::Rc;
@@ -9,6 +8,11 @@ pub struct Texture {
     pub name: Option<String>,
     pub inner: glow::Texture,
     gl: Rc<glow::Context>,
+}
+
+pub enum TextureType {
+    Simple,
+    Atlas,
 }
 
 pub enum TextureFilter {

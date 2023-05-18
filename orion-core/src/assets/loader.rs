@@ -114,7 +114,7 @@ impl AssetsLoader {
         reader.expand_empty_elements(true);
 
         let mut image = String::new();
-        let mut textures = Vec::new();
+        let mut entities = Vec::new();
 
         loop {
             match reader.read_event() {
@@ -153,7 +153,7 @@ impl AssetsLoader {
                         let position = Vec2::new(x.parse()?, y.parse()?);
                         let size = Vec2::new(width.parse()?, height.parse()?);
 
-                        textures.push(RawAtlasTexture::new(&name, position, size));
+                        entities.push(RawAtlasEntity::new(&name, position, size));
                     }
                     _ => {}
                 },
@@ -163,7 +163,7 @@ impl AssetsLoader {
             }
         }
 
-        self.raw_atlases.push(RawAtlas::new(name, &image, textures));
+        self.raw_atlases.push(RawAtlas::new(name, &image, entities));
 
         Ok(())
     }

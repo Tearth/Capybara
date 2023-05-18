@@ -4,9 +4,13 @@ use super::shader::Shader;
 use super::shader::*;
 use super::sprite::Shape;
 use super::sprite::Sprite;
+use super::sprite::Tile;
+use super::texture::AtlasEntity;
 use super::texture::Texture;
+use super::texture::TextureKind;
 use crate::assets::loader::AssetsLoader;
 use crate::utils::storage::Storage;
+use anyhow::bail;
 use anyhow::Result;
 use glam::Vec2;
 use glam::Vec4;
@@ -15,7 +19,11 @@ use glow::Context;
 use glow::HasContext;
 use glow::VertexArray;
 use instant::Instant;
+use rustc_hash::FxHashMap;
 use std::cmp;
+use std::collections::HashMap;
+use std::path::Path;
+use std::path::PathBuf;
 use std::ptr;
 use std::rc::Rc;
 
@@ -132,6 +140,20 @@ impl RendererContext {
             self.textures.store_with_name(&texture.name, Texture::new(self.gl.clone(), texture))?;
         }
 
+        for atlas in &assets.raw_atlases {
+            let name_without_extension = Path::new(&atlas.name).file_stem().unwrap().to_str().unwrap();
+            if self.textures.contains_by_name(name_without_extension) {
+                let texture = self.textures.get_by_name_mut(name_without_extension)?;
+                let mut entities = FxHashMap::default();
+
+                for raw in &atlas.entities {
+                    entities.insert(raw.name.clone(), AtlasEntity::new(raw.position, raw.size));
+                }
+
+                texture.kind = TextureKind::Atlas(entities);
+            }
+        }
+
         Ok(())
     }
 
@@ -206,14 +228,30 @@ impl RendererContext {
                 let v3 = model * Vec4::new(1.0, 1.0, 0.0, 1.0);
                 let v4 = model * Vec4::new(0.0, 1.0, 0.0, 1.0);
 
+                let (uv_position, uv_size) = match &sprite.tile {
+                    Tile::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0)),
+                    Tile::AtlasEntity(name) => {
+                        let texture = self.textures.get(sprite.texture_id)?;
+                        if let TextureKind::Atlas(entities) = &texture.kind {
+                            let entity = entities.get(name).unwrap();
+                            let uv_position = entity.position / texture.size;
+                            let uv_size = entity.size / texture.size;
+
+                            (uv_position, uv_size)
+                        } else {
+                            bail!("Texture is not an atlas");
+                        }
+                    }
+                };
+
                 self.buffer_vertices_queue[v_base + 0] = v1.x;
                 self.buffer_vertices_queue[v_base + 1] = v1.y;
                 self.buffer_vertices_queue[v_base + 2] = sprite.color.x;
                 self.buffer_vertices_queue[v_base + 3] = sprite.color.y;
                 self.buffer_vertices_queue[v_base + 4] = sprite.color.z;
                 self.buffer_vertices_queue[v_base + 5] = sprite.color.w;
-                self.buffer_vertices_queue[v_base + 6] = 0.0;
-                self.buffer_vertices_queue[v_base + 7] = 1.0;
+                self.buffer_vertices_queue[v_base + 6] = uv_position.x;
+                self.buffer_vertices_queue[v_base + 7] = uv_position.y + uv_size.y;
 
                 self.buffer_vertices_queue[v_base + 8] = v2.x;
                 self.buffer_vertices_queue[v_base + 9] = v2.y;
@@ -221,8 +259,8 @@ impl RendererContext {
                 self.buffer_vertices_queue[v_base + 11] = sprite.color.y;
                 self.buffer_vertices_queue[v_base + 12] = sprite.color.z;
                 self.buffer_vertices_queue[v_base + 13] = sprite.color.w;
-                self.buffer_vertices_queue[v_base + 14] = 1.0;
-                self.buffer_vertices_queue[v_base + 15] = 1.0;
+                self.buffer_vertices_queue[v_base + 14] = uv_position.x + uv_size.x;
+                self.buffer_vertices_queue[v_base + 15] = uv_position.y + uv_size.y;
 
                 self.buffer_vertices_queue[v_base + 16] = v3.x;
                 self.buffer_vertices_queue[v_base + 17] = v3.y;
@@ -230,8 +268,8 @@ impl RendererContext {
                 self.buffer_vertices_queue[v_base + 19] = sprite.color.y;
                 self.buffer_vertices_queue[v_base + 20] = sprite.color.z;
                 self.buffer_vertices_queue[v_base + 21] = sprite.color.w;
-                self.buffer_vertices_queue[v_base + 22] = 1.0;
-                self.buffer_vertices_queue[v_base + 23] = 0.0;
+                self.buffer_vertices_queue[v_base + 22] = uv_position.x + uv_size.x;
+                self.buffer_vertices_queue[v_base + 23] = uv_position.y;
 
                 self.buffer_vertices_queue[v_base + 24] = v4.x;
                 self.buffer_vertices_queue[v_base + 25] = v4.y;
@@ -239,8 +277,8 @@ impl RendererContext {
                 self.buffer_vertices_queue[v_base + 27] = sprite.color.y;
                 self.buffer_vertices_queue[v_base + 28] = sprite.color.z;
                 self.buffer_vertices_queue[v_base + 29] = sprite.color.w;
-                self.buffer_vertices_queue[v_base + 30] = 0.0;
-                self.buffer_vertices_queue[v_base + 31] = 0.0;
+                self.buffer_vertices_queue[v_base + 30] = uv_position.x;
+                self.buffer_vertices_queue[v_base + 31] = uv_position.y;
 
                 self.buffer_indices_queue[i_base + 0] = self.buffer_indices_max + 0;
                 self.buffer_indices_queue[i_base + 1] = self.buffer_indices_max + 1;

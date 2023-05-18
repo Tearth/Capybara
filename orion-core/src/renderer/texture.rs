@@ -1,18 +1,26 @@
 use crate::{assets::RawTexture, utils::storage::StorageItem};
 use glam::Vec2;
 use glow::HasContext;
-use std::rc::Rc;
+use rustc_hash::FxHashMap;
+use std::{collections::HashMap, rc::Rc};
 
 pub struct Texture {
     pub id: usize,
     pub name: Option<String>,
+    pub size: Vec2,
     pub inner: glow::Texture,
+    pub kind: TextureKind,
     gl: Rc<glow::Context>,
 }
 
-pub enum TextureType {
+pub struct AtlasEntity {
+    pub position: Vec2,
+    pub size: Vec2,
+}
+
+pub enum TextureKind {
     Simple,
-    Atlas,
+    Atlas(FxHashMap<String, AtlasEntity>),
 }
 
 pub enum TextureFilter {
@@ -33,7 +41,7 @@ impl Texture {
             gl.tex_image_2d(glow::TEXTURE_2D, 0, glow::SRGB8_ALPHA8 as i32, raw.size.x as i32, raw.size.y as i32, 0, glow::RGBA, glow::UNSIGNED_BYTE, Some(&raw.data));
             gl.generate_mipmap(glow::TEXTURE_2D);
 
-            Self { id: 0, name: None, inner, gl }
+            Self { id: 0, name: None, size: raw.size, inner, kind: TextureKind::Simple, gl }
         }
     }
 
@@ -104,5 +112,11 @@ impl Drop for Texture {
         unsafe {
             self.gl.delete_texture(self.inner);
         }
+    }
+}
+
+impl AtlasEntity {
+    pub fn new(position: Vec2, size: Vec2) -> Self {
+        Self { position, size }
     }
 }

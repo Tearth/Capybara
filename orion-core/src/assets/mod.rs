@@ -26,10 +26,10 @@ pub struct RawFont {
 pub struct RawAtlas {
     pub name: String,
     pub image: String,
-    pub textures: Vec<RawAtlasTexture>,
+    pub entities: Vec<RawAtlasEntity>,
 }
 
-pub struct RawAtlasTexture {
+pub struct RawAtlasEntity {
     pub name: String,
     pub position: Vec2,
     pub size: Vec2,
@@ -48,12 +48,12 @@ impl RawFont {
 }
 
 impl RawAtlas {
-    pub fn new(name: &str, image: &str, textures: Vec<RawAtlasTexture>) -> Self {
-        Self { name: name.to_string(), image: image.to_string(), textures }
+    pub fn new(name: &str, image: &str, textures: Vec<RawAtlasEntity>) -> Self {
+        Self { name: name.to_string(), image: image.to_string(), entities: textures }
     }
 }
 
-impl RawAtlasTexture {
+impl RawAtlasEntity {
     pub fn new(name: &str, position: Vec2, size: Vec2) -> Self {
         Self { name: name.to_string(), position, size }
     }

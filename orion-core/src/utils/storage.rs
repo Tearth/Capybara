@@ -47,6 +47,14 @@ where
         Ok(id)
     }
 
+    pub fn contains(&self, id: usize) -> bool {
+        self.data.get(id).is_some()
+    }
+
+    pub fn contains_by_name(&self, name: &str) -> bool {
+        self.name_to_id_hashmap.get(name).is_some()
+    }
+
     pub fn get(&self, id: usize) -> Result<&T> {
         match self.data.get(id) {
             Some(item) => Ok(item.as_ref().ok_or_else(|| anyhow!("Storage item {} not found", id))?),

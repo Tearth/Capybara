@@ -9,6 +9,7 @@ pub struct Sprite {
     pub color: Vec4,
     pub shape: Shape,
     pub texture_id: usize,
+    pub tile: Tile,
 }
 
 pub enum Shape {
@@ -19,6 +20,11 @@ pub enum Shape {
 pub struct ShapeData {
     pub vertices: Vec<f32>,
     pub indices: Vec<u32>,
+}
+
+pub enum Tile {
+    Simple,
+    AtlasEntity(String),
 }
 
 impl Sprite {
@@ -32,6 +38,7 @@ impl Sprite {
             color: Vec4::new(1.0, 1.0, 1.0, 1.0),
             shape: Shape::Standard,
             texture_id: 0,
+            tile: Tile::Simple,
         }
     }
 

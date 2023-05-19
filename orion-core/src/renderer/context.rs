@@ -230,14 +230,21 @@ impl RendererContext {
 
                 let (uv_position, uv_size) = match &sprite.tile {
                     Tile::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0)),
-                    Tile::AtlasEntity(name) => {
+                    Tile::AtlasEntity { name } => {
                         let texture = self.textures.get(sprite.texture_id)?;
-                        if let TextureKind::Atlas(entities) = &texture.kind {
-                            let entity = entities.get(name).unwrap();
-                            let uv_position = entity.position / texture.size;
-                            let uv_size = entity.size / texture.size;
-
-                            (uv_position, uv_size)
+                        if let TextureKind::Atlas(atlas_entities) = &texture.kind {
+                            let entity = atlas_entities.get(name).unwrap();
+                            (entity.position / texture.size, entity.size / texture.size)
+                        } else {
+                            bail!("Texture is not an atlas");
+                        }
+                    }
+                    Tile::AtlasAnimation { entities } => {
+                        let texture = self.textures.get(sprite.texture_id)?;
+                        if let TextureKind::Atlas(atlas_entities) = &texture.kind {
+                            let name = &entities[sprite.animation_frame];
+                            let entity = atlas_entities.get(name).unwrap();
+                            (entity.position / texture.size, entity.size / texture.size)
                         } else {
                             bail!("Texture is not an atlas");
                         }

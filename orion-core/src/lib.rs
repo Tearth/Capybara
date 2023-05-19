@@ -19,11 +19,12 @@ pub mod window;
 pub use anyhow;
 pub use egui;
 pub use glam;
+pub use instant;
 pub use log;
 
 #[macro_export]
 macro_rules! fast_gpu {
-    ( $( $x:expr ),* ) => {
+    () => {
         #[no_mangle]
         #[cfg(windows)]
         pub static NvOptimusEnablement: i32 = 1;

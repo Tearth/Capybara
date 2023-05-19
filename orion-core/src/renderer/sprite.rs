@@ -1,4 +1,7 @@
+use anyhow::bail;
+use anyhow::Result;
 use glam::{Mat4, Vec2, Vec3, Vec4};
+use instant::Instant;
 
 pub struct Sprite {
     pub position: Vec2,
@@ -10,6 +13,11 @@ pub struct Sprite {
     pub shape: Shape,
     pub texture_id: usize,
     pub tile: Tile,
+
+    pub animation_frame: usize,
+    pub animation_speed: f32,
+    pub animation_loop: bool,
+    pub animation_timestamp: Instant,
 }
 
 pub enum Shape {
@@ -24,7 +32,8 @@ pub struct ShapeData {
 
 pub enum Tile {
     Simple,
-    AtlasEntity(String),
+    AtlasEntity { name: String },
+    AtlasAnimation { entities: Vec<String> },
 }
 
 impl Sprite {
@@ -39,6 +48,11 @@ impl Sprite {
             shape: Shape::Standard,
             texture_id: 0,
             tile: Tile::Simple,
+
+            animation_frame: 0,
+            animation_speed: 1.0,
+            animation_loop: true,
+            animation_timestamp: Instant::now(),
         }
     }
 
@@ -49,6 +63,22 @@ impl Sprite {
         let anchor = Mat4::from_translation(-Vec3::new(self.anchor.x, self.anchor.y, 0.0));
 
         translation * rotation * scale * anchor
+    }
+
+    pub fn animate(&mut self, now: Instant) {
+        match &mut self.tile {
+            Tile::AtlasAnimation { entities } => {
+                if self.animation_frame == entities.len() - 1 && !self.animation_loop {
+                    return;
+                }
+
+                if (now - self.animation_timestamp).as_millis() >= (1000.0 / self.animation_speed) as u128 {
+                    self.animation_frame = (self.animation_frame + 1) % entities.len();
+                    self.animation_timestamp = now;
+                }
+            }
+            _ => {}
+        }
     }
 }
 

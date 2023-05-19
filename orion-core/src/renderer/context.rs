@@ -189,8 +189,8 @@ impl RendererContext {
     }
 
     pub fn draw(&mut self, sprite: &Sprite) -> Result<()> {
-        let v_base = self.buffer_vertices_count;
-        let i_base = self.buffer_indices_count;
+        let mut v_base = self.buffer_vertices_count;
+        let mut i_base = self.buffer_indices_count;
         let mut flush = false;
 
         if let Some(metadata) = self.buffer_metadata.as_mut() {
@@ -201,6 +201,8 @@ impl RendererContext {
 
         if flush {
             self.flush()?;
+            v_base = 0;
+            i_base = 0;
         }
 
         if self.buffer_metadata.is_none() {

@@ -42,6 +42,7 @@ pub struct UiContext {
     pub camera_id: usize,
     pub textures: HashMap<TextureId, usize>,
 
+    max_texture_size: i32,
     gl: Rc<glow::Context>,
 }
 
@@ -56,6 +57,7 @@ impl UiContext {
             camera_id: renderer.cameras.store(Camera::new(Default::default(), renderer.viewport_size, CameraOrigin::LeftTop)),
             textures: Default::default(),
 
+            max_texture_size: unsafe { renderer.gl.get_parameter_i32(glow::MAX_TEXTURE_SIZE) },
             gl: renderer.gl.clone(),
         })
     }
@@ -136,18 +138,16 @@ impl UiContext {
     }
 
     pub fn get_input(&mut self) -> RawInput {
-        unsafe {
-            let input = RawInput {
-                screen_rect: Some(Rect::from_two_pos(Pos2::new(0.0, 0.0), Pos2::new(self.screen_size.x, self.screen_size.y))),
-                events: self.collected_events.clone(),
-                max_texture_side: Some(self.gl.get_parameter_i32(glow::MAX_TEXTURE_SIZE) as usize),
-                modifiers: map_modifiers(self.modifiers),
-                ..Default::default()
-            };
-            self.collected_events.clear();
+        let input = RawInput {
+            screen_rect: Some(Rect::from_two_pos(Pos2::new(0.0, 0.0), Pos2::new(self.screen_size.x, self.screen_size.y))),
+            events: self.collected_events.clone(),
+            max_texture_side: Some(self.max_texture_size as usize),
+            modifiers: map_modifiers(self.modifiers),
+            ..Default::default()
+        };
+        self.collected_events.clear();
 
-            input
-        }
+        input
     }
 
     pub fn draw(&mut self, renderer: &mut RendererContext, output: FullOutput) -> Result<()> {

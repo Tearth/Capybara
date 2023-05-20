@@ -16,7 +16,7 @@ pub fn pack(input: &str, output: &str) -> Result<()> {
 
     let output_file = File::create(output).unwrap();
     let mut zip = ZipWriter::new(output_file);
-    let options = FileOptions::default().compression_method(CompressionMethod::Deflated).unix_permissions(0o755);
+    let options = FileOptions::default().compression_method(CompressionMethod::Deflated).compression_level(Some(9)).unix_permissions(0o755);
 
     let walkdir = WalkDir::new(input);
     let mut buffer = Vec::new();

@@ -14,25 +14,18 @@ walkdir = { version = "2.3.3" }
 png = { version = "0.17.8" }
 quick-xml = { version = "0.28.2" }
 rustc-hash = { version = "1.1.0" }
+kira = { version = "0.7.3", default-features = false, features = [ "cpal", "wav", "ogg" ]  }
 
 [build-dependencies]
 cfg_aliases = { version = "0.1.1" }
 
 [target.'cfg(all(target_os = "windows", target_arch = "x86_64"))'.dependencies]
-winapi = { version = "0.3.9", features = [ 
-    "winuser", 
-    "libloaderapi", 
-    "errhandlingapi" 
-]}
+winapi = { version = "0.3.9", features = [ "winuser", "libloaderapi", "errhandlingapi" ]}
 simple_logger = { version = "4.1.0", default-features = false, features = [ "timestamps" ]}
 instant = { version = "0.1.12" }
 
 [target.'cfg(all(target_os = "linux", target_arch = "x86_64"))'.dependencies]
-x11 = { version = "2.21.0", features = [
-    "xlib",
-    "xfixes",
-    "glx" 
-]}
+x11 = { version = "2.21.0", features = [ "xlib", "xfixes", "glx" ]}
 simple_logger = { version = "4.1.0", default-features = false, features = [ "timestamps" ]}
 instant = { version = "0.1.12" }
 
@@ -60,4 +53,4 @@ console_error_panic_hook = { version = "0.1.7" }
 instant = { version = "0.1.12", features = [ "wasm-bindgen" ] }
 
 [profile.release]
-debug = true
+lto = true

@@ -21,6 +21,7 @@ pub struct AssetsLoader {
     pub raw_textures: Vec<RawTexture>,
     pub raw_fonts: Vec<RawFont>,
     pub raw_atlases: Vec<RawAtlas>,
+    pub raw_sounds: Vec<RawSound>,
 }
 
 impl AssetsLoader {
@@ -32,6 +33,7 @@ impl AssetsLoader {
             raw_textures: Default::default(),
             raw_fonts: Default::default(),
             raw_atlases: Default::default(),
+            raw_sounds: Default::default(),
         }
     }
 
@@ -70,6 +72,8 @@ impl AssetsLoader {
                                 "png" => self.load_png(&name, &data)?,
                                 "ttf" => self.load_ttf(&name, &data)?,
                                 "xml" => self.load_xml(&name, &data)?,
+                                "wav" => self.load_wav(&name, &data)?,
+                                "ogg" => self.load_ogg(&name, &data)?,
                                 _ => {}
                             };
                         }
@@ -165,6 +169,16 @@ impl AssetsLoader {
 
         self.raw_atlases.push(RawAtlas::new(name, &image, entities));
 
+        Ok(())
+    }
+
+    fn load_wav(&mut self, name: &str, data: &[u8]) -> Result<()> {
+        self.raw_sounds.push(RawSound::new(name, data));
+        Ok(())
+    }
+
+    fn load_ogg(&mut self, name: &str, data: &[u8]) -> Result<()> {
+        self.raw_sounds.push(RawSound::new(name, data));
         Ok(())
     }
 }

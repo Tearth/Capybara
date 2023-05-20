@@ -35,6 +35,11 @@ pub struct RawAtlasEntity {
     pub size: Vec2,
 }
 
+pub struct RawSound {
+    pub name: String,
+    pub data: Vec<u8>,
+}
+
 impl RawTexture {
     pub fn new(name: &str, size: Vec2, data: &[u8]) -> Self {
         Self { name: name.to_string(), size, data: data.to_vec() }
@@ -56,5 +61,11 @@ impl RawAtlas {
 impl RawAtlasEntity {
     pub fn new(name: &str, position: Vec2, size: Vec2) -> Self {
         Self { name: name.to_string(), position, size }
+    }
+}
+
+impl RawSound {
+    pub fn new(name: &str, data: &[u8]) -> Self {
+        Self { name: name.to_string(), data: data.to_vec() }
     }
 }

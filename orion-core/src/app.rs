@@ -1,4 +1,5 @@
 use crate::assets::loader::AssetsLoader;
+use crate::audio::context::AudioContext;
 use crate::renderer::context::RendererContext;
 use crate::ui::context::UiContext;
 use crate::user::UserSpace;
@@ -8,6 +9,9 @@ use crate::window::WindowStyle;
 use anyhow::Result;
 use glam::Vec2;
 use instant::Instant;
+use kira::manager::backend::cpal::CpalBackend;
+use kira::manager::AudioManager;
+use kira::manager::AudioManagerSettings;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -16,6 +20,7 @@ pub struct ApplicationContext<U> {
     pub renderer: RendererContext,
     pub assets: AssetsLoader,
     pub ui: UiContext,
+    pub audio: AudioContext,
     pub user: U,
 
     frame_timestamp: Instant,
@@ -26,6 +31,7 @@ pub struct ApplicationState<'a> {
     pub renderer: &'a mut RendererContext,
     pub assets: &'a mut AssetsLoader,
     pub ui: &'a mut UiContext,
+    pub audio: &'a mut AudioContext,
 }
 
 impl<U> ApplicationContext<U>
@@ -37,8 +43,9 @@ where
         let mut renderer = RendererContext::new(window.load_gl_pointers())?;
         let assets = AssetsLoader::new();
         let ui = UiContext::new(&mut renderer)?;
+        let audio = AudioContext::new()?;
 
-        Ok(Self { window, renderer, assets, ui, user, frame_timestamp: Instant::now() })
+        Ok(Self { window, renderer, assets, ui, audio, user, frame_timestamp: Instant::now() })
     }
 
     pub fn run(self) -> Result<()> {
@@ -72,18 +79,18 @@ where
                 }
 
                 self.ui.collect_event(&event);
-                self.user.input(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui), event)?;
+                self.user.input(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio), event)?;
             }
 
             let ui_input = self.ui.get_input();
-            let ui_output = self.user.ui(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui), ui_input)?;
+            let ui_output = self.user.ui(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio), ui_input)?;
 
             let now = Instant::now();
             let delta = (now - self.frame_timestamp).as_secs_f32();
             self.frame_timestamp = now;
 
             self.renderer.begin_user_frame()?;
-            self.user.frame(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui), delta)?;
+            self.user.frame(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio), delta)?;
             self.renderer.end_user_frame()?;
 
             self.ui.draw(&mut self.renderer, ui_output)?;
@@ -96,7 +103,13 @@ where
 }
 
 impl<'a> ApplicationState<'a> {
-    pub fn new(window: &'a mut Box<WindowContext>, renderer: &'a mut RendererContext, assets: &'a mut AssetsLoader, ui: &'a mut UiContext) -> Self {
-        Self { window, renderer, assets, ui }
+    pub fn new(
+        window: &'a mut Box<WindowContext>,
+        renderer: &'a mut RendererContext,
+        assets: &'a mut AssetsLoader,
+        ui: &'a mut UiContext,
+        audio: &'a mut AudioContext,
+    ) -> Self {
+        Self { window, renderer, assets, ui, audio }
     }
 }

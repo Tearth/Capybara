@@ -9,6 +9,7 @@
 
 pub mod app;
 pub mod assets;
+pub mod audio;
 pub mod filesystem;
 pub mod renderer;
 pub mod ui;
@@ -20,6 +21,7 @@ pub use anyhow;
 pub use egui;
 pub use glam;
 pub use instant;
+pub use kira;
 pub use log;
 
 #[macro_export]

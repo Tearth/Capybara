@@ -6,7 +6,7 @@ pub type WindowContext = winapi::WindowContextWinApi;
 #[cfg(unix)]
 pub mod x11;
 #[cfg(unix)]
-pub type WindowContext = unix::WindowContextX11;
+pub type WindowContext = x11::WindowContextX11;
 
 #[cfg(web)]
 pub mod web;

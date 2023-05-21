@@ -21,9 +21,7 @@ use glow::VertexArray;
 use instant::Instant;
 use rustc_hash::FxHashMap;
 use std::cmp;
-use std::collections::HashMap;
 use std::path::Path;
-use std::path::PathBuf;
 use std::ptr;
 use std::rc::Rc;
 

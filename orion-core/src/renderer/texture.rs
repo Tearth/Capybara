@@ -2,7 +2,7 @@ use crate::{assets::RawTexture, utils::storage::StorageItem};
 use glam::Vec2;
 use glow::HasContext;
 use rustc_hash::FxHashMap;
-use std::{collections::HashMap, rc::Rc};
+use std::rc::Rc;
 
 pub struct Texture {
     pub id: usize,

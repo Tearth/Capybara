@@ -1,4 +1,5 @@
 use orion_core::assets::bundler;
+use std::path::Path;
 
 fn main() {
     let profile = std::env::var("PROFILE").unwrap();
@@ -9,6 +10,8 @@ fn main() {
         println!("cargo:rustc-link-arg=/EXPORT:AmdPowerXpressRequestHighPerformance");
     }
 
-    bundler::pack("./assets/", "./data/data0.zip").unwrap();
-    println!("cargo:rerun-if-changed=./assets/");
+    if Path::new("./assets/").exists() {
+        bundler::pack("./assets/", "./data/data0.zip").unwrap();
+        println!("cargo:rerun-if-changed=./assets/");
+    }
 }

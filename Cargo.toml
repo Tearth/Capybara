@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "orion-core",
+    "orion-template",
     "examples/benchmark",
     "examples/ui",
 ]

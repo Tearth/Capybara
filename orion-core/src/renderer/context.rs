@@ -230,6 +230,25 @@ impl RendererContext {
 
                 let (uv_position, uv_size) = match &sprite.tile {
                     Tile::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0)),
+                    Tile::Tilemap { size } => {
+                        let texture = self.textures.get(sprite.texture_id)?;
+                        let tiles_count = texture.size / *size;
+                        let position = Vec2::new((sprite.animation_frame % tiles_count.x as usize) as f32, (sprite.animation_frame / tiles_count.x as usize) as f32);
+                        let uv_position = position / tiles_count;
+                        let uv_size = *size / texture.size;
+
+                        (uv_position, uv_size)
+                    }
+                    Tile::TilemapAnimation { size, frames } => {
+                        let texture = self.textures.get(sprite.texture_id)?;
+                        let tiles_count = texture.size / *size;
+                        let animation_frame = frames[sprite.animation_frame];
+                        let position = Vec2::new((animation_frame % tiles_count.x as usize) as f32, (animation_frame / tiles_count.x as usize) as f32);
+                        let uv_position = position / tiles_count;
+                        let uv_size = *size / texture.size;
+
+                        (uv_position, uv_size)
+                    }
                     Tile::AtlasEntity { name } => {
                         let texture = self.textures.get(sprite.texture_id)?;
                         if let TextureKind::Atlas(atlas_entities) = &texture.kind {

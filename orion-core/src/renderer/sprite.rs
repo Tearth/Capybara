@@ -30,6 +30,8 @@ pub struct ShapeData {
 
 pub enum Tile {
     Simple,
+    Tilemap { size: Vec2 },
+    TilemapAnimation { size: Vec2, frames: Vec<usize> },
     AtlasEntity { name: String },
     AtlasAnimation { entities: Vec<String> },
 }
@@ -64,18 +66,19 @@ impl Sprite {
     }
 
     pub fn animate(&mut self, now: Instant) {
-        match &mut self.tile {
-            Tile::AtlasAnimation { entities } => {
-                if self.animation_frame == entities.len() - 1 && !self.animation_loop {
-                    return;
-                }
+        let frames_count = match &self.tile {
+            Tile::TilemapAnimation { size: _, frames } => frames.len(),
+            Tile::AtlasAnimation { entities } => entities.len(),
+            _ => return,
+        };
 
-                if (now - self.animation_timestamp).as_millis() >= (1000.0 / self.animation_speed) as u128 {
-                    self.animation_frame = (self.animation_frame + 1) % entities.len();
-                    self.animation_timestamp = now;
-                }
-            }
-            _ => {}
+        if self.animation_frame == frames_count - 1 && !self.animation_loop {
+            return;
+        }
+
+        if (now - self.animation_timestamp).as_millis() >= (1000.0 / self.animation_speed) as u128 {
+            self.animation_frame = (self.animation_frame + 1) % frames_count;
+            self.animation_timestamp = now;
         }
     }
 }

@@ -8,7 +8,8 @@ use orion_core::egui::FullOutput;
 use orion_core::egui::RawInput;
 use orion_core::egui::ScrollArea;
 use orion_core::fast_gpu;
-use orion_core::user::UserSpace;
+use orion_core::scene::FrameCommand;
+use orion_core::scene::Scene;
 use orion_core::window::Coordinates;
 use orion_core::window::InputEvent;
 use orion_core::window::WindowStyle;
@@ -17,17 +18,25 @@ use test::ColorTest;
 fast_gpu!();
 
 #[derive(Default)]
-struct User {
+struct MainScene {
     test: ColorTest,
 }
 
-impl UserSpace for User {
+impl Scene for MainScene {
+    fn activation(&mut self, _: ApplicationState) -> Result<()> {
+        Ok(())
+    }
+
+    fn deactivation(&mut self, _: ApplicationState) -> Result<()> {
+        Ok(())
+    }
+
     fn input(&mut self, _: ApplicationState, _: InputEvent) -> Result<()> {
         Ok(())
     }
 
-    fn frame(&mut self, _: ApplicationState, _: f32) -> Result<()> {
-        Ok(())
+    fn frame(&mut self, _: ApplicationState, _: f32) -> Result<Option<FrameCommand>> {
+        Ok(None)
     }
 
     fn ui(&mut self, state: ApplicationState, input: RawInput) -> Result<FullOutput> {
@@ -42,5 +51,9 @@ impl UserSpace for User {
 }
 
 fn main() {
-    ApplicationContext::new(User::default(), "UI", WindowStyle::Window { size: Coordinates::new(800, 600) }).unwrap().run().unwrap();
+    ApplicationContext::new("UI", WindowStyle::Window { size: Coordinates::new(800, 600) })
+        .unwrap()
+        .with_scene("MainScene", Box::<MainScene>::default())
+        .run("MainScene")
+        .unwrap();
 }

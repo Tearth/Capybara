@@ -35,8 +35,8 @@ impl Scene for LoadingScene {
 
     fn frame(&mut self, state: ApplicationState, _: f32) -> Result<Option<FrameCommand>> {
         if state.assets.load("./data/main.zip")? == AssetsLoadingStatus::Finished {
-            state.renderer.instantiate_assets(state.assets)?;
-            state.ui.instantiate_assets(state.assets)?;
+            state.renderer.instantiate_assets(state.assets, None)?;
+            state.ui.instantiate_assets(state.assets, None)?;
             self.loading_finished = true;
         }
 

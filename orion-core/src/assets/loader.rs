@@ -64,16 +64,17 @@ impl AssetsLoader {
                             let path = Path::new(entry.name());
                             let name = path.file_stem().unwrap().to_str().unwrap().to_string();
                             let extension = path.extension().unwrap().to_str().unwrap().to_string();
+                            let asset_path = format!("/{}", path.to_str().unwrap());
 
                             let mut data = Vec::new();
                             entry.read_to_end(&mut data)?;
 
                             match extension.as_str() {
-                                "png" => self.load_png(&name, &data)?,
-                                "ttf" => self.load_ttf(&name, &data)?,
-                                "xml" => self.load_xml(&name, &data)?,
-                                "wav" => self.load_wav(&name, &data)?,
-                                "ogg" => self.load_ogg(&name, &data)?,
+                                "png" => self.load_png(&name, &asset_path, &data)?,
+                                "ttf" => self.load_ttf(&name, &asset_path, &data)?,
+                                "xml" => self.load_xml(&name, &asset_path, &data)?,
+                                "wav" => self.load_wav(&name, &asset_path, &data)?,
+                                "ogg" => self.load_ogg(&name, &asset_path, &data)?,
                                 _ => {}
                             };
                         }
@@ -91,7 +92,7 @@ impl AssetsLoader {
         Ok(self.status)
     }
 
-    fn load_png(&mut self, name: &str, data: &[u8]) -> Result<()> {
+    fn load_png(&mut self, name: &str, path: &str, data: &[u8]) -> Result<()> {
         let cursor = Cursor::new(data);
         let mut decoder = Decoder::new(cursor);
         decoder.set_transformations(png::Transformations::normalize_to_color8());
@@ -101,17 +102,17 @@ impl AssetsLoader {
         let info = reader.next_frame(&mut data)?;
         let size = Vec2::new(info.width as f32, info.height as f32);
 
-        self.raw_textures.push(RawTexture::new(name, size, &data));
+        self.raw_textures.push(RawTexture::new(name, path, size, &data));
 
         Ok(())
     }
 
-    fn load_ttf(&mut self, name: &str, data: &[u8]) -> Result<()> {
-        self.raw_fonts.push(RawFont::new(name, data));
+    fn load_ttf(&mut self, name: &str, path: &str, data: &[u8]) -> Result<()> {
+        self.raw_fonts.push(RawFont::new(name, path, data));
         Ok(())
     }
 
-    fn load_xml(&mut self, name: &str, data: &[u8]) -> Result<()> {
+    fn load_xml(&mut self, name: &str, path: &str, data: &[u8]) -> Result<()> {
         let xml = str::from_utf8(data)?;
         let mut reader = Reader::from_str(xml);
         reader.trim_text(true);
@@ -157,7 +158,7 @@ impl AssetsLoader {
                         let position = Vec2::new(x.parse()?, y.parse()?);
                         let size = Vec2::new(width.parse()?, height.parse()?);
 
-                        entities.push(RawAtlasEntity::new(&name, position, size));
+                        entities.push(RawAtlasEntity::new(&name, path, position, size));
                     }
                     _ => {}
                 },
@@ -167,18 +168,18 @@ impl AssetsLoader {
             }
         }
 
-        self.raw_atlases.push(RawAtlas::new(name, &image, entities));
+        self.raw_atlases.push(RawAtlas::new(name, path, &image, entities));
 
         Ok(())
     }
 
-    fn load_wav(&mut self, name: &str, data: &[u8]) -> Result<()> {
-        self.raw_sounds.push(RawSound::new(name, data));
+    fn load_wav(&mut self, name: &str, path: &str, data: &[u8]) -> Result<()> {
+        self.raw_sounds.push(RawSound::new(name, path, data));
         Ok(())
     }
 
-    fn load_ogg(&mut self, name: &str, data: &[u8]) -> Result<()> {
-        self.raw_sounds.push(RawSound::new(name, data));
+    fn load_ogg(&mut self, name: &str, path: &str, data: &[u8]) -> Result<()> {
+        self.raw_sounds.push(RawSound::new(name, path, data));
         Ok(())
     }
 }

@@ -70,8 +70,8 @@ impl Scene for MainScene {
         }
 
         if !self.initialized && state.assets.load("./data/data0.zip")? == AssetsLoadingStatus::Finished {
-            state.renderer.instantiate_assets(state.assets)?;
-            state.ui.instantiate_assets(state.assets)?;
+            state.renderer.instantiate_assets(state.assets, None)?;
+            state.ui.instantiate_assets(state.assets, None)?;
             state.window.set_swap_interval(0);
 
             for _ in 0..COUNT {

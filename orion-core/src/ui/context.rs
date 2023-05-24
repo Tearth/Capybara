@@ -17,6 +17,8 @@ use anyhow::Result;
 use core::slice;
 use egui::epaint::ahash::HashMap;
 use egui::epaint::Primitive;
+use egui::Color32;
+use egui::ColorImage;
 use egui::Event;
 use egui::FontData;
 use egui::FontDefinitions;
@@ -27,10 +29,12 @@ use egui::PointerButton;
 use egui::Pos2;
 use egui::RawInput;
 use egui::Rect;
+use egui::TextureHandle;
 use egui::TextureId;
 use egui::TextureOptions;
 use glam::Vec2;
 use glow::HasContext;
+use instant::Instant;
 use std::rc::Rc;
 
 pub struct UiContext {
@@ -41,7 +45,9 @@ pub struct UiContext {
 
     pub camera_id: usize,
     pub textures: HashMap<TextureId, usize>,
+    pub handles: HashMap<String, TextureHandle>,
 
+    time: Instant,
     max_texture_size: i32,
     gl: Rc<glow::Context>,
 }
@@ -56,21 +62,54 @@ impl UiContext {
 
             camera_id: renderer.cameras.store(Camera::new(Default::default(), renderer.viewport_size, CameraOrigin::LeftTop)),
             textures: Default::default(),
+            handles: Default::default(),
 
+            time: Instant::now(),
             max_texture_size: unsafe { renderer.gl.get_parameter_i32(glow::MAX_TEXTURE_SIZE) },
             gl: renderer.gl.clone(),
         })
     }
 
-    pub fn instantiate_assets(&mut self, assets: &AssetsLoader) -> Result<()> {
-        for font in &assets.raw_fonts {
-            let mut fonts = FontDefinitions::default();
-            fonts.font_data.insert(font.name.clone(), FontData::from_owned(font.data.clone()));
-            fonts.families.insert(FontFamily::Name(font.name.clone().into()), vec![font.name.clone()]);
+    pub fn instantiate_assets(&mut self, assets: &AssetsLoader, prefix: Option<&str>) -> Result<()> {
+        for texture in &assets.raw_textures {
+            if let Some(prefix) = &prefix {
+                if !texture.path.starts_with(prefix) {
+                    continue;
+                }
+            }
 
-            self.inner.set_fonts(fonts);
+            let size = [texture.size.x as usize, texture.size.y as usize];
+            let mut image = ColorImage::new(size, Color32::TRANSPARENT);
+
+            for x in 0..size[0] {
+                for y in 0..size[1] {
+                    let base = x * 4 + y * 4 * size[0];
+                    let r = texture.data[base + 0];
+                    let g = texture.data[base + 1];
+                    let b = texture.data[base + 2];
+                    let a = texture.data[base + 3];
+
+                    image.pixels[x + y * size[0]] = Color32::from_rgba_premultiplied(r, g, b, a);
+                }
+            }
+
+            self.handles.insert(texture.name.clone(), self.inner.load_texture(texture.name.clone(), image, Default::default()));
         }
 
+        let mut fonts = FontDefinitions::default();
+
+        for font in &assets.raw_fonts {
+            if let Some(prefix) = &prefix {
+                if !font.path.starts_with(prefix) {
+                    continue;
+                }
+            }
+
+            fonts.font_data.insert(font.name.clone(), FontData::from_owned(font.data.clone()));
+            fonts.families.insert(FontFamily::Name(font.name.clone().into()), vec![font.name.clone()]);
+        }
+
+        self.inner.set_fonts(fonts);
         Ok(())
     }
 
@@ -143,6 +182,7 @@ impl UiContext {
             events: self.collected_events.clone(),
             max_texture_side: Some(self.max_texture_size as usize),
             modifiers: map_modifiers(self.modifiers),
+            time: Some(self.time.elapsed().as_secs_f64()),
             ..Default::default()
         };
         self.collected_events.clear();
@@ -224,7 +264,7 @@ impl UiContext {
 
             *texture_id
         } else {
-            let raw = RawTexture::new("", size, data);
+            let raw = RawTexture::new("", "", size, data);
             let texture_id = renderer.textures.store(Texture::new(self.gl.clone(), &raw));
             self.textures.insert(id, texture_id);
 

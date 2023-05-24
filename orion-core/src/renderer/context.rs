@@ -133,8 +133,14 @@ impl RendererContext {
         }
     }
 
-    pub fn instantiate_assets(&mut self, assets: &AssetsLoader) -> Result<()> {
+    pub fn instantiate_assets(&mut self, assets: &AssetsLoader, prefix: Option<&str>) -> Result<()> {
         for texture in &assets.raw_textures {
+            if let Some(prefix) = &prefix {
+                if !texture.path.starts_with(prefix) {
+                    continue;
+                }
+            }
+
             self.textures.store_with_name(&texture.name, Texture::new(self.gl.clone(), texture))?;
         }
 

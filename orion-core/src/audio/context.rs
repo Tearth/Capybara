@@ -16,8 +16,14 @@ impl AudioContext {
         Ok(Self { inner: AudioManager::<CpalBackend>::new(AudioManagerSettings::default())?, sounds: Default::default() })
     }
 
-    pub fn instantiate_assets(&mut self, assets: &AssetsLoader) -> Result<()> {
+    pub fn instantiate_assets(&mut self, assets: &AssetsLoader, prefix: Option<&str>) -> Result<()> {
         for sound in &assets.raw_sounds {
+            if let Some(prefix) = &prefix {
+                if !sound.path.starts_with(prefix) {
+                    continue;
+                }
+            }
+
             self.sounds.store_with_name(&sound.name, Sound::new(sound)?)?;
         }
 

@@ -42,9 +42,10 @@ impl Scene for LoadingScene {
 
         if self.loading_finished {
             if let Some(loading_start) = self.loading_start {
-                //if loading_start.elapsed().as_secs() >= 2 {
-                return Ok(Some(FrameCommand::ChangeScene { name: "MenuScene".to_string() }));
-                //}
+                #[allow(unused_comparisons, clippy::absurd_extreme_comparisons)]
+                if loading_start.elapsed().as_secs() >= 0 {
+                    return Ok(Some(FrameCommand::ChangeScene { name: "MenuScene".to_string() }));
+                }
             }
         }
 

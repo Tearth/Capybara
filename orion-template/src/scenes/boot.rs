@@ -1,13 +1,13 @@
 use orion_core::anyhow::Result;
 use orion_core::app::ApplicationState;
 use orion_core::assets::AssetsLoadingStatus;
-use orion_core::egui::style::Spacing;
+use orion_core::egui::Color32;
 use orion_core::egui::FontFamily;
 use orion_core::egui::FontId;
 use orion_core::egui::FullOutput;
 use orion_core::egui::RawInput;
+use orion_core::egui::Stroke;
 use orion_core::egui::TextStyle;
-use orion_core::egui::Vec2;
 use orion_core::scene::FrameCommand;
 use orion_core::scene::Scene;
 use orion_core::window::InputEvent;
@@ -39,6 +39,7 @@ impl Scene for BootScene {
                 (TextStyle::Button, (FontId { size: 32.0, family: FontFamily::Name("Kenney Pixel".into()) })),
             ]
             .into();
+            style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(1.0, Color32::from_rgb(30, 50, 20));
             state.ui.inner.set_style(style);
 
             return Ok(Some(FrameCommand::ChangeScene { name: "LoadingScene".to_string() }));

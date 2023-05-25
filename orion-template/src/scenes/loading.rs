@@ -51,13 +51,15 @@ impl Scene for LoadingScene {
         Ok(None)
     }
 
-    fn ui(&mut self, state: ApplicationState, input: RawInput) -> Result<FullOutput> {
-        Ok(state.ui.inner.run(input, |context| {
+    fn ui(&mut self, state: ApplicationState, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
+        let output = state.ui.inner.run(input, |context| {
             CentralPanel::default().show(context, |ui| {
                 ui.with_layout(Layout::centered_and_justified(Direction::LeftToRight), |ui| {
                     ui.label(RichText::new("Loading...".to_string()).heading().color(Color32::from_rgb(255, 255, 255)));
                 });
             });
-        }))
+        });
+
+        Ok((output, None))
     }
 }

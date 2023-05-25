@@ -26,13 +26,11 @@ use orion_core::utils::color::Vec4Color;
 use orion_core::window::InputEvent;
 
 #[derive(Default)]
-pub struct MenuScene {
-    play_button_state: WidgetState,
-    about_button_state: WidgetState,
-    exit_button_state: WidgetState,
+pub struct AboutScene {
+    return_button_state: WidgetState,
 }
 
-impl Scene for MenuScene {
+impl Scene for AboutScene {
     fn activation(&mut self, state: ApplicationState) -> Result<()> {
         state.renderer.set_clear_color(Vec4::new_rgb(40, 80, 30, 255));
         Ok(())
@@ -53,7 +51,7 @@ impl Scene for MenuScene {
     fn ui(&mut self, state: ApplicationState, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let mut command = None;
         let output = state.ui.inner.run(input, |context| {
-            let side_panel_width = (context.screen_rect().width() - 220.0) / 2.0;
+            let side_panel_width = (context.screen_rect().width() - 420.0) / 2.0;
 
             TopBottomPanel::new(TopBottomSide::Top, Id::new("top_menu_panel"))
                 .exact_height(200.0)
@@ -95,17 +93,19 @@ impl Scene for MenuScene {
                     .rounding(Rounding::same(5.0))
                     .show(ui, |ui| {
                         ui.vertical_centered(|ui| {
-                            widgets::image_button(ui, state.ui, "button", Vec2::new(190.0, 49.0), "Play", &mut self.play_button_state);
-                            ui.add_space(32.0);
+                            ui.label(
+                                RichText::new(
+                                    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras eleifend et mi sit amet convallis. \
+                                    Fusce posuere eget ligula non facilisis. Cras vulputate suscipit ipsum faucibus convallis. \
+                                    Sed maximus ultricies libero, non varius erat cursus vulputate. Curabitur consequat, dui at semper \
+                                    accumsan, mi dui blandit libero, a viverra leo urna nec ligula.",
+                                )
+                                .color(Color32::from_rgb(40, 70, 30)),
+                            );
+                            ui.add_space(20.0);
 
-                            if widgets::image_button(ui, state.ui, "button", Vec2::new(190.0, 49.0), "About", &mut self.about_button_state).clicked() {
-                                command = Some(FrameCommand::ChangeScene { name: "AboutScene".to_string() });
-                            }
-
-                            ui.add_space(32.0);
-
-                            if widgets::image_button(ui, state.ui, "button", Vec2::new(190.0, 49.0), "Exit", &mut self.exit_button_state).clicked() {
-                                state.window.close();
+                            if widgets::image_button(ui, state.ui, "button", Vec2::new(190.0, 49.0), "Back", &mut self.return_button_state).clicked() {
+                                command = Some(FrameCommand::ChangeScene { name: "MenuScene".to_string() });
                             }
                         });
                     });

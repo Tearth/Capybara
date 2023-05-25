@@ -115,18 +115,19 @@ impl ApplicationContext {
             }
 
             let ui_input = self.ui.get_input();
-            let ui_output = scene.ui(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio), ui_input)?;
+            let (ui_output, command) =
+                scene.ui(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio), ui_input)?;
+            self.process_frame_command(command);
 
             let now = Instant::now();
             let delta = (now - self.frame_timestamp).as_secs_f32();
             self.frame_timestamp = now;
 
+            let scene = self.scenes.get_mut(&self.current_scene).unwrap();
+
             self.renderer.begin_user_frame()?;
-            match scene.frame(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio), delta)? {
-                Some(FrameCommand::ChangeScene { name }) => self.next_scene = Some(name),
-                Some(FrameCommand::Exit) => self.running = false,
-                None => {}
-            }
+            let command = scene.frame(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio), delta)?;
+            self.process_frame_command(command);
             self.renderer.end_user_frame()?;
 
             self.ui.draw(&mut self.renderer, ui_output)?;
@@ -137,6 +138,14 @@ impl ApplicationContext {
         }
 
         Ok(())
+    }
+
+    fn process_frame_command(&mut self, command: Option<FrameCommand>) {
+        match command {
+            Some(FrameCommand::ChangeScene { name }) => self.next_scene = Some(name),
+            Some(FrameCommand::Exit) => self.running = false,
+            None => {}
+        }
     }
 }
 

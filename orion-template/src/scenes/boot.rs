@@ -1,11 +1,13 @@
 use orion_core::anyhow::Result;
 use orion_core::app::ApplicationState;
 use orion_core::assets::AssetsLoadingStatus;
+use orion_core::egui::style::Spacing;
 use orion_core::egui::FontFamily;
 use orion_core::egui::FontId;
 use orion_core::egui::FullOutput;
 use orion_core::egui::RawInput;
 use orion_core::egui::TextStyle;
+use orion_core::egui::Vec2;
 use orion_core::scene::FrameCommand;
 use orion_core::scene::Scene;
 use orion_core::window::InputEvent;
@@ -45,7 +47,7 @@ impl Scene for BootScene {
         Ok(None)
     }
 
-    fn ui(&mut self, state: ApplicationState, input: RawInput) -> Result<FullOutput> {
-        Ok(state.ui.inner.run(input, |_| {}))
+    fn ui(&mut self, state: ApplicationState, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
+        Ok((state.ui.inner.run(input, |_| {}), None))
     }
 }

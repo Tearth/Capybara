@@ -15,5 +15,5 @@ pub trait Scene {
 
     fn input(&mut self, state: ApplicationState, event: InputEvent) -> Result<()>;
     fn frame(&mut self, state: ApplicationState, delta: f32) -> Result<Option<FrameCommand>>;
-    fn ui(&mut self, state: ApplicationState, input: RawInput) -> Result<FullOutput>;
+    fn ui(&mut self, state: ApplicationState, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)>;
 }

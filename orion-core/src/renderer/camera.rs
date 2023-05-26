@@ -31,6 +31,22 @@ impl Camera {
     pub fn get_view_matrix(&self) -> Mat4 {
         Mat4::from_translation(Vec3::new(-self.position.x, -self.position.y, -1.0))
     }
+
+    pub fn from_window_to_screen_coordinates(&self, position: Vec2) -> Vec2 {
+        Vec2::new(position.x, self.size.y - position.y)
+    }
+
+    pub fn from_window_to_world_coordinates(&self, position: Vec2) -> Vec2 {
+        Vec2::new(position.x, self.size.y - position.y) + self.position
+    }
+
+    pub fn from_screen_to_window_coordinates(&self, position: Vec2) -> Vec2 {
+        Vec2::new(position.x, self.size.y - position.y)
+    }
+
+    pub fn from_world_to_window_coordinates(&self, position: Vec2) -> Vec2 {
+        Vec2::new(position.x, self.size.y - position.y) - self.position
+    }
 }
 
 impl StorageItem for Camera {

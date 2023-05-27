@@ -29,7 +29,7 @@ pub enum Shape {
 
 #[derive(Clone, Debug)]
 pub struct ShapeData {
-    pub vertices: Vec<f32>,
+    pub vertices: Vec<u32>,
     pub indices: Vec<u32>,
 }
 
@@ -90,7 +90,7 @@ impl Sprite {
 }
 
 impl ShapeData {
-    pub fn new(vertices: Vec<f32>, indices: Vec<u32>) -> Self {
+    pub fn new(vertices: Vec<u32>, indices: Vec<u32>) -> Self {
         Self { vertices, indices }
     }
 }

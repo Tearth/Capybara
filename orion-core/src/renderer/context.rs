@@ -44,7 +44,7 @@ pub struct RendererContext {
     buffer_ebo: Buffer,
 
     buffer_texture: Option<usize>,
-    buffer_vertices_queue: Vec<f32>,
+    buffer_vertices_queue: Vec<u32>,
     buffer_indices_queue: Vec<u32>,
     buffer_vertices_count: usize,
     buffer_indices_count: usize,
@@ -82,7 +82,7 @@ impl RendererContext {
                 buffer_ebo: square_ebo,
 
                 buffer_texture: None,
-                buffer_vertices_queue: vec![0.0; 256],
+                buffer_vertices_queue: vec![0; 256],
                 buffer_indices_queue: vec![0; 256],
                 buffer_vertices_count: 0,
                 buffer_indices_count: 0,
@@ -118,9 +118,9 @@ impl RendererContext {
             self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.buffer_vbo));
             self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.buffer_ebo));
 
-            self.gl.vertex_attrib_pointer_f32(0, 2, glow::FLOAT, false, 8 * 4, 0);
-            self.gl.vertex_attrib_pointer_f32(1, 4, glow::FLOAT, false, 8 * 4, 2 * 4);
-            self.gl.vertex_attrib_pointer_f32(2, 2, glow::FLOAT, false, 8 * 4, 6 * 4);
+            self.gl.vertex_attrib_pointer_f32(0, 2, glow::FLOAT, false, 5 * 4, 0);
+            self.gl.vertex_attrib_pointer_i32(1, 1, glow::UNSIGNED_INT, 5 * 4, 2 * 4);
+            self.gl.vertex_attrib_pointer_f32(2, 2, glow::FLOAT, false, 5 * 4, 3 * 4);
 
             self.gl.enable_vertex_attrib_array(0);
             self.gl.enable_vertex_attrib_array(1);
@@ -212,8 +212,8 @@ impl RendererContext {
 
         match &sprite.shape {
             Shape::Standard => {
-                if v_base + 32 >= self.buffer_vertices_queue.len() {
-                    self.buffer_vertices_queue.resize(self.buffer_vertices_queue.len() * 2, 0.0);
+                if v_base + 20 >= self.buffer_vertices_queue.len() {
+                    self.buffer_vertices_queue.resize(self.buffer_vertices_queue.len() * 2, 0);
                     self.buffer_resized = true;
                 }
 
@@ -273,41 +273,35 @@ impl RendererContext {
                     }
                 };
 
-                self.buffer_vertices_queue[v_base + 0] = v1.x;
-                self.buffer_vertices_queue[v_base + 1] = v1.y;
-                self.buffer_vertices_queue[v_base + 2] = sprite.color.x;
-                self.buffer_vertices_queue[v_base + 3] = sprite.color.y;
-                self.buffer_vertices_queue[v_base + 4] = sprite.color.z;
-                self.buffer_vertices_queue[v_base + 5] = sprite.color.w;
-                self.buffer_vertices_queue[v_base + 6] = uv_position.x;
-                self.buffer_vertices_queue[v_base + 7] = uv_position.y + uv_size.y;
+                let r = (sprite.color.x * 255.0) as u32;
+                let g = (sprite.color.y * 255.0) as u32;
+                let b = (sprite.color.z * 255.0) as u32;
+                let a = (sprite.color.w * 255.0) as u32;
+                let color = (r << 24) | (g << 16) | (b << 8) | a;
 
-                self.buffer_vertices_queue[v_base + 8] = v2.x;
-                self.buffer_vertices_queue[v_base + 9] = v2.y;
-                self.buffer_vertices_queue[v_base + 10] = sprite.color.x;
-                self.buffer_vertices_queue[v_base + 11] = sprite.color.y;
-                self.buffer_vertices_queue[v_base + 12] = sprite.color.z;
-                self.buffer_vertices_queue[v_base + 13] = sprite.color.w;
-                self.buffer_vertices_queue[v_base + 14] = uv_position.x + uv_size.x;
-                self.buffer_vertices_queue[v_base + 15] = uv_position.y + uv_size.y;
+                self.buffer_vertices_queue[v_base + 0] = v1.x.to_bits();
+                self.buffer_vertices_queue[v_base + 1] = v1.y.to_bits();
+                self.buffer_vertices_queue[v_base + 2] = color;
+                self.buffer_vertices_queue[v_base + 3] = uv_position.x.to_bits();
+                self.buffer_vertices_queue[v_base + 4] = (uv_position.y + uv_size.y).to_bits();
 
-                self.buffer_vertices_queue[v_base + 16] = v3.x;
-                self.buffer_vertices_queue[v_base + 17] = v3.y;
-                self.buffer_vertices_queue[v_base + 18] = sprite.color.x;
-                self.buffer_vertices_queue[v_base + 19] = sprite.color.y;
-                self.buffer_vertices_queue[v_base + 20] = sprite.color.z;
-                self.buffer_vertices_queue[v_base + 21] = sprite.color.w;
-                self.buffer_vertices_queue[v_base + 22] = uv_position.x + uv_size.x;
-                self.buffer_vertices_queue[v_base + 23] = uv_position.y;
+                self.buffer_vertices_queue[v_base + 5] = v2.x.to_bits();
+                self.buffer_vertices_queue[v_base + 6] = v2.y.to_bits();
+                self.buffer_vertices_queue[v_base + 7] = color;
+                self.buffer_vertices_queue[v_base + 8] = (uv_position.x + uv_size.x).to_bits();
+                self.buffer_vertices_queue[v_base + 9] = (uv_position.y + uv_size.y).to_bits();
 
-                self.buffer_vertices_queue[v_base + 24] = v4.x;
-                self.buffer_vertices_queue[v_base + 25] = v4.y;
-                self.buffer_vertices_queue[v_base + 26] = sprite.color.x;
-                self.buffer_vertices_queue[v_base + 27] = sprite.color.y;
-                self.buffer_vertices_queue[v_base + 28] = sprite.color.z;
-                self.buffer_vertices_queue[v_base + 29] = sprite.color.w;
-                self.buffer_vertices_queue[v_base + 30] = uv_position.x;
-                self.buffer_vertices_queue[v_base + 31] = uv_position.y;
+                self.buffer_vertices_queue[v_base + 10] = v3.x.to_bits();
+                self.buffer_vertices_queue[v_base + 11] = v3.y.to_bits();
+                self.buffer_vertices_queue[v_base + 12] = color;
+                self.buffer_vertices_queue[v_base + 13] = (uv_position.x + uv_size.x).to_bits();
+                self.buffer_vertices_queue[v_base + 14] = uv_position.y.to_bits();
+
+                self.buffer_vertices_queue[v_base + 15] = v4.x.to_bits();
+                self.buffer_vertices_queue[v_base + 16] = v4.y.to_bits();
+                self.buffer_vertices_queue[v_base + 17] = color;
+                self.buffer_vertices_queue[v_base + 18] = uv_position.x.to_bits();
+                self.buffer_vertices_queue[v_base + 19] = uv_position.y.to_bits();
 
                 self.buffer_indices_queue[i_base + 0] = self.buffer_indices_max + 0;
                 self.buffer_indices_queue[i_base + 1] = self.buffer_indices_max + 1;
@@ -316,7 +310,7 @@ impl RendererContext {
                 self.buffer_indices_queue[i_base + 4] = self.buffer_indices_max + 2;
                 self.buffer_indices_queue[i_base + 5] = self.buffer_indices_max + 3;
 
-                self.buffer_vertices_count = v_base + 32;
+                self.buffer_vertices_count = v_base + 20;
                 self.buffer_indices_count = i_base + 6;
                 self.buffer_indices_max += 4;
             }
@@ -325,7 +319,7 @@ impl RendererContext {
                     let mut sufficient_space = true;
 
                     if v_base + data.vertices.len() >= self.buffer_vertices_queue.len() {
-                        self.buffer_vertices_queue.resize(self.buffer_vertices_queue.len() * 2, 0.0);
+                        self.buffer_vertices_queue.resize(self.buffer_vertices_queue.len() * 2, 0);
                         self.buffer_resized = true;
                         sufficient_space = false;
                     }

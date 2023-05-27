@@ -25,6 +25,9 @@ use std::collections::VecDeque;
 
 fast_gpu!();
 
+const COUNT: usize = 200000;
+const SPEED: f32 = 100.0;
+const DELTA_HISTORY_COUNT: usize = 100;
 #[derive(Default)]
 struct MainScene {
     objects: Vec<Object>,
@@ -59,10 +62,6 @@ impl Scene for MainScene {
     }
 
     fn frame(&mut self, state: ApplicationState, delta: f32) -> Result<Option<FrameCommand>> {
-        const COUNT: usize = 200000;
-        const SPEED: f32 = 100.0;
-        const DELTA_HISTORY_COUNT: usize = 100;
-
         self.delta_history.push_back(delta);
 
         if self.delta_history.len() > DELTA_HISTORY_COUNT {
@@ -125,7 +124,8 @@ impl Scene for MainScene {
                     let delta_average = self.delta_history.iter().sum::<f32>() / self.delta_history.len() as f32;
                     let label = format!("Delta: {:.2}", delta_average * 1000.0);
 
-                    ui.label(RichText::new(label).font(font).heading().color(color));
+                    ui.label(RichText::new(label).font(font.clone()).heading().color(color));
+                    ui.label(RichText::new(format!("N: {}", COUNT)).font(font).heading().color(color));
                 }
             });
         });

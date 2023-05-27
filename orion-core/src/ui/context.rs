@@ -223,14 +223,17 @@ impl UiContext {
             if let Primitive::Mesh(mesh) = shape.primitive {
                 let mut vertices = Vec::new();
                 for vertice in mesh.vertices {
-                    vertices.push(vertice.pos.x);
-                    vertices.push(vertice.pos.y);
-                    vertices.push(vertice.color.r() as f32 / 255.0);
-                    vertices.push(vertice.color.g() as f32 / 255.0);
-                    vertices.push(vertice.color.b() as f32 / 255.0);
-                    vertices.push(vertice.color.a() as f32 / 255.0);
-                    vertices.push(vertice.uv.x);
-                    vertices.push(vertice.uv.y);
+                    let r = vertice.color.r() as u32;
+                    let g = vertice.color.g() as u32;
+                    let b = vertice.color.b() as u32;
+                    let a = vertice.color.a() as u32;
+                    let color = (r << 24) | (g << 16) | (b << 8) | a;
+
+                    vertices.push(vertice.pos.x.to_bits());
+                    vertices.push(vertice.pos.y.to_bits());
+                    vertices.push(color);
+                    vertices.push(vertice.uv.x.to_bits());
+                    vertices.push(vertice.uv.y.to_bits());
                 }
 
                 let mut sprite = Sprite::new();

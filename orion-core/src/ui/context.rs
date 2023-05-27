@@ -35,7 +35,6 @@ use egui::TextureOptions;
 use glam::Vec2;
 use glow::HasContext;
 use instant::Instant;
-use std::rc::Rc;
 
 pub struct UiContext {
     pub inner: egui::Context,
@@ -49,7 +48,6 @@ pub struct UiContext {
 
     time: Instant,
     max_texture_size: i32,
-    gl: Rc<glow::Context>,
 }
 
 impl UiContext {
@@ -66,7 +64,6 @@ impl UiContext {
 
             time: Instant::now(),
             max_texture_size: unsafe { renderer.gl.get_parameter_i32(glow::MAX_TEXTURE_SIZE) },
-            gl: renderer.gl.clone(),
         })
     }
 
@@ -93,7 +90,8 @@ impl UiContext {
                 }
             }
 
-            self.handles.insert(texture.name.clone(), self.inner.load_texture(texture.name.clone(), image, Default::default()));
+            let handle = self.inner.load_texture(texture.name.clone(), image, Default::default());
+            self.handles.insert(texture.name.clone(), handle);
         }
 
         let mut fonts = FontDefinitions::default();
@@ -130,7 +128,12 @@ impl UiContext {
                     let egui_position = Pos2::new(position.x as f32, position.y as f32);
                     let egui_modifiers = map_modifiers(*modifiers);
 
-                    self.collected_events.push(Event::PointerButton { pos: egui_position, button: egui_button, pressed: true, modifiers: egui_modifiers });
+                    self.collected_events.push(Event::PointerButton {
+                        pos: egui_position,
+                        button: egui_button,
+                        pressed: true,
+                        modifiers: egui_modifiers,
+                    });
                     self.modifiers = *modifiers;
                 }
             }
@@ -139,7 +142,12 @@ impl UiContext {
                     let egui_position = Pos2::new(position.x as f32, position.y as f32);
                     let egui_modifiers = map_modifiers(*modifiers);
 
-                    self.collected_events.push(Event::PointerButton { pos: egui_position, button: egui_button, pressed: false, modifiers: egui_modifiers });
+                    self.collected_events.push(Event::PointerButton {
+                        pos: egui_position,
+                        button: egui_button,
+                        pressed: false,
+                        modifiers: egui_modifiers,
+                    });
                     self.modifiers = *modifiers;
                 }
             }
@@ -203,7 +211,8 @@ impl UiContext {
                     self.update_texture(id, renderer, &data, position, size, delta.options, true)?;
                 }
                 ImageData::Color(image) => {
-                    let data = unsafe { slice::from_raw_parts(image.pixels.as_ptr() as *const u8, image.pixels.len() * 4) };
+                    let pixels_ptr = image.pixels.as_ptr() as *const u8;
+                    let data = unsafe { slice::from_raw_parts(pixels_ptr, image.pixels.len() * 4) };
                     let size = Vec2::new(image.size[0] as f32, image.size[1] as f32);
                     self.update_texture(id, renderer, data, position, size, delta.options, false)?;
                 }
@@ -265,7 +274,7 @@ impl UiContext {
             *texture_id
         } else {
             let raw = RawTexture::new("", "", size, data);
-            let texture_id = renderer.textures.store(Texture::new(self.gl.clone(), &raw));
+            let texture_id = renderer.textures.store(Texture::new(renderer, &raw));
             self.textures.insert(id, texture_id);
 
             texture_id

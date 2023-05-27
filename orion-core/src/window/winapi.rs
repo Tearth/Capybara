@@ -264,7 +264,13 @@ impl WindowContextWinApi {
                 bail!("SetPixelFormat error: {}", errhandlingapi::GetLastError());
             }
 
-            let mut wgl_context_attributes = [8337 /* wgl::WGL_CONTEXT_MAJOR_VERSION_ARB */, 3, 8338 /* wgl::WGL_CONTEXT_MINOR_VERSION_ARB */, 3, 0];
+            let mut wgl_context_attributes = [
+                8337, /* wgl::WGL_CONTEXT_MAJOR_VERSION_ARB */
+                3,    /* */
+                8338, /* wgl::WGL_CONTEXT_MINOR_VERSION_ARB */
+                3,    /* */
+                0,
+            ];
             let wgl_context_attributes_ptr = wgl_context_attributes.as_mut_ptr() as *const i32;
 
             let wgl_context = if let Some(wgl_create_context_attribs_arb) = phantom_wgl_extensions.wgl_create_context_attribs_arb {

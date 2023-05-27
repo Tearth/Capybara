@@ -75,8 +75,10 @@ impl Scene for MainScene {
             state.window.set_swap_interval(0);
 
             for _ in 0..COUNT {
-                let position =
-                    Vec2::new(fastrand::u32(0..state.renderer.viewport_size.x as u32) as f32, fastrand::u32(0..state.renderer.viewport_size.y as u32) as f32);
+                let position = Vec2::new(
+                    fastrand::u32(0..state.renderer.viewport_size.x as u32) as f32,
+                    fastrand::u32(0..state.renderer.viewport_size.y as u32) as f32,
+                );
                 let direction = Vec2::new(fastrand::f32() * 2.0 - 1.0, fastrand::f32() * 2.0 - 1.0);
                 let sprite = Sprite {
                     position,
@@ -114,13 +116,16 @@ impl Scene for MainScene {
         let output = state.ui.inner.run(input, |context| {
             SidePanel::new(Side::Left, Id::new("side")).show(context, |ui| {
                 if self.initialized {
-                    let font_id = FontId { size: 24.0, family: FontFamily::Name("Kenney Pixel".into()) };
-                    ui.label(RichText::new(format!("FPS: {}", state.renderer.fps)).font(font_id).heading().color(Color32::from_rgb(255, 255, 255)));
+                    let font = FontId { size: 24.0, family: FontFamily::Name("Kenney Pixel".into()) };
+                    let color = Color32::from_rgb(255, 255, 255);
+                    let label = format!("FPS: {}", state.renderer.fps);
+
+                    ui.label(RichText::new(label).font(font.clone()).heading().color(color));
 
                     let delta_average = self.delta_history.iter().sum::<f32>() / self.delta_history.len() as f32;
+                    let label = format!("Delta: {:.2}", delta_average * 1000.0);
 
-                    let font_id = FontId { size: 24.0, family: FontFamily::Name("Kenney Pixel".into()) };
-                    ui.label(RichText::new(format!("Delta: {:.2}", delta_average * 1000.0)).font(font_id).heading().color(Color32::from_rgb(255, 255, 255)));
+                    ui.label(RichText::new(label).font(font).heading().color(color));
                 }
             });
         });

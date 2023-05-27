@@ -135,6 +135,11 @@ where
 
 impl<T> Default for Storage<T> {
     fn default() -> Self {
-        Self { data: Default::default(), name_to_id_hashmap: Default::default(), id_to_name_hashmap: Default::default(), removed_ids: Default::default() }
+        Self {
+            data: Default::default(),
+            name_to_id_hashmap: Default::default(),
+            id_to_name_hashmap: Default::default(),
+            removed_ids: Default::default(),
+        }
     }
 }

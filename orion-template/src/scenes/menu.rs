@@ -22,6 +22,7 @@ use orion_core::scene::Scene;
 use orion_core::utils::color::Vec4Color;
 use orion_core::window::InputEvent;
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MenuSubScene {
     Main,
     About,

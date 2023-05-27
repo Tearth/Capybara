@@ -128,8 +128,11 @@ impl WindowContextWeb {
         self.init_keyup_callback(app.clone());
         self.init_keypress_callback(app.clone());
 
-        self.window.set_timeout_with_callback_and_timeout_and_arguments_0(self.resize_callback.as_ref().unwrap().as_ref().unchecked_ref(), 0).unwrap();
-        self.window.request_animation_frame(self.frame_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
+        let resize_callback = self.resize_callback.as_ref().unwrap().as_ref().unchecked_ref();
+        let frame_callback = self.frame_callback.as_ref().unwrap().as_ref().unchecked_ref();
+
+        self.window.set_timeout_with_callback_and_timeout_and_arguments_0(resize_callback, 0).unwrap();
+        self.window.request_animation_frame(frame_callback).unwrap();
     }
 
     fn init_frame_callback<F>(&mut self, mut event_loop: F)
@@ -153,7 +156,9 @@ impl WindowContextWeb {
             app.window.event_queue.push_back(InputEvent::WindowSizeChange { size });
             app.window.size = size;
         }));
-        self.window.add_event_listener_with_callback("resize", self.resize_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
+
+        let resize_callback = self.resize_callback.as_ref().unwrap().as_ref().unchecked_ref();
+        self.window.add_event_listener_with_callback("resize", resize_callback).unwrap();
     }
 
     fn init_mousemove_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
@@ -165,7 +170,9 @@ impl WindowContextWeb {
             app.window.event_queue.push_back(InputEvent::MouseMove { position, modifiers });
             app.window.cursor_position = position;
         }));
-        self.canvas.add_event_listener_with_callback("mousemove", self.mousemove_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
+
+        let mousemove_callback = self.mousemove_callback.as_ref().unwrap().as_ref().unchecked_ref();
+        self.canvas.add_event_listener_with_callback("mousemove", mousemove_callback).unwrap();
     }
 
     fn init_mouseenter_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
@@ -177,7 +184,9 @@ impl WindowContextWeb {
             app.window.event_queue.push_back(InputEvent::MouseEnter { position, modifiers });
             app.window.cursor_in_window = true;
         }));
-        self.canvas.add_event_listener_with_callback("mouseenter", self.mouseenter_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
+
+        let mouseenter_callback = self.mouseenter_callback.as_ref().unwrap().as_ref().unchecked_ref();
+        self.canvas.add_event_listener_with_callback("mouseenter", mouseenter_callback).unwrap();
     }
 
     fn init_mouseleave_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
@@ -187,7 +196,9 @@ impl WindowContextWeb {
             app.window.event_queue.push_back(InputEvent::MouseLeave);
             app.window.cursor_in_window = false;
         }));
-        self.canvas.add_event_listener_with_callback("mouseleave", self.mouseleave_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
+
+        let mouseleave_callback = self.mouseleave_callback.as_ref().unwrap().as_ref().unchecked_ref();
+        self.canvas.add_event_listener_with_callback("mouseleave", mouseleave_callback).unwrap();
     }
 
     fn init_mousedown_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
@@ -208,7 +219,9 @@ impl WindowContextWeb {
                 app.window.mouse_state[button as usize] = true;
             }
         }));
-        self.canvas.add_event_listener_with_callback("mousedown", self.mousedown_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
+
+        let mousedown_callback = self.mousedown_callback.as_ref().unwrap().as_ref().unchecked_ref();
+        self.canvas.add_event_listener_with_callback("mousedown", mousedown_callback).unwrap();
     }
 
     fn init_mouseup_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
@@ -229,7 +242,9 @@ impl WindowContextWeb {
                 app.window.mouse_state[button as usize] = false;
             }
         }));
-        self.canvas.add_event_listener_with_callback("mouseup", self.mouseup_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
+
+        let mouseup_callback = self.mouseup_callback.as_ref().unwrap().as_ref().unchecked_ref();
+        self.canvas.add_event_listener_with_callback("mouseup", mouseup_callback).unwrap();
     }
 
     fn init_scroll_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
@@ -240,7 +255,9 @@ impl WindowContextWeb {
 
             app.window.event_queue.push_back(InputEvent::MouseWheelRotated { direction, modifiers });
         }));
-        self.canvas.add_event_listener_with_callback("wheel", self.wheel_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
+
+        let wheel_callback = self.wheel_callback.as_ref().unwrap().as_ref().unchecked_ref();
+        self.canvas.add_event_listener_with_callback("wheel", wheel_callback).unwrap();
     }
 
     fn init_keydown_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
@@ -256,7 +273,9 @@ impl WindowContextWeb {
                 app.window.keyboard_state[key as usize] = true;
             }
         }));
-        self.canvas.add_event_listener_with_callback("keydown", self.keydown_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
+
+        let keydown_callback = self.keydown_callback.as_ref().unwrap().as_ref().unchecked_ref();
+        self.canvas.add_event_listener_with_callback("keydown", keydown_callback).unwrap();
     }
 
     fn init_keyup_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
@@ -272,7 +291,9 @@ impl WindowContextWeb {
                 app.window.last_character = None;
             }
         }));
-        self.canvas.add_event_listener_with_callback("keyup", self.keyup_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
+
+        let keyup_callback = self.keyup_callback.as_ref().unwrap().as_ref().unchecked_ref();
+        self.canvas.add_event_listener_with_callback("keyup", keyup_callback).unwrap();
     }
 
     fn init_keypress_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
@@ -296,7 +317,9 @@ impl WindowContextWeb {
                 app.window.last_character = Some(character);
             }
         }));
-        self.canvas.add_event_listener_with_callback("keypress", self.keypress_callback.as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
+
+        let keypress_callback = self.keypress_callback.as_ref().unwrap().as_ref().unchecked_ref();
+        self.canvas.add_event_listener_with_callback("keypress", keypress_callback).unwrap();
     }
 
     pub fn poll_event(&mut self) -> Option<InputEvent> {

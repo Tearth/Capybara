@@ -73,25 +73,24 @@ impl ApplicationContext {
         }
 
         app.borrow_mut().next_scene = Some(scene.to_string());
-
-        #[cfg(any(windows, unix))]
+        app.borrow_mut().window.set_swap_interval(1);
         app.borrow_mut().run_internal()?;
 
         Ok(())
     }
 
     pub fn run_internal(&mut self) -> Result<()> {
-        self.window.set_swap_interval(1);
-
         while self.running {
             if let Some(next_scene) = &self.next_scene {
                 if !self.current_scene.is_empty() {
                     let old_scene = self.scenes.get_mut(&self.current_scene).unwrap();
-                    old_scene.deactivation(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio))?;
+                    let state = ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio);
+                    old_scene.deactivation(state)?;
                 }
 
                 let new_scene = self.scenes.get_mut(next_scene).unwrap();
-                new_scene.activation(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio))?;
+                let state = ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio);
+                new_scene.activation(state)?;
 
                 self.current_scene = next_scene.clone();
                 self.next_scene = None;
@@ -111,23 +110,26 @@ impl ApplicationContext {
                 }
 
                 self.ui.collect_event(&event);
-                scene.input(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio), event)?;
+                let state = ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio);
+                scene.input(state, event)?;
             }
 
             let ui_input = self.ui.get_input();
-            let (ui_output, command) =
-                scene.ui(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio), ui_input)?;
+            let state = ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio);
+            let (ui_output, command) = scene.ui(state, ui_input)?;
             self.process_frame_command(command);
 
             let now = Instant::now();
             let delta = (now - self.frame_timestamp).as_secs_f32();
             self.frame_timestamp = now;
 
-            let scene = self.scenes.get_mut(&self.current_scene).unwrap();
-
             self.renderer.begin_user_frame()?;
-            let command = scene.frame(ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio), delta)?;
+
+            let scene = self.scenes.get_mut(&self.current_scene).unwrap();
+            let state = ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio);
+            let command = scene.frame(state, delta)?;
             self.process_frame_command(command);
+
             self.renderer.end_user_frame()?;
 
             self.ui.draw(&mut self.renderer, ui_output)?;

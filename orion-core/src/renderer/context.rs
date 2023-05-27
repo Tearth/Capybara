@@ -43,22 +43,17 @@ pub struct RendererContext {
     buffer_vbo: Buffer,
     buffer_ebo: Buffer,
 
+    buffer_texture: Option<usize>,
     buffer_vertices_queue: Vec<f32>,
     buffer_indices_queue: Vec<u32>,
     buffer_vertices_count: usize,
     buffer_indices_count: usize,
     buffer_indices_max: u32,
     buffer_resized: bool,
-    buffer_metadata: Option<BufferMetadata>,
 
+    pub fps: u32,
     fps_timestamp: Instant,
     fps_count: u32,
-    pub fps: u32,
-}
-
-#[derive(Debug, Default)]
-pub struct BufferMetadata {
-    pub texture_id: usize,
 }
 
 impl RendererContext {
@@ -86,17 +81,17 @@ impl RendererContext {
                 buffer_vbo: square_vbo,
                 buffer_ebo: square_ebo,
 
+                buffer_texture: None,
                 buffer_vertices_queue: vec![0.0; 256],
                 buffer_indices_queue: vec![0; 256],
                 buffer_vertices_count: 0,
                 buffer_indices_count: 0,
                 buffer_indices_max: 0,
                 buffer_resized: true,
-                buffer_metadata: None,
 
+                fps: 0,
                 fps_timestamp: Instant::now(),
                 fps_count: 0,
-                fps: 0,
             };
             context.init()?;
 
@@ -111,10 +106,12 @@ impl RendererContext {
             self.gl.blend_func_separate(glow::ONE, glow::ONE_MINUS_SRC_ALPHA, glow::ONE_MINUS_DST_ALPHA, glow::ONE);
             self.set_clear_color(Vec4::new(0.0, 0.0, 0.0, 1.0));
 
-            self.default_camera_id = self.cameras.store(Camera::new(Default::default(), Default::default(), CameraOrigin::LeftBottom));
+            let camera = Camera::new(Default::default(), Default::default(), CameraOrigin::LeftBottom);
+            self.default_camera_id = self.cameras.store(camera);
             self.activate_camera(self.default_camera_id)?;
 
-            self.default_shader_id = self.shaders.store(Shader::new(self, DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER)?);
+            let shader = Shader::new(self, DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER)?;
+            self.default_shader_id = self.shaders.store(shader);
             self.activate_shader(self.default_shader_id)?;
 
             self.gl.bind_vertex_array(Some(self.buffer_vao));
@@ -141,7 +138,7 @@ impl RendererContext {
                 }
             }
 
-            self.textures.store_with_name(&texture.name, Texture::new(self.gl.clone(), texture))?;
+            self.textures.store_with_name(&texture.name, Texture::new(self, texture))?;
         }
 
         for atlas in &assets.raw_atlases {
@@ -197,8 +194,8 @@ impl RendererContext {
         let mut i_base = self.buffer_indices_count;
         let mut flush = false;
 
-        if let Some(metadata) = self.buffer_metadata.as_mut() {
-            if metadata.texture_id != sprite.texture_id {
+        if let Some(texture_id) = self.buffer_texture.as_mut() {
+            if *texture_id != sprite.texture_id {
                 flush = true;
             }
         }
@@ -209,11 +206,8 @@ impl RendererContext {
             i_base = 0;
         }
 
-        if self.buffer_metadata.is_none() {
-            let mut metadata = BufferMetadata::default();
-            metadata.texture_id = sprite.texture_id;
-
-            self.buffer_metadata = Some(metadata);
+        if self.buffer_texture.is_none() {
+            self.buffer_texture = Some(sprite.texture_id);
         }
 
         match &sprite.shape {
@@ -239,7 +233,10 @@ impl RendererContext {
                     Tile::Tilemap { size } => {
                         let texture = self.textures.get(sprite.texture_id)?;
                         let tiles_count = texture.size / *size;
-                        let position = Vec2::new((sprite.animation_frame % tiles_count.x as usize) as f32, (sprite.animation_frame / tiles_count.x as usize) as f32);
+                        let position = Vec2::new(
+                            (sprite.animation_frame % tiles_count.x as usize) as f32,
+                            (sprite.animation_frame / tiles_count.x as usize) as f32,
+                        );
                         let uv_position = position / tiles_count;
                         let uv_size = *size / texture.size;
 
@@ -248,8 +245,8 @@ impl RendererContext {
                     Tile::TilemapAnimation { size, frames } => {
                         let texture = self.textures.get(sprite.texture_id)?;
                         let tiles_count = texture.size / *size;
-                        let animation_frame = frames[sprite.animation_frame];
-                        let position = Vec2::new((animation_frame % tiles_count.x as usize) as f32, (animation_frame / tiles_count.x as usize) as f32);
+                        let frame = frames[sprite.animation_frame];
+                        let position = Vec2::new((frame % tiles_count.x as usize) as f32, (frame / tiles_count.x as usize) as f32);
                         let uv_position = position / tiles_count;
                         let uv_size = *size / texture.size;
 
@@ -364,7 +361,7 @@ impl RendererContext {
 
     pub fn flush(&mut self) -> Result<()> {
         unsafe {
-            if let Some(metadata) = &self.buffer_metadata {
+            if let Some(texture_id) = &self.buffer_texture {
                 if self.buffer_indices_count > 0 {
                     let mut camera = self.cameras.get_mut(self.active_camera_id)?;
 
@@ -377,8 +374,12 @@ impl RendererContext {
                     }
 
                     if self.buffer_resized {
-                        self.gl.buffer_data_size(glow::ARRAY_BUFFER, self.buffer_vertices_queue.len() as i32 * 4, glow::DYNAMIC_DRAW);
-                        self.gl.buffer_data_size(glow::ELEMENT_ARRAY_BUFFER, self.buffer_indices_queue.len() as i32 * 4, glow::DYNAMIC_DRAW);
+                        let buffer_vertices_size = self.buffer_vertices_queue.len() as i32 * 4;
+                        let buffer_indices_size = self.buffer_indices_queue.len() as i32 * 4;
+
+                        self.gl.buffer_data_size(glow::ARRAY_BUFFER, buffer_vertices_size, glow::DYNAMIC_DRAW);
+                        self.gl.buffer_data_size(glow::ELEMENT_ARRAY_BUFFER, buffer_indices_size, glow::DYNAMIC_DRAW);
+
                         self.buffer_resized = false;
                     }
 
@@ -388,7 +389,7 @@ impl RendererContext {
                     self.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, 0, models_u8);
                     self.gl.buffer_sub_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, 0, indices_u8);
 
-                    self.textures.get(metadata.texture_id)?.activate();
+                    self.textures.get(*texture_id)?.activate();
                     self.gl.draw_elements(glow::TRIANGLES, self.buffer_indices_count as i32, glow::UNSIGNED_INT, 0);
 
                     self.buffer_vertices_count = 0;
@@ -396,7 +397,7 @@ impl RendererContext {
                     self.buffer_indices_max = 0;
                 }
 
-                self.buffer_metadata = None;
+                self.buffer_texture = None;
             }
 
             Ok(())

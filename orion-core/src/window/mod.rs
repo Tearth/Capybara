@@ -15,14 +15,14 @@ pub mod web;
 #[cfg(web)]
 pub type WindowContext = web::WindowContextWeb;
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum WindowStyle {
     Window { size: Coordinates },
     Borderless,
     Fullscreen,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum InputEvent {
     WindowSizeChange { size: Coordinates },
     MouseMove { position: Coordinates, modifiers: Modifiers },
@@ -38,7 +38,7 @@ pub enum InputEvent {
     Unknown,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum Key {
     Enter,
     Escape,
@@ -125,7 +125,7 @@ pub struct Modifiers {
     pub shift: bool,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MouseButton {
     Left,
     Middle,
@@ -133,7 +133,7 @@ pub enum MouseButton {
     Unknown,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MouseWheelDirection {
     Up,
     Down,

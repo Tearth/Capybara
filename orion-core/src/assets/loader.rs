@@ -30,6 +30,7 @@ impl AssetsLoader {
             input: Default::default(),
             status: AssetsLoadingStatus::Idle,
             filesystem: Default::default(),
+
             raw_textures: Default::default(),
             raw_fonts: Default::default(),
             raw_atlases: Default::default(),
@@ -114,12 +115,12 @@ impl AssetsLoader {
 
     fn load_xml(&mut self, name: &str, path: &str, data: &[u8]) -> Result<()> {
         let xml = str::from_utf8(data)?;
-        let mut reader = Reader::from_str(xml);
-        reader.trim_text(true);
-        reader.expand_empty_elements(true);
-
         let mut image = String::new();
         let mut entities = Vec::new();
+        let mut reader = Reader::from_str(xml);
+
+        reader.trim_text(true);
+        reader.expand_empty_elements(true);
 
         loop {
             match reader.read_event() {

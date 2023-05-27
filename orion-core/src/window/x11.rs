@@ -131,7 +131,8 @@ impl WindowContextX11 {
 
             xlib::XFree(frame_buffer_config as *mut c_void);
 
-            let event_mask = ExposureMask | StructureNotifyMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | PointerMotionMask;
+            let event_mask =
+                ExposureMask | StructureNotifyMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | PointerMotionMask;
             let colormap = xlib::XCreateColormap(display, xlib::XRootWindow(display, screen), (*visual_info).visual, AllocNone as i32);
 
             let mut window_attributes = XSetWindowAttributes {
@@ -481,7 +482,10 @@ impl WindowContextX11 {
 
 impl GlxExtensions {
     pub fn new() -> Self {
-        Self { glx_create_context_attribs_arb: load_extension::<_>("glXCreateContextAttribsARB"), glx_swap_interval_ext: load_extension::<_>("glXSwapIntervalEXT") }
+        Self {
+            glx_create_context_attribs_arb: load_extension::<_>("glXCreateContextAttribsARB"),
+            glx_swap_interval_ext: load_extension::<_>("glXSwapIntervalEXT"),
+        }
     }
 }
 

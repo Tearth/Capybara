@@ -1,5 +1,3 @@
-pub mod test;
-
 use orion_core::anyhow::Result;
 use orion_core::app::ApplicationContext;
 use orion_core::app::ApplicationState;
@@ -14,6 +12,8 @@ use orion_core::window::Coordinates;
 use orion_core::window::InputEvent;
 use orion_core::window::WindowStyle;
 use test::ColorTest;
+
+pub mod test;
 
 fast_gpu!();
 

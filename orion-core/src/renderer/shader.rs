@@ -19,9 +19,9 @@ pub struct Shader {
     pub id: usize,
     pub name: Option<String>,
     pub program: Program,
-    gl: Rc<Context>,
-
     pub uniforms: HashMap<String, ShaderParameter>,
+
+    gl: Rc<Context>,
 }
 
 pub struct ShaderParameter {
@@ -102,13 +102,16 @@ impl Shader {
                     (self.gl.uniform_1_f32(Some(&parameter.location), (*data).into()));
                 }
                 glow::FLOAT_VEC2 => {
-                    (self.gl.uniform_2_f32_slice(Some(&parameter.location), slice::from_raw_parts::<f32>(data as *const f32, 2)));
+                    let slice = slice::from_raw_parts::<f32>(data as *const f32, 2);
+                    (self.gl.uniform_2_f32_slice(Some(&parameter.location), slice));
                 }
                 glow::FLOAT_VEC4 => {
-                    (self.gl.uniform_4_f32_slice(Some(&parameter.location), slice::from_raw_parts::<f32>(data as *const f32, 4)));
+                    let slice = slice::from_raw_parts::<f32>(data as *const f32, 4);
+                    (self.gl.uniform_4_f32_slice(Some(&parameter.location), slice));
                 }
                 glow::FLOAT_MAT4 => {
-                    (self.gl.uniform_matrix_4_f32_slice(Some(&parameter.location), false, slice::from_raw_parts::<f32>(data as *const f32, 16)));
+                    let slice = slice::from_raw_parts::<f32>(data as *const f32, 16);
+                    (self.gl.uniform_matrix_4_f32_slice(Some(&parameter.location), false, slice));
                 }
                 _ => bail!("Invalid shader parameter type".to_string()),
             };

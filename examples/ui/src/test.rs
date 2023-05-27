@@ -1,3 +1,8 @@
+/*
+    A test for sanity-checking and diagnosing egui rendering backend
+    https://www.egui.rs/#Colors
+*/
+
 use orion_core::egui;
 use orion_core::egui::color_picker::*;
 use orion_core::egui::*;
@@ -10,8 +15,6 @@ const RED: Color32 = Color32::RED;
 const TRANSPARENT: Color32 = Color32::TRANSPARENT;
 const WHITE: Color32 = Color32::WHITE;
 
-/// A test for sanity-checking and diagnosing egui rendering backends.
-/// https://www.egui.rs/#Colors
 pub struct ColorTest {
     tex_mngr: TextureManager,
     vertex_gradients: bool,
@@ -86,7 +89,8 @@ impl ColorTest {
                 let tex = self.tex_mngr.get(ui.ctx(), &g);
                 let texel_offset = 0.5 / (g.0.len() as f32);
                 let uv = Rect::from_min_max(pos2(texel_offset, 0.0), pos2(1.0 - texel_offset, 1.0));
-                ui.add(Image::new(tex, GRADIENT_SIZE).tint(vertex_color).uv(uv)).on_hover_text(format!("A texture that is {} texels wide", g.0.len()));
+                ui.add(Image::new(tex, GRADIENT_SIZE).tint(vertex_color).uv(uv))
+                    .on_hover_text(format!("A texture that is {} texels wide", g.0.len()));
                 ui.label("GPU result");
             });
         });
@@ -196,7 +200,8 @@ impl ColorTest {
             let tex = self.tex_mngr.get(ui.ctx(), gradient);
             let texel_offset = 0.5 / (gradient.0.len() as f32);
             let uv = Rect::from_min_max(pos2(texel_offset, 0.0), pos2(1.0 - texel_offset, 1.0));
-            ui.add(Image::new(tex, GRADIENT_SIZE).bg_fill(bg_fill).uv(uv)).on_hover_text(format!("A texture that is {} texels wide", gradient.0.len()));
+            ui.add(Image::new(tex, GRADIENT_SIZE).bg_fill(bg_fill).uv(uv))
+                .on_hover_text(format!("A texture that is {} texels wide", gradient.0.len()));
             ui.label(label);
         });
     }
@@ -343,8 +348,10 @@ fn pixel_test(ui: &mut Ui) {
 
     let mut cursor_pixel = Pos2::new(response.rect.min.x * pixels_per_point, response.rect.min.y * pixels_per_point).ceil();
     for size in 1..=num_squares {
-        let rect_points =
-            Rect::from_min_size(Pos2::new(cursor_pixel.x / pixels_per_point, cursor_pixel.y / pixels_per_point), Vec2::splat(size as f32) / pixels_per_point);
+        let rect_points = Rect::from_min_size(
+            Pos2::new(cursor_pixel.x / pixels_per_point, cursor_pixel.y / pixels_per_point),
+            Vec2::splat(size as f32) / pixels_per_point,
+        );
         painter.rect_filled(rect_points, 0.0, color);
         cursor_pixel.x += (1 + size) as f32;
     }

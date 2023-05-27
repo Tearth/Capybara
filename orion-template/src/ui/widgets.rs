@@ -21,7 +21,15 @@ pub fn button_orange(ui: &mut Ui, context: &UiContext, label: &str, state: &mut 
     image_button(ui, context, "button_orange", Vec2::new(190.0, 49.0), label, Color32::from_rgb(120, 50, 0), state)
 }
 
-pub fn image_button(ui: &mut Ui, context: &UiContext, texture: &str, size: Vec2, label: &str, label_color: Color32, state: &mut WidgetState) -> Response {
+pub fn image_button(
+    ui: &mut Ui,
+    context: &UiContext,
+    texture: &str,
+    size: Vec2,
+    label: &str,
+    label_color: Color32,
+    state: &mut WidgetState,
+) -> Response {
     let tint = if state.pressed {
         Color32::from_rgba_premultiplied(220, 220, 220, 255)
     } else if state.hovered {

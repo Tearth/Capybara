@@ -1,4 +1,7 @@
-use glam::{Mat4, Vec2, Vec3, Vec4};
+use glam::Mat4;
+use glam::Vec2;
+use glam::Vec3;
+use glam::Vec4;
 use instant::Instant;
 
 pub struct Sprite {
@@ -18,16 +21,19 @@ pub struct Sprite {
     pub animation_timestamp: Instant,
 }
 
+#[derive(Clone, Debug)]
 pub enum Shape {
     Standard,
     Custom(ShapeData),
 }
 
+#[derive(Clone, Debug)]
 pub struct ShapeData {
     pub vertices: Vec<f32>,
     pub indices: Vec<u32>,
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum Tile {
     Simple,
     Tilemap { size: Vec2 },

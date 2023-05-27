@@ -1,5 +1,7 @@
 use crate::utils::storage::StorageItem;
-use glam::{Mat4, Vec2, Vec3};
+use glam::Mat4;
+use glam::Vec2;
+use glam::Vec3;
 
 pub struct Camera {
     pub id: usize,
@@ -11,6 +13,7 @@ pub struct Camera {
     pub dirty: bool,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum CameraOrigin {
     LeftTop,
     LeftBottom,

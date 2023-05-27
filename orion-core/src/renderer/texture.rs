@@ -1,5 +1,8 @@
-use crate::{assets::RawTexture, utils::storage::StorageItem};
+use super::context::RendererContext;
+use crate::assets::RawTexture;
+use crate::utils::storage::StorageItem;
 use glam::Vec2;
+use glow::Context;
 use glow::HasContext;
 use rustc_hash::FxHashMap;
 use std::rc::Rc;
@@ -10,7 +13,7 @@ pub struct Texture {
     pub size: Vec2,
     pub inner: glow::Texture,
     pub kind: TextureKind,
-    gl: Rc<glow::Context>,
+    gl: Rc<Context>,
 }
 
 pub struct AtlasEntity {
@@ -23,14 +26,16 @@ pub enum TextureKind {
     Atlas(FxHashMap<String, AtlasEntity>),
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum TextureFilter {
     Linear,
     Nearest,
 }
 
 impl Texture {
-    pub fn new(gl: Rc<glow::Context>, raw: &RawTexture) -> Self {
+    pub fn new(renderer: &RendererContext, raw: &RawTexture) -> Self {
         unsafe {
+            let gl = renderer.gl.clone();
             let inner = gl.create_texture().unwrap();
 
             gl.bind_texture(glow::TEXTURE_2D, Some(inner));
@@ -38,7 +43,17 @@ impl Texture {
             gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_T, glow::CLAMP_TO_EDGE as i32);
             gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MIN_FILTER, glow::NEAREST_MIPMAP_NEAREST as i32);
             gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MAG_FILTER, glow::NEAREST as i32);
-            gl.tex_image_2d(glow::TEXTURE_2D, 0, glow::SRGB8_ALPHA8 as i32, raw.size.x as i32, raw.size.y as i32, 0, glow::RGBA, glow::UNSIGNED_BYTE, Some(&raw.data));
+            gl.tex_image_2d(
+                glow::TEXTURE_2D,
+                0,
+                glow::SRGB8_ALPHA8 as i32,
+                raw.size.x as i32,
+                raw.size.y as i32,
+                0,
+                glow::RGBA,
+                glow::UNSIGNED_BYTE,
+                Some(&raw.data),
+            );
             gl.generate_mipmap(glow::TEXTURE_2D);
 
             Self { id: 0, name: None, size: raw.size, inner, kind: TextureKind::Simple, gl }

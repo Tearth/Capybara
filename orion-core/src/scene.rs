@@ -4,6 +4,7 @@ use anyhow::Result;
 use egui::FullOutput;
 use egui::RawInput;
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum FrameCommand {
     ChangeScene { name: String },
     Exit,

@@ -9,6 +9,7 @@ use crate::window::WindowContext;
 use crate::window::WindowStyle;
 use anyhow::Result;
 use glam::Vec2;
+use glow::HasContext;
 use instant::Instant;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -133,6 +134,7 @@ impl ApplicationContext {
             self.renderer.end_user_frame()?;
 
             self.ui.draw(&mut self.renderer, ui_output)?;
+            unsafe { self.renderer.gl.flush() };
             self.window.swap_buffers();
 
             #[cfg(web)]

@@ -12,8 +12,11 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::slice;
 
-pub const DEFAULT_VERTEX_SHADER: &str = include_str!("./shaders/default.vert");
-pub const DEFAULT_FRAGMENT_SHADER: &str = include_str!("./shaders/default.frag");
+pub const SPRITE_VERTEX_SHADER: &str = include_str!("./shaders/sprite.vert");
+pub const SPRITE_FRAGMENT_SHADER: &str = include_str!("./shaders/sprite.frag");
+
+pub const SHAPE_VERTEX_SHADER: &str = include_str!("./shaders/shape.vert");
+pub const SHAPE_FRAGMENT_SHADER: &str = include_str!("./shaders/shape.frag");
 
 pub struct Shader {
     pub id: usize,

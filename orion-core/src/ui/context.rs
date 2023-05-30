@@ -227,7 +227,7 @@ impl UiContext {
                     let g = vertice.color.g() as u32;
                     let b = vertice.color.b() as u32;
                     let a = vertice.color.a() as u32;
-                    let color = (r << 24) | (g << 16) | (b << 8) | a;
+                    let color = r | (g << 8) | (b << 16) | (a << 24);
 
                     vertices.push(vertice.pos.x.to_bits());
                     vertices.push(vertice.pos.y.to_bits());
@@ -245,7 +245,7 @@ impl UiContext {
 
                 renderer.enable_scissor(scissor_position, scissor_size);
                 renderer.draw(&sprite)?;
-                renderer.flush()?;
+                renderer.flush_buffer()?;
             }
         }
 

@@ -28,6 +28,7 @@ fast_gpu!();
 const COUNT: usize = 200000;
 const SPEED: f32 = 100.0;
 const DELTA_HISTORY_COUNT: usize = 100;
+
 #[derive(Default)]
 struct MainScene {
     objects: Vec<Object>,

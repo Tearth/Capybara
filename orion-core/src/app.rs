@@ -9,7 +9,6 @@ use crate::window::WindowContext;
 use crate::window::WindowStyle;
 use anyhow::Result;
 use glam::Vec2;
-use glow::HasContext;
 use instant::Instant;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -124,17 +123,17 @@ impl ApplicationContext {
             let delta = (now - self.frame_timestamp).as_secs_f32();
             self.frame_timestamp = now;
 
-            self.renderer.begin_user_frame()?;
+            self.renderer.begin_frame()?;
 
             let scene = self.scenes.get_mut(&self.current_scene).unwrap();
             let state = ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio);
             let command = scene.frame(state, delta)?;
             self.process_frame_command(command);
-
-            self.renderer.end_user_frame()?;
+            self.renderer.flush_buffer()?;
 
             self.ui.draw(&mut self.renderer, ui_output)?;
-            unsafe { self.renderer.gl.flush() };
+
+            self.renderer.end_frame()?;
             self.window.swap_buffers();
 
             #[cfg(web)]

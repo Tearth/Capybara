@@ -2,9 +2,9 @@ use super::camera::Camera;
 use super::camera::CameraOrigin;
 use super::shader::Shader;
 use super::shader::*;
-use super::sprite::Shape;
+use super::shape::Shape;
 use super::sprite::Sprite;
-use super::sprite::Tile;
+use super::sprite::TextureType;
 use super::texture::AtlasEntity;
 use super::texture::Texture;
 use super::texture::TextureKind;
@@ -27,13 +27,13 @@ use std::rc::Rc;
 use std::slice;
 
 pub struct RendererContext {
-    pub clear_color: Vec4,
     pub viewport_size: Vec2,
 
     pub default_camera_id: usize,
-    pub active_camera_id: usize,
     pub default_sprite_shader_id: usize,
     pub default_shape_shader_id: usize,
+
+    pub active_camera_id: usize,
     pub active_shader_id: usize,
 
     pub cameras: Storage<Camera>,
@@ -91,13 +91,13 @@ impl RendererContext {
             let shape_buffer_ebo = gl.create_buffer().unwrap();
 
             let mut context = Self {
-                clear_color: Default::default(),
                 viewport_size: Default::default(),
 
                 default_camera_id: usize::MAX,
-                active_camera_id: usize::MAX,
                 default_sprite_shader_id: usize::MAX,
                 default_shape_shader_id: usize::MAX,
+
+                active_camera_id: usize::MAX,
                 active_shader_id: usize::MAX,
 
                 cameras: Default::default(),
@@ -238,7 +238,7 @@ impl RendererContext {
         Ok(())
     }
 
-    pub fn begin_user_frame(&mut self) -> Result<()> {
+    pub fn begin_frame(&mut self) -> Result<()> {
         unsafe {
             self.gl.clear(glow::COLOR_BUFFER_BIT);
 
@@ -250,8 +250,12 @@ impl RendererContext {
         }
     }
 
-    pub fn end_user_frame(&mut self) -> Result<()> {
+    pub fn end_frame(&mut self) -> Result<()> {
         self.flush_buffer()?;
+
+        unsafe {
+            self.gl.flush();
+        }
 
         let now = Instant::now();
         if (now - self.fps_timestamp).as_secs() >= 1 {
@@ -265,146 +269,133 @@ impl RendererContext {
         Ok(())
     }
 
-    pub fn draw(&mut self, sprite: &Sprite) -> Result<()> {
-        let mut flush = false;
-
+    pub fn draw_sprite(&mut self, sprite: &Sprite) -> Result<()> {
         if let Some(buffer_metadata) = &self.buffer_metadata {
-            let content_type = match sprite.shape {
-                Shape::Standard => BufferContentType::Sprite,
-                Shape::Custom(_) => BufferContentType::Shape,
-            };
+            if buffer_metadata.content_type != BufferContentType::Sprite || buffer_metadata.texture_id != sprite.texture_id {
+                self.flush_buffer()?;
+            }
+        } else {
+            self.buffer_metadata = Some(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id))
+        }
 
-            if buffer_metadata.content_type != content_type || buffer_metadata.texture_id != sprite.texture_id {
-                flush = true;
+        if self.sprite_buffer_vertices_count + 12 >= self.sprite_buffer_vertices_queue.len() {
+            self.sprite_buffer_vertices_queue.resize(self.sprite_buffer_vertices_queue.len() * 2, 0);
+            self.sprite_buffer_resized = true;
+        }
+
+        let (uv_position, uv_size) = match &sprite.texture_type {
+            TextureType::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0)),
+            TextureType::Tilemap { size } => {
+                let texture = self.textures.get(sprite.texture_id)?;
+                let tiles_count = texture.size / *size;
+                let position =
+                    Vec2::new((sprite.animation_frame % tiles_count.x as usize) as f32, (sprite.animation_frame / tiles_count.x as usize) as f32);
+                let uv_position = position / tiles_count;
+                let uv_size = *size / texture.size;
+
+                (uv_position, uv_size)
+            }
+            TextureType::TilemapAnimation { size, frames } => {
+                let texture = self.textures.get(sprite.texture_id)?;
+                let tiles_count = texture.size / *size;
+                let frame = frames[sprite.animation_frame];
+                let position = Vec2::new((frame % tiles_count.x as usize) as f32, (frame / tiles_count.x as usize) as f32);
+                let uv_position = position / tiles_count;
+                let uv_size = *size / texture.size;
+
+                (uv_position, uv_size)
+            }
+            TextureType::AtlasEntity { name } => {
+                let texture = self.textures.get(sprite.texture_id)?;
+                if let TextureKind::Atlas(atlas_entities) = &texture.kind {
+                    let entity = atlas_entities.get(name).unwrap();
+                    (entity.position / texture.size, entity.size / texture.size)
+                } else {
+                    bail!("Texture is not an atlas");
+                }
+            }
+            TextureType::AtlasAnimation { entities } => {
+                let texture = self.textures.get(sprite.texture_id)?;
+                if let TextureKind::Atlas(atlas_entities) = &texture.kind {
+                    let name = &entities[sprite.animation_frame];
+                    let entity = atlas_entities.get(name).unwrap();
+                    (entity.position / texture.size, entity.size / texture.size)
+                } else {
+                    bail!("Texture is not an atlas");
+                }
+            }
+        };
+
+        let r = (sprite.color.x * 255.0) as u32;
+        let g = (sprite.color.y * 255.0) as u32;
+        let b = (sprite.color.z * 255.0) as u32;
+        let a = (sprite.color.w * 255.0) as u32;
+        let color = r | (g << 8) | (b << 16) | (a << 24);
+
+        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 0] = sprite.position.x.to_bits();
+        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 1] = sprite.position.y.to_bits();
+        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 2] = sprite.anchor.y.to_bits();
+        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 3] = sprite.anchor.y.to_bits();
+        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 4] = sprite.rotation.to_bits();
+        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 5] = sprite.size.x.to_bits();
+        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 6] = sprite.size.y.to_bits();
+        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 7] = color;
+        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 8] = uv_position.x.to_bits();
+        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 9] = uv_position.y.to_bits();
+        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 10] = uv_size.x.to_bits();
+        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 11] = uv_size.y.to_bits();
+
+        self.sprite_buffer_count += 1;
+        self.sprite_buffer_vertices_count += 12;
+
+        Ok(())
+    }
+
+    pub fn draw_shape(&mut self, shape: &Shape) -> Result<()> {
+        if let Some(buffer_metadata) = &self.buffer_metadata {
+            if buffer_metadata.content_type != BufferContentType::Shape || buffer_metadata.texture_id != shape.texture_id {
+                self.flush_buffer()?;
+            }
+        } else {
+            self.buffer_metadata = Some(BufferMetadata::new(BufferContentType::Shape, shape.texture_id));
+        }
+
+        loop {
+            let mut sufficient_space = true;
+
+            if self.shape_buffer_vertices_count + shape.vertices.len() >= self.shape_buffer_vertices_queue.len() {
+                self.shape_buffer_vertices_queue.resize(self.shape_buffer_vertices_queue.len() * 2, 0);
+                self.shape_buffer_resized = true;
+                sufficient_space = false;
+            }
+
+            if self.shape_buffer_indices_count + shape.indices.len() >= self.shape_buffer_indices_queue.len() {
+                self.shape_buffer_indices_queue.resize(self.shape_buffer_indices_queue.len() * 2, 0);
+                self.shape_buffer_resized = true;
+                sufficient_space = false;
+            }
+
+            if sufficient_space {
+                break;
             }
         }
 
-        if flush {
-            self.flush_buffer()?;
+        unsafe {
+            ptr::copy(
+                shape.vertices.as_ptr(),
+                (self.shape_buffer_vertices_queue.as_mut_ptr()).add(self.shape_buffer_vertices_count),
+                shape.vertices.len(),
+            );
         }
 
-        match &sprite.shape {
-            Shape::Standard => {
-                let v_base = self.sprite_buffer_vertices_count;
-
-                if v_base + 12 >= self.sprite_buffer_vertices_queue.len() {
-                    self.sprite_buffer_vertices_queue.resize(self.sprite_buffer_vertices_queue.len() * 2, 0);
-                    self.sprite_buffer_resized = true;
-                }
-
-                let (uv_position, uv_size) = match &sprite.tile {
-                    Tile::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0)),
-                    Tile::Tilemap { size } => {
-                        let texture = self.textures.get(sprite.texture_id)?;
-                        let tiles_count = texture.size / *size;
-                        let position = Vec2::new(
-                            (sprite.animation_frame % tiles_count.x as usize) as f32,
-                            (sprite.animation_frame / tiles_count.x as usize) as f32,
-                        );
-                        let uv_position = position / tiles_count;
-                        let uv_size = *size / texture.size;
-
-                        (uv_position, uv_size)
-                    }
-                    Tile::TilemapAnimation { size, frames } => {
-                        let texture = self.textures.get(sprite.texture_id)?;
-                        let tiles_count = texture.size / *size;
-                        let frame = frames[sprite.animation_frame];
-                        let position = Vec2::new((frame % tiles_count.x as usize) as f32, (frame / tiles_count.x as usize) as f32);
-                        let uv_position = position / tiles_count;
-                        let uv_size = *size / texture.size;
-
-                        (uv_position, uv_size)
-                    }
-                    Tile::AtlasEntity { name } => {
-                        let texture = self.textures.get(sprite.texture_id)?;
-                        if let TextureKind::Atlas(atlas_entities) = &texture.kind {
-                            let entity = atlas_entities.get(name).unwrap();
-                            (entity.position / texture.size, entity.size / texture.size)
-                        } else {
-                            bail!("Texture is not an atlas");
-                        }
-                    }
-                    Tile::AtlasAnimation { entities } => {
-                        let texture = self.textures.get(sprite.texture_id)?;
-                        if let TextureKind::Atlas(atlas_entities) = &texture.kind {
-                            let name = &entities[sprite.animation_frame];
-                            let entity = atlas_entities.get(name).unwrap();
-                            (entity.position / texture.size, entity.size / texture.size)
-                        } else {
-                            bail!("Texture is not an atlas");
-                        }
-                    }
-                };
-
-                let r = (sprite.color.x * 255.0) as u32;
-                let g = (sprite.color.y * 255.0) as u32;
-                let b = (sprite.color.z * 255.0) as u32;
-                let a = (sprite.color.w * 255.0) as u32;
-                let color = r | (g << 8) | (b << 16) | (a << 24);
-
-                self.sprite_buffer_vertices_queue[v_base + 0] = sprite.position.x.to_bits();
-                self.sprite_buffer_vertices_queue[v_base + 1] = sprite.position.y.to_bits();
-                self.sprite_buffer_vertices_queue[v_base + 2] = sprite.anchor.y.to_bits();
-                self.sprite_buffer_vertices_queue[v_base + 3] = sprite.anchor.y.to_bits();
-                self.sprite_buffer_vertices_queue[v_base + 4] = sprite.rotation.to_bits();
-                self.sprite_buffer_vertices_queue[v_base + 5] = sprite.size.x.to_bits();
-                self.sprite_buffer_vertices_queue[v_base + 6] = sprite.size.y.to_bits();
-                self.sprite_buffer_vertices_queue[v_base + 7] = color;
-                self.sprite_buffer_vertices_queue[v_base + 8] = uv_position.x.to_bits();
-                self.sprite_buffer_vertices_queue[v_base + 9] = uv_position.y.to_bits();
-                self.sprite_buffer_vertices_queue[v_base + 10] = uv_size.x.to_bits();
-                self.sprite_buffer_vertices_queue[v_base + 11] = uv_size.y.to_bits();
-
-                self.sprite_buffer_count += 1;
-                self.sprite_buffer_vertices_count = v_base + 12;
-
-                if self.buffer_metadata.is_none() {
-                    self.buffer_metadata = Some(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id))
-                }
-            }
-            Shape::Custom(data) => {
-                let v_base = self.shape_buffer_vertices_count;
-                let i_base = self.shape_buffer_indices_count;
-
-                loop {
-                    let mut sufficient_space = true;
-
-                    if v_base + data.vertices.len() >= self.shape_buffer_vertices_queue.len() {
-                        self.shape_buffer_vertices_queue.resize(self.shape_buffer_vertices_queue.len() * 2, 0);
-                        self.shape_buffer_resized = true;
-                        sufficient_space = false;
-                    }
-
-                    if i_base + data.indices.len() >= self.shape_buffer_indices_queue.len() {
-                        self.shape_buffer_indices_queue.resize(self.shape_buffer_indices_queue.len() * 2, 0);
-                        self.shape_buffer_resized = true;
-                        sufficient_space = false;
-                    }
-
-                    if sufficient_space {
-                        break;
-                    }
-                }
-
-                unsafe {
-                    ptr::copy(data.vertices.as_ptr(), (self.shape_buffer_vertices_queue.as_mut_ptr()).add(v_base), data.vertices.len());
-                }
-
-                let base_indice = self.shape_buffer_indices_max;
-                for i in 0..data.indices.len() {
-                    self.shape_buffer_indices_queue[i_base + i] = base_indice + data.indices[i];
-                    self.shape_buffer_indices_max = cmp::max(self.shape_buffer_indices_max, base_indice + data.indices[i]);
-                }
-
-                self.shape_buffer_vertices_count = v_base + data.vertices.len();
-                self.shape_buffer_indices_count = i_base + data.indices.len();
-
-                if self.buffer_metadata.is_none() {
-                    self.buffer_metadata = Some(BufferMetadata::new(BufferContentType::Shape, sprite.texture_id))
-                }
-            }
+        let base_indice = self.shape_buffer_indices_max;
+        for i in 0..shape.indices.len() {
+            self.shape_buffer_indices_queue[self.shape_buffer_indices_count + i] = base_indice + shape.indices[i];
+            self.shape_buffer_indices_max = cmp::max(self.shape_buffer_indices_max, base_indice + shape.indices[i]);
         }
+
+        self.shape_buffer_vertices_count += shape.vertices.len();
+        self.shape_buffer_indices_count += shape.indices.len();
 
         Ok(())
     }
@@ -439,10 +430,14 @@ impl RendererContext {
 
                 match buffer_metadata.content_type {
                     BufferContentType::Sprite => {
-                        let shader = self.shaders.get(self.default_sprite_shader_id)?;
-                        shader.activate();
-                        shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr())?;
-                        shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr())?;
+                        if self.active_shader_id != self.default_sprite_shader_id {
+                            let shader = self.shaders.get(self.default_sprite_shader_id)?;
+                            shader.activate();
+                            shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr())?;
+                            shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr())?;
+
+                            self.active_shader_id = self.default_sprite_shader_id;
+                        }
 
                         self.gl.bind_vertex_array(Some(self.sprite_buffer_vao));
                         self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.sprite_buffer_data_vbo));
@@ -462,10 +457,14 @@ impl RendererContext {
                         self.sprite_buffer_vertices_count = 0;
                     }
                     BufferContentType::Shape => {
-                        let shader = self.shaders.get(self.default_shape_shader_id)?;
-                        shader.activate();
-                        shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr())?;
-                        shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr())?;
+                        if self.active_shader_id != self.default_shape_shader_id {
+                            let shader = self.shaders.get(self.default_shape_shader_id)?;
+                            shader.activate();
+                            shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr())?;
+                            shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr())?;
+
+                            self.active_shader_id = self.default_shape_shader_id;
+                        }
 
                         self.gl.bind_vertex_array(Some(self.shape_buffer_vao));
                         self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.shape_buffer_vbo));
@@ -505,15 +504,6 @@ impl RendererContext {
         Ok(())
     }
 
-    pub fn activate_shader(&mut self, shader_id: usize) -> Result<()> {
-        self.active_shader_id = shader_id;
-
-        self.shaders.get(shader_id)?.activate();
-        self.cameras.get_mut(self.active_camera_id)?.dirty = true;
-
-        Ok(())
-    }
-
     pub fn set_viewport(&mut self, size: Vec2) -> Result<()> {
         unsafe {
             self.gl.viewport(0, 0, size.x as i32, size.y as i32);
@@ -530,7 +520,6 @@ impl RendererContext {
     pub fn set_clear_color(&mut self, color: Vec4) {
         unsafe {
             self.gl.clear_color(color.x, color.y, color.z, color.w);
-            self.clear_color = color;
         }
     }
 

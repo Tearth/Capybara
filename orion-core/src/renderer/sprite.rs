@@ -1,6 +1,4 @@
-use glam::Mat4;
 use glam::Vec2;
-use glam::Vec3;
 use glam::Vec4;
 use instant::Instant;
 
@@ -11,9 +9,8 @@ pub struct Sprite {
     pub size: Vec2,
     pub anchor: Vec2,
     pub color: Vec4,
-    pub shape: Shape,
     pub texture_id: usize,
-    pub tile: Tile,
+    pub texture_type: TextureType,
 
     pub animation_frame: usize,
     pub animation_speed: f32,
@@ -21,20 +18,8 @@ pub struct Sprite {
     pub animation_timestamp: Instant,
 }
 
-#[derive(Clone, Debug)]
-pub enum Shape {
-    Standard,
-    Custom(ShapeData),
-}
-
-#[derive(Clone, Debug)]
-pub struct ShapeData {
-    pub vertices: Vec<u32>,
-    pub indices: Vec<u32>,
-}
-
 #[derive(Clone, Debug, PartialEq)]
-pub enum Tile {
+pub enum TextureType {
     Simple,
     Tilemap { size: Vec2 },
     TilemapAnimation { size: Vec2, frames: Vec<usize> },
@@ -51,9 +36,8 @@ impl Sprite {
             size: Default::default(),
             anchor: Vec2::new(0.5, 0.5),
             color: Vec4::new(1.0, 1.0, 1.0, 1.0),
-            shape: Shape::Standard,
             texture_id: 0,
-            tile: Tile::Simple,
+            texture_type: TextureType::Simple,
 
             animation_frame: 0,
             animation_speed: 1.0,
@@ -62,19 +46,10 @@ impl Sprite {
         }
     }
 
-    pub fn get_model(&self) -> Mat4 {
-        let translation = Mat4::from_translation(Vec3::new(self.position.x, self.position.y, 0.0));
-        let rotation = Mat4::from_rotation_z(self.rotation);
-        let scale = Mat4::from_scale(Vec3::new(self.size.x * self.scale.x, self.size.y * self.scale.y, 0.0));
-        let anchor = Mat4::from_translation(-Vec3::new(self.anchor.x, self.anchor.y, 0.0));
-
-        translation * rotation * scale * anchor
-    }
-
     pub fn animate(&mut self, now: Instant) {
-        let frames_count = match &self.tile {
-            Tile::TilemapAnimation { size: _, frames } => frames.len(),
-            Tile::AtlasAnimation { entities } => entities.len(),
+        let frames_count = match &self.texture_type {
+            TextureType::TilemapAnimation { size: _, frames } => frames.len(),
+            TextureType::AtlasAnimation { entities } => entities.len(),
             _ => return,
         };
 
@@ -86,12 +61,6 @@ impl Sprite {
             self.animation_frame = (self.animation_frame + 1) % frames_count;
             self.animation_timestamp = now;
         }
-    }
-}
-
-impl ShapeData {
-    pub fn new(vertices: Vec<u32>, indices: Vec<u32>) -> Self {
-        Self { vertices, indices }
     }
 }
 

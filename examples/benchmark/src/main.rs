@@ -14,7 +14,7 @@ use orion_core::egui::SidePanel;
 use orion_core::fast_gpu;
 use orion_core::glam::Vec2;
 use orion_core::renderer::sprite::Sprite;
-use orion_core::renderer::sprite::Tile;
+use orion_core::renderer::sprite::TextureType;
 use orion_core::scene::FrameCommand;
 use orion_core::scene::Scene;
 use orion_core::window::Coordinates;
@@ -84,7 +84,7 @@ impl Scene for MainScene {
                     position,
                     size: Vec2::new(16.0, 16.0),
                     texture_id: state.renderer.textures.get_by_name("tako")?.id,
-                    tile: Tile::Simple,
+                    texture_type: TextureType::Simple,
                     ..Default::default()
                 };
 
@@ -106,7 +106,7 @@ impl Scene for MainScene {
                 object.direction = Vec2::new(object.direction.x, -object.direction.y.abs());
             }
 
-            state.renderer.draw(&object.sprite)?;
+            state.renderer.draw_sprite(&object.sprite)?;
         }
 
         Ok(None)

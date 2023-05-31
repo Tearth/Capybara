@@ -3,9 +3,7 @@ use crate::assets::RawTexture;
 use crate::renderer::camera::Camera;
 use crate::renderer::camera::CameraOrigin;
 use crate::renderer::context::RendererContext;
-use crate::renderer::sprite::Shape;
-use crate::renderer::sprite::ShapeData;
-use crate::renderer::sprite::Sprite;
+use crate::renderer::shape::Shape;
 use crate::renderer::texture::Texture;
 use crate::renderer::texture::TextureFilter;
 use crate::window::InputEvent;
@@ -236,15 +234,16 @@ impl UiContext {
                     vertices.push(vertice.uv.y.to_bits());
                 }
 
-                let mut sprite = Sprite::new();
-                sprite.shape = Shape::Custom(ShapeData::new(vertices, mesh.indices));
+                let mut sprite = Shape::new();
+                sprite.vertices = vertices;
+                sprite.indices = mesh.indices;
                 sprite.texture_id = *self.textures.get(&mesh.texture_id).unwrap();
 
                 let scissor_position = Vec2::new(shape.clip_rect.left(), renderer.viewport_size.y - shape.clip_rect.height() - shape.clip_rect.top());
                 let scissor_size = Vec2::new(shape.clip_rect.width(), shape.clip_rect.height());
 
                 renderer.enable_scissor(scissor_position, scissor_size);
-                renderer.draw(&sprite)?;
+                renderer.draw_shape(&sprite)?;
                 renderer.flush_buffer()?;
             }
         }

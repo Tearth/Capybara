@@ -440,13 +440,14 @@ impl RendererContext {
 
                 match buffer_metadata.content_type {
                     BufferContentType::Sprite => {
-                        if self.active_shader_id != self.default_sprite_shader_id {
+                        if self.active_shader_id != self.default_sprite_shader_id || camera.dirty {
                             let shader = self.shaders.get(self.default_sprite_shader_id)?;
                             shader.activate();
                             shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr())?;
                             shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr())?;
 
                             self.active_shader_id = self.default_sprite_shader_id;
+                            camera.dirty = false;
                         }
 
                         self.gl.bind_vertex_array(Some(self.sprite_buffer_vao));
@@ -472,13 +473,14 @@ impl RendererContext {
                         self.sprite_buffer_vertices_count = 0;
                     }
                     BufferContentType::Shape => {
-                        if self.active_shader_id != self.default_shape_shader_id {
+                        if self.active_shader_id != self.default_shape_shader_id || camera.dirty {
                             let shader = self.shaders.get(self.default_shape_shader_id)?;
                             shader.activate();
                             shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr())?;
                             shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr())?;
 
                             self.active_shader_id = self.default_shape_shader_id;
+                            camera.dirty = false;
                         }
 
                         self.gl.bind_vertex_array(Some(self.shape_buffer_vao));

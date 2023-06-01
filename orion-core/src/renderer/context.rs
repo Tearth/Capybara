@@ -9,6 +9,7 @@ use super::texture::AtlasEntity;
 use super::texture::Texture;
 use super::texture::TextureKind;
 use crate::assets::loader::AssetsLoader;
+use crate::assets::RawTexture;
 use crate::utils::storage::Storage;
 use anyhow::bail;
 use anyhow::Result;
@@ -32,6 +33,7 @@ pub struct RendererContext {
     pub default_camera_id: usize,
     pub default_sprite_shader_id: usize,
     pub default_shape_shader_id: usize,
+    pub default_texture_id: usize,
 
     pub active_camera_id: usize,
     pub active_shader_id: usize,
@@ -69,7 +71,7 @@ pub struct RendererContext {
 
 pub struct BufferMetadata {
     pub content_type: BufferContentType,
-    pub texture_id: usize,
+    pub texture_id: Option<usize>,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -96,6 +98,7 @@ impl RendererContext {
                 default_camera_id: usize::MAX,
                 default_sprite_shader_id: usize::MAX,
                 default_shape_shader_id: usize::MAX,
+                default_texture_id: usize::MAX,
 
                 active_camera_id: usize::MAX,
                 active_shader_id: usize::MAX,
@@ -152,6 +155,9 @@ impl RendererContext {
 
             let shape_shader = Shader::new(self, SHAPE_VERTEX_SHADER, SHAPE_FRAGMENT_SHADER)?;
             self.default_shape_shader_id = self.shaders.store(shape_shader);
+
+            let default_texture = Texture::new(self, &RawTexture::new("", "", Vec2::new(1.0, 1.0), &[255, 255, 255, 255]));
+            self.default_texture_id = self.textures.store(default_texture);
 
             // Sprite buffers
             self.gl.bind_vertex_array(Some(self.sprite_buffer_vao));
@@ -283,47 +289,51 @@ impl RendererContext {
             self.sprite_buffer_resized = true;
         }
 
-        let (uv_position, uv_size) = match &sprite.texture_type {
-            TextureType::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0)),
-            TextureType::Tilemap { size } => {
-                let texture = self.textures.get(sprite.texture_id)?;
-                let tiles_count = texture.size / *size;
-                let position =
-                    Vec2::new((sprite.animation_frame % tiles_count.x as usize) as f32, (sprite.animation_frame / tiles_count.x as usize) as f32);
-                let uv_position = position / tiles_count;
-                let uv_size = *size / texture.size;
+        let (uv_position, uv_size) = if let Some(texture_id) = sprite.texture_id {
+            match &sprite.texture_type {
+                TextureType::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0)),
+                TextureType::Tilemap { size } => {
+                    let texture = self.textures.get(texture_id)?;
+                    let tiles_count = texture.size / *size;
+                    let position =
+                        Vec2::new((sprite.animation_frame % tiles_count.x as usize) as f32, (sprite.animation_frame / tiles_count.x as usize) as f32);
+                    let uv_position = position / tiles_count;
+                    let uv_size = *size / texture.size;
 
-                (uv_position, uv_size)
-            }
-            TextureType::TilemapAnimation { size, frames } => {
-                let texture = self.textures.get(sprite.texture_id)?;
-                let tiles_count = texture.size / *size;
-                let frame = frames[sprite.animation_frame];
-                let position = Vec2::new((frame % tiles_count.x as usize) as f32, (frame / tiles_count.x as usize) as f32);
-                let uv_position = position / tiles_count;
-                let uv_size = *size / texture.size;
+                    (uv_position, uv_size)
+                }
+                TextureType::TilemapAnimation { size, frames } => {
+                    let texture = self.textures.get(texture_id)?;
+                    let tiles_count = texture.size / *size;
+                    let frame = frames[sprite.animation_frame];
+                    let position = Vec2::new((frame % tiles_count.x as usize) as f32, (frame / tiles_count.x as usize) as f32);
+                    let uv_position = position / tiles_count;
+                    let uv_size = *size / texture.size;
 
-                (uv_position, uv_size)
-            }
-            TextureType::AtlasEntity { name } => {
-                let texture = self.textures.get(sprite.texture_id)?;
-                if let TextureKind::Atlas(atlas_entities) = &texture.kind {
-                    let entity = atlas_entities.get(name).unwrap();
-                    (entity.position / texture.size, entity.size / texture.size)
-                } else {
-                    bail!("Texture is not an atlas");
+                    (uv_position, uv_size)
+                }
+                TextureType::AtlasEntity { name } => {
+                    let texture = self.textures.get(texture_id)?;
+                    if let TextureKind::Atlas(atlas_entities) = &texture.kind {
+                        let entity = atlas_entities.get(name).unwrap();
+                        (entity.position / texture.size, entity.size / texture.size)
+                    } else {
+                        bail!("Texture is not an atlas");
+                    }
+                }
+                TextureType::AtlasAnimation { entities } => {
+                    let texture = self.textures.get(texture_id)?;
+                    if let TextureKind::Atlas(atlas_entities) = &texture.kind {
+                        let name = &entities[sprite.animation_frame];
+                        let entity = atlas_entities.get(name).unwrap();
+                        (entity.position / texture.size, entity.size / texture.size)
+                    } else {
+                        bail!("Texture is not an atlas");
+                    }
                 }
             }
-            TextureType::AtlasAnimation { entities } => {
-                let texture = self.textures.get(sprite.texture_id)?;
-                if let TextureKind::Atlas(atlas_entities) = &texture.kind {
-                    let name = &entities[sprite.animation_frame];
-                    let entity = atlas_entities.get(name).unwrap();
-                    (entity.position / texture.size, entity.size / texture.size)
-                } else {
-                    bail!("Texture is not an atlas");
-                }
-            }
+        } else {
+            (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0))
         };
 
         let r = (sprite.color.x * 255.0) as u32;
@@ -450,7 +460,12 @@ impl RendererContext {
 
                         self.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, 0, models_u8);
 
-                        self.textures.get(buffer_metadata.texture_id)?.activate();
+                        if let Some(texture_id) = buffer_metadata.texture_id {
+                            self.textures.get(texture_id)?.activate();
+                        } else {
+                            self.textures.get(self.default_texture_id)?.activate();
+                        }
+
                         self.gl.draw_elements_instanced(glow::TRIANGLES, 6, glow::UNSIGNED_INT, 0, self.sprite_buffer_count as i32);
 
                         self.sprite_buffer_count = 0;
@@ -478,7 +493,12 @@ impl RendererContext {
                         self.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, 0, models_u8);
                         self.gl.buffer_sub_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, 0, indices_u8);
 
-                        self.textures.get(buffer_metadata.texture_id)?.activate();
+                        if let Some(texture_id) = buffer_metadata.texture_id {
+                            self.textures.get(texture_id)?.activate();
+                        } else {
+                            self.textures.get(self.default_texture_id)?.activate();
+                        }
+
                         self.gl.draw_elements(glow::TRIANGLES, self.shape_buffer_indices_count as i32, glow::UNSIGNED_INT, 0);
 
                         self.shape_buffer_vertices_count = 0;
@@ -538,7 +558,7 @@ impl RendererContext {
 }
 
 impl BufferMetadata {
-    pub fn new(content_type: BufferContentType, texture_id: usize) -> Self {
+    pub fn new(content_type: BufferContentType, texture_id: Option<usize>) -> Self {
         Self { content_type, texture_id }
     }
 }

@@ -83,7 +83,7 @@ impl Scene for MainScene {
                 let sprite = Sprite {
                     position,
                     size: Vec2::new(16.0, 16.0),
-                    texture_id: state.renderer.textures.get_by_name("tako")?.id,
+                    texture_id: Some(state.renderer.textures.get_by_name("tako")?.id),
                     texture_type: TextureType::Simple,
                     ..Default::default()
                 };

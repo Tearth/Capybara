@@ -9,7 +9,7 @@ pub struct Sprite {
     pub size: Vec2,
     pub anchor: Vec2,
     pub color: Vec4,
-    pub texture_id: usize,
+    pub texture_id: Option<usize>,
     pub texture_type: TextureType,
 
     pub animation_frame: usize,
@@ -36,7 +36,7 @@ impl Sprite {
             size: Default::default(),
             anchor: Vec2::new(0.5, 0.5),
             color: Vec4::new(1.0, 1.0, 1.0, 1.0),
-            texture_id: 0,
+            texture_id: None,
             texture_type: TextureType::Simple,
 
             animation_frame: 0,

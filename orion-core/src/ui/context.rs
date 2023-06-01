@@ -237,7 +237,7 @@ impl UiContext {
                 let mut sprite = Shape::new();
                 sprite.vertices = vertices;
                 sprite.indices = mesh.indices;
-                sprite.texture_id = *self.textures.get(&mesh.texture_id).unwrap();
+                sprite.texture_id = Some(*self.textures.get(&mesh.texture_id).unwrap());
 
                 let scissor_position = Vec2::new(shape.clip_rect.left(), renderer.viewport_size.y - shape.clip_rect.height() - shape.clip_rect.top());
                 let scissor_size = Vec2::new(shape.clip_rect.width(), shape.clip_rect.height());

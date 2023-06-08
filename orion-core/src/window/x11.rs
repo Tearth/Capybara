@@ -48,6 +48,7 @@ pub struct GlxExtensions {
 impl WindowContextX11 {
     pub fn new(title: &str, style: WindowStyle) -> Result<Box<Self>> {
         unsafe {
+            #[cfg(debug_assertions)]
             simple_logger::init_with_level(Level::Debug)?;
 
             let display = xlib::XOpenDisplay(ptr::null());

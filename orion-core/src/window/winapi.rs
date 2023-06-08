@@ -47,6 +47,7 @@ pub struct WglExtensions {
 impl WindowContextWinApi {
     pub fn new(title: &str, style: WindowStyle) -> Result<Box<Self>> {
         unsafe {
+            #[cfg(debug_assertions)]
             simple_logger::init_with_level(Level::Debug)?;
 
             let title_cstr = CString::new(title).unwrap();

@@ -295,7 +295,7 @@ impl RendererContext {
             let sprite_size = sprite.size.unwrap_or(texture.size);
 
             match &sprite.texture_type {
-                TextureType::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0), sprite.size.unwrap_or(Vec2::new(1.0, 1.0))),
+                TextureType::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0), sprite_size),
                 TextureType::SimpleOffset { offset } => {
                     let uv_position = *offset / texture.size;
                     let uv_size = sprite_size / texture.size;

@@ -293,6 +293,13 @@ impl RendererContext {
         let (uv_position, uv_size) = if let Some(texture_id) = sprite.texture_id {
             match &sprite.texture_type {
                 TextureType::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0)),
+                TextureType::SimpleOffset { offset } => {
+                    let texture = self.textures.get(texture_id)?;
+                    let uv_position = *offset / texture.size;
+                    let uv_size = sprite.size / texture.size;
+
+                    (uv_position, uv_size)
+                }
                 TextureType::Tilemap { size } => {
                     let texture = self.textures.get(texture_id)?;
                     let tiles_count = texture.size / *size;

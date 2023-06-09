@@ -21,6 +21,7 @@ pub struct Sprite {
 #[derive(Clone, Debug, PartialEq)]
 pub enum TextureType {
     Simple,
+    SimpleOffset { offset: Vec2 },
     Tilemap { size: Vec2 },
     TilemapAnimation { size: Vec2, frames: Vec<usize> },
     AtlasEntity { name: String },

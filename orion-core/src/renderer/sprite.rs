@@ -6,7 +6,7 @@ pub struct Sprite {
     pub position: Vec2,
     pub rotation: f32,
     pub scale: Vec2,
-    pub size: Vec2,
+    pub size: Option<Vec2>,
     pub anchor: Vec2,
     pub color: Vec4,
     pub texture_id: Option<usize>,

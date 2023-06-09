@@ -290,58 +290,56 @@ impl RendererContext {
             self.sprite_buffer_resized = true;
         }
 
-        let (uv_position, uv_size) = if let Some(texture_id) = sprite.texture_id {
-            match &sprite.texture_type {
-                TextureType::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0)),
-                TextureType::SimpleOffset { offset } => {
-                    let texture = self.textures.get(texture_id)?;
-                    let uv_position = *offset / texture.size;
-                    let uv_size = sprite.size / texture.size;
+        let (uv_position, uv_size, sprite_size) = if let Some(texture_id) = sprite.texture_id {
+            let texture = self.textures.get(texture_id)?;
+            let sprite_size = sprite.size.unwrap_or(texture.size);
 
-                    (uv_position, uv_size)
+            match &sprite.texture_type {
+                TextureType::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0), sprite.size.unwrap_or(Vec2::new(1.0, 1.0))),
+                TextureType::SimpleOffset { offset } => {
+                    let uv_position = *offset / texture.size;
+                    let uv_size = sprite_size / texture.size;
+
+                    (uv_position, uv_size, sprite_size)
                 }
                 TextureType::Tilemap { size } => {
-                    let texture = self.textures.get(texture_id)?;
                     let tiles_count = texture.size / *size;
                     let position =
                         Vec2::new((sprite.animation_frame % tiles_count.x as usize) as f32, (sprite.animation_frame / tiles_count.x as usize) as f32);
                     let uv_position = position / tiles_count;
                     let uv_size = *size / texture.size;
 
-                    (uv_position, uv_size)
+                    (uv_position, uv_size, sprite_size)
                 }
                 TextureType::TilemapAnimation { size, frames } => {
-                    let texture = self.textures.get(texture_id)?;
                     let tiles_count = texture.size / *size;
                     let frame = frames[sprite.animation_frame];
                     let position = Vec2::new((frame % tiles_count.x as usize) as f32, (frame / tiles_count.x as usize) as f32);
                     let uv_position = position / tiles_count;
                     let uv_size = *size / texture.size;
 
-                    (uv_position, uv_size)
+                    (uv_position, uv_size, sprite_size)
                 }
                 TextureType::AtlasEntity { name } => {
-                    let texture = self.textures.get(texture_id)?;
                     if let TextureKind::Atlas(atlas_entities) = &texture.kind {
                         let entity = atlas_entities.get(name).unwrap();
-                        (entity.position / texture.size, entity.size / texture.size)
+                        (entity.position / texture.size, entity.size / texture.size, sprite_size)
                     } else {
                         bail!("Texture is not an atlas");
                     }
                 }
                 TextureType::AtlasAnimation { entities } => {
-                    let texture = self.textures.get(texture_id)?;
                     if let TextureKind::Atlas(atlas_entities) = &texture.kind {
                         let name = &entities[sprite.animation_frame];
                         let entity = atlas_entities.get(name).unwrap();
-                        (entity.position / texture.size, entity.size / texture.size)
+                        (entity.position / texture.size, entity.size / texture.size, sprite_size)
                     } else {
                         bail!("Texture is not an atlas");
                     }
                 }
             }
         } else {
-            (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0))
+            (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0), sprite.size.unwrap_or(Vec2::new(1.0, 1.0)))
         };
 
         let r = (sprite.color.x * 255.0) as u32;
@@ -352,11 +350,11 @@ impl RendererContext {
 
         self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 0] = sprite.position.x.to_bits();
         self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 1] = sprite.position.y.to_bits();
-        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 2] = sprite.anchor.y.to_bits();
+        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 2] = sprite.anchor.x.to_bits();
         self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 3] = sprite.anchor.y.to_bits();
         self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 4] = sprite.rotation.to_bits();
-        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 5] = sprite.size.x.to_bits();
-        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 6] = sprite.size.y.to_bits();
+        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 5] = (sprite_size.x * sprite.scale.x).to_bits();
+        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 6] = (sprite_size.y * sprite.scale.y).to_bits();
         self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 7] = color;
         self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 8] = uv_position.x.to_bits();
         self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 9] = uv_position.y.to_bits();

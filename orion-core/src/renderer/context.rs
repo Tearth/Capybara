@@ -279,9 +279,10 @@ impl RendererContext {
         if let Some(buffer_metadata) = &self.buffer_metadata {
             if buffer_metadata.content_type != BufferContentType::Sprite || buffer_metadata.texture_id != sprite.texture_id {
                 self.flush_buffer()?;
+                self.buffer_metadata = Some(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id));
             }
         } else {
-            self.buffer_metadata = Some(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id))
+            self.buffer_metadata = Some(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id));
         }
 
         if self.sprite_buffer_vertices_count + 12 >= self.sprite_buffer_vertices_queue.len() {

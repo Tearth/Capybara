@@ -84,7 +84,7 @@ impl UiContext {
                     let b = texture.data[base + 2];
                     let a = texture.data[base + 3];
 
-                    image.pixels[x + y * size[0]] = Color32::from_rgba_premultiplied(r, g, b, a);
+                    image.pixels[x + y * size[0]] = Color32::from_rgba_unmultiplied(r, g, b, a);
                 }
             }
 

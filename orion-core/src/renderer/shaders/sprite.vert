@@ -20,8 +20,8 @@ out vec2 vertexUv;
 
 void main()
 {
-    float r_cos = cos(rotation);
     float r_sin = sin(rotation);
+    float r_cos = cos(rotation);
 
     vec2 position_adjusted = position - anchor;
     vec2 rotated = vec2(
@@ -37,5 +37,5 @@ void main()
         float(color.z) / 255.0, 
         float(color.w) / 255.0
     );
-    vertexUv = uv.xy + uv.zw - uv.zw * position;
+    vertexUv = uv.xy + uv.zw * vec2(position.x, 1.0 - position.y);
 }

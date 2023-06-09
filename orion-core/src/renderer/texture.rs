@@ -32,6 +32,12 @@ pub enum TextureFilter {
     Nearest,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum TextureWrapMode {
+    Repeat,
+    Clamp,
+}
+
 impl Texture {
     pub fn new(renderer: &RendererContext, raw: &RawTexture) -> Self {
         unsafe {
@@ -94,6 +100,19 @@ impl Texture {
             self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MIN_FILTER, minification_value);
             self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MAG_FILTER, magnification_value);
             self.gl.generate_mipmap(glow::TEXTURE_2D);
+        }
+    }
+
+    pub fn set_wrap_mode(&self, mode: TextureWrapMode) {
+        let value = match mode {
+            TextureWrapMode::Repeat => glow::REPEAT,
+            TextureWrapMode::Clamp => glow::CLAMP_TO_EDGE,
+        } as i32;
+
+        unsafe {
+            self.gl.bind_texture(glow::TEXTURE_2D, Some(self.inner));
+            self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, value);
+            self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_T, value);
         }
     }
 

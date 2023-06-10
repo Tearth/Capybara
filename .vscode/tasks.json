@@ -58,28 +58,6 @@
             },
         },
         {
-            "label": "build web debug",
-            "type": "shell",
-            "command": "wasm-pack build --target web",
-            "options": {
-                "cwd": "${workspaceFolder}/examples/benchmark/"
-            },
-            "group": {
-                "kind": "build"
-            },
-        },
-        {
-            "label": "build web release",
-            "type": "shell",
-            "command": "wasm-pack build --release --target web",
-            "options": {
-                "cwd": "${workspaceFolder}/examples/benchmark/"
-            },
-            "group": {
-                "kind": "build"
-            },
-        },
-        {
             "label": "build and run windows release",
             "type": "shell",
             "command": "${workspaceFolder}/target/x86_64-pc-windows-msvc/release/benchmark.exe",

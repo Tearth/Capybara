@@ -115,8 +115,9 @@ impl WindowContextWeb {
     }
 
     #[allow(clippy::redundant_clone)]
-    pub fn init_closures<F>(&mut self, app: Rc<RefCell<ApplicationContext>>, event_loop: F)
+    pub fn init_closures<G, F>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>, event_loop: F)
     where
+        G: Default + 'static,
         F: FnMut() + Clone + 'static,
     {
         self.init_frame_callback(event_loop.clone());
@@ -147,7 +148,10 @@ impl WindowContextWeb {
         }));
     }
 
-    fn init_resize_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_resize_callback<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>)
+    where
+        G: Default + 'static,
+    {
         self.resize_callback = Some(Closure::<dyn FnMut()>::new(move || {
             let mut app = app.borrow_mut();
             let canvas = &app.window.canvas;
@@ -164,7 +168,10 @@ impl WindowContextWeb {
         self.window.add_event_listener_with_callback("resize", resize_callback).unwrap();
     }
 
-    fn init_mousemove_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_mousemove_callback<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>)
+    where
+        G: Default + 'static,
+    {
         self.mousemove_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
             let mut app = app.borrow_mut();
             let position = Coordinates::new(event.offset_x(), event.offset_y());
@@ -178,7 +185,10 @@ impl WindowContextWeb {
         self.canvas.add_event_listener_with_callback("mousemove", mousemove_callback).unwrap();
     }
 
-    fn init_mouseenter_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_mouseenter_callback<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>)
+    where
+        G: Default + 'static,
+    {
         self.mouseenter_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
             let mut app = app.borrow_mut();
             let position = Coordinates::new(event.offset_x(), event.offset_y());
@@ -192,7 +202,10 @@ impl WindowContextWeb {
         self.canvas.add_event_listener_with_callback("mouseenter", mouseenter_callback).unwrap();
     }
 
-    fn init_mouseleave_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_mouseleave_callback<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>)
+    where
+        G: Default + 'static,
+    {
         self.mouseleave_callback = Some(Closure::<dyn FnMut(_)>::new(move |_: MouseEvent| {
             let mut app = app.borrow_mut();
 
@@ -204,7 +217,10 @@ impl WindowContextWeb {
         self.canvas.add_event_listener_with_callback("mouseleave", mouseleave_callback).unwrap();
     }
 
-    fn init_mousedown_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_mousedown_callback<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>)
+    where
+        G: Default + 'static,
+    {
         self.mousedown_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
             let mut app = app.borrow_mut();
             let button = match event.button() {
@@ -227,7 +243,10 @@ impl WindowContextWeb {
         self.canvas.add_event_listener_with_callback("mousedown", mousedown_callback).unwrap();
     }
 
-    fn init_mouseup_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_mouseup_callback<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>)
+    where
+        G: Default + 'static,
+    {
         self.mouseup_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
             let mut app = app.borrow_mut();
             let button = match event.button() {
@@ -250,7 +269,10 @@ impl WindowContextWeb {
         self.canvas.add_event_listener_with_callback("mouseup", mouseup_callback).unwrap();
     }
 
-    fn init_scroll_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_scroll_callback<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>)
+    where
+        G: Default + 'static,
+    {
         self.wheel_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: WheelEvent| {
             let mut app = app.borrow_mut();
             let direction = if event.delta_y() < 0.0 { MouseWheelDirection::Up } else { MouseWheelDirection::Down };
@@ -263,7 +285,10 @@ impl WindowContextWeb {
         self.canvas.add_event_listener_with_callback("wheel", wheel_callback).unwrap();
     }
 
-    fn init_keydown_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_keydown_callback<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>)
+    where
+        G: Default + 'static,
+    {
         self.keydown_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
             let mut app = app.borrow_mut();
             let key = map_key(event.code());
@@ -281,7 +306,10 @@ impl WindowContextWeb {
         self.canvas.add_event_listener_with_callback("keydown", keydown_callback).unwrap();
     }
 
-    fn init_keyup_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_keyup_callback<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>)
+    where
+        G: Default + 'static,
+    {
         self.keyup_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
             let mut app = app.borrow_mut();
             let key = map_key(event.code());
@@ -299,7 +327,10 @@ impl WindowContextWeb {
         self.canvas.add_event_listener_with_callback("keyup", keyup_callback).unwrap();
     }
 
-    fn init_keypress_callback(&mut self, app: Rc<RefCell<ApplicationContext>>) {
+    fn init_keypress_callback<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>)
+    where
+        G: Default + 'static,
+    {
         self.keypress_callback = Some(Closure::<dyn FnMut(_)>::new(move |event: KeyboardEvent| {
             let mut app = app.borrow_mut();
             let mut character = event.key();

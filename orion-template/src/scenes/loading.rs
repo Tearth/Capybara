@@ -13,27 +13,29 @@ use orion_core::scene::FrameCommand;
 use orion_core::scene::Scene;
 use orion_core::window::InputEvent;
 
+use super::GlobalData;
+
 #[derive(Default)]
 pub struct LoadingScene {
     loading_start: Option<Instant>,
     loading_finished: bool,
 }
 
-impl Scene for LoadingScene {
-    fn activation(&mut self, _: ApplicationState) -> Result<()> {
+impl Scene<GlobalData> for LoadingScene {
+    fn activation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
         self.loading_start = Some(Instant::now());
         Ok(())
     }
 
-    fn deactivation(&mut self, _: ApplicationState) -> Result<()> {
+    fn deactivation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
         Ok(())
     }
 
-    fn input(&mut self, _: ApplicationState, _: InputEvent) -> Result<()> {
+    fn input(&mut self, _: ApplicationState<GlobalData>, _: InputEvent) -> Result<()> {
         Ok(())
     }
 
-    fn frame(&mut self, state: ApplicationState, _: f32) -> Result<Option<FrameCommand>> {
+    fn frame(&mut self, state: ApplicationState<GlobalData>, _: f32) -> Result<Option<FrameCommand>> {
         if state.assets.load("./data/main.zip")? == AssetsLoadingStatus::Finished {
             state.renderer.instantiate_assets(state.assets, None)?;
             state.ui.instantiate_assets(state.assets, None)?;
@@ -52,7 +54,7 @@ impl Scene for LoadingScene {
         Ok(None)
     }
 
-    fn ui(&mut self, state: ApplicationState, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
+    fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let output = state.ui.inner.run(input, |context| {
             CentralPanel::default().show(context, |ui| {
                 ui.with_layout(Layout::centered_and_justified(Direction::LeftToRight), |ui| {

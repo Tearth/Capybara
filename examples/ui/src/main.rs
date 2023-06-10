@@ -18,28 +18,31 @@ pub mod test;
 fast_gpu!();
 
 #[derive(Default)]
+struct GlobalData {}
+
+#[derive(Default)]
 struct MainScene {
     test: ColorTest,
 }
 
-impl Scene for MainScene {
-    fn activation(&mut self, _: ApplicationState) -> Result<()> {
+impl Scene<GlobalData> for MainScene {
+    fn activation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
         Ok(())
     }
 
-    fn deactivation(&mut self, _: ApplicationState) -> Result<()> {
+    fn deactivation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
         Ok(())
     }
 
-    fn input(&mut self, _: ApplicationState, _: InputEvent) -> Result<()> {
+    fn input(&mut self, _: ApplicationState<GlobalData>, _: InputEvent) -> Result<()> {
         Ok(())
     }
 
-    fn frame(&mut self, _: ApplicationState, _: f32) -> Result<Option<FrameCommand>> {
+    fn frame(&mut self, _: ApplicationState<GlobalData>, _: f32) -> Result<Option<FrameCommand>> {
         Ok(None)
     }
 
-    fn ui(&mut self, state: ApplicationState, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
+    fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let output = state.ui.inner.run(input, |context| {
             CentralPanel::default().show(context, |ui| {
                 ScrollArea::both().auto_shrink([false; 2]).show(ui, |ui| {
@@ -53,7 +56,7 @@ impl Scene for MainScene {
 }
 
 fn main() {
-    ApplicationContext::new("UI", WindowStyle::Window { size: Coordinates::new(800, 600) })
+    ApplicationContext::<GlobalData>::new("UI", WindowStyle::Window { size: Coordinates::new(800, 600) })
         .unwrap()
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene")

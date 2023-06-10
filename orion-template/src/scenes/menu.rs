@@ -22,6 +22,8 @@ use orion_core::scene::Scene;
 use orion_core::utils::color::Vec4Color;
 use orion_core::window::InputEvent;
 
+use super::GlobalData;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MenuSubScene {
     Main,
@@ -38,7 +40,7 @@ pub struct MenuScene {
 }
 
 impl MenuScene {
-    pub fn subscene_main(&mut self, state: &ApplicationState, context: &Context) -> Option<FrameCommand> {
+    pub fn subscene_main(&mut self, state: &ApplicationState<GlobalData>, context: &Context) -> Option<FrameCommand> {
         let mut command = None;
         let center = context.screen_rect().center();
 
@@ -74,7 +76,7 @@ impl MenuScene {
         command
     }
 
-    fn subscene_about(&mut self, state: &ApplicationState, context: &Context) -> Option<FrameCommand> {
+    fn subscene_about(&mut self, state: &ApplicationState<GlobalData>, context: &Context) -> Option<FrameCommand> {
         let command = None;
         let center = context.screen_rect().center();
 
@@ -111,25 +113,25 @@ impl MenuScene {
     }
 }
 
-impl Scene for MenuScene {
-    fn activation(&mut self, state: ApplicationState) -> Result<()> {
+impl Scene<GlobalData> for MenuScene {
+    fn activation(&mut self, state: ApplicationState<GlobalData>) -> Result<()> {
         state.renderer.set_clear_color(Vec4::new_rgb(40, 80, 30, 255));
         Ok(())
     }
 
-    fn deactivation(&mut self, _: ApplicationState) -> Result<()> {
+    fn deactivation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
         Ok(())
     }
 
-    fn input(&mut self, _: ApplicationState, _: InputEvent) -> Result<()> {
+    fn input(&mut self, _: ApplicationState<GlobalData>, _: InputEvent) -> Result<()> {
         Ok(())
     }
 
-    fn frame(&mut self, _: ApplicationState, _: f32) -> Result<Option<FrameCommand>> {
+    fn frame(&mut self, _: ApplicationState<GlobalData>, _: f32) -> Result<Option<FrameCommand>> {
         Ok(None)
     }
 
-    fn ui(&mut self, state: ApplicationState, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
+    fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let mut command = None;
         let output = state.ui.inner.run(input, |context| {
             TopBottomPanel::new(TopBottomSide::Top, Id::new("top_menu_panel"))

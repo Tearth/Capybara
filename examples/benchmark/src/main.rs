@@ -30,6 +30,9 @@ const SPEED: f32 = 100.0;
 const DELTA_HISTORY_COUNT: usize = 100;
 
 #[derive(Default)]
+struct GlobalData {}
+
+#[derive(Default)]
 struct MainScene {
     objects: Vec<Object>,
     initialized: bool,
@@ -41,16 +44,16 @@ struct Object {
     direction: Vec2,
 }
 
-impl Scene for MainScene {
-    fn activation(&mut self, _: ApplicationState) -> Result<()> {
+impl Scene<GlobalData> for MainScene {
+    fn activation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
         Ok(())
     }
 
-    fn deactivation(&mut self, _: ApplicationState) -> Result<()> {
+    fn deactivation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
         Ok(())
     }
 
-    fn input(&mut self, state: ApplicationState, event: InputEvent) -> Result<()> {
+    fn input(&mut self, state: ApplicationState<GlobalData>, event: InputEvent) -> Result<()> {
         if let InputEvent::KeyPress { key, repeat: _, modifiers: _ } = event {
             match key {
                 Key::Escape => state.window.close(),
@@ -62,7 +65,7 @@ impl Scene for MainScene {
         Ok(())
     }
 
-    fn frame(&mut self, state: ApplicationState, delta: f32) -> Result<Option<FrameCommand>> {
+    fn frame(&mut self, state: ApplicationState<GlobalData>, delta: f32) -> Result<Option<FrameCommand>> {
         self.delta_history.push_back(delta);
 
         if self.delta_history.len() > DELTA_HISTORY_COUNT {
@@ -112,7 +115,7 @@ impl Scene for MainScene {
         Ok(None)
     }
 
-    fn ui(&mut self, state: ApplicationState, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
+    fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let output = state.ui.inner.run(input, |context| {
             SidePanel::new(Side::Left, Id::new("side")).show(context, |ui| {
                 if self.initialized {
@@ -136,7 +139,7 @@ impl Scene for MainScene {
 }
 
 fn main() {
-    ApplicationContext::new("Benchmark", WindowStyle::Window { size: Coordinates::new(800, 600) })
+    ApplicationContext::<GlobalData>::new("Benchmark", WindowStyle::Window { size: Coordinates::new(800, 600) })
         .unwrap()
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene")

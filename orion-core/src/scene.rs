@@ -10,11 +10,11 @@ pub enum FrameCommand {
     Exit,
 }
 
-pub trait Scene {
-    fn activation(&mut self, state: ApplicationState) -> Result<()>;
-    fn deactivation(&mut self, state: ApplicationState) -> Result<()>;
+pub trait Scene<G> {
+    fn activation(&mut self, state: ApplicationState<G>) -> Result<()>;
+    fn deactivation(&mut self, state: ApplicationState<G>) -> Result<()>;
 
-    fn input(&mut self, state: ApplicationState, event: InputEvent) -> Result<()>;
-    fn frame(&mut self, state: ApplicationState, delta: f32) -> Result<Option<FrameCommand>>;
-    fn ui(&mut self, state: ApplicationState, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)>;
+    fn input(&mut self, state: ApplicationState<G>, event: InputEvent) -> Result<()>;
+    fn frame(&mut self, state: ApplicationState<G>, delta: f32) -> Result<Option<FrameCommand>>;
+    fn ui(&mut self, state: ApplicationState<G>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)>;
 }

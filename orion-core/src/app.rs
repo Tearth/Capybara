@@ -14,13 +14,17 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-pub struct ApplicationContext {
+pub struct ApplicationContext<G>
+where
+    G: Default + 'static,
+{
     pub window: Box<WindowContext>,
     pub renderer: RendererContext,
     pub assets: AssetsLoader,
     pub ui: UiContext,
     pub audio: AudioContext,
-    pub scenes: HashMap<String, Box<dyn Scene>>,
+    pub scenes: HashMap<String, Box<dyn Scene<G>>>,
+    pub global: G,
 
     current_scene: String,
     next_scene: Option<String>,
@@ -28,15 +32,19 @@ pub struct ApplicationContext {
     running: bool,
 }
 
-pub struct ApplicationState<'a> {
+pub struct ApplicationState<'a, G> {
     pub window: &'a mut Box<WindowContext>,
     pub renderer: &'a mut RendererContext,
     pub assets: &'a mut AssetsLoader,
     pub ui: &'a mut UiContext,
     pub audio: &'a mut AudioContext,
+    pub global: &'a mut G,
 }
 
-impl ApplicationContext {
+impl<G> ApplicationContext<G>
+where
+    G: Default + 'static,
+{
     pub fn new(title: &str, style: WindowStyle) -> Result<Self> {
         let window = WindowContext::new(title, style)?;
         let mut renderer = RendererContext::new(window.load_gl_pointers())?;
@@ -51,6 +59,7 @@ impl ApplicationContext {
             ui,
             audio,
             scenes: Default::default(),
+            global: Default::default(),
             current_scene: "".to_string(),
             next_scene: None,
             frame_timestamp: Instant::now(),
@@ -58,7 +67,7 @@ impl ApplicationContext {
         })
     }
 
-    pub fn with_scene(mut self, name: &str, scene: Box<dyn Scene>) -> Self {
+    pub fn with_scene(mut self, name: &str, scene: Box<dyn Scene<G>>) -> Self {
         self.scenes.insert(name.to_string(), scene);
         self
     }
@@ -84,12 +93,20 @@ impl ApplicationContext {
             if let Some(next_scene) = &self.next_scene {
                 if !self.current_scene.is_empty() {
                     let old_scene = self.scenes.get_mut(&self.current_scene).unwrap();
-                    let state = ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio);
+                    let state = ApplicationState::new(
+                        &mut self.window,
+                        &mut self.renderer,
+                        &mut self.assets,
+                        &mut self.ui,
+                        &mut self.audio,
+                        &mut self.global,
+                    );
                     old_scene.deactivation(state)?;
                 }
 
                 let new_scene = self.scenes.get_mut(next_scene).unwrap();
-                let state = ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio);
+                let state =
+                    ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio, &mut self.global);
                 new_scene.activation(state)?;
 
                 self.current_scene = next_scene.clone();
@@ -110,12 +127,14 @@ impl ApplicationContext {
                 }
 
                 self.ui.collect_event(&event);
-                let state = ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio);
+                let state =
+                    ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio, &mut self.global);
                 scene.input(state, event)?;
             }
 
             let ui_input = self.ui.get_input();
-            let state = ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio);
+            let state =
+                ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio, &mut self.global);
             let (ui_output, command) = scene.ui(state, ui_input)?;
             self.process_frame_command(command);
 
@@ -126,7 +145,8 @@ impl ApplicationContext {
             self.renderer.begin_frame()?;
 
             let scene = self.scenes.get_mut(&self.current_scene).unwrap();
-            let state = ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio);
+            let state =
+                ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio, &mut self.global);
             let command = scene.frame(state, delta)?;
             self.process_frame_command(command);
             self.renderer.flush_buffer()?;
@@ -152,14 +172,15 @@ impl ApplicationContext {
     }
 }
 
-impl<'a> ApplicationState<'a> {
+impl<'a, G> ApplicationState<'a, G> {
     pub fn new(
         window: &'a mut Box<WindowContext>,
         renderer: &'a mut RendererContext,
         assets: &'a mut AssetsLoader,
         ui: &'a mut UiContext,
         audio: &'a mut AudioContext,
+        global: &'a mut G,
     ) -> Self {
-        Self { window, renderer, assets, ui, audio }
+        Self { window, renderer, assets, ui, audio, global }
     }
 }

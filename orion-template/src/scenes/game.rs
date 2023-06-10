@@ -14,6 +14,8 @@ use orion_core::utils::color::Vec4Color;
 use orion_core::window::InputEvent;
 use orion_core::window::Key;
 
+use super::GlobalData;
+
 #[derive(Default)]
 pub struct GameScene {
     play_button_state: WidgetState,
@@ -21,19 +23,19 @@ pub struct GameScene {
     exit_menu_visible: bool,
 }
 
-impl Scene for GameScene {
-    fn activation(&mut self, state: ApplicationState) -> Result<()> {
+impl Scene<GlobalData> for GameScene {
+    fn activation(&mut self, state: ApplicationState<GlobalData>) -> Result<()> {
         self.exit_menu_visible = false;
 
         state.renderer.set_clear_color(Vec4::new_rgb(40, 80, 30, 255));
         Ok(())
     }
 
-    fn deactivation(&mut self, _: ApplicationState) -> Result<()> {
+    fn deactivation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
         Ok(())
     }
 
-    fn input(&mut self, _: ApplicationState, event: InputEvent) -> Result<()> {
+    fn input(&mut self, _: ApplicationState<GlobalData>, event: InputEvent) -> Result<()> {
         if let InputEvent::KeyPress { key, repeat: _, modifiers: _ } = event {
             if key == Key::Escape {
                 self.exit_menu_visible = !self.exit_menu_visible;
@@ -42,11 +44,11 @@ impl Scene for GameScene {
         Ok(())
     }
 
-    fn frame(&mut self, _: ApplicationState, _: f32) -> Result<Option<FrameCommand>> {
+    fn frame(&mut self, _: ApplicationState<GlobalData>, _: f32) -> Result<Option<FrameCommand>> {
         Ok(None)
     }
 
-    fn ui(&mut self, state: ApplicationState, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
+    fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let mut command = None;
         let output = state.ui.inner.run(input, |context| {
             let center = context.screen_rect().center();

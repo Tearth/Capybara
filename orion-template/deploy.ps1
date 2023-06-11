@@ -2,7 +2,7 @@ Set-Location ./dist/
 Write-Output "Replacing paths..."
 Write-Output "------------------"
 Get-ChildItem -Path .\ -Filter *.html -File -Name | ForEach-Object {
-	(Get-Content $_) -replace '"/', '"./' -replace "''/', '''./" | Out-File -encoding UTF8 $_
+	(Get-Content $_) -replace """/", """./" -replace "''/", "''./" | Out-File -encoding UTF8 $_
 }
 Write-Output "Optimizing WASM..."
 Write-Output "------------------"

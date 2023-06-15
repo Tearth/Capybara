@@ -13,6 +13,7 @@ use orion_core::egui::RichText;
 use orion_core::egui::SidePanel;
 use orion_core::fast_gpu;
 use orion_core::glam::Vec2;
+use orion_core::rapier2d::prelude::*;
 use orion_core::renderer::sprite::Sprite;
 use orion_core::scene::FrameCommand;
 use orion_core::scene::Scene;
@@ -24,9 +25,9 @@ use std::collections::VecDeque;
 
 fast_gpu!();
 
-const COUNT: usize = 200000;
-const SPEED: f32 = 100.0;
+const COUNT: usize = 1000;
 const DELTA_HISTORY_COUNT: usize = 100;
+const PIXELS_PER_METER: f32 = 50.0;
 
 #[derive(Default)]
 struct GlobalData {}
@@ -36,11 +37,15 @@ struct MainScene {
     objects: Vec<Object>,
     initialized: bool,
     delta_history: VecDeque<f32>,
+
+    terrain: Sprite,
+    terrain_collider: Option<ColliderHandle>,
 }
 
 struct Object {
     sprite: Sprite,
-    direction: Vec2,
+    collider: ColliderHandle,
+    rigidbody: RigidBodyHandle,
 }
 
 impl Scene<GlobalData> for MainScene {
@@ -68,7 +73,7 @@ impl Scene<GlobalData> for MainScene {
         Ok(None)
     }
 
-    fn frame(&mut self, state: ApplicationState<GlobalData>, _: f32, delta: f32) -> Result<Option<FrameCommand>> {
+    fn frame(&mut self, state: ApplicationState<GlobalData>, accumulator: f32, delta: f32) -> Result<Option<FrameCommand>> {
         self.delta_history.push_back(delta);
 
         if self.delta_history.len() > DELTA_HISTORY_COUNT {
@@ -80,33 +85,37 @@ impl Scene<GlobalData> for MainScene {
             state.ui.instantiate_assets(state.assets, None)?;
             state.window.set_swap_interval(0);
 
+            self.terrain = Sprite { size: Some(Vec2::new(state.renderer.viewport_size.x, 50.0)), ..Default::default() };
+            self.terrain_collider = Some(state.physics.colliders.insert(ColliderBuilder::cuboid(100.0, 0.1).build()));
+
             for _ in 0..COUNT {
                 let position = Vec2::new(
                     fastrand::u32(0..state.renderer.viewport_size.x as u32) as f32,
                     fastrand::u32(0..state.renderer.viewport_size.y as u32) as f32,
                 );
-                let direction = Vec2::new(fastrand::f32() * 2.0 - 1.0, fastrand::f32() * 2.0 - 1.0);
                 let sprite = Sprite { position, texture_id: Some(state.renderer.textures.get_by_name("tako")?.id), ..Default::default() };
+                let collider = ColliderBuilder::ball(0.3).restitution(0.7).build();
+                let rigidbody = RigidBodyBuilder::dynamic().translation(vector![position.x, position.y] / PIXELS_PER_METER).build();
+                let rigidbody_handle = state.physics.rigidbodies.insert(rigidbody);
+                let collider_handle = state.physics.colliders.insert_with_parent(collider, rigidbody_handle, &mut state.physics.rigidbodies);
 
-                self.objects.push(Object { sprite, direction });
+                self.objects.push(Object { sprite, collider: collider_handle, rigidbody: rigidbody_handle });
             }
 
             self.initialized = true;
         }
 
-        for object in &mut self.objects {
-            object.sprite.position += object.direction * SPEED * delta;
-            if object.sprite.position.x < 0.0 {
-                object.direction = Vec2::new(object.direction.x.abs(), object.direction.y);
-            } else if object.sprite.position.x > state.renderer.viewport_size.x {
-                object.direction = Vec2::new(-object.direction.x.abs(), object.direction.y);
-            } else if object.sprite.position.y < 0.0 {
-                object.direction = Vec2::new(object.direction.x, object.direction.y.abs());
-            } else if object.sprite.position.y > state.renderer.viewport_size.y {
-                object.direction = Vec2::new(object.direction.x, -object.direction.y.abs());
-            }
+        if self.initialized {
+            let alpha = accumulator / state.physics.integration_parameters.dt;
 
-            state.renderer.draw_sprite(&object.sprite)?;
+            for i in 0..COUNT {
+                let object = &mut self.objects[i];
+                if let Some(interpolation_data) = state.physics.interpolation_data.get(&object.rigidbody) {
+                    self.objects[i].sprite.position = interpolation_data.get_position_interpolated(alpha) * PIXELS_PER_METER;
+                    self.objects[i].sprite.rotation = interpolation_data.get_rotation_interpolated(alpha);
+                    state.renderer.draw_sprite(&self.objects[i].sprite)?;
+                }
+            }
         }
 
         Ok(None)
@@ -136,7 +145,7 @@ impl Scene<GlobalData> for MainScene {
 }
 
 fn main() {
-    ApplicationContext::<GlobalData>::new("Benchmark", WindowStyle::Window { size: Coordinates::new(800, 600) })
+    ApplicationContext::<GlobalData>::new("Physics", WindowStyle::Window { size: Coordinates::new(800, 600) })
         .unwrap()
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene")

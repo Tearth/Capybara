@@ -1,5 +1,6 @@
 use crate::assets::loader::AssetsLoader;
 use crate::audio::context::AudioContext;
+use crate::physics::context::PhysicsContext;
 use crate::renderer::context::RendererContext;
 use crate::scene::FrameCommand;
 use crate::scene::Scene;
@@ -23,6 +24,7 @@ where
     pub assets: AssetsLoader,
     pub ui: UiContext,
     pub audio: AudioContext,
+    pub physics: PhysicsContext,
     pub scenes: HashMap<String, Box<dyn Scene<G>>>,
     pub global: G,
 
@@ -30,6 +32,8 @@ where
     next_scene: Option<String>,
     frame_timestamp: Instant,
     running: bool,
+    timestep: f32,
+    accumulator: f32,
 }
 
 pub struct ApplicationState<'a, G> {
@@ -38,6 +42,7 @@ pub struct ApplicationState<'a, G> {
     pub assets: &'a mut AssetsLoader,
     pub ui: &'a mut UiContext,
     pub audio: &'a mut AudioContext,
+    pub physics: &'a mut PhysicsContext,
     pub global: &'a mut G,
 }
 
@@ -51,6 +56,7 @@ where
         let assets = AssetsLoader::new();
         let ui = UiContext::new(&mut renderer)?;
         let audio = AudioContext::new()?;
+        let physics = PhysicsContext::new();
 
         Ok(Self {
             window,
@@ -58,12 +64,16 @@ where
             assets,
             ui,
             audio,
+            physics,
             scenes: Default::default(),
             global: Default::default(),
+
             current_scene: "".to_string(),
             next_scene: None,
             frame_timestamp: Instant::now(),
             running: true,
+            timestep: 1.0 / 60.0,
+            accumulator: 0.0,
         })
     }
 
@@ -99,14 +109,22 @@ where
                         &mut self.assets,
                         &mut self.ui,
                         &mut self.audio,
+                        &mut self.physics,
                         &mut self.global,
                     );
                     old_scene.deactivation(state)?;
                 }
 
                 let new_scene = self.scenes.get_mut(next_scene).unwrap();
-                let state =
-                    ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio, &mut self.global);
+                let state = ApplicationState::new(
+                    &mut self.window,
+                    &mut self.renderer,
+                    &mut self.assets,
+                    &mut self.ui,
+                    &mut self.audio,
+                    &mut self.physics,
+                    &mut self.global,
+                );
                 new_scene.activation(state)?;
 
                 self.current_scene = next_scene.clone();
@@ -127,27 +145,73 @@ where
                 }
 
                 self.ui.collect_event(&event);
-                let state =
-                    ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio, &mut self.global);
+                let state = ApplicationState::new(
+                    &mut self.window,
+                    &mut self.renderer,
+                    &mut self.assets,
+                    &mut self.ui,
+                    &mut self.audio,
+                    &mut self.physics,
+                    &mut self.global,
+                );
                 scene.input(state, event)?;
             }
 
             let ui_input = self.ui.get_input();
-            let state =
-                ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio, &mut self.global);
+            let state = ApplicationState::new(
+                &mut self.window,
+                &mut self.renderer,
+                &mut self.assets,
+                &mut self.ui,
+                &mut self.audio,
+                &mut self.physics,
+                &mut self.global,
+            );
             let (ui_output, command) = scene.ui(state, ui_input)?;
             self.process_frame_command(command);
 
             let now = Instant::now();
-            let delta = (now - self.frame_timestamp).as_secs_f32();
+            let mut delta = (now - self.frame_timestamp).as_secs_f32();
+
+            if delta > 0.1 {
+                delta = 0.1;
+            }
+
             self.frame_timestamp = now;
+            self.accumulator += delta;
+
+            while self.accumulator >= self.timestep {
+                self.physics.step(self.timestep);
+
+                let scene = self.scenes.get_mut(&self.current_scene).unwrap();
+                let state = ApplicationState::new(
+                    &mut self.window,
+                    &mut self.renderer,
+                    &mut self.assets,
+                    &mut self.ui,
+                    &mut self.audio,
+                    &mut self.physics,
+                    &mut self.global,
+                );
+                let command = scene.fixed(state)?;
+                self.process_frame_command(command);
+
+                self.accumulator -= self.timestep;
+            }
 
             self.renderer.begin_frame()?;
 
             let scene = self.scenes.get_mut(&self.current_scene).unwrap();
-            let state =
-                ApplicationState::new(&mut self.window, &mut self.renderer, &mut self.assets, &mut self.ui, &mut self.audio, &mut self.global);
-            let command = scene.frame(state, delta)?;
+            let state = ApplicationState::new(
+                &mut self.window,
+                &mut self.renderer,
+                &mut self.assets,
+                &mut self.ui,
+                &mut self.audio,
+                &mut self.physics,
+                &mut self.global,
+            );
+            let command = scene.frame(state, self.accumulator, delta)?;
             self.process_frame_command(command);
             self.renderer.flush_buffer()?;
 
@@ -179,8 +243,9 @@ impl<'a, G> ApplicationState<'a, G> {
         assets: &'a mut AssetsLoader,
         ui: &'a mut UiContext,
         audio: &'a mut AudioContext,
+        physics: &'a mut PhysicsContext,
         global: &'a mut G,
     ) -> Self {
-        Self { window, renderer, assets, ui, audio, global }
+        Self { window, renderer, assets, ui, audio, physics, global }
     }
 }

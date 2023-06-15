@@ -44,7 +44,11 @@ impl Scene<GlobalData> for GameScene {
         Ok(())
     }
 
-    fn frame(&mut self, _: ApplicationState<GlobalData>, _: f32) -> Result<Option<FrameCommand>> {
+    fn fixed(&mut self, _: ApplicationState<GlobalData>) -> Result<Option<FrameCommand>> {
+        Ok(None)
+    }
+
+    fn frame(&mut self, _: ApplicationState<GlobalData>, _: f32, _: f32) -> Result<Option<FrameCommand>> {
         Ok(None)
     }
 

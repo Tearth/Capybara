@@ -15,6 +15,7 @@ pub trait Scene<G> {
     fn deactivation(&mut self, state: ApplicationState<G>) -> Result<()>;
 
     fn input(&mut self, state: ApplicationState<G>, event: InputEvent) -> Result<()>;
-    fn frame(&mut self, state: ApplicationState<G>, delta: f32) -> Result<Option<FrameCommand>>;
+    fn fixed(&mut self, state: ApplicationState<G>) -> Result<Option<FrameCommand>>;
+    fn frame(&mut self, state: ApplicationState<G>, accumulator: f32, delta: f32) -> Result<Option<FrameCommand>>;
     fn ui(&mut self, state: ApplicationState<G>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)>;
 }

@@ -15,6 +15,7 @@ png = { version = "0.17.8" }
 quick-xml = { version = "0.28.2" }
 rustc-hash = { version = "1.1.0" }
 kira = { version = "0.8.3", default-features = false, features = [ "cpal", "wav", "ogg" ]  }
+rapier2d = { version = "0.17.2" }
 
 [build-dependencies]
 cfg_aliases = { version = "0.1.1" }

@@ -11,6 +11,7 @@ pub mod app;
 pub mod assets;
 pub mod audio;
 pub mod filesystem;
+pub mod physics;
 pub mod renderer;
 pub mod scene;
 pub mod ui;
@@ -23,6 +24,7 @@ pub use glam;
 pub use instant;
 pub use kira;
 pub use log;
+pub use rapier2d;
 
 #[macro_export]
 macro_rules! fast_gpu {

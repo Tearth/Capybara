@@ -1,3 +1,4 @@
+use super::events::EventCollector;
 use glam::Vec2;
 use rapier2d::na::Vector2;
 use rapier2d::prelude::*;
@@ -16,8 +17,8 @@ pub struct PhysicsContext {
     pub impulse_joints: ImpulseJointSet,
     pub multibody_joints: MultibodyJointSet,
     pub solver: CCDSolver,
-    pub physics_hooks: Box<dyn PhysicsHooks>,
-    pub event_handlers: Box<dyn EventHandler>,
+    pub hooks: Box<dyn PhysicsHooks>,
+    pub events: EventCollector,
 }
 
 pub struct InterpolationData {
@@ -42,12 +43,14 @@ impl PhysicsContext {
             impulse_joints: ImpulseJointSet::new(),
             multibody_joints: MultibodyJointSet::new(),
             solver: CCDSolver::new(),
-            physics_hooks: Box::new(()),
-            event_handlers: Box::new(()),
+            hooks: Box::new(()),
+            events: Default::default(),
         }
     }
 
     pub fn step(&mut self, timestamp: f32) {
+        self.events.clear();
+
         self.integration_parameters.dt = timestamp;
         self.physics_pipeline.step(
             &self.gravity,
@@ -61,8 +64,8 @@ impl PhysicsContext {
             &mut self.multibody_joints,
             &mut self.solver,
             None,
-            self.physics_hooks.as_ref(),
-            self.event_handlers.as_ref(),
+            self.hooks.as_ref(),
+            &self.events,
         );
 
         for (handle, rigidbody) in self.rigidbodies.iter() {

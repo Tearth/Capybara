@@ -25,7 +25,7 @@ use std::collections::VecDeque;
 
 fast_gpu!();
 
-const COUNT: usize = 1000;
+const COUNT: usize = 100;
 const DELTA_HISTORY_COUNT: usize = 100;
 const PIXELS_PER_METER: f32 = 50.0;
 
@@ -49,7 +49,7 @@ struct Object {
 }
 
 impl Scene<GlobalData> for MainScene {
-    fn activation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
+    fn activation(&mut self, state: ApplicationState<GlobalData>) -> Result<()> {
         Ok(())
     }
 
@@ -69,7 +69,12 @@ impl Scene<GlobalData> for MainScene {
         Ok(())
     }
 
-    fn fixed(&mut self, _: ApplicationState<GlobalData>) -> Result<Option<FrameCommand>> {
+    fn fixed(&mut self, state: ApplicationState<GlobalData>) -> Result<Option<FrameCommand>> {
+        let collisions = state.physics.events.collisions.read().unwrap();
+        let contacts = state.physics.events.contacts.read().unwrap();
+
+        println!("Collisions: {}, contacts: {}", collisions.len(), contacts.len());
+
         Ok(None)
     }
 
@@ -94,7 +99,10 @@ impl Scene<GlobalData> for MainScene {
                     fastrand::u32(0..state.renderer.viewport_size.y as u32) as f32,
                 );
                 let sprite = Sprite { position, texture_id: Some(state.renderer.textures.get_by_name("tako")?.id), ..Default::default() };
-                let collider = ColliderBuilder::ball(0.3).restitution(0.7).build();
+                let collider = ColliderBuilder::ball(0.3)
+                    .restitution(0.7)
+                    .active_events(ActiveEvents::COLLISION_EVENTS | ActiveEvents::CONTACT_FORCE_EVENTS)
+                    .build();
                 let rigidbody = RigidBodyBuilder::dynamic().translation(vector![position.x, position.y] / PIXELS_PER_METER).build();
                 let rigidbody_handle = state.physics.rigidbodies.insert(rigidbody);
                 let collider_handle = state.physics.colliders.insert_with_parent(collider, rigidbody_handle, &mut state.physics.rigidbodies);

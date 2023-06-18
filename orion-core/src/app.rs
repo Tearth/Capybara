@@ -46,6 +46,20 @@ pub struct ApplicationState<'a, G> {
     pub global: &'a mut G,
 }
 
+macro_rules! state {
+    ($self:ident) => {
+        ApplicationState::new(
+            &mut $self.window,
+            &mut $self.renderer,
+            &mut $self.assets,
+            &mut $self.ui,
+            &mut $self.audio,
+            &mut $self.physics,
+            &mut $self.global,
+        )
+    };
+}
+
 impl<G> ApplicationContext<G>
 where
     G: Default + 'static,
@@ -103,29 +117,11 @@ where
             if let Some(next_scene) = &self.next_scene {
                 if !self.current_scene.is_empty() {
                     let old_scene = self.scenes.get_mut(&self.current_scene).unwrap();
-                    let state = ApplicationState::new(
-                        &mut self.window,
-                        &mut self.renderer,
-                        &mut self.assets,
-                        &mut self.ui,
-                        &mut self.audio,
-                        &mut self.physics,
-                        &mut self.global,
-                    );
-                    old_scene.deactivation(state)?;
+                    old_scene.deactivation(state!(self))?;
                 }
 
                 let new_scene = self.scenes.get_mut(next_scene).unwrap();
-                let state = ApplicationState::new(
-                    &mut self.window,
-                    &mut self.renderer,
-                    &mut self.assets,
-                    &mut self.ui,
-                    &mut self.audio,
-                    &mut self.physics,
-                    &mut self.global,
-                );
-                new_scene.activation(state)?;
+                new_scene.activation(state!(self))?;
 
                 self.current_scene = next_scene.clone();
                 self.next_scene = None;
@@ -145,29 +141,11 @@ where
                 }
 
                 self.ui.collect_event(&event);
-                let state = ApplicationState::new(
-                    &mut self.window,
-                    &mut self.renderer,
-                    &mut self.assets,
-                    &mut self.ui,
-                    &mut self.audio,
-                    &mut self.physics,
-                    &mut self.global,
-                );
-                scene.input(state, event)?;
+                scene.input(state!(self), event)?;
             }
 
             let ui_input = self.ui.get_input();
-            let state = ApplicationState::new(
-                &mut self.window,
-                &mut self.renderer,
-                &mut self.assets,
-                &mut self.ui,
-                &mut self.audio,
-                &mut self.physics,
-                &mut self.global,
-            );
-            let (ui_output, command) = scene.ui(state, ui_input)?;
+            let (ui_output, command) = scene.ui(state!(self), ui_input)?;
             self.process_frame_command(command);
 
             let now = Instant::now();
@@ -184,16 +162,7 @@ where
                 self.physics.step(self.timestep);
 
                 let scene = self.scenes.get_mut(&self.current_scene).unwrap();
-                let state = ApplicationState::new(
-                    &mut self.window,
-                    &mut self.renderer,
-                    &mut self.assets,
-                    &mut self.ui,
-                    &mut self.audio,
-                    &mut self.physics,
-                    &mut self.global,
-                );
-                let command = scene.fixed(state)?;
+                let command = scene.fixed(state!(self))?;
                 self.process_frame_command(command);
 
                 self.accumulator -= self.timestep;
@@ -202,16 +171,7 @@ where
             self.renderer.begin_frame()?;
 
             let scene = self.scenes.get_mut(&self.current_scene).unwrap();
-            let state = ApplicationState::new(
-                &mut self.window,
-                &mut self.renderer,
-                &mut self.assets,
-                &mut self.ui,
-                &mut self.audio,
-                &mut self.physics,
-                &mut self.global,
-            );
-            let command = scene.frame(state, self.accumulator, delta)?;
+            let command = scene.frame(state!(self), self.accumulator, delta)?;
             self.process_frame_command(command);
             self.renderer.flush_buffer()?;
 

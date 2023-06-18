@@ -3,6 +3,10 @@ name = "orion-core"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+audio = [ "dep:kira" ]
+physics = [ "dep:rapier2d" ]
+
 [dependencies]
 anyhow = { version = "1.0.71" }
 log = { version = "0.4.18" }
@@ -14,8 +18,8 @@ walkdir = { version = "2.3.3" }
 png = { version = "0.17.8" }
 quick-xml = { version = "0.28.2" }
 rustc-hash = { version = "1.1.0" }
-kira = { version = "0.8.3", default-features = false, features = [ "cpal", "wav", "ogg" ]  }
-rapier2d = { version = "0.17.2" }
+kira = { version = "0.8.3", default-features = false, features = [ "cpal", "wav", "ogg" ], optional = true  }
+rapier2d = { version = "0.17.2", optional = true }
 
 [build-dependencies]
 cfg_aliases = { version = "0.1.1" }

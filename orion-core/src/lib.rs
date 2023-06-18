@@ -9,21 +9,29 @@
 
 pub mod app;
 pub mod assets;
-pub mod audio;
 pub mod filesystem;
-pub mod physics;
 pub mod renderer;
 pub mod scene;
 pub mod ui;
 pub mod utils;
 pub mod window;
 
+#[cfg(feature = "audio")]
+pub mod audio;
+
+#[cfg(feature = "physics")]
+pub mod physics;
+
 pub use anyhow;
 pub use egui;
 pub use glam;
 pub use instant;
-pub use kira;
 pub use log;
+
+#[cfg(feature = "audio")]
+pub use kira;
+
+#[cfg(feature = "physics")]
 pub use rapier2d;
 
 #[macro_export]

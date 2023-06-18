@@ -1,6 +1,4 @@
 use crate::assets::loader::AssetsLoader;
-use crate::audio::context::AudioContext;
-use crate::physics::context::PhysicsContext;
 use crate::renderer::context::RendererContext;
 use crate::scene::FrameCommand;
 use crate::scene::Scene;
@@ -15,6 +13,12 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+#[cfg(feature = "audio")]
+use crate::audio::context::AudioContext;
+
+#[cfg(feature = "physics")]
+use crate::physics::context::PhysicsContext;
+
 pub struct ApplicationContext<G>
 where
     G: Default + 'static,
@@ -23,10 +27,14 @@ where
     pub renderer: RendererContext,
     pub assets: AssetsLoader,
     pub ui: UiContext,
-    pub audio: AudioContext,
-    pub physics: PhysicsContext,
     pub scenes: HashMap<String, Box<dyn Scene<G>>>,
     pub global: G,
+
+    #[cfg(feature = "audio")]
+    pub audio: AudioContext,
+
+    #[cfg(feature = "physics")]
+    pub physics: PhysicsContext,
 
     current_scene: String,
     next_scene: Option<String>,
@@ -39,24 +47,32 @@ where
 pub struct ApplicationState<'a, G> {
     pub window: &'a mut Box<WindowContext>,
     pub renderer: &'a mut RendererContext,
-    pub assets: &'a mut AssetsLoader,
     pub ui: &'a mut UiContext,
-    pub audio: &'a mut AudioContext,
-    pub physics: &'a mut PhysicsContext,
+    pub assets: &'a mut AssetsLoader,
     pub global: &'a mut G,
+
+    #[cfg(feature = "audio")]
+    pub audio: &'a mut AudioContext,
+
+    #[cfg(feature = "physics")]
+    pub physics: &'a mut PhysicsContext,
 }
 
 macro_rules! state {
     ($self:ident) => {
-        ApplicationState::new(
-            &mut $self.window,
-            &mut $self.renderer,
-            &mut $self.assets,
-            &mut $self.ui,
-            &mut $self.audio,
-            &mut $self.physics,
-            &mut $self.global,
-        )
+        ApplicationState {
+            window: &mut $self.window,
+            renderer: &mut $self.renderer,
+            ui: &mut $self.ui,
+            assets: &mut $self.assets,
+            global: &mut $self.global,
+
+            #[cfg(feature = "audio")]
+            audio: &mut $self.audio,
+
+            #[cfg(feature = "physics")]
+            physics: &mut $self.physics,
+        }
     };
 }
 
@@ -67,9 +83,13 @@ where
     pub fn new(title: &str, style: WindowStyle) -> Result<Self> {
         let window = WindowContext::new(title, style)?;
         let mut renderer = RendererContext::new(window.load_gl_pointers())?;
-        let assets = AssetsLoader::new();
         let ui = UiContext::new(&mut renderer)?;
+        let assets = AssetsLoader::new();
+
+        #[cfg(feature = "audio")]
         let audio = AudioContext::new()?;
+
+        #[cfg(feature = "physics")]
         let physics = PhysicsContext::new();
 
         Ok(Self {
@@ -77,10 +97,14 @@ where
             renderer,
             assets,
             ui,
-            audio,
-            physics,
             scenes: Default::default(),
             global: Default::default(),
+
+            #[cfg(feature = "audio")]
+            audio,
+
+            #[cfg(feature = "physics")]
+            physics,
 
             current_scene: "".to_string(),
             next_scene: None,
@@ -159,6 +183,7 @@ where
             self.accumulator += delta;
 
             while self.accumulator >= self.timestep {
+                #[cfg(feature = "physics")]
                 self.physics.step(self.timestep);
 
                 let scene = self.scenes.get_mut(&self.current_scene).unwrap();
@@ -193,19 +218,5 @@ where
             Some(FrameCommand::Exit) => self.running = false,
             None => {}
         }
-    }
-}
-
-impl<'a, G> ApplicationState<'a, G> {
-    pub fn new(
-        window: &'a mut Box<WindowContext>,
-        renderer: &'a mut RendererContext,
-        assets: &'a mut AssetsLoader,
-        ui: &'a mut UiContext,
-        audio: &'a mut AudioContext,
-        physics: &'a mut PhysicsContext,
-        global: &'a mut G,
-    ) -> Self {
-        Self { window, renderer, assets, ui, audio, physics, global }
     }
 }

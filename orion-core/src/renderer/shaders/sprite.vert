@@ -25,11 +25,11 @@ void main()
 
     vec2 position_adjusted = position - anchor;
     vec2 rotated = vec2(
-        position_adjusted.x * r_cos - position_adjusted.y * r_sin, 
-        position_adjusted.y * r_cos + position_adjusted.x * r_sin
+        position_adjusted.x * size.x * r_cos - position_adjusted.y * size.y * r_sin, 
+        position_adjusted.y * size.y * r_cos + position_adjusted.x * size.x * r_sin
     );
 
-    gl_Position = proj * view * vec4(rotated * size + offset, 0.0, 1.0);
+    gl_Position = proj * view * vec4(rotated + offset, 0.0, 1.0);
 
     vertexColor = vec4(
         float(color.x) / 255.0, 

@@ -1,14 +1,11 @@
-use glam::Vec2;
-use glam::Vec4;
+use glam::{Mat4, Vec2, Vec3};
 
 pub struct Shape {
     pub position: Vec2,
     pub rotation: f32,
     pub scale: Vec2,
-    pub size: Vec2,
-    pub anchor: Vec2,
-    pub color: Vec4,
     pub texture_id: Option<usize>,
+    pub apply_model: bool,
 
     pub vertices: Vec<u32>,
     pub indices: Vec<u32>,
@@ -20,14 +17,20 @@ impl Shape {
             position: Default::default(),
             rotation: 0.0,
             scale: Vec2::ONE,
-            size: Default::default(),
-            anchor: Vec2::new(0.5, 0.5),
-            color: Vec4::new(1.0, 1.0, 1.0, 1.0),
             texture_id: None,
+            apply_model: true,
 
             vertices: Default::default(),
             indices: Default::default(),
         }
+    }
+
+    pub fn get_model(&self) -> Mat4 {
+        let translation = Mat4::from_translation(Vec3::new(self.position.x, self.position.y, 0.0));
+        let rotation = Mat4::from_rotation_z(self.rotation);
+        let scale = Mat4::from_scale(Vec3::new(self.scale.x, self.scale.y, 0.0));
+
+        translation * rotation * scale
     }
 }
 

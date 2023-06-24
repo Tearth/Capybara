@@ -217,10 +217,10 @@ impl UiContext {
             };
         }
 
-        for shape in self.inner.tessellate(output.shapes) {
-            if let Primitive::Mesh(mesh) = shape.primitive {
+        for mesh in self.inner.tessellate(output.shapes) {
+            if let Primitive::Mesh(data) = mesh.primitive {
                 let mut vertices = Vec::new();
-                for vertice in mesh.vertices {
+                for vertice in data.vertices {
                     let r = vertice.color.r() as u32;
                     let g = vertice.color.g() as u32;
                     let b = vertice.color.b() as u32;
@@ -234,16 +234,17 @@ impl UiContext {
                     vertices.push(vertice.uv.y.to_bits());
                 }
 
-                let mut sprite = Shape::new();
-                sprite.vertices = vertices;
-                sprite.indices = mesh.indices;
-                sprite.texture_id = Some(*self.textures.get(&mesh.texture_id).unwrap());
+                let mut shape = Shape::new();
+                shape.vertices = vertices;
+                shape.indices = data.indices;
+                shape.texture_id = Some(*self.textures.get(&data.texture_id).unwrap());
+                shape.apply_model = false;
 
-                let scissor_position = Vec2::new(shape.clip_rect.left(), renderer.viewport_size.y - shape.clip_rect.height() - shape.clip_rect.top());
-                let scissor_size = Vec2::new(shape.clip_rect.width(), shape.clip_rect.height());
+                let scissor_position = Vec2::new(mesh.clip_rect.left(), renderer.viewport_size.y - mesh.clip_rect.height() - mesh.clip_rect.top());
+                let scissor_size = Vec2::new(mesh.clip_rect.width(), mesh.clip_rect.height());
 
                 renderer.enable_scissor(scissor_position, scissor_size);
-                renderer.draw_shape(&sprite)?;
+                renderer.draw_shape(&shape)?;
                 renderer.flush_buffer()?;
             }
         }

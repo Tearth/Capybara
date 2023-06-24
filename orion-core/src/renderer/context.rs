@@ -404,6 +404,23 @@ impl RendererContext {
             );
         }
 
+        if shape.apply_model {
+            let model = shape.get_model();
+
+            for i in 0..self.shape_buffer_vertices_queue.len() / 5 {
+                let position = Vec4::new(
+                    f32::from_bits(self.shape_buffer_vertices_queue[i * 5 + 0]),
+                    f32::from_bits(self.shape_buffer_vertices_queue[i * 5 + 1]),
+                    0.0,
+                    1.0,
+                );
+                let position_transformed = model * position;
+
+                self.shape_buffer_vertices_queue[i * 5 + 0] = position_transformed.x.to_bits();
+                self.shape_buffer_vertices_queue[i * 5 + 1] = position_transformed.y.to_bits();
+            }
+        }
+
         let base_indice = self.shape_buffer_indices_max;
         for i in 0..shape.indices.len() {
             self.shape_buffer_indices_queue[self.shape_buffer_indices_count + i] = base_indice + shape.indices[i];

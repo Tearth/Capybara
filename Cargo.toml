@@ -4,6 +4,7 @@ members = [
     "orion-template",
 
     "examples/benchmark",
+    "examples/particles",
     "examples/physics",
     "examples/ui",
 ]

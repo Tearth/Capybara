@@ -11,13 +11,17 @@ use std::ops::Sub;
 
 pub struct Particle {
     pub postion: Vec2,
+    pub rotation: f32,
+    pub scale: Vec2,
     pub size: Option<Vec2>,
     pub color: Vec4,
     pub birthday: Instant,
     pub lifetime: f32,
 
-    pub color_variations: Vec<Vec4>,
     pub velocity_variations: Vec<Vec2>,
+    pub rotation_variations: Vec<f32>,
+    pub scale_variations: Vec<Vec2>,
+    pub color_variations: Vec<Vec4>,
 }
 
 pub struct ParticleParameter<T> {
@@ -35,12 +39,15 @@ pub struct ParticleEmitter {
 
     pub particle_size: Option<Vec2>,
     pub particle_lifetime: f32,
+    pub particle_texture_id: Option<usize>,
 
     last_burst_time: Option<Instant>,
 
     pub particles: Vec<Particle>,
-    pub color_waypoints: Vec<ParticleParameter<Vec4>>,
     pub velocity_waypoints: Vec<ParticleParameter<Vec2>>,
+    pub rotation_waypoints: Vec<ParticleParameter<f32>>,
+    pub scale_waypoints: Vec<ParticleParameter<Vec2>>,
+    pub color_waypoints: Vec<ParticleParameter<Vec4>>,
 }
 
 impl ParticleEmitter {
@@ -59,17 +66,23 @@ impl ParticleEmitter {
             let offset = self.position - self.size / 2.0;
 
             for _ in 0..self.amount {
-                let color_variations = generate_variations(&self.color_waypoints);
                 let velocity_variations = generate_variations(&self.velocity_waypoints);
+                let rotation_variations = generate_variations(&self.rotation_waypoints);
+                let scale_variations = generate_variations(&self.scale_waypoints);
+                let color_variations = generate_variations(&self.color_waypoints);
 
                 self.particles.push(Particle {
                     postion: Vec2::new(fastrand::f32(), fastrand::f32()) * self.size + offset,
+                    rotation: 0.0,
+                    scale: Vec2::new(1.0, 1.0),
                     size: self.particle_size,
                     color: Vec4::new(1.0, 1.0, 1.0, 1.0),
                     birthday: now,
                     lifetime: self.particle_lifetime,
-                    color_variations,
                     velocity_variations,
+                    rotation_variations,
+                    scale_variations,
+                    color_variations,
                 })
             }
         }
@@ -84,8 +97,10 @@ impl ParticleEmitter {
             } else {
                 let lifetime_factor = particle_time / particle.lifetime;
 
-                particle.color = calculate(lifetime_factor, &self.color_waypoints, &particle.color_variations);
-                particle.postion += calculate(lifetime_factor, &self.velocity_waypoints, &particle.velocity_variations) * delta;
+                particle.postion += calculate(lifetime_factor, &self.velocity_waypoints, &particle.velocity_variations, particle.postion) * delta;
+                particle.rotation = calculate(lifetime_factor, &self.rotation_waypoints, &particle.rotation_variations, particle.rotation);
+                particle.scale = calculate(lifetime_factor, &self.scale_waypoints, &particle.scale_variations, particle.scale);
+                particle.color = calculate(lifetime_factor, &self.color_waypoints, &particle.color_variations, particle.color);
             }
         }
 
@@ -98,8 +113,11 @@ impl ParticleEmitter {
         let mut sprite = Sprite::new();
         for particle in &self.particles {
             sprite.position = particle.postion;
+            sprite.rotation = particle.rotation;
+            sprite.scale = particle.scale;
             sprite.size = particle.size;
             sprite.color = particle.color;
+            sprite.texture_id = self.particle_texture_id;
 
             renderer.draw_sprite(&sprite).unwrap();
         }
@@ -124,10 +142,16 @@ where
     variations
 }
 
-fn calculate<T>(lifetime_factor: f32, waypoints: &[ParticleParameter<T>], variations: &[T]) -> T
+fn calculate<T>(lifetime_factor: f32, waypoints: &[ParticleParameter<T>], variations: &[T], default: T) -> T
 where
     T: Copy + Add<Output = T> + Sub<Output = T> + Mul<f32, Output = T>,
 {
+    if waypoints.is_empty() {
+        return default;
+    } else if waypoints.len() == 1 {
+        return waypoints[0].base + variations[0];
+    }
+
     let lifetime_per_waypoint = 1.0 / (waypoints.len() - 1) as f32;
     let waypoint_index = ((waypoints.len() - 1) as f32 * lifetime_factor) as usize;
     let waypoint_offset = (waypoints.len() - 1) as f32 * (lifetime_factor % lifetime_per_waypoint);

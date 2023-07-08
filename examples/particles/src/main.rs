@@ -77,15 +77,21 @@ impl Scene<GlobalData> for MainScene {
             state.ui.instantiate_assets(state.assets, None)?;
             state.window.set_swap_interval(0);
 
-            self.emitter.size = Vec2::new(10.0, 10.0);
-            self.emitter.period = 1.0;
+            self.emitter.size = Vec2::new(16.0, 16.0);
+            self.emitter.period = 0.05;
             self.emitter.bursts = 0;
-            self.emitter.amount = 2000;
+            self.emitter.amount = 500;
             self.emitter.particle_size = Some(Vec2::new(5.0, 5.0));
             self.emitter.particle_lifetime = 5.0;
+            self.emitter.particle_texture_id = Some(state.renderer.textures.get_by_name("particle")?.id);
 
             self.emitter.velocity_waypoints.push(ParticleParameter::new(Vec2::new(0.0, 0.0), Vec2::new(250.0, 250.0)));
             self.emitter.velocity_waypoints.push(ParticleParameter::new(Vec2::new(0.0, 0.0), Vec2::new(0.0, 0.0)));
+
+            self.emitter.rotation_waypoints.push(ParticleParameter::new(1.0, 0.0));
+
+            self.emitter.scale_waypoints.push(ParticleParameter::new(Vec2::new(1.0, 1.0), Vec2::new(0.5, 0.5)));
+            self.emitter.scale_waypoints.push(ParticleParameter::new(Vec2::new(0.0, 0.0), Vec2::new(0.0, 0.0)));
 
             self.emitter.color_waypoints.push(ParticleParameter::new(Vec4::new(1.0, 1.0, 1.0, 0.0), Vec4::new(0.0, 0.0, 0.0, 0.0)));
             self.emitter.color_waypoints.push(ParticleParameter::new(Vec4::new(1.0, 1.0, 1.0, 1.0), Vec4::new(0.0, 0.0, 0.0, 0.0)));
@@ -95,7 +101,8 @@ impl Scene<GlobalData> for MainScene {
         }
 
         if self.initialized {
-            self.emitter.position = Vec2::new(state.window.cursor_position.x as f32, state.window.cursor_position.y as f32);
+            self.emitter.position =
+                Vec2::new(state.window.cursor_position.x as f32, state.window.size.y as f32 - state.window.cursor_position.y as f32);
             self.emitter.update(Instant::now(), delta);
             self.emitter.draw(state.renderer);
         }
@@ -115,6 +122,11 @@ impl Scene<GlobalData> for MainScene {
 
                     let delta_average = self.delta_history.iter().sum::<f32>() / self.delta_history.len() as f32;
                     let label = format!("Delta: {:.2}", delta_average * 1000.0);
+
+                    ui.label(RichText::new(label).font(font.clone()).heading().color(color));
+
+                    let particles_count = self.emitter.particles.len();
+                    let label = format!("Particles: {}", particles_count);
 
                     ui.label(RichText::new(label).font(font.clone()).heading().color(color));
                 }

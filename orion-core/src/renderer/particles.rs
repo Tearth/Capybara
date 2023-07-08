@@ -4,6 +4,7 @@ use crate::utils::rand::NewRand;
 use glam::Vec2;
 use glam::Vec4;
 use instant::Instant;
+use std::collections::VecDeque;
 use std::ops::Add;
 use std::ops::Div;
 use std::ops::Mul;
@@ -43,7 +44,9 @@ pub struct ParticleEmitter {
 
     last_burst_time: Option<Instant>,
 
-    pub particles: Vec<Particle>,
+    pub particles: Vec<Option<Particle>>,
+    pub particles_removed_ids: VecDeque<usize>,
+
     pub velocity_waypoints: Vec<ParticleParameter<Vec2>>,
     pub rotation_waypoints: Vec<ParticleParameter<f32>>,
     pub scale_waypoints: Vec<ParticleParameter<Vec2>>,
@@ -71,7 +74,14 @@ impl ParticleEmitter {
                 let scale_variations = generate_variations(&self.scale_waypoints);
                 let color_variations = generate_variations(&self.color_waypoints);
 
-                self.particles.push(Particle {
+                let id = if let Some(id) = self.particles_removed_ids.pop_front() {
+                    id
+                } else {
+                    self.particles.push(None);
+                    self.particles.len() - 1
+                };
+
+                self.particles[id] = Some(Particle {
                     postion: Vec2::new(fastrand::f32(), fastrand::f32()) * self.size + offset,
                     rotation: 0.0,
                     scale: Vec2::new(1.0, 1.0),
@@ -83,43 +93,42 @@ impl ParticleEmitter {
                     rotation_variations,
                     scale_variations,
                     color_variations,
-                })
+                });
             }
         }
 
-        let mut particles_to_remove = Vec::new();
+        for (index, particle_option) in self.particles.iter_mut().enumerate() {
+            if let Some(particle) = particle_option {
+                let particle_time = (now - particle.birthday).as_secs_f32();
 
-        for (index, particle) in self.particles.iter_mut().enumerate() {
-            let particle_time = (now - particle.birthday).as_secs_f32();
+                if particle_time >= particle.lifetime {
+                    self.particles_removed_ids.push_back(index);
+                    *particle_option = None;
+                } else {
+                    let lifetime_factor = particle_time / particle.lifetime;
 
-            if particle_time >= particle.lifetime {
-                particles_to_remove.push(index);
-            } else {
-                let lifetime_factor = particle_time / particle.lifetime;
-
-                particle.postion += calculate(lifetime_factor, &self.velocity_waypoints, &particle.velocity_variations, particle.postion) * delta;
-                particle.rotation = calculate(lifetime_factor, &self.rotation_waypoints, &particle.rotation_variations, particle.rotation);
-                particle.scale = calculate(lifetime_factor, &self.scale_waypoints, &particle.scale_variations, particle.scale);
-                particle.color = calculate(lifetime_factor, &self.color_waypoints, &particle.color_variations, particle.color);
+                    particle.postion += calculate(lifetime_factor, &self.velocity_waypoints, &particle.velocity_variations, particle.postion) * delta;
+                    particle.rotation = calculate(lifetime_factor, &self.rotation_waypoints, &particle.rotation_variations, particle.rotation);
+                    particle.scale = calculate(lifetime_factor, &self.scale_waypoints, &particle.scale_variations, particle.scale);
+                    particle.color = calculate(lifetime_factor, &self.color_waypoints, &particle.color_variations, particle.color);
+                }
             }
-        }
-
-        for index in particles_to_remove.iter().rev() {
-            self.particles.remove(*index);
         }
     }
 
     pub fn draw(&mut self, renderer: &mut RendererContext) {
         let mut sprite = Sprite::new();
         for particle in &self.particles {
-            sprite.position = particle.postion;
-            sprite.rotation = particle.rotation;
-            sprite.scale = particle.scale;
-            sprite.size = particle.size;
-            sprite.color = particle.color;
-            sprite.texture_id = self.particle_texture_id;
+            if let Some(particle) = particle {
+                sprite.position = particle.postion;
+                sprite.rotation = particle.rotation;
+                sprite.scale = particle.scale;
+                sprite.size = particle.size;
+                sprite.color = particle.color;
+                sprite.texture_id = self.particle_texture_id;
 
-            renderer.draw_sprite(&sprite).unwrap();
+                renderer.draw_sprite(&sprite).unwrap();
+            }
         }
     }
 }

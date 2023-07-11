@@ -1,16 +1,42 @@
 use super::context::RendererContext;
 use super::sprite::Sprite;
 use crate::utils::rand::NewRand;
+use arrayvec::ArrayVec;
 use glam::Vec2;
 use glam::Vec4;
 use instant::Instant;
 use std::collections::VecDeque;
+use std::f32::consts;
 use std::ops::Add;
 use std::ops::Div;
 use std::ops::Mul;
 use std::ops::Sub;
 
-pub struct Particle {
+#[derive(Default)]
+pub struct ParticleEmitter<const WAYPOINTS: usize> {
+    pub position: Vec2,
+    pub size: Vec2,
+    pub period: f32,
+    pub bursts: u32,
+    pub amount: u32,
+    pub interpolation: ParticleInterpolation,
+
+    pub particle_size: Option<Vec2>,
+    pub particle_lifetime: f32,
+    pub particle_texture_id: Option<usize>,
+
+    last_burst_time: Option<Instant>,
+
+    pub particles: Vec<Option<Particle<WAYPOINTS>>>,
+    pub particles_removed_ids: VecDeque<usize>,
+
+    pub velocity_waypoints: ArrayVec<ParticleParameter<Vec2>, WAYPOINTS>,
+    pub rotation_waypoints: ArrayVec<ParticleParameter<f32>, WAYPOINTS>,
+    pub scale_waypoints: ArrayVec<ParticleParameter<Vec2>, WAYPOINTS>,
+    pub color_waypoints: ArrayVec<ParticleParameter<Vec4>, WAYPOINTS>,
+}
+
+pub struct Particle<const WAYPOINTS: usize> {
     pub postion: Vec2,
     pub rotation: f32,
     pub scale: Vec2,
@@ -19,10 +45,10 @@ pub struct Particle {
     pub birthday: Instant,
     pub lifetime: f32,
 
-    pub velocity_variations: Vec<Vec2>,
-    pub rotation_variations: Vec<f32>,
-    pub scale_variations: Vec<Vec2>,
-    pub color_variations: Vec<Vec4>,
+    pub velocity_variations: ArrayVec<Vec2, WAYPOINTS>,
+    pub rotation_variations: ArrayVec<f32, WAYPOINTS>,
+    pub scale_variations: ArrayVec<Vec2, WAYPOINTS>,
+    pub color_variations: ArrayVec<Vec4, WAYPOINTS>,
 }
 
 pub struct ParticleParameter<T> {
@@ -30,40 +56,20 @@ pub struct ParticleParameter<T> {
     pub variation: T,
 }
 
-#[derive(Default)]
-pub struct ParticleEmitter {
-    pub position: Vec2,
-    pub size: Vec2,
-    pub period: f32,
-    pub bursts: u32,
-    pub amount: u32,
-
-    pub particle_size: Option<Vec2>,
-    pub particle_lifetime: f32,
-    pub particle_texture_id: Option<usize>,
-
-    last_burst_time: Option<Instant>,
-
-    pub particles: Vec<Option<Particle>>,
-    pub particles_removed_ids: VecDeque<usize>,
-
-    pub velocity_waypoints: Vec<ParticleParameter<Vec2>>,
-    pub rotation_waypoints: Vec<ParticleParameter<f32>>,
-    pub scale_waypoints: Vec<ParticleParameter<Vec2>>,
-    pub color_waypoints: Vec<ParticleParameter<Vec4>>,
+#[derive(Copy, Clone, Default)]
+pub enum ParticleInterpolation {
+    #[default]
+    Linear,
+    Cosine,
 }
 
-impl ParticleEmitter {
+impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
     pub fn update(&mut self, now: Instant, delta: f32) {
         let fire = if let Some(last_burst_time) = self.last_burst_time {
             (now - last_burst_time).as_secs_f32() >= self.period
         } else {
             self.last_burst_time.is_none()
         };
-
-        if fire {
-            self.last_burst_time = Some(now);
-        }
 
         if fire {
             let offset = self.position - self.size / 2.0;
@@ -95,6 +101,8 @@ impl ParticleEmitter {
                     color_variations,
                 });
             }
+
+            self.last_burst_time = Some(now);
         }
 
         for (index, particle_option) in self.particles.iter_mut().enumerate() {
@@ -107,10 +115,15 @@ impl ParticleEmitter {
                 } else {
                     let lifetime_factor = particle_time / particle.lifetime;
 
-                    particle.postion += calculate(lifetime_factor, &self.velocity_waypoints, &particle.velocity_variations, particle.postion) * delta;
-                    particle.rotation = calculate(lifetime_factor, &self.rotation_waypoints, &particle.rotation_variations, particle.rotation);
-                    particle.scale = calculate(lifetime_factor, &self.scale_waypoints, &particle.scale_variations, particle.scale);
-                    particle.color = calculate(lifetime_factor, &self.color_waypoints, &particle.color_variations, particle.color);
+                    particle.postion +=
+                        calculate(lifetime_factor, &self.velocity_waypoints, &particle.velocity_variations, particle.postion, self.interpolation)
+                            * delta;
+                    particle.rotation =
+                        calculate(lifetime_factor, &self.rotation_waypoints, &particle.rotation_variations, particle.rotation, self.interpolation);
+                    particle.scale =
+                        calculate(lifetime_factor, &self.scale_waypoints, &particle.scale_variations, particle.scale, self.interpolation);
+                    particle.color =
+                        calculate(lifetime_factor, &self.color_waypoints, &particle.color_variations, particle.color, self.interpolation);
                 }
             }
         }
@@ -118,17 +131,16 @@ impl ParticleEmitter {
 
     pub fn draw(&mut self, renderer: &mut RendererContext) {
         let mut sprite = Sprite::new();
-        for particle in &self.particles {
-            if let Some(particle) = particle {
-                sprite.position = particle.postion;
-                sprite.rotation = particle.rotation;
-                sprite.scale = particle.scale;
-                sprite.size = particle.size;
-                sprite.color = particle.color;
-                sprite.texture_id = self.particle_texture_id;
+        sprite.texture_id = self.particle_texture_id;
 
-                renderer.draw_sprite(&sprite).unwrap();
-            }
+        for particle in self.particles.iter().flatten() {
+            sprite.position = particle.postion;
+            sprite.rotation = particle.rotation;
+            sprite.scale = particle.scale;
+            sprite.size = particle.size;
+            sprite.color = particle.color;
+
+            renderer.draw_sprite(&sprite).unwrap();
         }
     }
 }
@@ -139,11 +151,11 @@ impl<T> ParticleParameter<T> {
     }
 }
 
-fn generate_variations<T>(waypoints: &Vec<ParticleParameter<T>>) -> Vec<T>
+fn generate_variations<T, const WAYPOINTS: usize>(waypoints: &ArrayVec<ParticleParameter<T>, WAYPOINTS>) -> ArrayVec<T, WAYPOINTS>
 where
     T: Copy + NewRand<T> + Sub<Output = T> + Mul<T, Output = T> + Div<f32, Output = T>,
 {
-    let mut variations = Vec::new();
+    let mut variations = ArrayVec::new();
     for waypoint in waypoints {
         variations.push(waypoint.variation / 2.0 - waypoint.variation * T::new_rand());
     }
@@ -151,29 +163,40 @@ where
     variations
 }
 
-fn calculate<T>(lifetime_factor: f32, waypoints: &[ParticleParameter<T>], variations: &[T], default: T) -> T
+fn calculate<T>(lifetime_factor: f32, waypoints: &[ParticleParameter<T>], variations: &[T], default: T, interpolation: ParticleInterpolation) -> T
 where
     T: Copy + Add<Output = T> + Sub<Output = T> + Mul<f32, Output = T>,
 {
-    if waypoints.is_empty() {
-        return default;
-    } else if waypoints.len() == 1 {
-        return waypoints[0].base + variations[0];
+    match waypoints.len() {
+        0 => default,
+        1 => waypoints[0].base + variations[0],
+        _ => {
+            let count = (waypoints.len() - 1) as f32;
+            let lifetime_per_waypoint = 1.0 / count;
+            let waypoint_index = (count * lifetime_factor) as usize;
+            let waypoint_offset = (lifetime_factor % lifetime_per_waypoint) * count;
+
+            let waypoint_a = &waypoints[waypoint_index];
+            let waypoint_b = &waypoints[waypoint_index + 1];
+
+            interpolate(
+                waypoint_a.base + variations[waypoint_index],
+                waypoint_b.base + variations[waypoint_index + 1],
+                waypoint_offset,
+                interpolation,
+            )
+        }
     }
-
-    let lifetime_per_waypoint = 1.0 / (waypoints.len() - 1) as f32;
-    let waypoint_index = ((waypoints.len() - 1) as f32 * lifetime_factor) as usize;
-    let waypoint_offset = (waypoints.len() - 1) as f32 * (lifetime_factor % lifetime_per_waypoint);
-
-    let waypoint_a = &waypoints[waypoint_index];
-    let waypoint_b = &waypoints[waypoint_index + 1];
-
-    interpolate(waypoint_a.base + variations[waypoint_index], waypoint_b.base + variations[waypoint_index + 1], waypoint_offset)
 }
 
-fn interpolate<T>(from: T, to: T, offset: f32) -> T
+fn interpolate<T>(from: T, to: T, offset: f32, interpolation: ParticleInterpolation) -> T
 where
     T: Copy + Add<Output = T> + Sub<Output = T> + Mul<f32, Output = T>,
 {
+    let offset = match interpolation {
+        ParticleInterpolation::Linear => offset,
+        ParticleInterpolation::Cosine => ((offset * consts::PI - consts::PI / 2.0).sin() + 1.0) / 2.0,
+    };
+
     from + (to - from) * offset
 }

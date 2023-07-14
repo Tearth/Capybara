@@ -342,9 +342,9 @@ impl RendererContext {
             (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0), sprite.size.unwrap_or(Vec2::new(1.0, 1.0)))
         };
 
-        let r = (sprite.color.x * 255.0) as u32;
-        let g = (sprite.color.y * 255.0) as u32;
-        let b = (sprite.color.z * 255.0) as u32;
+        let r = (sprite.color.x * sprite.color.w * 255.0) as u32;
+        let g = (sprite.color.y * sprite.color.w * 255.0) as u32;
+        let b = (sprite.color.z * sprite.color.w * 255.0) as u32;
         let a = (sprite.color.w * 255.0) as u32;
         let color = r | (g << 8) | (b << 16) | (a << 24);
 

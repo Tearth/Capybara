@@ -18,7 +18,6 @@ use orion_core::instant::Instant;
 use orion_core::renderer::particles::ParticleEmitter;
 use orion_core::renderer::particles::ParticleInterpolation;
 use orion_core::renderer::particles::ParticleParameter;
-use orion_core::renderer::sprite::Sprite;
 use orion_core::scene::FrameCommand;
 use orion_core::scene::Scene;
 use orion_core::window::Coordinates;
@@ -79,25 +78,25 @@ impl Scene<GlobalData> for MainScene {
             state.window.set_swap_interval(0);
 
             self.emitter.size = Vec2::new(32.0, 8.0);
-            self.emitter.period = 0.01;
+            self.emitter.period = 0.02;
             self.emitter.bursts = 0;
             self.emitter.amount = 20;
-            self.emitter.particle_size = Some(Vec2::new(8.0, 8.0));
-            self.emitter.particle_lifetime = 2.0;
+            self.emitter.particle_size = Some(Vec2::new(16.0, 16.0));
+            self.emitter.particle_lifetime = 1.0;
             self.emitter.particle_texture_id = Some(state.renderer.textures.get_by_name("particle")?.id);
             self.emitter.interpolation = ParticleInterpolation::Cosine;
 
-            self.emitter.velocity_waypoints.push(ParticleParameter::new(Vec2::new(0.0, 200.0), Vec2::new(0.0, 40.0)));
+            self.emitter.velocity_waypoints.push(ParticleParameter::new(Vec2::new(0.0, 200.0), Vec2::new(100.0, 40.0)));
             self.emitter.velocity_waypoints.push(ParticleParameter::new(Vec2::new(0.0, 0.0), Vec2::new(0.0, 0.0)));
 
             self.emitter.scale_waypoints.push(ParticleParameter::new(Vec2::new(1.0, 1.0), Vec2::new(0.5, 0.5)));
             self.emitter.scale_waypoints.push(ParticleParameter::new(Vec2::new(0.0, 0.0), Vec2::new(0.0, 0.0)));
 
             self.emitter.color_waypoints.push(ParticleParameter::new(Vec4::new(1.0, 1.0, 0.0, 0.0), Vec4::new(0.0, 0.0, 0.0, 0.0)));
-            self.emitter.color_waypoints.push(ParticleParameter::new(Vec4::new(1.0, 1.0, 0.0, 1.0), Vec4::new(0.0, 0.0, 0.0, 0.0)));
-            self.emitter.color_waypoints.push(ParticleParameter::new(Vec4::new(1.0, 0.0, 0.0, 1.0), Vec4::new(0.0, 0.0, 0.0, 0.0)));
-            self.emitter.color_waypoints.push(ParticleParameter::new(Vec4::new(1.0, 0.0, 0.0, 1.0), Vec4::new(0.0, 0.0, 0.0, 0.0)));
-            self.emitter.color_waypoints.push(ParticleParameter::new(Vec4::new(1.0, 0.0, 0.0, 0.0), Vec4::new(0.0, 0.0, 0.0, 0.0)));
+            self.emitter.color_waypoints.push(ParticleParameter::new(Vec4::new(1.0, 1.0, 0.0, 0.2), Vec4::new(0.0, 0.0, 0.0, 0.0)));
+            self.emitter.color_waypoints.push(ParticleParameter::new(Vec4::new(1.0, 0.2, 0.2, 0.2), Vec4::new(0.0, 0.0, 0.0, 0.0)));
+            self.emitter.color_waypoints.push(ParticleParameter::new(Vec4::new(1.0, 0.2, 0.2, 0.1), Vec4::new(0.0, 0.0, 0.0, 0.0)));
+            self.emitter.color_waypoints.push(ParticleParameter::new(Vec4::new(1.0, 0.2, 0.2, 0.0), Vec4::new(0.0, 0.0, 0.0, 0.0)));
 
             self.initialized = true;
         }

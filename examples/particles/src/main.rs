@@ -129,7 +129,7 @@ impl Scene<GlobalData> for MainScene {
                     let particles_count = self.emitter.particles.len();
                     let label = format!("Particles: {}", particles_count);
 
-                    ui.label(RichText::new(label).font(font.clone()).heading().color(color));
+                    ui.label(RichText::new(label).font(font).heading().color(color));
                 }
             });
         });

@@ -57,7 +57,7 @@ struct Object {
 }
 
 impl Scene<GlobalData> for MainScene {
-    fn activation(&mut self, state: ApplicationState<GlobalData>) -> Result<()> {
+    fn activation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
         Ok(())
     }
 
@@ -120,17 +120,17 @@ impl Scene<GlobalData> for MainScene {
             let collider = ColliderBuilder::ball(0.3).restitution(0.7).build();
             let rigidbody = RigidBodyBuilder::dynamic().translation(vector![300.0, 300.0] / PIXELS_PER_METER).build();
             self.wheel_left_rigidbody = state.physics.rigidbodies.insert(rigidbody);
-            let collider_handle = state.physics.colliders.insert_with_parent(collider, self.wheel_left_rigidbody, &mut state.physics.rigidbodies);
+            state.physics.colliders.insert_with_parent(collider, self.wheel_left_rigidbody, &mut state.physics.rigidbodies);
 
             let collider = ColliderBuilder::ball(0.3).restitution(0.7).build();
             let rigidbody = RigidBodyBuilder::dynamic().translation(vector![350.0, 300.0] / PIXELS_PER_METER).build();
             self.wheel_right_rigidbody = state.physics.rigidbodies.insert(rigidbody);
-            let collider_handle = state.physics.colliders.insert_with_parent(collider, self.wheel_right_rigidbody, &mut state.physics.rigidbodies);
+            state.physics.colliders.insert_with_parent(collider, self.wheel_right_rigidbody, &mut state.physics.rigidbodies);
 
             let collider = ColliderBuilder::cuboid(1.0, 0.5).restitution(0.7).build();
             let rigidbody = RigidBodyBuilder::dynamic().translation(vector![325.0, 320.0] / PIXELS_PER_METER).build();
             self.car_rigidbody = state.physics.rigidbodies.insert(rigidbody);
-            let collider_handle = state.physics.colliders.insert_with_parent(collider, self.car_rigidbody, &mut state.physics.rigidbodies);
+            state.physics.colliders.insert_with_parent(collider, self.car_rigidbody, &mut state.physics.rigidbodies);
 
             let joint = RevoluteJointBuilder::new().local_anchor1(point![-0.6, -0.5]).local_anchor2(point![0.0, 0.0]).contacts_enabled(false);
             state.physics.impulse_joints.insert(self.car_rigidbody, self.wheel_left_rigidbody, joint, true);
@@ -150,7 +150,7 @@ impl Scene<GlobalData> for MainScene {
                     .build();
                 let rigidbody = RigidBodyBuilder::dynamic().translation(vector![position.x, position.y] / PIXELS_PER_METER).build();
                 let rigidbody_handle = state.physics.rigidbodies.insert(rigidbody);
-                let collider_handle = state.physics.colliders.insert_with_parent(collider, rigidbody_handle, &mut state.physics.rigidbodies);
+                state.physics.colliders.insert_with_parent(collider, rigidbody_handle, &mut state.physics.rigidbodies);
 
                 self.objects.push(Object { sprite, rigidbody: rigidbody_handle });
             }

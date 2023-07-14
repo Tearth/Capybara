@@ -1,10 +1,14 @@
 use orion_core::anyhow::Result;
 use orion_core::app::ApplicationContext;
 use orion_core::app::ApplicationState;
+use orion_core::assets::AssetsLoadingStatus;
 use orion_core::egui::CentralPanel;
+use orion_core::egui::FontFamily;
+use orion_core::egui::FontId;
 use orion_core::egui::FullOutput;
 use orion_core::egui::RawInput;
 use orion_core::egui::ScrollArea;
+use orion_core::egui::TextStyle;
 use orion_core::fast_gpu;
 use orion_core::scene::FrameCommand;
 use orion_core::scene::Scene;
@@ -22,6 +26,7 @@ struct GlobalData {}
 
 #[derive(Default)]
 struct MainScene {
+    initialized: bool,
     test: ColorTest,
 }
 
@@ -42,7 +47,12 @@ impl Scene<GlobalData> for MainScene {
         Ok(None)
     }
 
-    fn frame(&mut self, _: ApplicationState<GlobalData>, _: f32, _: f32) -> Result<Option<FrameCommand>> {
+    fn frame(&mut self, state: ApplicationState<GlobalData>, _: f32, _: f32) -> Result<Option<FrameCommand>> {
+        if state.assets.load("./data/data0.zip")? == AssetsLoadingStatus::Finished {
+            state.ui.instantiate_assets(state.assets, None)?;
+            self.initialized = true;
+        }
+
         Ok(None)
     }
 
@@ -50,7 +60,9 @@ impl Scene<GlobalData> for MainScene {
         let output = state.ui.inner.run(input, |context| {
             CentralPanel::default().show(context, |ui| {
                 ScrollArea::both().auto_shrink([false; 2]).show(ui, |ui| {
-                    self.test.ui(ui);
+                    if self.initialized {
+                        self.test.ui(ui);
+                    }
                 });
             });
         });

@@ -101,8 +101,14 @@ impl UiContext {
                 }
             }
 
+            let family = match font.name.as_str() {
+                "Proportional" => FontFamily::Proportional,
+                "Monospace" => FontFamily::Monospace,
+                _ => FontFamily::Name(font.name.clone().into()),
+            };
+
             fonts.font_data.insert(font.name.clone(), FontData::from_owned(font.data.clone()));
-            fonts.families.insert(FontFamily::Name(font.name.clone().into()), vec![font.name.clone()]);
+            fonts.families.insert(family, vec![font.name.clone()]);
         }
 
         self.inner.set_fonts(fonts);

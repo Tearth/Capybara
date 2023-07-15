@@ -26,10 +26,6 @@ use std::collections::VecDeque;
 
 fast_gpu!();
 
-const COUNT: usize = 20;
-const DELTA_HISTORY_COUNT: usize = 100;
-const PIXELS_PER_METER: f32 = 50.0;
-
 #[derive(Default)]
 struct GlobalData {}
 
@@ -66,12 +62,8 @@ impl Scene<GlobalData> for MainScene {
     }
 
     fn input(&mut self, state: ApplicationState<GlobalData>, event: InputEvent) -> Result<()> {
-        if let InputEvent::KeyPress { key, repeat: _, modifiers: _ } = event {
-            match key {
-                Key::Escape => state.window.close(),
-                Key::Space => state.window.set_cursor_visibility(!state.window.cursor_visible),
-                _ => {}
-            }
+        if let InputEvent::KeyPress { key: Key::Escape, repeat: _, modifiers: _ } = event {
+            state.window.close();
         }
 
         Ok(())
@@ -101,9 +93,11 @@ impl Scene<GlobalData> for MainScene {
     fn frame(&mut self, state: ApplicationState<GlobalData>, accumulator: f32, delta: f32) -> Result<Option<FrameCommand>> {
         self.delta_history.push_back(delta);
 
-        if self.delta_history.len() > DELTA_HISTORY_COUNT {
+        if self.delta_history.len() > 100 {
             self.delta_history.pop_front();
         }
+
+        const PIXELS_PER_METER: f32 = 50.0;
 
         if !self.initialized && state.assets.load("./data/data0.zip")? == AssetsLoadingStatus::Finished {
             state.renderer.instantiate_assets(state.assets, None)?;
@@ -113,8 +107,8 @@ impl Scene<GlobalData> for MainScene {
             self.terrain = Sprite { size: Some(Vec2::new(state.renderer.viewport_size.x, 50.0)), ..Default::default() };
             self.terrain_collider = Some(state.physics.colliders.insert(ColliderBuilder::cuboid(100.0, 0.1).build()));
 
-            self.wheel_left = Sprite { texture_id: Some(state.renderer.textures.get_by_name("wheel")?.id), ..Default::default() };
-            self.wheel_right = Sprite { texture_id: Some(state.renderer.textures.get_by_name("wheel")?.id), ..Default::default() };
+            self.wheel_left = Sprite { texture_id: Some(state.renderer.textures.get_by_name("Wheel")?.id), ..Default::default() };
+            self.wheel_right = Sprite { texture_id: Some(state.renderer.textures.get_by_name("Wheel")?.id), ..Default::default() };
             self.car = Sprite { size: Some(Vec2::new(100.0, 50.0)), color: Vec4::new(0.8, 0.8, 0.8, 1.0), ..Default::default() };
 
             let collider = ColliderBuilder::ball(0.3).restitution(0.7).build();
@@ -138,12 +132,12 @@ impl Scene<GlobalData> for MainScene {
             let joint = RevoluteJointBuilder::new().local_anchor1(point![0.6, -0.5]).local_anchor2(point![0.0, 0.0]).contacts_enabled(false);
             state.physics.impulse_joints.insert(self.car_rigidbody, self.wheel_right_rigidbody, joint, true);
 
-            for _ in 0..COUNT {
+            for _ in 0..20 {
                 let position = Vec2::new(
                     fastrand::u32(0..state.renderer.viewport_size.x as u32) as f32,
                     fastrand::u32(0..state.renderer.viewport_size.y as u32) as f32,
                 );
-                let sprite = Sprite { position, texture_id: Some(state.renderer.textures.get_by_name("tako")?.id), ..Default::default() };
+                let sprite = Sprite { position, texture_id: Some(state.renderer.textures.get_by_name("Takodachi")?.id), ..Default::default() };
                 let collider = ColliderBuilder::ball(0.3)
                     .restitution(0.7)
                     .active_events(ActiveEvents::COLLISION_EVENTS | ActiveEvents::CONTACT_FORCE_EVENTS)
@@ -161,7 +155,7 @@ impl Scene<GlobalData> for MainScene {
         if self.initialized {
             let alpha = accumulator / state.physics.integration_parameters.dt;
 
-            for i in 0..COUNT {
+            for i in 0..self.objects.len() {
                 let object = &mut self.objects[i];
                 if let Some(interpolation_data) = state.physics.interpolation_data.get(&object.rigidbody) {
                     self.objects[i].sprite.position = interpolation_data.get_position_interpolated(alpha) * PIXELS_PER_METER;
@@ -194,7 +188,7 @@ impl Scene<GlobalData> for MainScene {
 
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let output = state.ui.inner.run(input, |context| {
-            SidePanel::new(Side::Left, Id::new("side")).show(context, |ui| {
+            SidePanel::new(Side::Left, Id::new("side")).resizable(false).show(context, |ui| {
                 if self.initialized {
                     let font = FontId { size: 24.0, family: FontFamily::Name("Kenney Pixel".into()) };
                     let color = Color32::from_rgb(255, 255, 255);
@@ -206,7 +200,7 @@ impl Scene<GlobalData> for MainScene {
                     let label = format!("Delta: {:.2}", delta_average * 1000.0);
 
                     ui.label(RichText::new(label).font(font.clone()).heading().color(color));
-                    ui.label(RichText::new(format!("N: {}", COUNT)).font(font).heading().color(color));
+                    ui.label(RichText::new(format!("N: {}", self.objects.len())).font(font).heading().color(color));
                 }
             });
         });

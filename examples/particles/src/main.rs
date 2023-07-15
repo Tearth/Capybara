@@ -28,8 +28,6 @@ use std::collections::VecDeque;
 
 fast_gpu!();
 
-const DELTA_HISTORY_COUNT: usize = 100;
-
 #[derive(Default)]
 struct GlobalData {}
 
@@ -50,12 +48,8 @@ impl Scene<GlobalData> for MainScene {
     }
 
     fn input(&mut self, state: ApplicationState<GlobalData>, event: InputEvent) -> Result<()> {
-        if let InputEvent::KeyPress { key, repeat: _, modifiers: _ } = event {
-            match key {
-                Key::Escape => state.window.close(),
-                Key::Space => state.window.set_cursor_visibility(!state.window.cursor_visible),
-                _ => {}
-            }
+        if let InputEvent::KeyPress { key: Key::Escape, repeat: _, modifiers: _ } = event {
+            state.window.close();
         }
 
         Ok(())
@@ -68,7 +62,7 @@ impl Scene<GlobalData> for MainScene {
     fn frame(&mut self, state: ApplicationState<GlobalData>, _: f32, delta: f32) -> Result<Option<FrameCommand>> {
         self.delta_history.push_back(delta);
 
-        if self.delta_history.len() > DELTA_HISTORY_COUNT {
+        if self.delta_history.len() > 100 {
             self.delta_history.pop_front();
         }
 
@@ -83,7 +77,7 @@ impl Scene<GlobalData> for MainScene {
             self.emitter.amount = 20;
             self.emitter.particle_size = Some(Vec2::new(16.0, 16.0));
             self.emitter.particle_lifetime = 1.0;
-            self.emitter.particle_texture_id = Some(state.renderer.textures.get_by_name("particle")?.id);
+            self.emitter.particle_texture_id = Some(state.renderer.textures.get_by_name("Particle")?.id);
             self.emitter.interpolation = ParticleInterpolation::Cosine;
 
             self.emitter.velocity_waypoints.push(ParticleParameter::new(Vec2::new(0.0, 200.0), Vec2::new(100.0, 40.0)));
@@ -113,7 +107,7 @@ impl Scene<GlobalData> for MainScene {
 
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let output = state.ui.inner.run(input, |context| {
-            SidePanel::new(Side::Left, Id::new("side")).show(context, |ui| {
+            SidePanel::new(Side::Left, Id::new("side")).resizable(false).show(context, |ui| {
                 if self.initialized {
                     let font = FontId { size: 24.0, family: FontFamily::Name("Kenney Pixel".into()) };
                     let color = Color32::from_rgb(255, 255, 255);
@@ -127,7 +121,7 @@ impl Scene<GlobalData> for MainScene {
                     ui.label(RichText::new(label).font(font.clone()).heading().color(color));
 
                     let particles_count = self.emitter.particles.len();
-                    let label = format!("Particles: {}", particles_count);
+                    let label = format!("N: {}", particles_count);
 
                     ui.label(RichText::new(label).font(font).heading().color(color));
                 }
@@ -139,7 +133,7 @@ impl Scene<GlobalData> for MainScene {
 }
 
 fn main() {
-    ApplicationContext::<GlobalData>::new("Benchmark", WindowStyle::Window { size: Coordinates::new(800, 600) })
+    ApplicationContext::<GlobalData>::new("Particles", WindowStyle::Window { size: Coordinates::new(800, 600) })
         .unwrap()
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene")

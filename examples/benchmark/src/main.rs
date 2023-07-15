@@ -24,10 +24,6 @@ use std::collections::VecDeque;
 
 fast_gpu!();
 
-const COUNT: usize = 200000;
-const SPEED: f32 = 100.0;
-const DELTA_HISTORY_COUNT: usize = 100;
-
 #[derive(Default)]
 struct GlobalData {}
 
@@ -53,12 +49,8 @@ impl Scene<GlobalData> for MainScene {
     }
 
     fn input(&mut self, state: ApplicationState<GlobalData>, event: InputEvent) -> Result<()> {
-        if let InputEvent::KeyPress { key, repeat: _, modifiers: _ } = event {
-            match key {
-                Key::Escape => state.window.close(),
-                Key::Space => state.window.set_cursor_visibility(!state.window.cursor_visible),
-                _ => {}
-            }
+        if let InputEvent::KeyPress { key: Key::Escape, repeat: _, modifiers: _ } = event {
+            state.window.close();
         }
 
         Ok(())
@@ -71,7 +63,7 @@ impl Scene<GlobalData> for MainScene {
     fn frame(&mut self, state: ApplicationState<GlobalData>, _: f32, delta: f32) -> Result<Option<FrameCommand>> {
         self.delta_history.push_back(delta);
 
-        if self.delta_history.len() > DELTA_HISTORY_COUNT {
+        if self.delta_history.len() > 100 {
             self.delta_history.pop_front();
         }
 
@@ -80,22 +72,24 @@ impl Scene<GlobalData> for MainScene {
             state.ui.instantiate_assets(state.assets, None)?;
             state.window.set_swap_interval(0);
 
-            for _ in 0..COUNT {
+            for _ in 0..200000 {
                 let position = Vec2::new(
                     fastrand::u32(0..state.renderer.viewport_size.x as u32) as f32,
                     fastrand::u32(0..state.renderer.viewport_size.y as u32) as f32,
                 );
-                let direction = Vec2::new(fastrand::f32() * 2.0 - 1.0, fastrand::f32() * 2.0 - 1.0);
-                let sprite = Sprite { position, texture_id: Some(state.renderer.textures.get_by_name("tako")?.id), ..Default::default() };
 
-                self.objects.push(Object { sprite, direction });
+                self.objects.push(Object {
+                    sprite: Sprite { position, texture_id: Some(state.renderer.textures.get_by_name("Takodachi")?.id), ..Default::default() },
+                    direction: Vec2::new(fastrand::f32() * 2.0 - 1.0, fastrand::f32() * 2.0 - 1.0),
+                });
             }
 
             self.initialized = true;
         }
 
         for object in &mut self.objects {
-            object.sprite.position += object.direction * SPEED * delta;
+            object.sprite.position += object.direction * 100.0 * delta;
+
             if object.sprite.position.x < 0.0 {
                 object.direction = Vec2::new(object.direction.x.abs(), object.direction.y);
             } else if object.sprite.position.x > state.renderer.viewport_size.x {
@@ -114,7 +108,7 @@ impl Scene<GlobalData> for MainScene {
 
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let output = state.ui.inner.run(input, |context| {
-            SidePanel::new(Side::Left, Id::new("side")).show(context, |ui| {
+            SidePanel::new(Side::Left, Id::new("side")).resizable(false).show(context, |ui| {
                 if self.initialized {
                     let font = FontId { size: 24.0, family: FontFamily::Name("Kenney Pixel".into()) };
                     let color = Color32::from_rgb(255, 255, 255);
@@ -126,7 +120,7 @@ impl Scene<GlobalData> for MainScene {
                     let label = format!("Delta: {:.2}", delta_average * 1000.0);
 
                     ui.label(RichText::new(label).font(font.clone()).heading().color(color));
-                    ui.label(RichText::new(format!("N: {}", COUNT)).font(font).heading().color(color));
+                    ui.label(RichText::new(format!("N: {}", self.objects.len())).font(font).heading().color(color));
                 }
             });
         });

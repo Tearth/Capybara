@@ -26,7 +26,7 @@ pub fn pack(input: &str, output: &str) -> Result<()> {
 
     for entry in walkdir.into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
-        let mut zip_path = path.strip_prefix(input).unwrap().to_str().unwrap().to_string();
+        let mut zip_path = path.strip_prefix(input)?.to_str().unwrap().to_string();
         zip_path = zip_path.replace('\\', "/");
 
         if !zip_path.is_empty() {

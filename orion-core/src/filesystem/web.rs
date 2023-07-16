@@ -55,11 +55,8 @@ impl FileSystem {
         }
 
         if let FileLoadingStatus::Idle = status {
-            let mut opts = RequestInit::new();
-            opts.method("GET");
-
             let window = web_sys::window().unwrap();
-            let request = Request::new_with_str_and_init(input, &opts).unwrap();
+            let request = Request::new_with_str_and_init(input, &RequestInit::new()).unwrap();
             let fetch_closure_clone = self.fetch_closure.clone();
             let _ = window.fetch_with_request(&request).then(&fetch_closure_clone.borrow());
 

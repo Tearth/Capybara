@@ -96,8 +96,8 @@ impl Scene<GlobalData> for MainScene {
         }
 
         if self.initialized {
-            self.emitter.position =
-                Vec2::new(state.window.cursor_position.x as f32, state.window.size.y as f32 - state.window.cursor_position.y as f32);
+            let cursor_position = Vec2::new(state.window.cursor_position.x as f32, state.window.cursor_position.y as f32);
+            self.emitter.position = state.renderer.cameras.get(state.renderer.active_camera_id)?.from_window_to_screen_coordinates(cursor_position);
             self.emitter.update(Instant::now(), delta);
             self.emitter.draw(state.renderer);
         }

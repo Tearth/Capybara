@@ -138,10 +138,8 @@ impl Scene<GlobalData> for MainScene {
                     fastrand::u32(0..state.renderer.viewport_size.y as u32) as f32,
                 );
                 let sprite = Sprite { position, texture_id: Some(state.renderer.textures.get_by_name("Takodachi")?.id), ..Default::default() };
-                let collider = ColliderBuilder::ball(0.3)
-                    .restitution(0.7)
-                    .active_events(ActiveEvents::COLLISION_EVENTS | ActiveEvents::CONTACT_FORCE_EVENTS)
-                    .build();
+                let collider_flags = ActiveEvents::COLLISION_EVENTS | ActiveEvents::CONTACT_FORCE_EVENTS;
+                let collider = ColliderBuilder::ball(0.3).restitution(0.7).active_events(collider_flags).build();
                 let rigidbody = RigidBodyBuilder::dynamic().translation(vector![position.x, position.y] / PIXELS_PER_METER).build();
                 let rigidbody_handle = state.physics.rigidbodies.insert(rigidbody);
                 state.physics.colliders.insert_with_parent(collider, rigidbody_handle, &mut state.physics.rigidbodies);

@@ -56,7 +56,7 @@ pub struct ParticleParameter<T> {
     pub variation: T,
 }
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Debug, Default)]
 pub enum ParticleInterpolation {
     #[default]
     Linear,
@@ -113,17 +113,17 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
                     self.particles_removed_ids.push_back(index);
                     *particle_option = None;
                 } else {
-                    let lifetime_factor = particle_time / particle.lifetime;
+                    let factor = particle_time / particle.lifetime;
 
-                    particle.postion +=
-                        calculate(lifetime_factor, &self.velocity_waypoints, &particle.velocity_variations, particle.postion, self.interpolation)
-                            * delta;
-                    particle.rotation =
-                        calculate(lifetime_factor, &self.rotation_waypoints, &particle.rotation_variations, particle.rotation, self.interpolation);
-                    particle.scale =
-                        calculate(lifetime_factor, &self.scale_waypoints, &particle.scale_variations, particle.scale, self.interpolation);
-                    particle.color =
-                        calculate(lifetime_factor, &self.color_waypoints, &particle.color_variations, particle.color, self.interpolation);
+                    let p = calculate(factor, &self.velocity_waypoints, &particle.velocity_variations, particle.postion, self.interpolation);
+                    let r = calculate(factor, &self.rotation_waypoints, &particle.rotation_variations, particle.rotation, self.interpolation);
+                    let s = calculate(factor, &self.scale_waypoints, &particle.scale_variations, particle.scale, self.interpolation);
+                    let c = calculate(factor, &self.color_waypoints, &particle.color_variations, particle.color, self.interpolation);
+
+                    particle.postion += p * delta;
+                    particle.rotation = r;
+                    particle.scale = s;
+                    particle.color = c;
                 }
             }
         }

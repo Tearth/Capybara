@@ -304,8 +304,9 @@ impl RendererContext {
                 }
                 TextureType::Tilemap { size } => {
                     let tiles_count = texture.size / *size;
-                    let position =
-                        Vec2::new((sprite.animation_frame % tiles_count.x as usize) as f32, (sprite.animation_frame / tiles_count.x as usize) as f32);
+                    let tile_x = sprite.animation_frame % tiles_count.x as usize;
+                    let tile_y = sprite.animation_frame / tiles_count.x as usize;
+                    let position = Vec2::new(tile_x as f32, tile_y as f32);
                     let uv_position = position / tiles_count;
                     let uv_size = *size / texture.size;
 
@@ -314,7 +315,9 @@ impl RendererContext {
                 TextureType::TilemapAnimation { size, frames } => {
                     let tiles_count = texture.size / *size;
                     let frame = frames[sprite.animation_frame];
-                    let position = Vec2::new((frame % tiles_count.x as usize) as f32, (frame / tiles_count.x as usize) as f32);
+                    let frame_x = frame % tiles_count.x as usize;
+                    let frame_y = frame / tiles_count.x as usize;
+                    let position = Vec2::new(frame_x as f32, frame_y as f32);
                     let uv_position = position / tiles_count;
                     let uv_size = *size / texture.size;
 
@@ -397,23 +400,17 @@ impl RendererContext {
         }
 
         unsafe {
-            ptr::copy(
-                shape.vertices.as_ptr(),
-                (self.shape_buffer_vertices_queue.as_mut_ptr()).add(self.shape_buffer_vertices_count),
-                shape.vertices.len(),
-            );
+            let buffer_ptr = self.shape_buffer_vertices_queue.as_mut_ptr();
+            ptr::copy(shape.vertices.as_ptr(), buffer_ptr.add(self.shape_buffer_vertices_count), shape.vertices.len());
         }
 
         if shape.apply_model {
             let model = shape.get_model();
 
             for i in 0..self.shape_buffer_vertices_queue.len() / 5 {
-                let position = Vec4::new(
-                    f32::from_bits(self.shape_buffer_vertices_queue[i * 5 + 0]),
-                    f32::from_bits(self.shape_buffer_vertices_queue[i * 5 + 1]),
-                    0.0,
-                    1.0,
-                );
+                let x = self.shape_buffer_vertices_queue[i * 5 + 0];
+                let y = self.shape_buffer_vertices_queue[i * 5 + 1];
+                let position = Vec4::new(f32::from_bits(x), f32::from_bits(y), 0.0, 1.0);
                 let position_transformed = model * position;
 
                 self.shape_buffer_vertices_queue[i * 5 + 0] = position_transformed.x.to_bits();
@@ -510,10 +507,11 @@ impl RendererContext {
                         self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.shape_buffer_vbo));
                         self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.shape_buffer_ebo));
 
-                        let models_u8 =
-                            slice::from_raw_parts(self.shape_buffer_vertices_queue.as_ptr() as *const u8, self.shape_buffer_vertices_count * 4);
-                        let indices_u8 =
-                            slice::from_raw_parts(self.shape_buffer_indices_queue.as_ptr() as *const u8, self.shape_buffer_indices_count * 4);
+                        let buffer_ptr = self.shape_buffer_vertices_queue.as_ptr();
+                        let models_u8 = slice::from_raw_parts(buffer_ptr as *const u8, self.shape_buffer_vertices_count * 4);
+
+                        let buffer_ptr = self.shape_buffer_indices_queue.as_ptr();
+                        let indices_u8 = slice::from_raw_parts(buffer_ptr as *const u8, self.shape_buffer_indices_count * 4);
 
                         self.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, 0, models_u8);
                         self.gl.buffer_sub_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, 0, indices_u8);

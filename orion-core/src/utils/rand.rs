@@ -1,4 +1,6 @@
-use glam::{Vec2, Vec3, Vec4};
+use glam::Vec2;
+use glam::Vec3;
+use glam::Vec4;
 
 pub trait NewRand<T> {
     fn new_rand() -> T;

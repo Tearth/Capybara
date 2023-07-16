@@ -38,7 +38,7 @@ pub enum InputEvent {
     Unknown,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub enum Key {
     Enter,
     Escape,
@@ -115,28 +115,33 @@ pub enum Key {
     Num8,
     Num9,
 
+    #[default]
     Unknown,
 }
 
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct Modifiers {
     pub control: bool,
     pub alt: bool,
     pub shift: bool,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub enum MouseButton {
     Left,
     Middle,
     Right,
+
+    #[default]
     Unknown,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub enum MouseWheelDirection {
     Up,
     Down,
+
+    #[default]
     Unknown,
 }
 

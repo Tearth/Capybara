@@ -133,10 +133,7 @@ impl WindowContextWeb {
         self.init_keypress_callback(app.clone());
 
         let resize_callback = self.resize_callback.as_ref().unwrap().as_ref().unchecked_ref();
-        let frame_callback = self.frame_callback.as_ref().unwrap().as_ref().unchecked_ref();
-
         self.window.set_timeout_with_callback_and_timeout_and_arguments_0(resize_callback, 0).unwrap();
-        self.window.request_animation_frame(frame_callback).unwrap();
     }
 
     fn init_frame_callback<F>(&mut self, mut event_loop: F)

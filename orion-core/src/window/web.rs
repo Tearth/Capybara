@@ -3,10 +3,8 @@ use crate::app::ApplicationContext;
 use anyhow::Error;
 use anyhow::Result;
 use glow::Context;
-use log::Level;
 use std::cell::RefCell;
 use std::collections::VecDeque;
-use std::panic;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use web_sys::Document;
@@ -49,10 +47,10 @@ pub struct WindowContextWeb {
 impl WindowContextWeb {
     pub fn new(_: &str, _: WindowStyle) -> Result<Box<Self>> {
         #[cfg(debug_assertions)]
-        console_log::init_with_level(Level::Debug).unwrap();
+        console_log::init_with_level(log::Level::Debug).unwrap();
 
         #[cfg(debug_assertions)]
-        panic::set_hook(Box::new(console_error_panic_hook::hook));
+        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
         let window = web_sys::window().unwrap();
         let document = window.document().unwrap();

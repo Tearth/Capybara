@@ -1,5 +1,5 @@
-use orion_core::assets::bundler;
 use std::path::Path;
+use std::process::Command;
 
 fn main() {
     let profile = std::env::var("PROFILE").unwrap();
@@ -11,12 +11,12 @@ fn main() {
     }
 
     if Path::new("./assets/boot/").exists() {
-        bundler::pack("./assets/boot/", "./data/boot.zip").unwrap();
+        Command::new("7z").args(["a", "-tzip", "./data/boot.zip", "./assets/boot/*"]).spawn().unwrap();
         println!("cargo:rerun-if-changed=./assets/boot/");
     }
 
     if Path::new("./assets/main/").exists() {
-        bundler::pack("./assets/main/", "./data/main.zip").unwrap();
+        Command::new("7z").args(["a", "-tzip", "./data/main.zip", "./assets/main/*"]).spawn().unwrap();
         println!("cargo:rerun-if-changed=./assets/main/");
     }
 }

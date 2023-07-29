@@ -1,6 +1,5 @@
 use glam::Vec2;
 
-pub mod bundler;
 pub mod loader;
 
 #[derive(Copy, Clone, Debug, PartialEq)]

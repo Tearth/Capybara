@@ -6,6 +6,3 @@ edition = "2021"
 [dependencies]
 orion-core = { path = "../../orion-core", features = [ "physics" ] }
 fastrand = { version = "2.0.0" }
-
-[build-dependencies]
-orion-core = { path = "../../orion-core" }

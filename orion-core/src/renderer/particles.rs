@@ -17,8 +17,8 @@ pub struct ParticleEmitter<const WAYPOINTS: usize> {
     pub position: Vec2,
     pub size: Vec2,
     pub period: f32,
-    pub bursts: u32,
     pub amount: u32,
+    pub bursts: Option<u32>,
     pub interpolation: ParticleInterpolation,
 
     pub particle_size: Option<Vec2>,
@@ -65,11 +65,17 @@ pub enum ParticleInterpolation {
 
 impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
     pub fn update(&mut self, now: Instant, delta: f32) {
-        let fire = if let Some(last_burst_time) = self.last_burst_time {
+        let mut fire = if let Some(last_burst_time) = self.last_burst_time {
             (now - last_burst_time).as_secs_f32() >= self.period
         } else {
             self.last_burst_time.is_none()
         };
+
+        if let Some(bursts) = self.bursts {
+            if bursts == 0 {
+                fire = false;
+            }
+        }
 
         if fire {
             let offset = self.position - self.size / 2.0;
@@ -103,6 +109,10 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
             }
 
             self.last_burst_time = Some(now);
+
+            if let Some(bursts) = &mut self.bursts {
+                *bursts -= 1;
+            }
         }
 
         for (index, particle_option) in self.particles.iter_mut().enumerate() {
@@ -142,6 +152,10 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
 
             renderer.draw_sprite(&sprite).unwrap();
         }
+    }
+
+    pub fn finished(&self) -> bool {
+        self.particles.len() == self.particles_removed_ids.len()
     }
 }
 

@@ -292,11 +292,11 @@ impl RendererContext {
 
         let (uv_position, uv_size, sprite_size) = if let Some(texture_id) = sprite.texture_id {
             let texture = self.textures.get(texture_id)?;
-            let sprite_size = sprite.size.unwrap_or(texture.size);
 
             match &sprite.texture_type {
-                TextureType::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0), sprite_size),
+                TextureType::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0), sprite.size.unwrap_or(texture.size)),
                 TextureType::SimpleOffset { offset } => {
+                    let sprite_size = sprite.size.unwrap_or(texture.size);
                     let uv_position = *offset / texture.size;
                     let uv_size = sprite_size / texture.size;
 
@@ -309,6 +309,7 @@ impl RendererContext {
                     let position = Vec2::new(tile_x as f32, tile_y as f32);
                     let uv_position = position / tiles_count;
                     let uv_size = *size / texture.size;
+                    let sprite_size = sprite.size.unwrap_or(*size);
 
                     (uv_position, uv_size, sprite_size)
                 }
@@ -320,12 +321,15 @@ impl RendererContext {
                     let position = Vec2::new(frame_x as f32, frame_y as f32);
                     let uv_position = position / tiles_count;
                     let uv_size = *size / texture.size;
+                    let sprite_size = sprite.size.unwrap_or(*size);
 
                     (uv_position, uv_size, sprite_size)
                 }
                 TextureType::AtlasEntity { name } => {
                     if let TextureKind::Atlas(atlas_entities) = &texture.kind {
                         let entity = atlas_entities.get(name).unwrap();
+                        let sprite_size = sprite.size.unwrap_or(entity.size);
+
                         (entity.position / texture.size, entity.size / texture.size, sprite_size)
                     } else {
                         bail!("Texture is not an atlas");
@@ -335,6 +339,8 @@ impl RendererContext {
                     if let TextureKind::Atlas(atlas_entities) = &texture.kind {
                         let name = &entities[sprite.animation_frame];
                         let entity = atlas_entities.get(name).unwrap();
+                        let sprite_size = sprite.size.unwrap_or(entity.size);
+
                         (entity.position / texture.size, entity.size / texture.size, sprite_size)
                     } else {
                         bail!("Texture is not an atlas");

@@ -35,6 +35,9 @@ pub use kira;
 #[cfg(feature = "physics")]
 pub use rapier2d;
 
+#[cfg(feature = "physics")]
+pub use nalgebra;
+
 #[macro_export]
 macro_rules! fast_gpu {
     () => {

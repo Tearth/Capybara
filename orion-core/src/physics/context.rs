@@ -19,6 +19,7 @@ pub struct PhysicsContext {
     pub solver: CCDSolver,
     pub hooks: Box<dyn PhysicsHooks>,
     pub events: EventCollector,
+    pub running: bool,
 }
 
 pub struct InterpolationData {
@@ -45,11 +46,16 @@ impl PhysicsContext {
             solver: CCDSolver::new(),
             hooks: Box::new(()),
             events: Default::default(),
+            running: true,
         }
     }
 
     pub fn step(&mut self, timestamp: f32) {
         self.events.clear();
+
+        if !self.running {
+            return;
+        }
 
         self.integration_parameters.dt = timestamp;
         self.physics_pipeline.step(

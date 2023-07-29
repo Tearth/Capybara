@@ -12,6 +12,7 @@ use orion_core::egui::RawInput;
 use orion_core::egui::RichText;
 use orion_core::egui::SidePanel;
 use orion_core::fast_gpu;
+use orion_core::fastrand;
 use orion_core::glam::Vec2;
 use orion_core::renderer::sprite::Sprite;
 use orion_core::scene::FrameCommand;

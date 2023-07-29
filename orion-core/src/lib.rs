@@ -24,6 +24,7 @@ pub mod physics;
 
 pub use anyhow;
 pub use egui;
+pub use fastrand;
 pub use glam;
 pub use instant;
 pub use log;

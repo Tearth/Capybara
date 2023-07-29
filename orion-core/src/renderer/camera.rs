@@ -24,6 +24,14 @@ impl Camera {
         Self { id: 0, name: None, position, size, origin, dirty: true }
     }
 
+    pub fn get_center_position(&self) -> Vec2 {
+        self.position + self.size / 2.0
+    }
+
+    pub fn set_center_position(&mut self, position: Vec2) {
+        self.position = position - self.size / 2.0;
+    }
+
     pub fn get_projection_matrix(&self) -> Mat4 {
         match self.origin {
             CameraOrigin::LeftTop => Mat4::orthographic_rh(0.0, self.size.x, self.size.y, 0.0, 0.1, 100.0),

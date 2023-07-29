@@ -142,8 +142,7 @@ impl RendererContext {
     fn init(&mut self) -> Result<()> {
         unsafe {
             self.gl.enable(glow::BLEND);
-            self.gl.blend_equation_separate(glow::FUNC_ADD, glow::FUNC_ADD);
-            self.gl.blend_func_separate(glow::ONE, glow::ONE_MINUS_SRC_ALPHA, glow::ONE_MINUS_DST_ALPHA, glow::ONE);
+            self.gl.blend_func(glow::ONE, glow::ONE_MINUS_SRC_ALPHA);
             self.set_clear_color(Vec4::new(0.0, 0.0, 0.0, 1.0));
 
             let camera = Camera::new(Default::default(), Default::default(), CameraOrigin::LeftBottom);

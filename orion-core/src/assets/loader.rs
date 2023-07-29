@@ -103,6 +103,17 @@ impl AssetsLoader {
         let info = reader.next_frame(&mut data)?;
         let size = Vec2::new(info.width as f32, info.height as f32);
 
+        for i in 0..data.len() / 4 {
+            let r = data[i * 4 + 0] as f32 / 255.0;
+            let g = data[i * 4 + 1] as f32 / 255.0;
+            let b = data[i * 4 + 2] as f32 / 255.0;
+            let a = data[i * 4 + 3] as f32 / 255.0;
+
+            data[i * 4 + 0] = (r * a * 255.0) as u8;
+            data[i * 4 + 1] = (g * a * 255.0) as u8;
+            data[i * 4 + 2] = (b * a * 255.0) as u8;
+        }
+
         self.raw_textures.push(RawTexture::new(name, path, size, &data));
 
         Ok(())

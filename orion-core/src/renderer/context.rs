@@ -275,6 +275,46 @@ impl RendererContext {
     }
 
     pub fn draw_sprite(&mut self, sprite: &Sprite) -> Result<()> {
+        let camera = self.cameras.get(self.active_camera_id)?;
+        let sprite_size = if let Some(texture_id) = sprite.texture_id {
+            let texture = self.textures.get(texture_id)?;
+
+            match &sprite.texture_type {
+                TextureType::Simple => sprite.size.unwrap_or(texture.size),
+                TextureType::SimpleOffset { offset: _ } => sprite.size.unwrap_or(texture.size),
+                TextureType::Tilemap { size } => sprite.size.unwrap_or(*size),
+                TextureType::TilemapAnimation { size, frames: _ } => sprite.size.unwrap_or(*size),
+                TextureType::AtlasEntity { name } => {
+                    if let TextureKind::Atlas(atlas_entities) = &texture.kind {
+                        let entity = atlas_entities.get(name).unwrap();
+                        sprite.size.unwrap_or(entity.size)
+                    } else {
+                        bail!("Texture is not an atlas");
+                    }
+                }
+                TextureType::AtlasAnimation { entities } => {
+                    if let TextureKind::Atlas(atlas_entities) = &texture.kind {
+                        let name = &entities[sprite.animation_frame];
+                        let entity = atlas_entities.get(name).unwrap();
+                        sprite.size.unwrap_or(entity.size)
+                    } else {
+                        bail!("Texture is not an atlas");
+                    }
+                }
+            }
+        } else {
+            sprite.size.unwrap_or(Vec2::new(1.0, 1.0))
+        };
+
+        let camera_min = camera.position;
+        let camera_max = camera.position + camera.size;
+        let sprite_min = sprite.position - sprite.anchor * sprite_size;
+        let sprite_max = sprite.position + (Vec2::new(1.0, 1.0) - sprite.anchor) * sprite_size;
+
+        if sprite_min.x > camera_max.x || sprite_min.y > camera_max.y || sprite_max.x < camera_min.x || sprite_max.y < camera_min.y {
+            return Ok(());
+        }
+
         if let Some(buffer_metadata) = &self.buffer_metadata {
             if buffer_metadata.content_type != BufferContentType::Sprite || buffer_metadata.texture_id != sprite.texture_id {
                 self.flush_buffer()?;
@@ -289,17 +329,16 @@ impl RendererContext {
             self.sprite_buffer_resized = true;
         }
 
-        let (uv_position, uv_size, sprite_size) = if let Some(texture_id) = sprite.texture_id {
+        let (uv_position, uv_size) = if let Some(texture_id) = sprite.texture_id {
             let texture = self.textures.get(texture_id)?;
 
             match &sprite.texture_type {
-                TextureType::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0), sprite.size.unwrap_or(texture.size)),
+                TextureType::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0)),
                 TextureType::SimpleOffset { offset } => {
-                    let sprite_size = sprite.size.unwrap_or(texture.size);
                     let uv_position = *offset / texture.size;
                     let uv_size = sprite_size / texture.size;
 
-                    (uv_position, uv_size, sprite_size)
+                    (uv_position, uv_size)
                 }
                 TextureType::Tilemap { size } => {
                     let tiles_count = texture.size / *size;
@@ -308,9 +347,8 @@ impl RendererContext {
                     let position = Vec2::new(tile_x as f32, tile_y as f32);
                     let uv_position = position / tiles_count;
                     let uv_size = *size / texture.size;
-                    let sprite_size = sprite.size.unwrap_or(*size);
 
-                    (uv_position, uv_size, sprite_size)
+                    (uv_position, uv_size)
                 }
                 TextureType::TilemapAnimation { size, frames } => {
                     let tiles_count = texture.size / *size;
@@ -320,16 +358,13 @@ impl RendererContext {
                     let position = Vec2::new(frame_x as f32, frame_y as f32);
                     let uv_position = position / tiles_count;
                     let uv_size = *size / texture.size;
-                    let sprite_size = sprite.size.unwrap_or(*size);
 
-                    (uv_position, uv_size, sprite_size)
+                    (uv_position, uv_size)
                 }
                 TextureType::AtlasEntity { name } => {
                     if let TextureKind::Atlas(atlas_entities) = &texture.kind {
                         let entity = atlas_entities.get(name).unwrap();
-                        let sprite_size = sprite.size.unwrap_or(entity.size);
-
-                        (entity.position / texture.size, entity.size / texture.size, sprite_size)
+                        (entity.position / texture.size, entity.size / texture.size)
                     } else {
                         bail!("Texture is not an atlas");
                     }
@@ -338,16 +373,15 @@ impl RendererContext {
                     if let TextureKind::Atlas(atlas_entities) = &texture.kind {
                         let name = &entities[sprite.animation_frame];
                         let entity = atlas_entities.get(name).unwrap();
-                        let sprite_size = sprite.size.unwrap_or(entity.size);
 
-                        (entity.position / texture.size, entity.size / texture.size, sprite_size)
+                        (entity.position / texture.size, entity.size / texture.size)
                     } else {
                         bail!("Texture is not an atlas");
                     }
                 }
             }
         } else {
-            (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0), sprite.size.unwrap_or(Vec2::new(1.0, 1.0)))
+            (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0))
         };
 
         let r = (sprite.color.x * sprite.color.w * 255.0) as u32;

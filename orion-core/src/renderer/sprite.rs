@@ -18,8 +18,10 @@ pub struct Sprite {
     pub animation_timestamp: Instant,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[rustfmt::skip]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub enum TextureType {
+    #[default]
     Simple,
     SimpleOffset { offset: Vec2 },
     Tilemap { size: Vec2 },
@@ -45,6 +47,10 @@ impl Sprite {
             animation_loop: true,
             animation_timestamp: Instant::now(),
         }
+    }
+
+    pub fn is_animation(&self) -> bool {
+        matches!(self.texture_type, TextureType::TilemapAnimation { size: _, frames: _ } | TextureType::AtlasAnimation { entities: _ })
     }
 
     pub fn animate(&mut self, now: Instant) {

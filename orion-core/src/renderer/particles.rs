@@ -1,6 +1,9 @@
 use super::context::RendererContext;
 use super::sprite::Sprite;
+use super::sprite::TextureType;
 use crate::utils::rand::NewRand;
+use anyhow::bail;
+use anyhow::Result;
 use arrayvec::ArrayVec;
 use glam::Vec2;
 use glam::Vec4;
@@ -24,6 +27,7 @@ pub struct ParticleEmitter<const WAYPOINTS: usize> {
     pub particle_size: Option<Vec2>,
     pub particle_lifetime: f32,
     pub particle_texture_id: Option<usize>,
+    pub particle_texture_type: TextureType,
 
     last_burst_time: Option<Instant>,
 
@@ -139,9 +143,14 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
         }
     }
 
-    pub fn draw(&mut self, renderer: &mut RendererContext) {
+    pub fn draw(&mut self, renderer: &mut RendererContext) -> Result<()> {
         let mut sprite = Sprite::new();
         sprite.texture_id = self.particle_texture_id;
+        sprite.texture_type = self.particle_texture_type.clone();
+
+        if sprite.is_animation() {
+            bail!("Animations in particles aren't supported");
+        }
 
         for particle in self.particles.iter().flatten() {
             sprite.position = particle.postion;
@@ -150,11 +159,13 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
             sprite.size = particle.size;
             sprite.color = particle.color;
 
-            renderer.draw_sprite(&sprite).unwrap();
+            renderer.draw_sprite(&sprite)?;
         }
+
+        Ok(())
     }
 
-    pub fn finished(&self) -> bool {
+    pub fn is_finished(&self) -> bool {
         self.particles.len() == self.particles_removed_ids.len()
     }
 }

@@ -18,7 +18,7 @@ use orion_core::window::Key;
 #[derive(Default)]
 pub struct GameScene {
     play_button_state: WidgetState,
-    about_button_state: WidgetState,
+    exit_button_state: WidgetState,
     exit_menu_visible: bool,
 }
 
@@ -73,7 +73,7 @@ impl Scene<GlobalData> for GameScene {
 
                             ui.add_space(32.0);
 
-                            if widgets::button_green(ui, state.ui, "No", &mut self.about_button_state).clicked() {
+                            if widgets::button_green(ui, state.ui, "No", &mut self.exit_button_state).clicked() {
                                 self.exit_menu_visible = false;
                             }
                         });

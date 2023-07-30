@@ -6,6 +6,9 @@ edition = "2021"
 [dependencies]
 orion-core = { path = "../orion-core" }
 
+[build-dependencies]
+cfg_aliases = { version = "0.1.1" }
+
 # [profile.release]
 # lto = true
 # codegen-units = 1

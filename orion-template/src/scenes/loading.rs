@@ -1,3 +1,4 @@
+use super::GlobalData;
 use orion_core::anyhow::Result;
 use orion_core::app::ApplicationState;
 use orion_core::assets::AssetsLoadingStatus;
@@ -12,8 +13,6 @@ use orion_core::instant::Instant;
 use orion_core::scene::FrameCommand;
 use orion_core::scene::Scene;
 use orion_core::window::InputEvent;
-
-use super::GlobalData;
 
 #[derive(Default)]
 pub struct LoadingScene {

@@ -1,3 +1,4 @@
+use super::GlobalData;
 use orion_core::anyhow::Result;
 use orion_core::app::ApplicationState;
 use orion_core::assets::AssetsLoadingStatus;
@@ -11,8 +12,6 @@ use orion_core::egui::TextStyle;
 use orion_core::scene::FrameCommand;
 use orion_core::scene::Scene;
 use orion_core::window::InputEvent;
-
-use super::GlobalData;
 
 #[derive(Default)]
 pub struct BootScene {}

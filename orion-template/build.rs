@@ -1,3 +1,4 @@
+use cfg_aliases::cfg_aliases;
 use std::path::Path;
 use std::process::Command;
 
@@ -18,5 +19,11 @@ fn main() {
     if Path::new("./assets/main/").exists() {
         Command::new("7z").args(["a", "-tzip", "./data/main.zip", "./assets/main/*"]).spawn().unwrap();
         println!("cargo:rerun-if-changed=./assets/main/");
+    }
+
+    cfg_aliases! {
+        windows: { all(target_os = "windows", target_arch = "x86_64") },
+        unix: { all(target_os = "linux", target_arch = "x86_64") },
+        web: { all(target_os = "unknown", target_arch = "wasm32") },
     }
 }

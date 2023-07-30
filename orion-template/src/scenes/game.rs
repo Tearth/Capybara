@@ -1,3 +1,4 @@
+use super::GlobalData;
 use crate::ui::state::WidgetState;
 use crate::ui::widgets;
 use orion_core::anyhow::Result;
@@ -13,8 +14,6 @@ use orion_core::scene::Scene;
 use orion_core::utils::color::Vec4Color;
 use orion_core::window::InputEvent;
 use orion_core::window::Key;
-
-use super::GlobalData;
 
 #[derive(Default)]
 pub struct GameScene {

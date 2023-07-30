@@ -1,3 +1,4 @@
+use super::GlobalData;
 use crate::ui::state::WidgetState;
 use crate::ui::widgets;
 use orion_core::anyhow::Result;
@@ -22,8 +23,6 @@ use orion_core::scene::Scene;
 use orion_core::utils::color::Vec4Color;
 use orion_core::window::InputEvent;
 
-use super::GlobalData;
-
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MenuSubScene {
     Main,
@@ -35,8 +34,10 @@ pub struct MenuScene {
 
     play_button_state: WidgetState,
     about_button_state: WidgetState,
-    exit_button_state: WidgetState,
     back_button_state: WidgetState,
+
+    #[cfg(not(web))]
+    exit_button_state: WidgetState,
 }
 
 impl MenuScene {
@@ -65,10 +66,13 @@ impl MenuScene {
                         self.sub_scene = MenuSubScene::About;
                     }
 
-                    ui.add_space(32.0);
+                    #[cfg(not(web))]
+                    {
+                        ui.add_space(32.0);
 
-                    if widgets::button_green(ui, state.ui, "Exit", &mut self.exit_button_state).clicked() {
-                        state.window.close();
+                        if widgets::button_green(ui, state.ui, "Exit", &mut self.exit_button_state).clicked() {
+                            state.window.close();
+                        }
                     }
                 });
             });
@@ -175,8 +179,10 @@ impl Default for MenuScene {
             sub_scene: MenuSubScene::Main,
             play_button_state: Default::default(),
             about_button_state: Default::default(),
-            exit_button_state: Default::default(),
             back_button_state: Default::default(),
+
+            #[cfg(not(web))]
+            exit_button_state: Default::default(),
         }
     }
 }

@@ -68,6 +68,10 @@ pub enum ParticleInterpolation {
 }
 
 impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
     pub fn update(&mut self, now: Instant, delta: f32) {
         let mut fire = if let Some(last_burst_time) = self.last_burst_time {
             (now - last_burst_time).as_secs_f32() >= self.period

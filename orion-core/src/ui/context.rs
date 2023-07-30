@@ -212,13 +212,13 @@ impl UiContext {
                 ImageData::Font(font) => {
                     let data = font.srgba_pixels(None).flat_map(|a| a.to_array()).collect::<Vec<u8>>();
                     let size = Vec2::new(font.size[0] as f32, font.size[1] as f32);
-                    self.update_texture(id, renderer, &data, position, size, delta.options, true)?;
+                    self.update_texture(id, renderer, &data, position, size, delta.options)?;
                 }
                 ImageData::Color(image) => {
                     let pixels_ptr = image.pixels.as_ptr() as *const u8;
                     let data = unsafe { slice::from_raw_parts(pixels_ptr, image.pixels.len() * 4) };
                     let size = Vec2::new(image.size[0] as f32, image.size[1] as f32);
-                    self.update_texture(id, renderer, data, position, size, delta.options, false)?;
+                    self.update_texture(id, renderer, data, position, size, delta.options)?;
                 }
             };
         }
@@ -273,7 +273,6 @@ impl UiContext {
         position: Option<Vec2>,
         size: Vec2,
         options: TextureOptions,
-        font: bool,
     ) -> Result<()> {
         let texture_id = if let Some(position) = position {
             let texture_id = self.textures.get(&id).unwrap();
@@ -289,19 +288,17 @@ impl UiContext {
             texture_id
         };
 
-        if !font {
-            let minification = match options.minification {
-                egui::TextureFilter::Linear => TextureFilter::Linear,
-                egui::TextureFilter::Nearest => TextureFilter::Nearest,
-            };
+        let minification = match options.minification {
+            egui::TextureFilter::Linear => TextureFilter::Linear,
+            egui::TextureFilter::Nearest => TextureFilter::Nearest,
+        };
 
-            let magnification = match options.magnification {
-                egui::TextureFilter::Linear => TextureFilter::Linear,
-                egui::TextureFilter::Nearest => TextureFilter::Nearest,
-            };
+        let magnification = match options.magnification {
+            egui::TextureFilter::Linear => TextureFilter::Linear,
+            egui::TextureFilter::Nearest => TextureFilter::Nearest,
+        };
 
-            renderer.textures.get(texture_id)?.set_filters(minification, magnification);
-        }
+        renderer.textures.get(texture_id)?.set_filters(minification, magnification);
 
         Ok(())
     }

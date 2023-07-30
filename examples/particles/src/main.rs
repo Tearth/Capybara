@@ -133,7 +133,7 @@ impl Scene<GlobalData> for MainScene {
 }
 
 fn main() {
-    ApplicationContext::<GlobalData>::new("Particles", WindowStyle::Window { size: Coordinates::new(800, 600) })
+    ApplicationContext::<GlobalData>::new("Particles", WindowStyle::Window { size: Coordinates::new(1280, 720) })
         .unwrap()
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene")

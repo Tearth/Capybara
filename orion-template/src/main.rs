@@ -14,7 +14,7 @@ pub mod ui;
 fast_gpu!();
 
 fn main() {
-    ApplicationContext::<GlobalData>::new("Template", WindowStyle::Window { size: Coordinates::new(800, 600) })
+    ApplicationContext::<GlobalData>::new("Template", WindowStyle::Window { size: Coordinates::new(1280, 720) })
         .unwrap()
         .with_scene("BootScene", Box::<BootScene>::default())
         .with_scene("LoadingScene", Box::<LoadingScene>::default())

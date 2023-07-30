@@ -138,6 +138,8 @@ where
 
     pub fn run_internal(&mut self) -> Result<()> {
         while self.running {
+            self.renderer.begin_frame()?;
+
             if let Some(next_scene) = &self.next_scene {
                 if !self.current_scene.is_empty() {
                     let old_scene = self.scenes.get_mut(&self.current_scene).unwrap();
@@ -155,12 +157,8 @@ where
 
             while let Some(event) = self.window.poll_event() {
                 match event {
-                    InputEvent::WindowSizeChange { size } => {
-                        self.renderer.set_viewport(Vec2::new(size.x as f32, size.y as f32))?;
-                    }
-                    InputEvent::WindowClose => {
-                        return Ok(());
-                    }
+                    InputEvent::WindowSizeChange { size } => self.renderer.set_viewport(Vec2::new(size.x as f32, size.y as f32))?,
+                    InputEvent::WindowClose => return Ok(()),
                     _ => {}
                 }
 
@@ -192,8 +190,6 @@ where
 
                 self.accumulator -= self.timestep;
             }
-
-            self.renderer.begin_frame()?;
 
             let scene = self.scenes.get_mut(&self.current_scene).unwrap();
             let command = scene.frame(state!(self), self.accumulator, delta)?;

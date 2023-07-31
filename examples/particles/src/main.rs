@@ -73,7 +73,6 @@ impl Scene<GlobalData> for MainScene {
 
             self.emitter.size = Vec2::new(32.0, 8.0);
             self.emitter.period = 0.02;
-            self.emitter.bursts = 0;
             self.emitter.amount = 20;
             self.emitter.particle_size = Some(Vec2::new(16.0, 16.0));
             self.emitter.particle_lifetime = 1.0;

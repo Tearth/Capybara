@@ -1,6 +1,7 @@
 use super::context::RendererContext;
 use super::sprite::Sprite;
 use super::sprite::TextureType;
+use crate::utils::bag::Bag;
 use crate::utils::rand::NewRand;
 use anyhow::bail;
 use anyhow::Result;
@@ -8,7 +9,6 @@ use arrayvec::ArrayVec;
 use glam::Vec2;
 use glam::Vec4;
 use instant::Instant;
-use std::collections::VecDeque;
 use std::f32::consts;
 use std::ops::Add;
 use std::ops::Div;
@@ -31,8 +31,7 @@ pub struct ParticleEmitter<const WAYPOINTS: usize> {
 
     last_burst_time: Option<Instant>,
 
-    pub particles: Vec<Option<Particle<WAYPOINTS>>>,
-    pub particles_removed_ids: VecDeque<usize>,
+    pub particles: Bag<Particle<WAYPOINTS>>,
 
     pub velocity_waypoints: ArrayVec<ParticleParameter<Vec2>, WAYPOINTS>,
     pub rotation_waypoints: ArrayVec<ParticleParameter<f32>, WAYPOINTS>,
@@ -72,7 +71,7 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
         Default::default()
     }
 
-    pub fn update(&mut self, now: Instant, delta: f32) {
+    pub fn update(&mut self, now: Instant, delta: f32) -> Result<()> {
         let mut fire = if let Some(last_burst_time) = self.last_burst_time {
             (now - last_burst_time).as_secs_f32() >= self.period
         } else {
@@ -94,14 +93,7 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
                 let scale_variations = generate_variations(&self.scale_waypoints);
                 let color_variations = generate_variations(&self.color_waypoints);
 
-                let id = if let Some(id) = self.particles_removed_ids.pop_front() {
-                    id
-                } else {
-                    self.particles.push(None);
-                    self.particles.len() - 1
-                };
-
-                self.particles[id] = Some(Particle {
+                self.particles.store(Particle {
                     postion: Vec2::new(fastrand::f32(), fastrand::f32()) * self.size + offset,
                     rotation: 0.0,
                     scale: Vec2::new(1.0, 1.0),
@@ -123,28 +115,32 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
             }
         }
 
-        for (index, particle_option) in self.particles.iter_mut().enumerate() {
-            if let Some(particle) = particle_option {
-                let particle_time = (now - particle.birthday).as_secs_f32();
+        let mut removed_ids = Vec::new();
+        for (index, particle) in self.particles.iter_enumerate_mut() {
+            let particle_time = (now - particle.birthday).as_secs_f32();
 
-                if particle_time >= particle.lifetime {
-                    self.particles_removed_ids.push_back(index);
-                    *particle_option = None;
-                } else {
-                    let factor = particle_time / particle.lifetime;
+            if particle_time >= particle.lifetime {
+                removed_ids.push(index);
+            } else {
+                let factor = particle_time / particle.lifetime;
 
-                    let p = calculate(factor, &self.velocity_waypoints, &particle.velocity_variations, particle.postion, self.interpolation);
-                    let r = calculate(factor, &self.rotation_waypoints, &particle.rotation_variations, particle.rotation, self.interpolation);
-                    let s = calculate(factor, &self.scale_waypoints, &particle.scale_variations, particle.scale, self.interpolation);
-                    let c = calculate(factor, &self.color_waypoints, &particle.color_variations, particle.color, self.interpolation);
+                let p = calculate(factor, &self.velocity_waypoints, &particle.velocity_variations, particle.postion, self.interpolation);
+                let r = calculate(factor, &self.rotation_waypoints, &particle.rotation_variations, particle.rotation, self.interpolation);
+                let s = calculate(factor, &self.scale_waypoints, &particle.scale_variations, particle.scale, self.interpolation);
+                let c = calculate(factor, &self.color_waypoints, &particle.color_variations, particle.color, self.interpolation);
 
-                    particle.postion += p * delta;
-                    particle.rotation = r;
-                    particle.scale = s;
-                    particle.color = c;
-                }
+                particle.postion += p * delta;
+                particle.rotation = r;
+                particle.scale = s;
+                particle.color = c;
             }
         }
+
+        for index in removed_ids {
+            self.particles.remove(index)?;
+        }
+
+        Ok(())
     }
 
     pub fn draw(&mut self, renderer: &mut RendererContext) -> Result<()> {
@@ -156,7 +152,7 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
             bail!("Animations in particles aren't supported");
         }
 
-        for particle in self.particles.iter().flatten() {
+        for particle in self.particles.iter() {
             sprite.position = particle.postion;
             sprite.rotation = particle.rotation;
             sprite.scale = particle.scale;
@@ -170,7 +166,7 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
     }
 
     pub fn is_finished(&self) -> bool {
-        self.particles.len() == self.particles_removed_ids.len()
+        self.particles.is_empty()
     }
 }
 

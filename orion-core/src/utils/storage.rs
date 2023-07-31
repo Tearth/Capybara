@@ -123,6 +123,22 @@ where
         self.data.iter_mut().filter_map(|p| p.as_mut())
     }
 
+    pub fn iter_enumerate(&self) -> impl Iterator<Item = (usize, &T)> {
+        self.data.iter().enumerate().filter(|(_, p)| p.is_some()).map(|(i, p)| (i, p.as_ref().unwrap()))
+    }
+
+    pub fn iter_enumerate_mut(&mut self) -> impl Iterator<Item = (usize, &mut T)> {
+        self.data.iter_mut().enumerate().filter(|(_, p)| p.is_some()).map(|(i, p)| (i, p.as_mut().unwrap()))
+    }
+
+    pub fn len(&self) -> usize {
+        self.data.len() - self.removed_ids.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.data.len() == self.removed_ids.len()
+    }
+
     fn get_new_id(&mut self) -> usize {
         if let Some(id) = self.removed_ids.pop_front() {
             id

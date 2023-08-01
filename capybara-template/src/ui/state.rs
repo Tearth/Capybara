@@ -1,4 +1,4 @@
-use orion_core::egui::Response;
+use capybara_core::egui::Response;
 
 #[derive(Default)]
 pub struct WidgetState {

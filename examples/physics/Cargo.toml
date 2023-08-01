@@ -4,4 +4,4 @@ version = "1.0.0"
 edition = "2021"
 
 [dependencies]
-orion-core = { path = "../../orion-core", features = [ "physics" ] }
+capybara-core = { path = "../../capybara-core", features = [ "physics" ] }

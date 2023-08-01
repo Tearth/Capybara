@@ -1,10 +1,10 @@
 [package]
-name = "orion-template"
+name = "capybara-template"
 version = "1.0.0"
 edition = "2021"
 
 [dependencies]
-orion-core = { path = "../orion-core" }
+capybara-core = { path = "../capybara-core" }
 
 [build-dependencies]
 cfg_aliases = { version = "0.1.1" }

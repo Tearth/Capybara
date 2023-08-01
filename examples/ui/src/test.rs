@@ -3,9 +3,9 @@
     https://www.egui.rs/#Colors
 */
 
-use orion_core::egui;
-use orion_core::egui::color_picker::*;
-use orion_core::egui::*;
+use capybara_core::egui;
+use capybara_core::egui::color_picker::*;
+use capybara_core::egui::*;
 use std::collections::HashMap;
 
 const GRADIENT_SIZE: Vec2 = vec2(256.0, 18.0);

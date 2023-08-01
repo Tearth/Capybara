@@ -1,17 +1,17 @@
 use super::GlobalData;
-use orion_core::anyhow::Result;
-use orion_core::app::ApplicationState;
-use orion_core::assets::AssetsLoadingStatus;
-use orion_core::egui::Color32;
-use orion_core::egui::FontFamily;
-use orion_core::egui::FontId;
-use orion_core::egui::FullOutput;
-use orion_core::egui::RawInput;
-use orion_core::egui::Stroke;
-use orion_core::egui::TextStyle;
-use orion_core::scene::FrameCommand;
-use orion_core::scene::Scene;
-use orion_core::window::InputEvent;
+use capybara_core::anyhow::Result;
+use capybara_core::app::ApplicationState;
+use capybara_core::assets::AssetsLoadingStatus;
+use capybara_core::egui::Color32;
+use capybara_core::egui::FontFamily;
+use capybara_core::egui::FontId;
+use capybara_core::egui::FullOutput;
+use capybara_core::egui::RawInput;
+use capybara_core::egui::Stroke;
+use capybara_core::egui::TextStyle;
+use capybara_core::scene::FrameCommand;
+use capybara_core::scene::Scene;
+use capybara_core::window::InputEvent;
 
 #[derive(Default)]
 pub struct BootScene {}

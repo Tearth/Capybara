@@ -1,19 +1,19 @@
 use super::GlobalData;
 use crate::ui::state::WidgetState;
 use crate::ui::widgets;
-use orion_core::anyhow::Result;
-use orion_core::app::ApplicationState;
-use orion_core::egui::Align2;
-use orion_core::egui::FullOutput;
-use orion_core::egui::RawInput;
-use orion_core::egui::Vec2;
-use orion_core::egui::Window;
-use orion_core::glam::Vec4;
-use orion_core::scene::FrameCommand;
-use orion_core::scene::Scene;
-use orion_core::utils::color::Vec4Color;
-use orion_core::window::InputEvent;
-use orion_core::window::Key;
+use capybara_core::anyhow::Result;
+use capybara_core::app::ApplicationState;
+use capybara_core::egui::Align2;
+use capybara_core::egui::FullOutput;
+use capybara_core::egui::RawInput;
+use capybara_core::egui::Vec2;
+use capybara_core::egui::Window;
+use capybara_core::glam::Vec4;
+use capybara_core::scene::FrameCommand;
+use capybara_core::scene::Scene;
+use capybara_core::utils::color::Vec4Color;
+use capybara_core::window::InputEvent;
+use capybara_core::window::Key;
 
 #[derive(Default)]
 pub struct GameScene {

@@ -50,7 +50,7 @@ impl WindowContextWinApi {
             simple_logger::init_with_level(log::Level::Debug)?;
 
             let title_cstr = CString::new(title).unwrap();
-            let class_cstr = CString::new("OrionWindow").unwrap();
+            let class_cstr = CString::new("CapybaraWindow").unwrap();
             let app_icon_cstr = CString::new("APP_ICON").unwrap();
             let cursor_icon_cstr = CString::new("CURSOR_ICON").unwrap();
             let module_handle = libloaderapi::GetModuleHandleA(ptr::null_mut());
@@ -123,7 +123,7 @@ impl WindowContextWinApi {
     fn init_gl_context(&mut self) -> Result<()> {
         unsafe {
             let phantom_title_cstr = CString::new("Phantom").unwrap();
-            let phantom_class_cstr = CString::new("OrionPhantom").unwrap();
+            let phantom_class_cstr = CString::new("CapybaraPhantom").unwrap();
             let phantom_module_handle = libloaderapi::GetModuleHandleA(ptr::null_mut());
 
             let phantom_window_class = WNDCLASSA {

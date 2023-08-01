@@ -1,7 +1,7 @@
 [workspace]
 members = [
-    "orion-core",
-    "orion-template",
+    "capybara-core",
+    "capybara-template",
 
     "examples/benchmark",
     "examples/particles",

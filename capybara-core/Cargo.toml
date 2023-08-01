@@ -1,5 +1,5 @@
 [package]
-name = "orion-core"
+name = "capybara-core"
 version = "0.1.0"
 edition = "2021"
 

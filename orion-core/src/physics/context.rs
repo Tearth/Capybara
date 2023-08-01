@@ -113,6 +113,28 @@ impl PhysicsContext {
             self.interpolation_data.remove(handle);
         }
     }
+
+    pub fn get_collision_pair(
+        &self,
+        handle1: ColliderHandle,
+        handle2: ColliderHandle,
+        data1: u128,
+        data2: u128,
+    ) -> Option<(ColliderHandle, ColliderHandle)> {
+        if let Some(collider1) = self.colliders.get(handle1) {
+            if let Some(collider2) = self.colliders.get(handle2) {
+                if (collider1.user_data & data1) != 0 && (collider2.user_data & data2) != 0 {
+                    return Some((handle1, handle2));
+                } else if (collider1.user_data & data2) != 0 && (collider2.user_data & data1) != 0 {
+                    return Some((handle2, handle1));
+                } else {
+                    return None;
+                }
+            }
+        }
+
+        None
+    }
 }
 
 impl Default for PhysicsContext {

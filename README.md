@@ -1,7 +1,7 @@
-<h1 align="center">Capybara</h1>
+# Capybara
+
 <p align="center">
 <img src="./media/capybara.png"></img>
-<img src="https://img.shields.io/badge/capybara-love-b68e5c"></img>
 <img src="https://img.shields.io/badge/capybara-love-b68e5c"></img>
 <img src="https://img.shields.io/badge/capybara-love-b68e5c"></img>
 <img src="https://img.shields.io/badge/capybara-love-b68e5c"></img>
@@ -15,6 +15,7 @@ A simple, cross-platform 2D game engine written in Rust, using OpenGL/WebGL as g
  - asynchronous assets loader
  - integration with immediate mode UI
  - flexible particle system with lots of configuration options
+ - animations and support for XML based atlases (Starling)
  - built-in support for the physics engine and audio system
  - easy web development via [trunk](https://github.com/thedodd/trunk)
 
@@ -26,6 +27,6 @@ A simple, cross-platform 2D game engine written in Rust, using OpenGL/WebGL as g
  - sound: [kira](https://github.com/tesselode/kira)
 
 ## Supported platforms
- - Windows ([winapi.rs](./capybara-core/src/window/winapi.rs))
- - Linux X11 ([x11.rs](./capybara-core/src/window/x11.rs))
- - Web ([web.rs](./capybara-core/src/window/web.rs))
+ - Windows/WinAPI ([winapi.rs](./capybara-core/src/window/winapi.rs))
+ - Linux/X11 ([x11.rs](./capybara-core/src/window/x11.rs))
+ - Web/WASM ([web.rs](./capybara-core/src/window/web.rs))

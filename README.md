@@ -9,7 +9,7 @@
 <img src="https://img.shields.io/badge/capybara-love-b68e5c"></img>
 </p>
 
-A simple, cross-platform 2D engine written in Rust, using OpenGL/WebGL as graphics backend. Focused on development speed and ease of use, which makes it suitable for game jams with strict time constraints.
+A simple, cross-platform 2D game engine written in Rust, using OpenGL/WebGL as graphics backend. Focused on development speed and ease of use, which makes it suitable for game jams with strict time constraints.
 
 ## Main features
  - asynchronous assets loader

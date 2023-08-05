@@ -3,6 +3,7 @@ use glam::Mat4;
 use glam::Vec2;
 use glam::Vec3;
 use glam::Vec4;
+use std::f32::consts;
 
 pub struct Shape {
     pub position: Vec2,
@@ -178,6 +179,42 @@ impl Shape {
             vertices,
             indices: vec![0, 2, 1, 2, 3, 1, 2, 4, 5, 2, 5, 3, 4, 6, 5, 6, 7, 5, 6, 0, 1, 6, 1, 7],
         }
+    }
+
+    pub fn new_disc(center: Vec2, radius: f32, sides: u32, color: Vec4) -> Self {
+        let color = color.to_rgb_packed();
+        let angle_step = consts::TAU / sides as f32;
+        let mut vertices = vec![
+            // Center
+            center.x.to_bits(),
+            center.y.to_bits(),
+            color,
+            0.5f32.to_bits(),
+            0.5f32.to_bits(),
+        ];
+        let mut indices = Vec::new();
+
+        for i in 0..sides {
+            let angle = i as f32 * angle_step;
+            let sin = f32::sin(angle);
+            let cos = f32::cos(angle);
+
+            vertices.extend_from_slice(&[
+                (sin * radius + center.x).to_bits(),
+                (cos * radius + center.y).to_bits(),
+                color,
+                (sin / 2.0 + 0.5).to_bits(),
+                (1.0 - (cos / 2.0 + 0.5)).to_bits(),
+            ]);
+
+            if i > 0 {
+                indices.extend_from_slice(&[0, i, i + 1]);
+            }
+        }
+
+        indices.extend_from_slice(&[0, sides, 1]);
+
+        Shape { position: Vec2::ZERO, rotation: 0.0, scale: Vec2::ONE, texture_id: None, apply_model: true, vertices, indices }
     }
 
     pub fn get_model(&self) -> Mat4 {

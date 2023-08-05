@@ -413,6 +413,7 @@ impl RendererContext {
         if let Some(buffer_metadata) = &self.buffer_metadata {
             if buffer_metadata.content_type != BufferContentType::Shape || buffer_metadata.texture_id != shape.texture_id {
                 self.flush_buffer()?;
+                self.buffer_metadata = Some(BufferMetadata::new(BufferContentType::Shape, shape.texture_id));
             }
         } else {
             self.buffer_metadata = Some(BufferMetadata::new(BufferContentType::Shape, shape.texture_id));

@@ -33,37 +33,79 @@ impl Shape {
         let width = thickness / 2.0;
         let length = (to - from).length() + 1.0;
         let angle = Vec2::new(0.0, 1.0).angle_between(to - from);
-        let mut vertices = Vec::new();
-
         let color = color.to_rgb_packed();
 
-        vertices.push((-width).to_bits());
-        vertices.push((-0.5f32).to_bits());
-        vertices.push(color);
-        vertices.push(0.0f32.to_bits());
-        vertices.push(0.0f32.to_bits());
-
-        vertices.push((width).to_bits());
-        vertices.push((-0.5f32).to_bits());
-        vertices.push(color);
-        vertices.push(1.0f32.to_bits());
-        vertices.push(0.0f32.to_bits());
-
-        vertices.push((width).to_bits());
-        vertices.push((length - 0.5).to_bits());
-        vertices.push(color);
-        vertices.push(1.0f32.to_bits());
-        vertices.push(1.0f32.to_bits());
-
-        vertices.push((-width).to_bits());
-        vertices.push((length - 0.5).to_bits());
-        vertices.push(color);
-        vertices.push(0.0f32.to_bits());
-        vertices.push(1.0f32.to_bits());
+        let vertices = vec![
+            // Left-bottom
+            (-width).to_bits(),
+            (-0.5f32).to_bits(),
+            color,
+            0.0f32.to_bits(),
+            1.0f32.to_bits(),
+            // Right-bottom
+            (width).to_bits(),
+            (-0.5f32).to_bits(),
+            color,
+            1.0f32.to_bits(),
+            1.0f32.to_bits(),
+            // Right-top
+            (width).to_bits(),
+            (length - 0.5).to_bits(),
+            color,
+            1.0f32.to_bits(),
+            0.0f32.to_bits(),
+            // Left-top
+            (-width).to_bits(),
+            (length - 0.5).to_bits(),
+            color,
+            0.0f32.to_bits(),
+            0.0f32.to_bits(),
+        ];
 
         Shape {
             position: from + Vec2::new(0.5, 0.5),
             rotation: angle,
+            scale: Vec2::ONE,
+            texture_id: None,
+            apply_model: true,
+            vertices,
+            indices: vec![0, 1, 2, 0, 2, 3],
+        }
+    }
+
+    pub fn new_rectangle(left_bottom: Vec2, right_top: Vec2, color: Vec4) -> Self {
+        let size = right_top - left_bottom + Vec2::ONE;
+        let color = color.to_rgb_packed();
+        let vertices = vec![
+            // Left-bottom
+            (left_bottom.x).to_bits(),
+            (left_bottom.y).to_bits(),
+            color,
+            0.0f32.to_bits(),
+            1.0f32.to_bits(),
+            // Right-bottom
+            (left_bottom.x + size.x).to_bits(),
+            (left_bottom.y).to_bits(),
+            color,
+            1.0f32.to_bits(),
+            1.0f32.to_bits(),
+            // Right-top
+            (left_bottom.x + size.x).to_bits(),
+            (left_bottom.y + size.y).to_bits(),
+            color,
+            1.0f32.to_bits(),
+            0.0f32.to_bits(),
+            // Left-top
+            (left_bottom.x).to_bits(),
+            (left_bottom.y + size.y).to_bits(),
+            color,
+            0.0f32.to_bits(),
+            0.0f32.to_bits(),
+        ];
+
+        Shape {
+            position: Vec2::ZERO,
+            rotation: 0.0,
             scale: Vec2::ONE,
             texture_id: None,
             apply_model: true,

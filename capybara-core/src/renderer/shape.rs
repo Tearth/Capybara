@@ -1,6 +1,7 @@
 use glam::Mat4;
 use glam::Vec2;
 use glam::Vec3;
+use glam::Vec4;
 
 pub struct Shape {
     pub position: Vec2,
@@ -24,6 +25,53 @@ impl Shape {
 
             vertices: Default::default(),
             indices: Default::default(),
+        }
+    }
+
+    pub fn new_line(from: Vec2, to: Vec2, thickness: f32, color: Vec4) -> Self {
+        let width = thickness / 2.0;
+        let length = (to - from).length() + 1.0;
+        let angle = Vec2::new(0.0, 1.0).angle_between(to - from);
+        let mut vertices = Vec::new();
+
+        let r = (color.x * 255.0) as u32;
+        let g = (color.y * 255.0) as u32;
+        let b = (color.z * 255.0) as u32;
+        let a = (color.w * 255.0) as u32;
+        let color = r | (g << 8) | (b << 16) | (a << 24);
+
+        vertices.push((-width).to_bits());
+        vertices.push((-0.5f32).to_bits());
+        vertices.push(color);
+        vertices.push(0.0f32.to_bits());
+        vertices.push(0.0f32.to_bits());
+
+        vertices.push((width).to_bits());
+        vertices.push((-0.5f32).to_bits());
+        vertices.push(color);
+        vertices.push(1.0f32.to_bits());
+        vertices.push(0.0f32.to_bits());
+
+        vertices.push((width).to_bits());
+        vertices.push((length - 0.5).to_bits());
+        vertices.push(color);
+        vertices.push(1.0f32.to_bits());
+        vertices.push(1.0f32.to_bits());
+
+        vertices.push((-width).to_bits());
+        vertices.push((length - 0.5).to_bits());
+        vertices.push(color);
+        vertices.push(0.0f32.to_bits());
+        vertices.push(1.0f32.to_bits());
+
+        Shape {
+            position: from + Vec2::new(0.5, 0.5),
+            rotation: angle,
+            scale: Vec2::ONE,
+            texture_id: None,
+            apply_model: true,
+            vertices,
+            indices: vec![0, 1, 2, 0, 2, 3],
         }
     }
 

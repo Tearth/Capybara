@@ -10,6 +10,7 @@ use super::texture::Texture;
 use super::texture::TextureKind;
 use crate::assets::loader::AssetsLoader;
 use crate::assets::RawTexture;
+use crate::utils::color::Vec4Color;
 use crate::utils::storage::Storage;
 use anyhow::bail;
 use anyhow::Result;
@@ -384,11 +385,7 @@ impl RendererContext {
             (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0))
         };
 
-        let r = (sprite.color.x * sprite.color.w * 255.0) as u32;
-        let g = (sprite.color.y * sprite.color.w * 255.0) as u32;
-        let b = (sprite.color.z * sprite.color.w * 255.0) as u32;
-        let a = (sprite.color.w * 255.0) as u32;
-        let color = r | (g << 8) | (b << 16) | (a << 24);
+        let color = sprite.color.to_rgb_packed();
 
         self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 0] = sprite.position.x.to_bits();
         self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 1] = sprite.position.y.to_bits();

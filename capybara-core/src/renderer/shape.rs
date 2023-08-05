@@ -1,3 +1,4 @@
+use crate::utils::color::Vec4Color;
 use glam::Mat4;
 use glam::Vec2;
 use glam::Vec3;
@@ -34,11 +35,7 @@ impl Shape {
         let angle = Vec2::new(0.0, 1.0).angle_between(to - from);
         let mut vertices = Vec::new();
 
-        let r = (color.x * 255.0) as u32;
-        let g = (color.y * 255.0) as u32;
-        let b = (color.z * 255.0) as u32;
-        let a = (color.w * 255.0) as u32;
-        let color = r | (g << 8) | (b << 16) | (a << 24);
+        let color = color.to_rgb_packed();
 
         vertices.push((-width).to_bits());
         vertices.push((-0.5f32).to_bits());

@@ -447,21 +447,21 @@ impl RendererContext {
         if shape.apply_model {
             let model = shape.get_model();
 
-            for i in 0..self.shape_buffer_vertices_queue.len() / 5 {
-                let x = self.shape_buffer_vertices_queue[i * 5 + 0];
-                let y = self.shape_buffer_vertices_queue[i * 5 + 1];
+            for i in (self.shape_buffer_vertices_count..(self.shape_buffer_vertices_count + shape.vertices.len())).step_by(5) {
+                let x = self.shape_buffer_vertices_queue[i + 0];
+                let y = self.shape_buffer_vertices_queue[i + 1];
                 let position = Vec4::new(f32::from_bits(x), f32::from_bits(y), 0.0, 1.0);
                 let position_transformed = model * position;
 
-                self.shape_buffer_vertices_queue[i * 5 + 0] = position_transformed.x.to_bits();
-                self.shape_buffer_vertices_queue[i * 5 + 1] = position_transformed.y.to_bits();
+                self.shape_buffer_vertices_queue[i + 0] = position_transformed.x.to_bits();
+                self.shape_buffer_vertices_queue[i + 1] = position_transformed.y.to_bits();
             }
         }
 
         let base_indice = self.shape_buffer_indices_max;
         for i in 0..shape.indices.len() {
             self.shape_buffer_indices_queue[self.shape_buffer_indices_count + i] = base_indice + shape.indices[i];
-            self.shape_buffer_indices_max = cmp::max(self.shape_buffer_indices_max, base_indice + shape.indices[i]);
+            self.shape_buffer_indices_max = cmp::max(self.shape_buffer_indices_max, base_indice + shape.indices[i] + 1);
         }
 
         self.shape_buffer_vertices_count += shape.vertices.len();

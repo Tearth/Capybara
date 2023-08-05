@@ -114,6 +114,72 @@ impl Shape {
         }
     }
 
+    pub fn new_frame(left_bottom: Vec2, right_top: Vec2, thickness: f32, color: Vec4) -> Self {
+        let size = right_top - left_bottom + Vec2::ONE;
+        let color = color.to_rgb_packed();
+        let uv_thickness = thickness / size;
+        let vertices = vec![
+            // Left-bottom outer
+            (left_bottom.x).to_bits(),
+            (left_bottom.y).to_bits(),
+            color,
+            0.0f32.to_bits(),
+            1.0f32.to_bits(),
+            // Left-bottom inner
+            (left_bottom.x + thickness).to_bits(),
+            (left_bottom.y + thickness).to_bits(),
+            color,
+            (0.0 + uv_thickness.x).to_bits(),
+            (1.0 - uv_thickness.y).to_bits(),
+            // Right-bottom outer
+            (left_bottom.x + size.x).to_bits(),
+            (left_bottom.y).to_bits(),
+            color,
+            1.0f32.to_bits(),
+            1.0f32.to_bits(),
+            // Right-bottom inner
+            (left_bottom.x + size.x - thickness).to_bits(),
+            (left_bottom.y + thickness).to_bits(),
+            color,
+            (1.0 - uv_thickness.x).to_bits(),
+            (1.0 - uv_thickness.y).to_bits(),
+            // Right-top outer
+            (left_bottom.x + size.x).to_bits(),
+            (left_bottom.y + size.y).to_bits(),
+            color,
+            1.0f32.to_bits(),
+            0.0f32.to_bits(),
+            // Right-top inner
+            (left_bottom.x + size.x - thickness).to_bits(),
+            (left_bottom.y + size.y - thickness).to_bits(),
+            color,
+            (1.0 - uv_thickness.x).to_bits(),
+            (0.0 + uv_thickness.y).to_bits(),
+            // Left-top outer
+            (left_bottom.x).to_bits(),
+            (left_bottom.y + size.y).to_bits(),
+            color,
+            0.0f32.to_bits(),
+            0.0f32.to_bits(),
+            // Left-top inner
+            (left_bottom.x + thickness).to_bits(),
+            (left_bottom.y + size.y - thickness).to_bits(),
+            color,
+            (0.0 + uv_thickness.x).to_bits(),
+            (0.0 + uv_thickness.y).to_bits(),
+        ];
+
+        Shape {
+            position: Vec2::ZERO,
+            rotation: 0.0,
+            scale: Vec2::ONE,
+            texture_id: None,
+            apply_model: true,
+            vertices,
+            indices: vec![0, 2, 1, 2, 3, 1, 2, 4, 5, 2, 5, 3, 4, 6, 5, 6, 7, 5, 6, 0, 1, 6, 1, 7],
+        }
+    }
+
     pub fn get_model(&self) -> Mat4 {
         let translation = Mat4::from_translation(Vec3::new(self.position.x, self.position.y, 0.0));
         let rotation = Mat4::from_rotation_z(self.rotation);

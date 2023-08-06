@@ -217,6 +217,45 @@ impl Shape {
         Shape { position: Vec2::ZERO, rotation: 0.0, scale: Vec2::ONE, texture_id: None, apply_model: true, vertices, indices }
     }
 
+    pub fn new_circle(center: Vec2, radius: f32, sides: u32, thickness: f32, color: Vec4) -> Self {
+        let color = color.to_rgb_packed();
+        let uv_thickness = thickness / radius;
+        let angle_step = consts::TAU / sides as f32;
+        let mut vertices = Vec::new();
+        let mut indices = Vec::new();
+
+        for i in 0..sides {
+            let angle = i as f32 * angle_step;
+            let sin = f32::sin(angle);
+            let cos = f32::cos(angle);
+
+            vertices.extend_from_slice(&[
+                // Outer
+                (sin * radius + center.x).to_bits(),
+                (cos * radius + center.y).to_bits(),
+                color,
+                (sin / 2.0 + 0.5).to_bits(),
+                (1.0 - (cos / 2.0 + 0.5)).to_bits(),
+                // Inner
+                (sin * (radius - thickness) + center.x).to_bits(),
+                (cos * (radius - thickness) + center.y).to_bits(),
+                color,
+                (sin * (1.0 - uv_thickness) / 2.0 + 0.5).to_bits(),
+                (1.0 - (cos * (1.0 - uv_thickness) / 2.0 + 0.5)).to_bits(),
+            ]);
+
+            if i > 0 {
+                let i = i * 2;
+                indices.extend_from_slice(&[i - 2, i - 1, i + 1, i - 2, i, i + 1]);
+            }
+        }
+
+        let i = sides * 2;
+        indices.extend_from_slice(&[i - 2, i - 1, 1, i - 2, 0, 1]);
+
+        Shape { position: Vec2::ZERO, rotation: 0.0, scale: Vec2::ONE, texture_id: None, apply_model: true, vertices, indices }
+    }
+
     pub fn get_model(&self) -> Mat4 {
         let translation = Mat4::from_translation(Vec3::new(self.position.x, self.position.y, 0.0));
         let rotation = Mat4::from_rotation_z(self.rotation);

@@ -181,7 +181,8 @@ impl Shape {
         }
     }
 
-    pub fn new_disc(center: Vec2, radius: f32, sides: u32, color: Vec4) -> Self {
+    pub fn new_disc(center: Vec2, radius: f32, sides: Option<u32>, color: Vec4) -> Self {
+        let sides = sides.unwrap_or((radius / 2.0) as u32);
         let color = color.to_rgb_packed();
         let angle_step = consts::TAU / sides as f32;
         let mut vertices = vec![
@@ -217,7 +218,8 @@ impl Shape {
         Shape { position: Vec2::ZERO, rotation: 0.0, scale: Vec2::ONE, texture_id: None, apply_model: true, vertices, indices }
     }
 
-    pub fn new_circle(center: Vec2, radius: f32, sides: u32, thickness: f32, color: Vec4) -> Self {
+    pub fn new_circle(center: Vec2, radius: f32, sides: Option<u32>, thickness: f32, color: Vec4) -> Self {
+        let sides = sides.unwrap_or((radius / 2.0) as u32);
         let color = color.to_rgb_packed();
         let uv_thickness = thickness / radius;
         let angle_step = consts::TAU / sides as f32;

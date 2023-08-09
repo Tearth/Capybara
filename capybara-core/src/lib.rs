@@ -12,6 +12,7 @@ pub mod assets;
 pub mod filesystem;
 pub mod renderer;
 pub mod scene;
+pub mod settings;
 pub mod ui;
 pub mod utils;
 pub mod window;
@@ -28,6 +29,7 @@ pub use fastrand;
 pub use glam;
 pub use instant;
 pub use log;
+pub use rustc_hash;
 
 #[cfg(feature = "audio")]
 pub use kira;

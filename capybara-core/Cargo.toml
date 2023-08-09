@@ -51,7 +51,8 @@ web-sys = { version = "0.3.63", features = [
     "Request",
     "RequestInit",
     "RequestMode",
-    "Response"
+    "Response",
+    "Storage"
 ]}
 js-sys = { version = "0.3.63" }
 wasm-bindgen = { version = "0.2.86" }

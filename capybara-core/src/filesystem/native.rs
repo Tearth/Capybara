@@ -20,7 +20,7 @@ impl FileSystem {
         Self { input, status, buffer }
     }
 
-    pub fn load(&mut self, input: &str) -> Result<FileLoadingStatus> {
+    pub fn read(&mut self, input: &str) -> Result<FileLoadingStatus> {
         let mut buffer = self.buffer.borrow_mut();
         let mut file = File::open(input)?;
 

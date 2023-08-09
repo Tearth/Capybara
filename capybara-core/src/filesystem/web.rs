@@ -47,7 +47,7 @@ impl FileSystem {
         Self { input, status, buffer, fetch_closure }
     }
 
-    pub fn load(&mut self, input: &str) -> Result<FileLoadingStatus> {
+    pub fn read(&mut self, input: &str) -> Result<FileLoadingStatus> {
         let status = *self.status.borrow_mut();
 
         if status == FileLoadingStatus::Finished && *self.input.borrow() != input {

@@ -45,13 +45,13 @@ impl AssetsLoader {
 
         match self.status {
             AssetsLoadingStatus::Initializing => {
-                self.filesystem.load(input)?;
+                self.filesystem.read(input)?;
 
                 self.input = input.to_string();
                 self.status = AssetsLoadingStatus::Loading;
             }
             AssetsLoadingStatus::Loading => {
-                if self.filesystem.load(input)? == FileLoadingStatus::Finished {
+                if self.filesystem.read(input)? == FileLoadingStatus::Finished {
                     let buffer = self.filesystem.buffer.clone();
                     let buffer = buffer.borrow();
 

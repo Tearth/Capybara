@@ -1,6 +1,7 @@
 use capybara_core::anyhow::Result;
 use capybara_core::app::ApplicationContext;
 use capybara_core::app::ApplicationState;
+use capybara_core::assets::loader::AssetsLoader;
 use capybara_core::assets::AssetsLoadingStatus;
 use capybara_core::egui::panel::Side;
 use capybara_core::egui::Color32;
@@ -26,7 +27,9 @@ use std::collections::VecDeque;
 fast_gpu!();
 
 #[derive(Default)]
-struct GlobalData {}
+struct GlobalData {
+    assets: AssetsLoader,
+}
 
 #[derive(Default)]
 struct MainScene {
@@ -68,9 +71,9 @@ impl Scene<GlobalData> for MainScene {
             self.delta_history.pop_front();
         }
 
-        if !self.initialized && state.assets.load("./data/data0.zip")? == AssetsLoadingStatus::Finished {
-            state.renderer.instantiate_assets(state.assets, None)?;
-            state.ui.instantiate_assets(state.assets, None)?;
+        if !self.initialized && state.global.assets.load("./data/data0.zip")? == AssetsLoadingStatus::Finished {
+            state.renderer.instantiate_assets(&state.global.assets, None)?;
+            state.ui.instantiate_assets(&state.global.assets, None)?;
             state.window.set_swap_interval(0);
 
             for _ in 0..200000 {

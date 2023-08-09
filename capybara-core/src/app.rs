@@ -1,4 +1,3 @@
-use crate::assets::loader::AssetsLoader;
 use crate::renderer::context::RendererContext;
 use crate::scene::FrameCommand;
 use crate::scene::Scene;
@@ -25,7 +24,6 @@ where
 {
     pub window: Box<WindowContext>,
     pub renderer: RendererContext,
-    pub assets: AssetsLoader,
     pub ui: UiContext,
     pub scenes: HashMap<String, Box<dyn Scene<G>>>,
     pub global: G,
@@ -48,7 +46,6 @@ pub struct ApplicationState<'a, G> {
     pub window: &'a mut Box<WindowContext>,
     pub renderer: &'a mut RendererContext,
     pub ui: &'a mut UiContext,
-    pub assets: &'a mut AssetsLoader,
     pub global: &'a mut G,
 
     #[cfg(feature = "audio")]
@@ -64,7 +61,6 @@ macro_rules! state {
             window: &mut $self.window,
             renderer: &mut $self.renderer,
             ui: &mut $self.ui,
-            assets: &mut $self.assets,
             global: &mut $self.global,
 
             #[cfg(feature = "audio")]
@@ -84,7 +80,6 @@ where
         let window = WindowContext::new(title, style)?;
         let mut renderer = RendererContext::new(window.load_gl_pointers())?;
         let ui = UiContext::new(&mut renderer)?;
-        let assets = AssetsLoader::new();
 
         #[cfg(feature = "audio")]
         let audio = AudioContext::new()?;
@@ -95,7 +90,6 @@ where
         Ok(Self {
             window,
             renderer,
-            assets,
             ui,
             scenes: Default::default(),
             global: Default::default(),

@@ -1,6 +1,7 @@
 use capybara_core::anyhow::Result;
 use capybara_core::app::ApplicationContext;
 use capybara_core::app::ApplicationState;
+use capybara_core::assets::loader::AssetsLoader;
 use capybara_core::assets::AssetsLoadingStatus;
 use capybara_core::egui::panel::Side;
 use capybara_core::egui::Color32;
@@ -28,7 +29,9 @@ use std::collections::VecDeque;
 fast_gpu!();
 
 #[derive(Default)]
-struct GlobalData {}
+struct GlobalData {
+    assets: AssetsLoader,
+}
 
 #[derive(Default)]
 struct MainScene {
@@ -100,9 +103,9 @@ impl Scene<GlobalData> for MainScene {
 
         const PIXELS_PER_METER: f32 = 50.0;
 
-        if !self.initialized && state.assets.load("./data/data0.zip")? == AssetsLoadingStatus::Finished {
-            state.renderer.instantiate_assets(state.assets, None)?;
-            state.ui.instantiate_assets(state.assets, None)?;
+        if !self.initialized && state.global.assets.load("./data/data0.zip")? == AssetsLoadingStatus::Finished {
+            state.renderer.instantiate_assets(&state.global.assets, None)?;
+            state.ui.instantiate_assets(&state.global.assets, None)?;
             state.window.set_swap_interval(0);
 
             self.terrain = Sprite { size: Some(Vec2::new(state.renderer.viewport_size.x, 50.0)), ..Default::default() };

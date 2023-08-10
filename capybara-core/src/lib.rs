@@ -12,7 +12,6 @@ pub mod assets;
 pub mod filesystem;
 pub mod renderer;
 pub mod scene;
-pub mod settings;
 pub mod ui;
 pub mod utils;
 pub mod window;

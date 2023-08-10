@@ -1,18 +1,19 @@
+use crate::filesystem::FileSystem;
 use anyhow::Result;
 use rustc_hash::FxHashMap;
 use std::str::FromStr;
 
-#[cfg(any(windows, unix))]
-pub mod native;
-#[cfg(any(windows, unix))]
-pub type SettingsStorage = native::SettingsStorageNative;
-
-#[cfg(web)]
-pub mod web;
-#[cfg(web)]
-pub type SettingsStorage = web::SettingsStorageWeb;
+pub struct SettingsStorage {
+    path: String,
+    filesystem: FileSystem,
+    cache: Option<FxHashMap<String, String>>,
+}
 
 impl SettingsStorage {
+    pub fn new(path: &str) -> Self {
+        Self { path: path.to_string(), filesystem: Default::default(), cache: None }
+    }
+
     pub fn get<T>(&mut self, key: &str) -> Option<T>
     where
         T: FromStr,
@@ -23,7 +24,7 @@ impl SettingsStorage {
             }
         }
 
-        let content = self.read_content().unwrap();
+        let content = self.filesystem.read_local(&self.path).unwrap();
         let settings = self.deserialize(&content).unwrap();
         self.cache = Some(settings);
 
@@ -35,7 +36,7 @@ impl SettingsStorage {
         T: FromStr + ToString,
     {
         if self.cache.is_none() {
-            if let Ok(content) = self.read_content() {
+            if let Ok(content) = self.filesystem.read_local(&self.path) {
                 let settings = self.deserialize(&content)?;
                 self.cache = Some(settings);
             } else {
@@ -45,7 +46,7 @@ impl SettingsStorage {
 
         if self.cache.as_ref().unwrap().get(key).is_none() || overwrite {
             self.cache.as_mut().unwrap().insert(key.to_string(), value.to_string());
-            self.write_content(&self.serialize(self.cache.as_ref().unwrap()))?;
+            self.filesystem.write_local(&self.path, &self.serialize(self.cache.as_ref().unwrap()))?;
         }
 
         Ok(())

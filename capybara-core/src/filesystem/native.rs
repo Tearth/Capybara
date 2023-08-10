@@ -1,7 +1,7 @@
 use super::*;
 use anyhow::Result;
 use std::cell::RefCell;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::Read;
 use std::rc::Rc;
 
@@ -20,17 +20,29 @@ impl FileSystem {
         Self { input, status, buffer }
     }
 
-    pub fn read(&mut self, input: &str) -> Result<FileLoadingStatus> {
+    pub fn read(&mut self, path: &str) -> Result<FileLoadingStatus> {
         let mut buffer = self.buffer.borrow_mut();
-        let mut file = File::open(input)?;
+        let mut file = File::open(path)?;
 
         buffer.clear();
         file.read_to_end(&mut buffer)?;
 
-        *self.input.borrow_mut() = input.to_string();
+        *self.input.borrow_mut() = path.to_string();
         *self.status.borrow_mut() = FileLoadingStatus::Finished;
 
         Ok(*self.status.borrow())
+    }
+
+    pub fn write(&self, path: &str, content: &str) -> Result<()> {
+        Ok(fs::write(path, content)?)
+    }
+
+    pub fn read_local(&mut self, path: &str) -> Result<String> {
+        Ok(fs::read_to_string(path)?)
+    }
+
+    pub fn write_local(&self, path: &str, content: &str) -> Result<()> {
+        Ok(fs::write(path, content)?)
     }
 }
 

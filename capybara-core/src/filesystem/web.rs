@@ -1,4 +1,5 @@
 use super::*;
+use anyhow::bail;
 use anyhow::Result;
 use js_sys::ArrayBuffer;
 use js_sys::Uint8Array;
@@ -10,6 +11,7 @@ use wasm_bindgen::JsValue;
 use web_sys::Request;
 use web_sys::RequestInit;
 use web_sys::Response;
+use web_sys::Storage;
 
 pub struct FileSystem {
     pub input: Rc<RefCell<String>>,
@@ -17,6 +19,7 @@ pub struct FileSystem {
     pub buffer: Rc<RefCell<Vec<u8>>>,
 
     fetch_closure: Rc<RefCell<Closure<dyn FnMut(JsValue)>>>,
+    storage: Storage,
 }
 
 impl FileSystem {
@@ -44,7 +47,10 @@ impl FileSystem {
             let _ = response.array_buffer().unwrap().then(&blob_closure);
         })));
 
-        Self { input, status, buffer, fetch_closure }
+        let window = web_sys::window().unwrap();
+        let storage = window.local_storage().unwrap().unwrap();
+
+        Self { input, status, buffer, fetch_closure, storage }
     }
 
     pub fn read(&mut self, input: &str) -> Result<FileLoadingStatus> {
@@ -65,6 +71,27 @@ impl FileSystem {
         }
 
         Ok(*self.status.borrow())
+    }
+
+    pub fn write(&self, _: &str, _: &str) -> Result<()> {
+        bail!("Writing files not supported on Web")
+    }
+
+    pub fn read_local(&self, path: &str) -> Result<String> {
+        if let Ok(settings) = self.storage.get(path) {
+            if let Some(settings) = settings {
+                return Ok(settings);
+            } else {
+                return Ok("".to_string());
+            }
+        }
+
+        bail!("Local storate is not available")
+    }
+
+    pub fn write_local(&self, path: &str, content: &str) -> Result<()> {
+        self.storage.set(path, content).unwrap();
+        Ok(())
     }
 }
 

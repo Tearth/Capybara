@@ -1,4 +1,4 @@
-use capybara_core::egui::Response;
+use capybara::egui::Response;
 
 #[derive(Default)]
 pub struct WidgetState {

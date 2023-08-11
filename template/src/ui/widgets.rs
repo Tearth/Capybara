@@ -1,17 +1,17 @@
 use super::state::WidgetState;
 use super::state::WidgetStateTrait;
-use capybara_core::egui::Color32;
-use capybara_core::egui::Frame;
-use capybara_core::egui::ImageButton;
-use capybara_core::egui::Label;
-use capybara_core::egui::Margin;
-use capybara_core::egui::Response;
-use capybara_core::egui::RichText;
-use capybara_core::egui::Rounding;
-use capybara_core::egui::Stroke;
-use capybara_core::egui::Ui;
-use capybara_core::egui::Vec2;
-use capybara_core::ui::context::UiContext;
+use capybara::egui::Color32;
+use capybara::egui::Frame;
+use capybara::egui::ImageButton;
+use capybara::egui::Label;
+use capybara::egui::Margin;
+use capybara::egui::Response;
+use capybara::egui::RichText;
+use capybara::egui::Rounding;
+use capybara::egui::Stroke;
+use capybara::egui::Ui;
+use capybara::egui::Vec2;
+use capybara::ui::context::UiContext;
 
 pub fn button_green(ui: &mut Ui, context: &UiContext, label: &str, state: &mut WidgetState) -> Response {
     image_button(ui, context, "button_green", Vec2::new(190.0, 49.0), label, Color32::from_rgb(40, 70, 30), state)

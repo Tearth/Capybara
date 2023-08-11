@@ -1,4 +1,4 @@
-use capybara_core::assets::loader::AssetsLoader;
+use capybara::assets::loader::AssetsLoader;
 
 pub mod boot;
 pub mod game;

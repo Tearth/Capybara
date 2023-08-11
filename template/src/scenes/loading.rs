@@ -1,18 +1,18 @@
 use super::GlobalData;
-use capybara_core::anyhow::Result;
-use capybara_core::app::ApplicationState;
-use capybara_core::assets::AssetsLoadingStatus;
-use capybara_core::egui::CentralPanel;
-use capybara_core::egui::Color32;
-use capybara_core::egui::Direction;
-use capybara_core::egui::FullOutput;
-use capybara_core::egui::Layout;
-use capybara_core::egui::RawInput;
-use capybara_core::egui::RichText;
-use capybara_core::instant::Instant;
-use capybara_core::scene::FrameCommand;
-use capybara_core::scene::Scene;
-use capybara_core::window::InputEvent;
+use capybara::anyhow::Result;
+use capybara::app::ApplicationState;
+use capybara::assets::AssetsLoadingStatus;
+use capybara::egui::CentralPanel;
+use capybara::egui::Color32;
+use capybara::egui::Direction;
+use capybara::egui::FullOutput;
+use capybara::egui::Layout;
+use capybara::egui::RawInput;
+use capybara::egui::RichText;
+use capybara::instant::Instant;
+use capybara::scene::FrameCommand;
+use capybara::scene::Scene;
+use capybara::window::InputEvent;
 
 #[derive(Default)]
 pub struct LoadingScene {

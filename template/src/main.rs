@@ -1,7 +1,7 @@
-use capybara_core::app::ApplicationContext;
-use capybara_core::fast_gpu;
-use capybara_core::window::Coordinates;
-use capybara_core::window::WindowStyle;
+use capybara::app::ApplicationContext;
+use capybara::fast_gpu;
+use capybara::window::Coordinates;
+use capybara::window::WindowStyle;
 use scenes::boot::BootScene;
 use scenes::game::GameScene;
 use scenes::loading::LoadingScene;

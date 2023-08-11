@@ -27,6 +27,6 @@ A simple, cross-platform 2D game engine written in Rust, using OpenGL/WebGL as g
  - sound: [kira](https://github.com/tesselode/kira)
 
 ## Supported platforms
- - Windows/WinAPI ([winapi.rs](./capybara-core/src/window/winapi.rs))
- - Linux/X11 ([x11.rs](./capybara-core/src/window/x11.rs))
- - Web/WASM ([web.rs](./capybara-core/src/window/web.rs))
+ - Windows/WinAPI ([winapi.rs](./capybara/src/window/winapi.rs))
+ - Linux/X11 ([x11.rs](./capybara/src/window/x11.rs))
+ - Web/WASM ([web.rs](./capybara/src/window/web.rs))

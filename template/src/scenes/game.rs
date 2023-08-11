@@ -1,19 +1,19 @@
 use super::GlobalData;
 use crate::ui::state::WidgetState;
 use crate::ui::widgets;
-use capybara_core::anyhow::Result;
-use capybara_core::app::ApplicationState;
-use capybara_core::egui::Align2;
-use capybara_core::egui::FullOutput;
-use capybara_core::egui::RawInput;
-use capybara_core::egui::Vec2;
-use capybara_core::egui::Window;
-use capybara_core::glam::Vec4;
-use capybara_core::scene::FrameCommand;
-use capybara_core::scene::Scene;
-use capybara_core::utils::color::Vec4Color;
-use capybara_core::window::InputEvent;
-use capybara_core::window::Key;
+use capybara::anyhow::Result;
+use capybara::app::ApplicationState;
+use capybara::egui::Align2;
+use capybara::egui::FullOutput;
+use capybara::egui::RawInput;
+use capybara::egui::Vec2;
+use capybara::egui::Window;
+use capybara::glam::Vec4;
+use capybara::scene::FrameCommand;
+use capybara::scene::Scene;
+use capybara::utils::color::Vec4Color;
+use capybara::window::InputEvent;
+use capybara::window::Key;
 
 #[derive(Default)]
 pub struct GameScene {

@@ -1,7 +1,7 @@
 [workspace]
 members = [
-    "capybara-core",
-    "capybara-template",
+    "capybara",
+    "template",
 
     "examples/benchmark",
     "examples/particles",

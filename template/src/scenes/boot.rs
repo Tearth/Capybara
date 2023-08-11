@@ -1,17 +1,17 @@
 use super::GlobalData;
-use capybara_core::anyhow::Result;
-use capybara_core::app::ApplicationState;
-use capybara_core::assets::AssetsLoadingStatus;
-use capybara_core::egui::Color32;
-use capybara_core::egui::FontFamily;
-use capybara_core::egui::FontId;
-use capybara_core::egui::FullOutput;
-use capybara_core::egui::RawInput;
-use capybara_core::egui::Stroke;
-use capybara_core::egui::TextStyle;
-use capybara_core::scene::FrameCommand;
-use capybara_core::scene::Scene;
-use capybara_core::window::InputEvent;
+use capybara::anyhow::Result;
+use capybara::app::ApplicationState;
+use capybara::assets::AssetsLoadingStatus;
+use capybara::egui::Color32;
+use capybara::egui::FontFamily;
+use capybara::egui::FontId;
+use capybara::egui::FullOutput;
+use capybara::egui::RawInput;
+use capybara::egui::Stroke;
+use capybara::egui::TextStyle;
+use capybara::scene::FrameCommand;
+use capybara::scene::Scene;
+use capybara::window::InputEvent;
 
 #[derive(Default)]
 pub struct BootScene {}

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["BLACK","GRADIENT_SIZE","GREEN","RED","TRANSPARENT","WHITE"],"enum":["Interpolation"],"fn":["blending_and_feathering_test","lerp_color_gamma","mul_color_gamma","paint_fine_lines_and_text","pixel_test","text_on_bg","vertex_gradient"],"struct":["ColorTest","Gradient","TextureManager"]};

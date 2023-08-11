@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["main"],"mod":["test"],"static":["AmdPowerXpressRequestHighPerformance","NvOptimusEnablement"],"struct":["GlobalData","MainScene"]};

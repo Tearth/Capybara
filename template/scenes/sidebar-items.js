@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["boot","game","loading","menu"],"struct":["GlobalData"]};

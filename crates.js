@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["benchmark","capybara","particles","physics","template","ui"];

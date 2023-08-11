@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["InputEvent","Key","MouseButton","MouseWheelDirection","WindowStyle"],"mod":["winapi"],"struct":["Coordinates","Modifiers"],"type":["WindowContext"]};

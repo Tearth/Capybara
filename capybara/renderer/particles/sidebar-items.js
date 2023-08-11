@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ParticleInterpolation"],"fn":["calculate","generate_variations","interpolate"],"struct":["Particle","ParticleEmitter","ParticleParameter"]};

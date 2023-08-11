@@ -5,7 +5,7 @@ on:
 jobs:
   generate_docs:
     name: Generate docs
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@master
       - uses: actions-rs/toolchain@v1
@@ -17,8 +17,8 @@ jobs:
         with:
           command: doc
           args: --no-deps --document-private-items
-      - run: echo "<meta http-equiv=\"refresh\" content=\"0; url=capybara\">" > ./target/doc/index.html
+      - run: echo ^<meta http-equiv=^"refresh^" content=^"0; url=capybara^"^> > ./target/doc/index.html
       - uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./target/doc
+          publish_dir: ./target/doc/

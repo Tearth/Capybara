@@ -5,7 +5,7 @@ on:
 jobs:
   build_and_check:
     name: Build and check
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@master
       - uses: actions-rs/toolchain@v1
@@ -24,4 +24,3 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --release

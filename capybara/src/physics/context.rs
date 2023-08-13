@@ -1,5 +1,6 @@
 use super::events::EventCollector;
 use glam::Vec2;
+use glam::Vec4;
 use rapier2d::na::Vector2;
 use rapier2d::prelude::*;
 use rustc_hash::FxHashMap;
@@ -21,6 +22,21 @@ pub struct PhysicsContext {
     pub hooks: Box<dyn PhysicsHooks>,
     pub events: EventCollector,
     pub running: bool,
+
+    pub debug: PhysicsDebugSettings,
+}
+
+pub struct PhysicsDebugSettings {
+    pub collider_thickness: f32,
+    pub force_thickness: f32,
+    pub mass_center_radius: f32,
+    pub contact_radius: f32,
+
+    pub active_color: Vec4,
+    pub sleep_color: Vec4,
+    pub force_color: Vec4,
+    pub mass_center_color: Vec4,
+    pub contact_color: Vec4,
 }
 
 pub struct InterpolationData {
@@ -48,6 +64,19 @@ impl PhysicsContext {
             hooks: Box::new(()),
             events: Default::default(),
             running: true,
+
+            debug: PhysicsDebugSettings {
+                collider_thickness: 1.0,
+                force_thickness: 1.0,
+                mass_center_radius: 4.0,
+                contact_radius: 4.0,
+
+                active_color: Vec4::new(0.0, 0.0, 1.0, 1.0),
+                sleep_color: Vec4::new(1.0, 0.0, 0.0, 1.0),
+                force_color: Vec4::new(0.0, 1.0, 0.0, 1.0),
+                mass_center_color: Vec4::new(1.0, 0.0, 0.0, 1.0),
+                contact_color: Vec4::new(1.0, 1.0, 1.0, 1.0),
+            },
         }
     }
 

@@ -53,7 +53,7 @@ impl Scene<GlobalData> for GameScene {
 
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let mut command = None;
-        let output = state.ui.inner.run(input, |context| {
+        let output = state.ui.inner.read().unwrap().run(input, |context| {
             let center = context.screen_rect().center();
 
             if self.exit_menu_visible {

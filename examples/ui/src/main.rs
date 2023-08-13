@@ -57,7 +57,7 @@ impl Scene<GlobalData> for MainScene {
     }
 
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
-        let output = state.ui.inner.run(input, |context| {
+        let output = state.ui.inner.read().unwrap().run(input, |context| {
             CentralPanel::default().show(context, |ui| {
                 ScrollArea::both().auto_shrink([false; 2]).show(ui, |ui| {
                     if self.initialized {

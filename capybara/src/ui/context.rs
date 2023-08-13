@@ -33,9 +33,11 @@ use egui::TextureOptions;
 use glam::Vec2;
 use glow::HasContext;
 use instant::Instant;
+use std::sync::Arc;
+use std::sync::RwLock;
 
 pub struct UiContext {
-    pub inner: egui::Context,
+    pub inner: Arc<RwLock<egui::Context>>,
     pub screen_size: Vec2,
     pub collected_events: Vec<Event>,
     pub modifiers: Modifiers,
@@ -88,7 +90,7 @@ impl UiContext {
                 }
             }
 
-            let handle = self.inner.load_texture(texture.name.clone(), image, Default::default());
+            let handle = self.inner.write().unwrap().load_texture(texture.name.clone(), image, Default::default());
             self.handles.insert(texture.name.clone(), handle);
         }
 
@@ -111,7 +113,7 @@ impl UiContext {
             fonts.families.insert(family, vec![font.name.clone()]);
         }
 
-        self.inner.set_fonts(fonts);
+        self.inner.write().unwrap().set_fonts(fonts);
         Ok(())
     }
 
@@ -223,7 +225,7 @@ impl UiContext {
             };
         }
 
-        for mesh in self.inner.tessellate(output.shapes) {
+        for mesh in self.inner.read().unwrap().tessellate(output.shapes) {
             if let Primitive::Mesh(data) = mesh.primitive {
                 let mut vertices = Vec::new();
                 for vertice in data.vertices {

@@ -5,6 +5,7 @@ use anyhow::Result;
 use kira::manager::backend::cpal::CpalBackend;
 use kira::manager::AudioManager;
 use kira::manager::AudioManagerSettings;
+use kira::track::TrackId;
 
 pub struct AudioContext {
     pub inner: AudioManager<CpalBackend>,
@@ -16,7 +17,7 @@ impl AudioContext {
         Ok(Self { inner: AudioManager::<CpalBackend>::new(AudioManagerSettings::default())?, sounds: Default::default() })
     }
 
-    pub fn instantiate_assets(&mut self, assets: &AssetsLoader, prefix: Option<&str>) -> Result<()> {
+    pub fn instantiate_assets(&mut self, assets: &AssetsLoader, prefix: Option<&str>, track: Option<TrackId>) -> Result<()> {
         for sound in &assets.raw_sounds {
             if let Some(prefix) = &prefix {
                 if !sound.path.starts_with(prefix) {
@@ -24,7 +25,7 @@ impl AudioContext {
                 }
             }
 
-            self.sounds.store_with_name(&sound.name, Sound::new(sound)?)?;
+            self.sounds.store_with_name(&sound.name, Sound::new(sound, track)?)?;
         }
 
         Ok(())

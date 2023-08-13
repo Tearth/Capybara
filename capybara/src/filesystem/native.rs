@@ -1,7 +1,8 @@
 use super::*;
 use anyhow::Result;
 use std::cell::RefCell;
-use std::fs::{self, File};
+use std::fs;
+use std::fs::File;
 use std::io::Read;
 use std::rc::Rc;
 

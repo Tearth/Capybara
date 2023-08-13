@@ -1,4 +1,5 @@
 use crate::filesystem::FileSystem;
+use anyhow::anyhow;
 use anyhow::Result;
 use rustc_hash::FxHashMap;
 use std::str::FromStr;
@@ -14,24 +15,24 @@ impl SettingsStorage {
         Self { path: path.to_string(), filesystem: Default::default(), cache: None }
     }
 
-    pub fn get<T>(&mut self, key: &str) -> Option<T>
+    pub fn get<T>(&mut self, key: &str) -> Result<Option<T>>
     where
         T: FromStr,
     {
         if let Some(cache) = &self.cache {
             if let Some(value) = cache.get(key).cloned() {
-                return value.parse().ok();
+                return Ok(value.parse().ok());
             }
         }
 
         let content = self.filesystem.read_local(&self.path).unwrap();
-        let settings = self.deserialize(&content).unwrap();
+        let settings = self.deserialize(&content)?;
         self.cache = Some(settings);
 
-        self.cache.as_ref().unwrap().get(key).cloned()?.parse().ok()
+        Ok(self.cache.as_ref().unwrap().get(key).cloned().ok_or_else(|| anyhow!("Key not found"))?.parse().ok())
     }
 
-    pub fn set<T>(&mut self, key: &str, value: T, overwrite: bool) -> Result<()>
+    pub fn set<T>(&mut self, key: &str, value: T, overwrite: bool) -> Result<Option<T>>
     where
         T: FromStr + ToString,
     {
@@ -47,9 +48,11 @@ impl SettingsStorage {
         if self.cache.as_ref().unwrap().get(key).is_none() || overwrite {
             self.cache.as_mut().unwrap().insert(key.to_string(), value.to_string());
             self.filesystem.write_local(&self.path, &self.serialize(self.cache.as_ref().unwrap()))?;
-        }
 
-        Ok(())
+            Ok(Some(value))
+        } else {
+            Ok(self.cache.as_ref().unwrap().get(key).cloned().ok_or_else(|| anyhow!("Key not found"))?.parse().ok())
+        }
     }
 
     fn serialize(&self, settings: &FxHashMap<String, String>) -> String {

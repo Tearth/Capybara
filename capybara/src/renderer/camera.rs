@@ -3,6 +3,7 @@ use glam::Mat4;
 use glam::Vec2;
 use glam::Vec3;
 
+#[derive(Clone, PartialEq)]
 pub struct Camera {
     pub id: usize,
     pub name: Option<String>,
@@ -10,7 +11,6 @@ pub struct Camera {
     pub position: Vec2,
     pub size: Vec2,
     pub origin: CameraOrigin,
-    pub dirty: bool,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -21,7 +21,7 @@ pub enum CameraOrigin {
 
 impl Camera {
     pub fn new(position: Vec2, size: Vec2, origin: CameraOrigin) -> Self {
-        Self { id: 0, name: None, position, size, origin, dirty: true }
+        Self { id: 0, name: None, position, size, origin }
     }
 
     pub fn get_center_position(&self) -> Vec2 {
@@ -75,5 +75,11 @@ impl StorageItem for Camera {
 
     fn set_name(&mut self, name: Option<String>) {
         self.name = name;
+    }
+}
+
+impl Default for Camera {
+    fn default() -> Self {
+        Self::new(Vec2::ZERO, Vec2::ZERO, CameraOrigin::LeftBottom)
     }
 }

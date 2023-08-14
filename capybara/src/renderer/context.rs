@@ -44,6 +44,7 @@ pub struct RendererContext {
     pub textures: Storage<Texture>,
     pub gl: Rc<Context>,
 
+    active_camera_data: Camera,
     buffer_metadata: Option<BufferMetadata>,
 
     sprite_buffer_vao: VertexArray,
@@ -109,6 +110,7 @@ impl RendererContext {
                 textures: Default::default(),
                 gl: Rc::new(gl),
 
+                active_camera_data: Default::default(),
                 buffer_metadata: None,
 
                 sprite_buffer_vao,
@@ -495,16 +497,21 @@ impl RendererContext {
                     self.shape_buffer_resized = false;
                 }
 
+                let camera_changed = *camera != self.active_camera_data;
+
                 match buffer_metadata.content_type {
                     BufferContentType::Sprite => {
-                        if self.active_shader_id != self.default_sprite_shader_id || camera.dirty {
+                        if self.active_shader_id != self.default_sprite_shader_id || camera_changed {
                             let shader = self.shaders.get(self.default_sprite_shader_id)?;
                             shader.activate();
                             shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr())?;
                             shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr())?;
 
+                            if camera_changed {
+                                self.active_camera_data = camera.clone();
+                            }
+
                             self.active_shader_id = self.default_sprite_shader_id;
-                            camera.dirty = false;
                         }
 
                         self.gl.bind_vertex_array(Some(self.sprite_buffer_vao));
@@ -530,14 +537,17 @@ impl RendererContext {
                         self.sprite_buffer_vertices_count = 0;
                     }
                     BufferContentType::Shape => {
-                        if self.active_shader_id != self.default_shape_shader_id || camera.dirty {
+                        if self.active_shader_id != self.default_shape_shader_id || camera_changed {
                             let shader = self.shaders.get(self.default_shape_shader_id)?;
                             shader.activate();
                             shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr())?;
                             shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr())?;
 
+                            if camera_changed {
+                                self.active_camera_data = camera.clone();
+                            }
+
                             self.active_shader_id = self.default_shape_shader_id;
-                            camera.dirty = false;
                         }
 
                         self.gl.bind_vertex_array(Some(self.shape_buffer_vao));
@@ -577,9 +587,7 @@ impl RendererContext {
     pub fn activate_camera(&mut self, camera_id: usize) -> Result<()> {
         let camera = self.cameras.get_mut(camera_id)?;
         self.active_camera_id = camera_id;
-
         camera.size = self.viewport_size;
-        camera.dirty = true;
 
         Ok(())
     }
@@ -591,7 +599,6 @@ impl RendererContext {
 
             let camera = self.cameras.get_mut(self.active_camera_id)?;
             camera.size = self.viewport_size;
-            camera.dirty = true;
 
             Ok(())
         }

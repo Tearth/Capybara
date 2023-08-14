@@ -31,7 +31,7 @@ impl PhysicsContext {
                     let direction = Vec2::from_angle(rotation);
 
                     context.draw_shape(&Shape::new_circle(position, radius, None, self.debug.collider_thickness, color))?;
-                    context.draw_shape(&Shape::new_line(position, position + direction * radius, self.debug.collider_thickness, color))?;
+                    context.draw_shape(&Shape::new_line(position, position + direction * (radius - 1.0), self.debug.collider_thickness, color))?;
                 }
                 ShapeType::Cuboid => {
                     let cuboid = collider.shape().as_cuboid().unwrap();

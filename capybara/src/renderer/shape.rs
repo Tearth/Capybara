@@ -63,15 +63,7 @@ impl Shape {
             0.0f32.to_bits(),
         ];
 
-        Shape {
-            position: from + Vec2::new(0.5, 0.5),
-            rotation: angle,
-            scale: Vec2::ONE,
-            texture_id: None,
-            apply_model: true,
-            vertices,
-            indices: vec![0, 1, 2, 0, 2, 3],
-        }
+        Shape { position: from, rotation: angle, scale: Vec2::ONE, texture_id: None, apply_model: true, vertices, indices: vec![0, 1, 2, 0, 2, 3] }
     }
 
     pub fn new_rectangle(left_bottom: Vec2, right_top: Vec2, color: Vec4) -> Self {

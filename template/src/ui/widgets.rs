@@ -11,25 +11,31 @@ use capybara::egui::Rounding;
 use capybara::egui::Stroke;
 use capybara::egui::Ui;
 use capybara::egui::Vec2;
+use capybara::renderer::context::RendererContext;
 use capybara::ui::context::UiContext;
+use capybara::ui::ImageAtlas;
 
-pub fn button_green(ui: &mut Ui, context: &UiContext, label: &str, state: &mut WidgetState) -> Response {
-    image_button(ui, context, "button_green", Vec2::new(190.0, 49.0), label, Color32::from_rgb(40, 70, 30), state)
+pub fn button_green(ui: &mut Ui, context: &UiContext, renderer: &RendererContext, label: &str, state: &mut WidgetState) -> Response {
+    image_button(ui, context, renderer, "button_green", Vec2::new(190.0, 49.0), label, Color32::from_rgb(40, 70, 30), state)
 }
 
-pub fn button_orange(ui: &mut Ui, context: &UiContext, label: &str, state: &mut WidgetState) -> Response {
-    image_button(ui, context, "button_orange", Vec2::new(190.0, 49.0), label, Color32::from_rgb(120, 50, 0), state)
+pub fn button_orange(ui: &mut Ui, context: &UiContext, renderer: &RendererContext, label: &str, state: &mut WidgetState) -> Response {
+    image_button(ui, context, renderer, "button_orange", Vec2::new(190.0, 49.0), label, Color32::from_rgb(120, 50, 0), state)
 }
 
 pub fn image_button(
     ui: &mut Ui,
     context: &UiContext,
+    renderer: &RendererContext,
     texture: &str,
     size: Vec2,
     label: &str,
     label_color: Color32,
     state: &mut WidgetState,
 ) -> Response {
+    let atlas_handle = context.handles.get("ui").unwrap();
+    let atlas_texture = renderer.textures.get_by_name("ui").unwrap();
+
     let tint = if state.pressed {
         Color32::from_rgba_premultiplied(220, 220, 220, 255)
     } else if state.hovered {
@@ -38,7 +44,7 @@ pub fn image_button(
         Color32::from_rgba_premultiplied(255, 255, 255, 255)
     };
 
-    let mut response = ui.add(ImageButton::new(context.handles.get(texture).unwrap(), size).tint(tint).frame(false));
+    let mut response = ui.add(ImageButton::new(atlas_handle, size).atlas(atlas_texture, texture).unwrap().tint(tint).frame(false));
     *state = response.get_state();
 
     response.rect.set_height(response.rect.height() - 6.0);

@@ -1,13 +1,9 @@
-use crate::utils::storage::StorageItem;
 use glam::Mat4;
 use glam::Vec2;
 use glam::Vec3;
 
 #[derive(Clone, PartialEq)]
 pub struct Camera {
-    pub id: usize,
-    pub name: Option<String>,
-
     pub position: Vec2,
     pub size: Vec2,
     pub origin: CameraOrigin,
@@ -21,7 +17,7 @@ pub enum CameraOrigin {
 
 impl Camera {
     pub fn new(position: Vec2, size: Vec2, origin: CameraOrigin) -> Self {
-        Self { id: 0, name: None, position, size, origin }
+        Self { position, size, origin }
     }
 
     pub fn get_center_position(&self) -> Vec2 {
@@ -57,24 +53,6 @@ impl Camera {
 
     pub fn from_world_to_window_coordinates(&self, position: Vec2) -> Vec2 {
         Vec2::new(position.x, self.size.y - position.y) - self.position
-    }
-}
-
-impl StorageItem for Camera {
-    fn get_id(&self) -> usize {
-        self.id
-    }
-
-    fn set_id(&mut self, id: usize) {
-        self.id = id;
-    }
-
-    fn get_name(&self) -> Option<String> {
-        self.name.clone()
-    }
-
-    fn set_name(&mut self, name: Option<String>) {
-        self.name = name;
     }
 }
 

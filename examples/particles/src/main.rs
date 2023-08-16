@@ -79,7 +79,7 @@ impl Scene<GlobalData> for MainScene {
             self.emitter.amount = 20;
             self.emitter.particle_size = Some(Vec2::new(16.0, 16.0));
             self.emitter.particle_lifetime = 1.0;
-            self.emitter.particle_texture_id = Some(state.renderer.textures.get_by_name("Particle")?.id);
+            self.emitter.particle_texture_id = Some(state.renderer.textures.get_id("Particle")?);
             self.emitter.interpolation = ParticleInterpolation::Cosine;
 
             self.emitter.velocity_waypoints.push(ParticleParameter::new(Vec2::new(0.0, 200.0), Vec2::new(100.0, 40.0)));
@@ -135,9 +135,14 @@ impl Scene<GlobalData> for MainScene {
 }
 
 fn main() {
-    ApplicationContext::<GlobalData>::new("Particles", WindowStyle::Window { size: Coordinates::new(1280, 720) })
-        .unwrap()
-        .with_scene("MainScene", Box::<MainScene>::default())
+    main_internal().unwrap();
+}
+
+fn main_internal() -> Result<()> {
+    ApplicationContext::<GlobalData>::new("Particles", WindowStyle::Window { size: Coordinates::new(1280, 720) })?
+        .with_scene("MainScene", Box::<MainScene>::default())?
         .run("MainScene")
         .unwrap();
+
+    Ok(())
 }

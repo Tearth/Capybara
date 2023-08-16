@@ -72,9 +72,14 @@ impl Scene<GlobalData> for MainScene {
 }
 
 fn main() {
-    ApplicationContext::<GlobalData>::new("UI", WindowStyle::Window { size: Coordinates::new(1280, 720) })
-        .unwrap()
-        .with_scene("MainScene", Box::<MainScene>::default())
+    main_internal().unwrap();
+}
+
+fn main_internal() -> Result<()> {
+    ApplicationContext::<GlobalData>::new("UI", WindowStyle::Window { size: Coordinates::new(1280, 720) })?
+        .with_scene("MainScene", Box::<MainScene>::default())?
         .run("MainScene")
         .unwrap();
+
+    Ok(())
 }

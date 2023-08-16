@@ -83,7 +83,7 @@ impl Scene<GlobalData> for MainScene {
                 );
 
                 self.objects.push(Object {
-                    sprite: Sprite { position, texture_id: Some(state.renderer.textures.get_by_name("Takodachi")?.id), ..Default::default() },
+                    sprite: Sprite { position, texture_id: Some(state.renderer.textures.get_id("Takodachi")?), ..Default::default() },
                     direction: Vec2::new(fastrand::f32() * 2.0 - 1.0, fastrand::f32() * 2.0 - 1.0),
                 });
             }
@@ -134,9 +134,13 @@ impl Scene<GlobalData> for MainScene {
 }
 
 fn main() {
-    ApplicationContext::<GlobalData>::new("Benchmark", WindowStyle::Window { size: Coordinates::new(1280, 720) })
-        .unwrap()
-        .with_scene("MainScene", Box::<MainScene>::default())
-        .run("MainScene")
-        .unwrap();
+    main_internal().unwrap();
+}
+
+fn main_internal() -> Result<()> {
+    ApplicationContext::<GlobalData>::new("Benchmark", WindowStyle::Window { size: Coordinates::new(1280, 720) })?
+        .with_scene("MainScene", Box::<MainScene>::default())?
+        .run("MainScene")?;
+
+    Ok(())
 }

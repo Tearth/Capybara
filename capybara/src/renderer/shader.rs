@@ -1,5 +1,4 @@
 use super::context::RendererContext;
-use crate::utils::storage::StorageItem;
 use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Error;
@@ -19,8 +18,6 @@ pub const SHAPE_VERTEX_SHADER: &str = include_str!("./shaders/shape.vert");
 pub const SHAPE_FRAGMENT_SHADER: &str = include_str!("./shaders/shape.frag");
 
 pub struct Shader {
-    pub id: usize,
-    pub name: Option<String>,
     pub program: Program,
     pub uniforms: HashMap<String, ShaderParameter>,
 
@@ -83,7 +80,7 @@ impl Shader {
                 }
             }
 
-            Ok(Shader { id: 0, name: None, program, uniforms, gl })
+            Ok(Shader { program, uniforms, gl })
         }
     }
 
@@ -127,24 +124,6 @@ impl Shader {
         unsafe {
             self.gl.use_program(Some(self.program));
         }
-    }
-}
-
-impl StorageItem for Shader {
-    fn get_id(&self) -> usize {
-        self.id
-    }
-
-    fn set_id(&mut self, id: usize) {
-        self.id = id;
-    }
-
-    fn get_name(&self) -> Option<String> {
-        self.name.clone()
-    }
-
-    fn set_name(&mut self, name: Option<String>) {
-        self.name = name;
     }
 }
 

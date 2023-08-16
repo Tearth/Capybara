@@ -11,34 +11,20 @@ pub struct Storage<T> {
     removed_ids: VecDeque<usize>,
 }
 
-pub trait StorageItem {
-    fn get_id(&self) -> usize;
-    fn set_id(&mut self, id: usize);
-
-    fn get_name(&self) -> Option<String>;
-    fn set_name(&mut self, name: Option<String>);
-}
-
-impl<T> Storage<T>
-where
-    T: StorageItem,
-{
-    pub fn store(&mut self, mut item: T) -> usize {
+impl<T> Storage<T> {
+    pub fn store(&mut self, item: T) -> usize {
         let id = self.get_new_id();
-        item.set_id(id);
         self.data[id] = Some(item);
 
         id
     }
 
-    pub fn store_with_name(&mut self, name: &str, mut item: T) -> Result<usize> {
+    pub fn store_with_name(&mut self, name: &str, item: T) -> Result<usize> {
         if self.name_to_id_hashmap.contains_key(name) {
             bail!("Name already exists".to_string());
         }
 
         let id = self.get_new_id();
-        item.set_id(id);
-        item.set_name(Some(name.to_string()));
         self.data[id] = Some(item);
 
         self.name_to_id_hashmap.insert(name.to_string(), id);
@@ -59,6 +45,13 @@ where
         match self.data.get(id) {
             Some(item) => Ok(item.as_ref().ok_or_else(|| anyhow!("Storage item {} not found", id))?),
             None => bail!("Storage item {} not found", id),
+        }
+    }
+
+    pub fn get_id(&self, name: &str) -> Result<usize> {
+        match self.name_to_id_hashmap.get(name) {
+            Some(id) => Ok(*id),
+            None => bail!("Storage item {} not found", name),
         }
     }
 

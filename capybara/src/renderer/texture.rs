@@ -1,6 +1,5 @@
 use super::context::RendererContext;
 use crate::assets::RawTexture;
-use crate::utils::storage::StorageItem;
 use glam::Vec2;
 use glow::Context;
 use glow::HasContext;
@@ -8,8 +7,6 @@ use rustc_hash::FxHashMap;
 use std::rc::Rc;
 
 pub struct Texture {
-    pub id: usize,
-    pub name: Option<String>,
     pub size: Vec2,
     pub inner: glow::Texture,
     pub kind: TextureKind,
@@ -62,7 +59,7 @@ impl Texture {
             );
             gl.generate_mipmap(glow::TEXTURE_2D);
 
-            Self { id: 0, name: None, size: raw.size, inner, kind: TextureKind::Simple, gl }
+            Self { size: raw.size, inner, kind: TextureKind::Simple, gl }
         }
     }
 
@@ -120,24 +117,6 @@ impl Texture {
         unsafe {
             self.gl.bind_texture(glow::TEXTURE_2D, Some(self.inner));
         }
-    }
-}
-
-impl StorageItem for Texture {
-    fn get_id(&self) -> usize {
-        self.id
-    }
-
-    fn set_id(&mut self, id: usize) {
-        self.id = id;
-    }
-
-    fn get_name(&self) -> Option<String> {
-        self.name.clone()
-    }
-
-    fn set_name(&mut self, name: Option<String>) {
-        self.name = name;
     }
 }
 

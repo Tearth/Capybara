@@ -1,8 +1,8 @@
 use super::context::RendererContext;
 use super::sprite::Sprite;
 use super::sprite::TextureType;
-use crate::utils::bag::Bag;
 use crate::utils::rand::NewRand;
+use crate::utils::storage::Storage;
 use anyhow::bail;
 use anyhow::Result;
 use arrayvec::ArrayVec;
@@ -31,8 +31,7 @@ pub struct ParticleEmitter<const WAYPOINTS: usize> {
 
     last_burst_time: Option<Instant>,
 
-    pub particles: Bag<Particle<WAYPOINTS>>,
-
+    pub particles: Storage<Particle<WAYPOINTS>>,
     pub velocity_waypoints: ArrayVec<ParticleParameter<Vec2>, WAYPOINTS>,
     pub rotation_waypoints: ArrayVec<ParticleParameter<f32>, WAYPOINTS>,
     pub scale_waypoints: ArrayVec<ParticleParameter<Vec2>, WAYPOINTS>,

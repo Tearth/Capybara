@@ -86,7 +86,7 @@ impl FileSystem {
             }
         }
 
-        bail!("Local storate is not available")
+        bail!("Local storage is not available")
     }
 
     pub fn write_local(&self, path: &str, content: &str) -> Result<()> {

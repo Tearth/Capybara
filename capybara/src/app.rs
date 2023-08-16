@@ -2,6 +2,7 @@ use crate::renderer::context::RendererContext;
 use crate::scene::FrameCommand;
 use crate::scene::Scene;
 use crate::ui::context::UiContext;
+use crate::utils::storage::Storage;
 use crate::window::InputEvent;
 use crate::window::WindowContext;
 use crate::window::WindowStyle;
@@ -9,7 +10,6 @@ use anyhow::Result;
 use glam::Vec2;
 use instant::Instant;
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
 
 #[cfg(feature = "audio")]
@@ -25,7 +25,7 @@ where
     pub window: Box<WindowContext>,
     pub renderer: RendererContext,
     pub ui: UiContext,
-    pub scenes: HashMap<String, Box<dyn Scene<G>>>,
+    pub scenes: Storage<Box<dyn Scene<G>>>,
     pub global: G,
 
     #[cfg(feature = "audio")]
@@ -109,9 +109,9 @@ where
         })
     }
 
-    pub fn with_scene(mut self, name: &str, scene: Box<dyn Scene<G>>) -> Self {
-        self.scenes.insert(name.to_string(), scene);
-        self
+    pub fn with_scene(mut self, name: &str, scene: Box<dyn Scene<G>>) -> Result<Self> {
+        self.scenes.store_with_name(name, scene)?;
+        Ok(self)
     }
 
     pub fn run(self, scene: &str) -> Result<()> {
@@ -136,18 +136,15 @@ where
 
             if let Some(next_scene) = &self.next_scene {
                 if !self.current_scene.is_empty() {
-                    let old_scene = self.scenes.get_mut(&self.current_scene).unwrap();
-                    old_scene.deactivation(state!(self))?;
+                    self.scenes.get_by_name_mut(&self.current_scene)?.deactivation(state!(self))?;
                 }
 
-                let new_scene = self.scenes.get_mut(next_scene).unwrap();
-                new_scene.activation(state!(self))?;
-
+                self.scenes.get_by_name_mut(next_scene)?.activation(state!(self))?;
                 self.current_scene = next_scene.clone();
                 self.next_scene = None;
             }
 
-            let scene = self.scenes.get_mut(&self.current_scene).unwrap();
+            let scene = self.scenes.get_by_name_mut(&self.current_scene)?;
 
             while let Some(event) = self.window.poll_event() {
                 match event {
@@ -178,14 +175,14 @@ where
                 #[cfg(feature = "physics")]
                 self.physics.step(self.timestep);
 
-                let scene = self.scenes.get_mut(&self.current_scene).unwrap();
+                let scene = self.scenes.get_by_name_mut(&self.current_scene)?;
                 let command = scene.fixed(state!(self))?;
                 self.process_frame_command(command);
 
                 self.accumulator -= self.timestep;
             }
 
-            let scene = self.scenes.get_mut(&self.current_scene).unwrap();
+            let scene = self.scenes.get_by_name_mut(&self.current_scene)?;
             let command = scene.frame(state!(self), self.accumulator, delta)?;
             self.process_frame_command(command);
             self.renderer.flush_buffer()?;

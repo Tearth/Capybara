@@ -13,6 +13,7 @@ use crate::assets::RawTexture;
 use crate::utils::color::Vec4Color;
 use crate::utils::storage::Storage;
 use anyhow::bail;
+use anyhow::Error;
 use anyhow::Result;
 use glam::Vec2;
 use glam::Vec4;
@@ -85,14 +86,14 @@ pub enum BufferContentType {
 impl RendererContext {
     pub fn new(gl: Context) -> Result<Self> {
         unsafe {
-            let sprite_buffer_vao = gl.create_vertex_array().unwrap();
-            let sprite_buffer_base_vbo = gl.create_buffer().unwrap();
-            let sprite_buffer_data_vbo = gl.create_buffer().unwrap();
-            let sprite_buffer_ebo = gl.create_buffer().unwrap();
+            let sprite_buffer_vao = gl.create_vertex_array().map_err(Error::msg)?;
+            let sprite_buffer_base_vbo = gl.create_buffer().map_err(Error::msg)?;
+            let sprite_buffer_data_vbo = gl.create_buffer().map_err(Error::msg)?;
+            let sprite_buffer_ebo = gl.create_buffer().map_err(Error::msg)?;
 
-            let shape_buffer_vao = gl.create_vertex_array().unwrap();
-            let shape_buffer_vbo = gl.create_buffer().unwrap();
-            let shape_buffer_ebo = gl.create_buffer().unwrap();
+            let shape_buffer_vao = gl.create_vertex_array().map_err(Error::msg)?;
+            let shape_buffer_vbo = gl.create_buffer().map_err(Error::msg)?;
+            let shape_buffer_ebo = gl.create_buffer().map_err(Error::msg)?;
 
             let mut context = Self {
                 viewport_size: Default::default(),
@@ -158,7 +159,7 @@ impl RendererContext {
             let shape_shader = Shader::new(self, SHAPE_VERTEX_SHADER, SHAPE_FRAGMENT_SHADER)?;
             self.default_shape_shader_id = self.shaders.store(shape_shader);
 
-            let default_texture = Texture::new(self, &RawTexture::new("", "", Vec2::new(1.0, 1.0), &[255, 255, 255, 255]));
+            let default_texture = Texture::new(self, &RawTexture::new("", "", Vec2::new(1.0, 1.0), &[255, 255, 255, 255]))?;
             self.default_texture_id = self.textures.store(default_texture);
 
             // Sprite buffers
@@ -226,7 +227,7 @@ impl RendererContext {
                 }
             }
 
-            self.textures.store_with_name(&texture.name, Texture::new(self, texture))?;
+            self.textures.store_with_name(&texture.name, Texture::new(self, texture)?)?;
         }
 
         for atlas in &assets.raw_atlases {

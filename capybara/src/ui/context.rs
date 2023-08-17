@@ -284,7 +284,7 @@ impl UiContext {
             *texture_id
         } else {
             let raw = RawTexture::new("", "", size, data);
-            let texture_id = renderer.textures.store(Texture::new(renderer, &raw));
+            let texture_id = renderer.textures.store(Texture::new(renderer, &raw)?);
             self.textures.insert(id, texture_id);
 
             texture_id

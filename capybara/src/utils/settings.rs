@@ -25,7 +25,7 @@ impl SettingsStorage {
             }
         }
 
-        let content = self.filesystem.read_local(&self.path).unwrap();
+        let content = self.filesystem.read_local(&self.path)?;
         let settings = self.deserialize(&content)?;
         self.cache = Some(settings);
 

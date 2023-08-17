@@ -1,5 +1,7 @@
 use super::context::RendererContext;
 use crate::assets::RawTexture;
+use anyhow::Error;
+use anyhow::Result;
 use glam::Vec2;
 use glow::Context;
 use glow::HasContext;
@@ -36,10 +38,10 @@ pub enum TextureWrapMode {
 }
 
 impl Texture {
-    pub fn new(renderer: &RendererContext, raw: &RawTexture) -> Self {
+    pub fn new(renderer: &RendererContext, raw: &RawTexture) -> Result<Self> {
         unsafe {
             let gl = renderer.gl.clone();
-            let inner = gl.create_texture().unwrap();
+            let inner = gl.create_texture().map_err(Error::msg)?;
 
             gl.bind_texture(glow::TEXTURE_2D, Some(inner));
             gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, glow::CLAMP_TO_EDGE as i32);
@@ -59,7 +61,7 @@ impl Texture {
             );
             gl.generate_mipmap(glow::TEXTURE_2D);
 
-            Self { size: raw.size, inner, kind: TextureKind::Simple, gl }
+            Ok(Self { size: raw.size, inner, kind: TextureKind::Simple, gl })
         }
     }
 

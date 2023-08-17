@@ -46,7 +46,6 @@ impl AssetsLoader {
         match self.status {
             AssetsLoadingStatus::Initializing => {
                 self.filesystem.read(input)?;
-
                 self.input = input.to_string();
                 self.status = AssetsLoadingStatus::Loading;
             }

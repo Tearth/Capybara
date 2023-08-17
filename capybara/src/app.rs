@@ -116,16 +116,16 @@ where
 
     pub fn run(self, scene: &str) -> Result<()> {
         let app = Rc::new(RefCell::new(self));
+        let mut app_borrow = app.borrow_mut();
 
         #[cfg(web)]
         {
-            let app_clone = app.clone();
-            app.borrow_mut().window.init_closures(app.clone(), move || app_clone.borrow_mut().run_internal().unwrap());
+            app_borrow.window.init_closures(app.clone())?;
         }
 
-        app.borrow_mut().next_scene = Some(scene.to_string());
-        app.borrow_mut().window.set_swap_interval(1);
-        app.borrow_mut().run_internal()?;
+        app_borrow.next_scene = Some(scene.to_string());
+        app_borrow.window.set_swap_interval(1);
+        app_borrow.run_internal()?;
 
         Ok(())
     }

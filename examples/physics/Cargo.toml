@@ -5,3 +5,6 @@ edition = "2021"
 
 [dependencies]
 capybara = { path = "../../capybara", features = [ "physics" ] }
+
+[build-dependencies]
+anyhow = { version = "1.0.71" }

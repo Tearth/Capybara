@@ -1,5 +1,6 @@
 use rapier2d::prelude::*;
 use std::sync::RwLock;
+use std::sync::TryLockResult;
 
 #[derive(Default)]
 pub struct EventCollector {
@@ -19,18 +20,27 @@ pub struct ContactData {
 
 impl EventCollector {
     pub fn clear(&mut self) {
-        self.collisions.write().unwrap().clear();
-        self.contacts.write().unwrap().clear();
+        if let TryLockResult::Ok(mut collisions) = self.collisions.try_write() {
+            collisions.clear();
+        }
+
+        if let TryLockResult::Ok(mut contacts) = self.contacts.try_write() {
+            contacts.clear();
+        }
     }
 }
 
 impl EventHandler for EventCollector {
     fn handle_collision_event(&self, _: &RigidBodySet, _: &ColliderSet, event: CollisionEvent, contact_pair: Option<&ContactPair>) {
-        self.collisions.write().unwrap().push(CollisionData::new(event, contact_pair.cloned()));
+        if let TryLockResult::Ok(mut collisions) = self.collisions.try_write() {
+            collisions.push(CollisionData::new(event, contact_pair.cloned()));
+        }
     }
 
     fn handle_contact_force_event(&self, _: Real, _: &RigidBodySet, _: &ColliderSet, contact_pair: &ContactPair, total_force_magnitude: Real) {
-        self.contacts.write().unwrap().push(ContactData::new(total_force_magnitude, contact_pair.clone()));
+        if let TryLockResult::Ok(mut contacts) = self.contacts.try_write() {
+            contacts.push(ContactData::new(total_force_magnitude, contact_pair.clone()));
+        }
     }
 }
 

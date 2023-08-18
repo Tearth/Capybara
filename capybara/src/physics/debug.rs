@@ -4,6 +4,7 @@ use crate::renderer::shape::Shape;
 use anyhow::Result;
 use glam::Vec2;
 use rapier2d::prelude::ShapeType;
+use std::sync::TryLockResult;
 
 impl PhysicsContext {
     pub fn draw_debug(&self, context: &mut RendererContext, pixels_per_meter: f32) -> Result<()> {
@@ -55,20 +56,22 @@ impl PhysicsContext {
             context.draw_shape(&Shape::new_line(position, position + velocity, self.debug.force_thickness, self.debug.force_color))?;
         }
 
-        for contact in self.events.contacts.read().unwrap().iter() {
-            if let Some(collider) = self.colliders.get(contact.pair.collider1) {
-                for point in contact.pair.manifolds.iter().flat_map(|p| p.contacts()) {
-                    let collider_position = Vec2::from(collider.position().translation) * pixels_per_meter;
-                    let contact_local_position = Vec2::from(point.local_p1) * pixels_per_meter;
+        if let TryLockResult::Ok(contacts) = self.events.contacts.try_write() {
+            for contact in contacts.iter() {
+                if let Some(collider) = self.colliders.get(contact.pair.collider1) {
+                    for point in contact.pair.manifolds.iter().flat_map(|p| p.contacts()) {
+                        let collider_position = Vec2::from(collider.position().translation) * pixels_per_meter;
+                        let contact_local_position = Vec2::from(point.local_p1) * pixels_per_meter;
 
-                    let sin = collider.rotation().angle().sin();
-                    let cos = collider.rotation().angle().cos();
-                    let position = Vec2::new(
-                        contact_local_position.x * cos - contact_local_position.y * sin,
-                        contact_local_position.y * cos + contact_local_position.x * sin,
-                    ) + collider_position;
+                        let sin = collider.rotation().angle().sin();
+                        let cos = collider.rotation().angle().cos();
+                        let position = Vec2::new(
+                            contact_local_position.x * cos - contact_local_position.y * sin,
+                            contact_local_position.y * cos + contact_local_position.x * sin,
+                        ) + collider_position;
 
-                    context.draw_shape(&Shape::new_disc(position, self.debug.contact_radius, None, self.debug.contact_color))?;
+                        context.draw_shape(&Shape::new_disc(position, self.debug.contact_radius, None, self.debug.contact_color))?;
+                    }
                 }
             }
         }

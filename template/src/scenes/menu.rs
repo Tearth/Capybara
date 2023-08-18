@@ -106,8 +106,8 @@ impl MenuScene {
 
         if self.settings.is_none() {
             self.settings = Some(SettingsData {
-                music_level: state.global.settings.get(SETTINGS_MUSIC_LEVEL).unwrap().unwrap(),
-                sound_level: state.global.settings.get(SETTINGS_SOUND_LEVEL).unwrap().unwrap(),
+                music_level: state.global.settings.get(SETTINGS_MUSIC_LEVEL).unwrap(),
+                sound_level: state.global.settings.get(SETTINGS_SOUND_LEVEL).unwrap(),
             });
         }
 
@@ -162,12 +162,8 @@ impl MenuScene {
                             let music_track = state.global.music_track.as_ref().unwrap();
                             let sound_track = state.global.sound_track.as_ref().unwrap();
 
-                            music_track
-                                .set_volume(state.global.settings.get::<f64>(SETTINGS_MUSIC_LEVEL).unwrap().unwrap(), Tween::default())
-                                .unwrap();
-                            sound_track
-                                .set_volume(state.global.settings.get::<f64>(SETTINGS_SOUND_LEVEL).unwrap().unwrap(), Tween::default())
-                                .unwrap();
+                            music_track.set_volume(state.global.settings.get::<f64>(SETTINGS_MUSIC_LEVEL).unwrap(), Tween::default()).unwrap();
+                            sound_track.set_volume(state.global.settings.get::<f64>(SETTINGS_SOUND_LEVEL).unwrap(), Tween::default()).unwrap();
 
                             self.settings = None;
                             self.sub_scene = MenuSubScene::Main;

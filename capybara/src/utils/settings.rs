@@ -7,52 +7,47 @@ use std::str::FromStr;
 pub struct SettingsStorage {
     path: String,
     filesystem: FileSystem,
-    cache: Option<FxHashMap<String, String>>,
+    cache: FxHashMap<String, String>,
 }
 
 impl SettingsStorage {
     pub fn new(path: &str) -> Self {
-        Self { path: path.to_string(), filesystem: Default::default(), cache: None }
+        Self { path: path.to_string(), filesystem: Default::default(), cache: Default::default() }
     }
 
-    pub fn get<T>(&mut self, key: &str) -> Result<Option<T>>
+    pub fn get<T>(&mut self, key: &str) -> Result<T>
     where
-        T: FromStr,
+        T: FromStr + ToString,
     {
-        if let Some(cache) = &self.cache {
-            if let Some(value) = cache.get(key).cloned() {
-                return Ok(value.parse().ok());
+        if !self.cache.is_empty() {
+            if let Some(value) = self.cache.get(key).cloned() {
+                return Ok(value.parse().map_err(|_| anyhow!("Failed to parse {}", value))?);
             }
         }
 
         let content = self.filesystem.read_local(&self.path)?;
-        let settings = self.deserialize(&content)?;
-        self.cache = Some(settings);
+        self.cache = self.deserialize(&content)?;
 
-        Ok(self.cache.as_ref().unwrap().get(key).cloned().ok_or_else(|| anyhow!("Key not found"))?.parse().ok())
+        let value = self.cache.get(key).cloned().ok_or_else(|| anyhow!("Key not found"))?;
+        Ok(value.parse().map_err(|_| anyhow!("Failed to parse {}", value))?)
     }
 
-    pub fn set<T>(&mut self, key: &str, value: T, overwrite: bool) -> Result<Option<T>>
+    pub fn set<T>(&mut self, key: &str, value: T, overwrite: bool) -> Result<()>
     where
         T: FromStr + ToString,
     {
-        if self.cache.is_none() {
+        if self.cache.is_empty() {
             if let Ok(content) = self.filesystem.read_local(&self.path) {
-                let settings = self.deserialize(&content)?;
-                self.cache = Some(settings);
-            } else {
-                self.cache = Some(FxHashMap::default());
+                self.cache = self.deserialize(&content)?;
             }
         }
 
-        if self.cache.as_ref().unwrap().get(key).is_none() || overwrite {
-            self.cache.as_mut().unwrap().insert(key.to_string(), value.to_string());
-            self.filesystem.write_local(&self.path, &self.serialize(self.cache.as_ref().unwrap()))?;
-
-            Ok(Some(value))
-        } else {
-            Ok(self.cache.as_ref().unwrap().get(key).cloned().ok_or_else(|| anyhow!("Key not found"))?.parse().ok())
+        if self.cache.get(key).is_none() || overwrite {
+            self.cache.insert(key.to_string(), value.to_string());
+            self.filesystem.write_local(&self.path, &self.serialize(&self.cache))?;
         }
+
+        Ok(())
     }
 
     fn serialize(&self, settings: &FxHashMap<String, String>) -> String {

@@ -11,9 +11,9 @@ use crate::window::Key;
 use crate::window::Modifiers;
 use crate::window::MouseButton;
 use crate::window::MouseWheelDirection;
+use anyhow::anyhow;
 use anyhow::Result;
 use core::slice;
-use egui::epaint::ahash::HashMap;
 use egui::epaint::Primitive;
 use egui::Color32;
 use egui::ColorImage;
@@ -33,6 +33,7 @@ use egui::TextureOptions;
 use glam::Vec2;
 use glow::HasContext;
 use instant::Instant;
+use rustc_hash::FxHashMap;
 use std::sync::Arc;
 use std::sync::RwLock;
 
@@ -43,8 +44,8 @@ pub struct UiContext {
     pub modifiers: Modifiers,
 
     pub camera_id: usize,
-    pub textures: HashMap<TextureId, usize>,
-    pub handles: HashMap<String, TextureHandle>,
+    pub textures: FxHashMap<TextureId, usize>,
+    pub handles: FxHashMap<String, TextureHandle>,
 
     time: Instant,
     max_texture_size: i32,
@@ -245,7 +246,7 @@ impl UiContext {
                 let mut shape = Shape::new();
                 shape.vertices = vertices;
                 shape.indices = data.indices;
-                shape.texture_id = Some(*self.textures.get(&data.texture_id).unwrap());
+                shape.texture_id = self.textures.get(&data.texture_id).cloned();
                 shape.apply_model = false;
 
                 let scissor_position = Vec2::new(mesh.clip_rect.left(), renderer.viewport_size.y - mesh.clip_rect.height() - mesh.clip_rect.top());
@@ -260,8 +261,9 @@ impl UiContext {
         renderer.disable_scissor();
 
         for id in output.textures_delta.free {
-            let texture_id = self.textures.get(&id).unwrap();
-            renderer.textures.remove(*texture_id)?;
+            if let Some(texture_id) = self.textures.get(&id) {
+                renderer.textures.remove(*texture_id)?;
+            }
         }
 
         Ok(())
@@ -277,7 +279,7 @@ impl UiContext {
         options: TextureOptions,
     ) -> Result<()> {
         let texture_id = if let Some(position) = position {
-            let texture_id = self.textures.get(&id).unwrap();
+            let texture_id = self.textures.get(&id).ok_or_else(|| anyhow!("Texture id not found"))?;
             let texture = renderer.textures.get(*texture_id)?;
             texture.update(Vec2::new(position[0], position[1]), size, data);
 

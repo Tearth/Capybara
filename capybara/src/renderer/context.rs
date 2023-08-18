@@ -12,6 +12,7 @@ use crate::assets::loader::AssetsLoader;
 use crate::assets::RawTexture;
 use crate::utils::color::Vec4Color;
 use crate::utils::storage::Storage;
+use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Error;
 use anyhow::Result;
@@ -231,9 +232,12 @@ impl RendererContext {
         }
 
         for atlas in &assets.raw_atlases {
-            let name_without_extension = Path::new(&atlas.name).file_stem().unwrap().to_str().unwrap();
-            if self.textures.contains_by_name(name_without_extension) {
-                let texture = self.textures.get_by_name_mut(name_without_extension)?;
+            let path = Path::new(&atlas.name);
+            let name = path.file_stem().ok_or_else(|| anyhow!("Failed to get filename stem"))?;
+            let name_str = name.to_str().ok_or_else(|| anyhow!("Failed to get filename string"))?.to_string();
+
+            if self.textures.contains_by_name(&name_str) {
+                let texture = self.textures.get_by_name_mut(&name_str)?;
                 let mut entities = FxHashMap::default();
 
                 for raw in &atlas.entities {
@@ -290,7 +294,7 @@ impl RendererContext {
                 TextureType::TilemapAnimation { size, frames: _ } => sprite.size.unwrap_or(*size),
                 TextureType::AtlasEntity { name } => {
                     if let TextureKind::Atlas(atlas_entities) = &texture.kind {
-                        let entity = atlas_entities.get(name).unwrap();
+                        let entity = atlas_entities.get(name).ok_or_else(|| anyhow!("Entity not found"))?;
                         sprite.size.unwrap_or(entity.size)
                     } else {
                         bail!("Texture is not an atlas");
@@ -299,7 +303,7 @@ impl RendererContext {
                 TextureType::AtlasAnimation { entities } => {
                     if let TextureKind::Atlas(atlas_entities) = &texture.kind {
                         let name = &entities[sprite.animation_frame];
-                        let entity = atlas_entities.get(name).unwrap();
+                        let entity = atlas_entities.get(name).ok_or_else(|| anyhow!("Entity not found"))?;
                         sprite.size.unwrap_or(entity.size)
                     } else {
                         bail!("Texture is not an atlas");
@@ -367,7 +371,7 @@ impl RendererContext {
                 }
                 TextureType::AtlasEntity { name } => {
                     if let TextureKind::Atlas(atlas_entities) = &texture.kind {
-                        let entity = atlas_entities.get(name).unwrap();
+                        let entity = atlas_entities.get(name).ok_or_else(|| anyhow!("Entity not found"))?;
                         (entity.position / texture.size, entity.size / texture.size)
                     } else {
                         bail!("Texture is not an atlas");
@@ -376,7 +380,7 @@ impl RendererContext {
                 TextureType::AtlasAnimation { entities } => {
                     if let TextureKind::Atlas(atlas_entities) = &texture.kind {
                         let name = &entities[sprite.animation_frame];
-                        let entity = atlas_entities.get(name).unwrap();
+                        let entity = atlas_entities.get(name).ok_or_else(|| anyhow!("Entity not found"))?;
 
                         (entity.position / texture.size, entity.size / texture.size)
                     } else {

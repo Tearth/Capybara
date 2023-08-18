@@ -1,6 +1,7 @@
 use super::*;
 use crate::filesystem::FileLoadingStatus;
 use crate::filesystem::FileSystem;
+use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Result;
 use png::Decoder;
@@ -62,19 +63,22 @@ impl AssetsLoader {
                         let mut entry = archive.by_index(i)?;
                         if entry.is_file() {
                             let path = Path::new(entry.name());
-                            let name = path.file_stem().unwrap().to_str().unwrap().to_string();
-                            let extension = path.extension().unwrap().to_str().unwrap().to_string();
-                            let asset_path = format!("/{}", path.to_str().unwrap());
+                            let path_str = path.to_str().ok_or_else(|| anyhow!("Failed to get path string"))?;
+                            let name = path.file_stem().ok_or_else(|| anyhow!("Failed to get filename stem"))?;
+                            let name_str = name.to_str().ok_or_else(|| anyhow!("Failed to get filename string"))?.to_string();
+                            let extension = path.extension().ok_or_else(|| anyhow!("Failed to get extension"))?;
+                            let extension_str = extension.to_str().ok_or_else(|| anyhow!("Failed to get extension string"))?.to_string();
+                            let asset_path = format!("/{}", path_str);
 
                             let mut data = Vec::new();
                             entry.read_to_end(&mut data)?;
 
-                            match extension.as_str() {
-                                "png" => self.load_png(&name, &asset_path, &data)?,
-                                "ttf" => self.load_ttf(&name, &asset_path, &data)?,
-                                "xml" => self.load_xml(&name, &asset_path, &data)?,
-                                "wav" => self.load_wav(&name, &asset_path, &data)?,
-                                "ogg" => self.load_ogg(&name, &asset_path, &data)?,
+                            match extension_str.as_str() {
+                                "png" => self.load_png(&name_str, &asset_path, &data)?,
+                                "ttf" => self.load_ttf(&name_str, &asset_path, &data)?,
+                                "xml" => self.load_xml(&name_str, &asset_path, &data)?,
+                                "wav" => self.load_wav(&name_str, &asset_path, &data)?,
+                                "ogg" => self.load_ogg(&name_str, &asset_path, &data)?,
                                 _ => {}
                             };
                         }

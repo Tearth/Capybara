@@ -12,14 +12,16 @@ use web_sys::Request;
 use web_sys::RequestInit;
 use web_sys::Response;
 use web_sys::Storage;
+use web_sys::Window;
 
 pub struct FileSystem {
     pub input: Rc<RefCell<String>>,
     pub status: Rc<RefCell<FileLoadingStatus>>,
     pub buffer: Rc<RefCell<Vec<u8>>>,
 
-    fetch_closure: Rc<RefCell<Closure<dyn FnMut(JsValue)>>>,
+    window: Window,
     storage: Storage,
+    fetch_closure: Rc<RefCell<Closure<dyn FnMut(JsValue)>>>,
 }
 
 impl FileSystem {
@@ -50,7 +52,7 @@ impl FileSystem {
         let window = web_sys::window().unwrap();
         let storage = window.local_storage().unwrap().unwrap();
 
-        Self { input, status, buffer, fetch_closure, storage }
+        Self { input, status, buffer, window, storage, fetch_closure }
     }
 
     pub fn read(&mut self, input: &str) -> Result<FileLoadingStatus> {
@@ -61,10 +63,9 @@ impl FileSystem {
         }
 
         if let FileLoadingStatus::Idle = status {
-            let window = web_sys::window().unwrap();
             let request = Request::new_with_str_and_init(input, &RequestInit::new()).unwrap();
             let fetch_closure_clone = self.fetch_closure.clone();
-            let _ = window.fetch_with_request(&request).then(&fetch_closure_clone.borrow());
+            let _ = self.window.fetch_with_request(&request).then(&fetch_closure_clone.borrow());
 
             *self.input.borrow_mut() = input.to_string();
             *self.status.borrow_mut() = FileLoadingStatus::Loading;

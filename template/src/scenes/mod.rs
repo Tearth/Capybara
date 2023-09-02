@@ -11,11 +11,11 @@ pub const SETTINGS_MUSIC_LEVEL: &str = "MUSIC_LEVEL";
 pub const SETTINGS_SOUND_LEVEL: &str = "SOUND_LEVEL";
 
 pub struct GlobalData {
-    assets: AssetsLoader,
-    settings: SettingsStorage,
+    pub assets: AssetsLoader,
+    pub settings: SettingsStorage,
 
-    music_track: Option<TrackHandle>,
-    sound_track: Option<TrackHandle>,
+    pub music_track: Option<TrackHandle>,
+    pub sound_track: Option<TrackHandle>,
 }
 
 impl Default for GlobalData {

@@ -47,7 +47,7 @@ pub struct WindowContextWeb {
 impl WindowContextWeb {
     pub fn new(_: &str, _: WindowStyle) -> Result<Box<Self>> {
         #[cfg(debug_assertions)]
-        console_log::init_with_level(log::Level::Debug)?;
+        console_log::init_with_level(log::Level::Debug).unwrap();
 
         #[cfg(debug_assertions)]
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));

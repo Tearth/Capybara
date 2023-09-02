@@ -132,6 +132,13 @@ impl<T> Storage<T> {
         self.data.len() == self.removed_ids.len()
     }
 
+    pub fn clear(&mut self) {
+        self.data.clear();
+        self.name_to_id_hashmap.clear();
+        self.id_to_name_hashmap.clear();
+        self.removed_ids.clear();
+    }
+
     fn get_new_id(&mut self) -> usize {
         if let Some(id) = self.removed_ids.pop_front() {
             id

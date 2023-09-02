@@ -19,7 +19,7 @@
     "filter": "none",
     "exporter": "Starling",
     "fileName": "pack-result",
-    "savePath": "..\\assets\\main\\ui",
+    "savePath": "..\\assets\\main\\textures",
     "width": 2048,
     "height": 2048,
     "fixedSize": false,

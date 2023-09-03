@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["MenuSubScene"],"struct":["MenuScene"]};
+window.SIDEBAR_ITEMS = {"enum":["MenuSubScene"],"struct":["MenuScene","SettingsData"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["InterpolationData","PhysicsContext"]};
+window.SIDEBAR_ITEMS = {"struct":["InterpolationData","PhysicsContext","PhysicsDebugSettings"]};

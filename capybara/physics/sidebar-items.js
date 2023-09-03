@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["context","events"]};
+window.SIDEBAR_ITEMS = {"mod":["context","debug","events"]};

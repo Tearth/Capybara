@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["bag","color","rand","settings","storage"]};
+window.SIDEBAR_ITEMS = {"mod":["color","rand","settings","storage"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["context"]};
+window.SIDEBAR_ITEMS = {"mod":["context"],"trait":["ImageAtlas"]};

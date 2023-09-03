@@ -1,3 +1,3 @@
 (function() {var implementors = {
-"ui":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.71.1/core/hash/trait.Hash.html\" title=\"trait core::hash::Hash\">Hash</a> for <a class=\"struct\" href=\"ui/test/struct.Gradient.html\" title=\"struct ui::test::Gradient\">Gradient</a>"]]
+"ui":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.72.0/core/hash/trait.Hash.html\" title=\"trait core::hash::Hash\">Hash</a> for <a class=\"struct\" href=\"ui/test/struct.Gradient.html\" title=\"struct ui::test::Gradient\">Gradient</a>"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

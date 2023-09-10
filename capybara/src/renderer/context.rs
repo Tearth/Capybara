@@ -316,8 +316,10 @@ impl RendererContext {
 
         let camera_min = camera.position;
         let camera_max = camera.position + camera.size;
-        let sprite_min = sprite.position - sprite.anchor * sprite_size;
-        let sprite_max = sprite.position + (Vec2::new(1.0, 1.0) - sprite.anchor) * sprite_size;
+
+        let radius = sprite.anchor.length() + 2.0;
+        let sprite_min = sprite.position - radius * sprite_size.max_element() * sprite.scale.max_element();
+        let sprite_max = sprite.position + radius * sprite_size.max_element() * sprite.scale.max_element();
 
         if sprite_min.x > camera_max.x || sprite_min.y > camera_max.y || sprite_max.x < camera_min.x || sprite_max.y < camera_min.y {
             return Ok(());

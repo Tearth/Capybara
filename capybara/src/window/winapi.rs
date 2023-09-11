@@ -11,6 +11,8 @@ use ::winapi::um::winuser::*;
 use anyhow::bail;
 use anyhow::Result;
 use glow::Context;
+use log::debug;
+use log::error;
 use std::collections::VecDeque;
 use std::ffi::CString;
 use std::mem;
@@ -69,7 +71,7 @@ impl WindowContextWinApi {
             };
 
             if winuser::RegisterClassA(&window_class) == 0 {
-                bail!("RegisterClassA error: {}", errhandlingapi::GetLastError());
+                bail!("Failed to register window class, code {}", errhandlingapi::GetLastError());
             }
 
             let mut context = Box::new(Self {
@@ -105,7 +107,7 @@ impl WindowContextWinApi {
             );
 
             if hwnd.is_null() {
-                bail!("CreateWindowExA error: {}", errhandlingapi::GetLastError());
+                bail!("Failed to create window, code {}", errhandlingapi::GetLastError());
             }
 
             // Wait for WM_CREATE, where the context is initialized
@@ -114,7 +116,9 @@ impl WindowContextWinApi {
             context.init_gl_context()?;
             context.set_style(style);
 
-            winapi::SetForegroundWindow(context.hwnd);
+            if winapi::SetForegroundWindow(context.hwnd) == 0 {
+                error!("Failed to set foreground window");
+            }
 
             Ok(context)
         }
@@ -140,7 +144,7 @@ impl WindowContextWinApi {
             };
 
             if winuser::RegisterClassA(&phantom_window_class) == 0 {
-                bail!("RegisterClassA error: {}", errhandlingapi::GetLastError());
+                bail!("Failed to register phantom window class, code {}", errhandlingapi::GetLastError());
             }
 
             let mut phantom_context = Box::new(Self {
@@ -176,7 +180,7 @@ impl WindowContextWinApi {
             );
 
             if phantom_hwnd.is_null() {
-                bail!("CreateWindowExA error: {}", errhandlingapi::GetLastError());
+                bail!("Failed to create phantom window, code {}", errhandlingapi::GetLastError());
             }
 
             // Wait for WM_CREATE, where the context is initialized
@@ -213,18 +217,23 @@ impl WindowContextWinApi {
 
             let phantom_pixel_format = winapi::ChoosePixelFormat(phantom_context.hdc, &phantom_pixel_format_attributes);
             if winapi::SetPixelFormat(phantom_context.hdc, phantom_pixel_format, &phantom_pixel_format_attributes) == 0 {
-                bail!("SetPixelFormat error: {}", errhandlingapi::GetLastError());
+                bail!("Failed to set phantom pixel format, code {}", errhandlingapi::GetLastError());
             }
 
             let phantom_gl_context = winapi::wglCreateContext(phantom_context.hdc);
             if winapi::wglMakeCurrent(phantom_context.hdc, phantom_gl_context) == 0 {
-                bail!("wglMakeCurrent error: {}", errhandlingapi::GetLastError());
+                bail!("Failed to make phantom current context, code {}", errhandlingapi::GetLastError());
             }
 
             let phantom_wgl_extensions = WglExtensions::new();
 
-            winapi::wglDeleteContext(phantom_gl_context);
-            winapi::DestroyWindow(phantom_hwnd);
+            if winapi::wglDeleteContext(phantom_gl_context) == 0 {
+                error!("Failed to delete phantom context, code {}", errhandlingapi::GetLastError());
+            }
+
+            if winapi::DestroyWindow(phantom_hwnd) == 0 {
+                error!("Failed to destroy phantom window, code {}", errhandlingapi::GetLastError());
+            }
 
             let mut wgl_attributes = [
                 8193, /* WGL_DRAW_TO_WINDOW_ARB */
@@ -254,14 +263,14 @@ impl WindowContextWinApi {
 
             if let Some(wgl_choose_pixel_format_arb) = phantom_wgl_extensions.wgl_choose_pixel_format_arb {
                 if (wgl_choose_pixel_format_arb)(self.hdc, wgl_attributes_ptr, ptr::null_mut(), 1, &mut pixel_format, &mut formats_count) == 0 {
-                    bail!("wglChoosePixelFormatARB error");
+                    bail!("Failed to choose pixel format");
                 }
             } else {
-                bail!("wglChoosePixelFormatARB error");
+                bail!("Failed to choose pixel format");
             }
 
             if winapi::SetPixelFormat(self.hdc, pixel_format, &phantom_pixel_format_attributes) == 0 {
-                bail!("SetPixelFormat error: {}", errhandlingapi::GetLastError());
+                bail!("Failed to set pixel format, code {}", errhandlingapi::GetLastError());
             }
 
             let mut wgl_context_attributes = [
@@ -276,15 +285,14 @@ impl WindowContextWinApi {
             let wgl_context = if let Some(wgl_create_context_attribs_arb) = phantom_wgl_extensions.wgl_create_context_attribs_arb {
                 (wgl_create_context_attribs_arb)(self.hdc, ptr::null_mut(), wgl_context_attributes_ptr)
             } else {
-                bail!("wglCreateContextAttribsARB error");
+                bail!("Failed to create WGL context");
             };
 
             if winapi::wglMakeCurrent(self.hdc, wgl_context) == 0 {
-                bail!("wglMakeCurrent error: {}", errhandlingapi::GetLastError());
+                bail!("Failed to make current context, code {}", errhandlingapi::GetLastError());
             }
 
             self.wgl_context = Some(wgl_context);
-            self.wgl_extensions = Some(WglExtensions::new());
 
             Ok(())
         }
@@ -303,6 +311,12 @@ impl WindowContextWinApi {
                     proc = libloaderapi::GetProcAddress(opengl32_dll_handle, name_cstr.as_ptr());
                 }
 
+                if proc.is_null() {
+                    debug!("GL function {} unavailable", name);
+                } else {
+                    debug!("GL function {} loaded ({:?})", name, proc);
+                }
+
                 proc as *const _
             })
         }
@@ -311,7 +325,9 @@ impl WindowContextWinApi {
     pub fn set_style(&mut self, style: WindowStyle) {
         unsafe {
             if let WindowStyle::Fullscreen = style {
-                winuser::ChangeDisplaySettingsA(ptr::null_mut(), 0);
+                if winuser::ChangeDisplaySettingsA(ptr::null_mut(), 0) != winapi::DISP_CHANGE_SUCCESSFUL {
+                    error!("Failed to change display settings, code {}", errhandlingapi::GetLastError());
+                }
             }
 
             match style {
@@ -320,14 +336,29 @@ impl WindowContextWinApi {
                     let mut rect = RECT { left: 0, top: 0, right: size.x, bottom: size.y };
                     let style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
 
-                    winuser::GetWindowRect(winuser::GetDesktopWindow(), &mut desktop_rect);
+                    if winuser::GetWindowRect(winuser::GetDesktopWindow(), &mut desktop_rect) == 0 {
+                        error!("Failed to retrieve window rect, code {}", errhandlingapi::GetLastError());
+                    }
+
+                    errhandlingapi::SetLastError(0);
                     winuser::SetWindowLongA(self.hwnd, GWL_STYLE, style as i32);
-                    winuser::AdjustWindowRect(&mut rect, WS_OVERLAPPEDWINDOW, 0);
+
+                    if errhandlingapi::GetLastError() != 0 {
+                        error!("Failed to set window long, code {}", errhandlingapi::GetLastError());
+                    }
+
+                    if winuser::AdjustWindowRect(&mut rect, WS_OVERLAPPEDWINDOW, 0) == 0 {
+                        error!("Failed adjust window rect, code {}", errhandlingapi::GetLastError());
+                    }
 
                     let width = rect.right - rect.left;
                     let height = rect.bottom - rect.top;
+                    let x = desktop_rect.right / 2 - width / 2;
+                    let y = desktop_rect.bottom / 2 - height / 2;
 
-                    winuser::MoveWindow(self.hwnd, desktop_rect.right / 2 - width / 2, desktop_rect.bottom / 2 - height / 2, width, height, 1);
+                    if winuser::MoveWindow(self.hwnd, x, y, width, height, 1) == 0 {
+                        error!("Failed to move window, code {}", errhandlingapi::GetLastError());
+                    }
 
                     self.size = size;
                 }
@@ -335,17 +366,45 @@ impl WindowContextWinApi {
                     let mut desktop_rect = mem::zeroed();
                     let style = WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE;
 
-                    winuser::GetWindowRect(winuser::GetDesktopWindow(), &mut desktop_rect);
+                    if winuser::GetWindowRect(winuser::GetDesktopWindow(), &mut desktop_rect) == 0 {
+                        error!("Failed to retrieve window rect, code {}", errhandlingapi::GetLastError());
+                    }
+
+                    errhandlingapi::SetLastError(0);
                     winuser::SetWindowLongA(self.hwnd, GWL_STYLE, style as i32);
-                    winuser::MoveWindow(self.hwnd, 0, 0, desktop_rect.right - desktop_rect.left, desktop_rect.bottom - desktop_rect.top, 1);
+
+                    if errhandlingapi::GetLastError() != 0 {
+                        error!("Failed to set window long, code {}", errhandlingapi::GetLastError());
+                    }
+
+                    let width = desktop_rect.right - desktop_rect.left;
+                    let height = desktop_rect.bottom - desktop_rect.top;
+
+                    if winuser::MoveWindow(self.hwnd, 0, 0, width, height, 1) == 0 {
+                        error!("Failed to move window, code {}", errhandlingapi::GetLastError());
+                    }
                 }
                 WindowStyle::Fullscreen => {
                     let mut desktop_rec = mem::zeroed();
                     let style = WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE;
 
-                    winuser::GetWindowRect(winuser::GetDesktopWindow(), &mut desktop_rec);
+                    if winuser::GetWindowRect(winuser::GetDesktopWindow(), &mut desktop_rec) == 0 {
+                        error!("Failed to retrieve window rect, code {}", errhandlingapi::GetLastError());
+                    }
+
+                    errhandlingapi::SetLastError(0);
                     winuser::SetWindowLongA(self.hwnd, GWL_STYLE, style as i32);
-                    winuser::MoveWindow(self.hwnd, 0, 0, desktop_rec.right - desktop_rec.left, desktop_rec.bottom - desktop_rec.top, 1);
+
+                    if errhandlingapi::GetLastError() != 0 {
+                        error!("Failed to set window long, code {}", errhandlingapi::GetLastError());
+                    }
+
+                    let width = desktop_rec.right - desktop_rec.left;
+                    let height = desktop_rec.bottom - desktop_rec.top;
+
+                    if winuser::MoveWindow(self.hwnd, 0, 0, width, height, 1) == 0 {
+                        error!("Failed to move window, code {}", errhandlingapi::GetLastError());
+                    }
 
                     let mut mode: DEVMODEA = mem::zeroed();
                     mode.dmSize = mem::size_of::<DEVMODEA>() as u16;
@@ -354,7 +413,9 @@ impl WindowContextWinApi {
                     mode.dmBitsPerPel = 32;
                     mode.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL;
 
-                    winuser::ChangeDisplaySettingsA(&mut mode, CDS_FULLSCREEN);
+                    if winuser::ChangeDisplaySettingsA(&mut mode, CDS_FULLSCREEN) != winapi::DISP_CHANGE_SUCCESSFUL {
+                        error!("Failed to change display settings, code {}", errhandlingapi::GetLastError());
+                    }
                 }
             }
         }
@@ -364,7 +425,7 @@ impl WindowContextWinApi {
         unsafe {
             let mut event: MSG = mem::zeroed();
 
-            while winuser::PeekMessageA(&mut event, ptr::null_mut(), 0, 0, PM_REMOVE) > 0 {
+            while winuser::PeekMessageA(&mut event, ptr::null_mut(), 0, 0, PM_REMOVE) != 0 {
                 winuser::TranslateMessage(&event);
                 winuser::DispatchMessageA(&event);
 
@@ -374,12 +435,16 @@ impl WindowContextWinApi {
                         let y = (event.lParam as i32) >> 16;
 
                         if !self.cursor_in_window {
-                            winuser::TrackMouseEvent(&mut TRACKMOUSEEVENT {
+                            let mut mouse_event = TRACKMOUSEEVENT {
                                 cbSize: mem::size_of::<TRACKMOUSEEVENT>() as u32,
                                 dwFlags: TME_LEAVE,
                                 hwndTrack: self.hwnd,
                                 dwHoverTime: 0,
-                            });
+                            };
+
+                            if winuser::TrackMouseEvent(&mut mouse_event) == 0 {
+                                error!("Failed to track mouse event, code {}", errhandlingapi::GetLastError());
+                            }
 
                             let coordinates = Coordinates::new(x, y);
                             let modifiers = self.get_modifiers();
@@ -480,21 +545,33 @@ impl WindowContextWinApi {
 
     pub fn set_swap_interval(&self, interval: u32) {
         unsafe {
-            if let Some(wgl_swap_interval_ext) = self.wgl_extensions.as_ref().unwrap().wgl_swap_interval_ext {
-                (wgl_swap_interval_ext)(interval as i32);
+            if let Some(wgl_extension) = &self.wgl_extensions {
+                if let Some(wgl_swap_interval_ext) = wgl_extension.wgl_swap_interval_ext {
+                    if (wgl_swap_interval_ext)(interval as i32) == 0 {
+                        error!("Failed to change swap interval, code {}", errhandlingapi::GetLastError());
+                    }
+                } else {
+                    error!("WGL extension wglSwapIntervalEXT not available");
+                }
+            } else {
+                error!("WGL extensions not loaded");
             }
         }
     }
 
     pub fn swap_buffers(&self) {
         unsafe {
-            winapi::SwapBuffers(self.hdc);
+            if winapi::SwapBuffers(self.hdc) == 0 {
+                error!("Failed to swap buffer, code {}", errhandlingapi::GetLastError());
+            }
         }
     }
 
     pub fn close(&self) {
         unsafe {
-            winapi::DestroyWindow(self.hwnd);
+            if winapi::DestroyWindow(self.hwnd) == 0 {
+                error!("Failed to close window, code {}", errhandlingapi::GetLastError());
+            }
         }
     }
 }
@@ -505,10 +582,16 @@ extern "system" fn wnd_proc(hwnd: HWND, message: u32, w_param: usize, l_param: i
             WM_CREATE => {
                 let create_struct = &mut *(l_param as *mut CREATESTRUCTA);
                 let window = &mut *(create_struct.lpCreateParams as *mut WindowContext);
-                let hdc: HDC = GetDC(hwnd);
+                let hdc: HDC = winuser::GetDC(hwnd);
+
+                errhandlingapi::SetLastError(0);
 
                 // Save pointer to the window context, so it can be used in all future events
                 winuser::SetWindowLongPtrA(hwnd, GWLP_USERDATA, window as *mut _ as LONG_PTR);
+
+                if errhandlingapi::GetLastError() != 0 {
+                    error!("Failed to set window long, code {}", errhandlingapi::GetLastError());
+                }
 
                 window.hwnd = hwnd;
                 window.hdc = hdc;
@@ -573,9 +656,11 @@ fn load_extension<T>(name: &str) -> Option<T> {
         let extension_proc = winapi::wglGetProcAddress(extension_cstr.as_ptr());
 
         if extension_proc.is_null() {
+            debug!("WGL extension {} not available", name);
             return None;
         }
 
+        debug!("WGL extension {} loaded ({:?})", name, extension_proc);
         Some(mem::transmute_copy::<_, T>(&extension_proc))
     }
 }

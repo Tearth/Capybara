@@ -3,6 +3,7 @@ use crate::app::ApplicationContext;
 use anyhow::anyhow;
 use anyhow::Result;
 use glow::Context;
+use log::error;
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::rc::Rc;
@@ -47,23 +48,22 @@ pub struct WindowContextWeb {
 impl WindowContextWeb {
     pub fn new(_: &str, _: WindowStyle) -> Result<Box<Self>> {
         #[cfg(debug_assertions)]
-        console_log::init_with_level(log::Level::Debug).unwrap();
+        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
         #[cfg(debug_assertions)]
-        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+        console_log::init_with_level(log::Level::Debug).map_err(|_| anyhow!("Logger initialization failed"))?;
 
         let window = web_sys::window().ok_or_else(|| anyhow!("Window not found"))?;
         let document = window.document().ok_or_else(|| anyhow!("Document not found"))?;
         let canvas = document.get_element_by_id("canvas").ok_or_else(|| anyhow!("Canvas not found"))?;
-        let canvas = canvas.dyn_into::<HtmlCanvasElement>().map_err(|_| ()).map_err(|_| anyhow!("HtmlCanvasElement not present"))?;
+        let canvas = canvas.dyn_into::<HtmlCanvasElement>().map_err(|_| anyhow!("HtmlCanvasElement not found"))?;
         let last_canvas_size = Coordinates::new(canvas.scroll_width(), canvas.scroll_height());
 
-        let webgl_context = canvas
+        let webgl = canvas
             .get_context("webgl2")
             .map_err(|_| anyhow!("Failed to initialize WebGL context"))?
-            .ok_or_else(|| anyhow!("Failed to initialize WebGL context"))?
-            .dyn_into::<WebGl2RenderingContext>()
-            .map_err(|_| anyhow!("WebGl2RenderingContext not present"))?;
+            .ok_or_else(|| anyhow!("Failed to initialize WebGL context"))?;
+        let webgl_context = webgl.dyn_into::<WebGl2RenderingContext>().map_err(|_| anyhow!("Failed to initialize WebGl2RenderingContext"))?;
 
         Ok(Box::new(Self {
             window,
@@ -104,23 +104,21 @@ impl WindowContextWeb {
     }
 
     #[allow(clippy::redundant_clone)]
-    pub fn init_closures<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>) -> Result<()>
+    pub fn init_closures<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>)
     where
         G: Default + 'static,
     {
         self.init_frame_callback(app.clone());
-        self.init_resize_callback(app.clone()).map_err(|_| anyhow!("Failed to initialize resize listener"))?;
-        self.init_mousemove_callback(app.clone()).map_err(|_| anyhow!("Failed to initialize mousemove listener"))?;
-        self.init_mouseenter_callback(app.clone()).map_err(|_| anyhow!("Failed to initialize mouseenter listener"))?;
-        self.init_mouseleave_callback(app.clone()).map_err(|_| anyhow!("Failed to initialize mouseleave listener"))?;
-        self.init_mousedown_callback(app.clone()).map_err(|_| anyhow!("Failed to initialize mousedown listener"))?;
-        self.init_mouseup_callback(app.clone()).map_err(|_| anyhow!("Failed to initialize mouseup listener"))?;
-        self.init_scroll_callback(app.clone()).map_err(|_| anyhow!("Failed to initialize scroll listener"))?;
-        self.init_keydown_callback(app.clone()).map_err(|_| anyhow!("Failed to initialize keydown listener"))?;
-        self.init_keyup_callback(app.clone()).map_err(|_| anyhow!("Failed to initialize keyup listener"))?;
-        self.init_keypress_callback(app.clone()).map_err(|_| anyhow!("Failed to initialize keypress listener"))?;
-
-        Ok(())
+        self.init_resize_callback(app.clone()).map_or_else(|_| error!("Failed to initialize resize callback"), |_| ());
+        self.init_mousemove_callback(app.clone()).map_or_else(|_| error!("Failed to initialize mousemove callback"), |_| ());
+        self.init_mouseenter_callback(app.clone()).map_or_else(|_| error!("Failed to initialize mouseenter callback"), |_| ());
+        self.init_mouseleave_callback(app.clone()).map_or_else(|_| error!("Failed to initialize mouseleave callback"), |_| ());
+        self.init_mousedown_callback(app.clone()).map_or_else(|_| error!("Failed to initialize mousedown callback"), |_| ());
+        self.init_mouseup_callback(app.clone()).map_or_else(|_| error!("Failed to initialize mouseup callback"), |_| ());
+        self.init_scroll_callback(app.clone()).map_or_else(|_| error!("Failed to initialize scroll callback"), |_| ());
+        self.init_keydown_callback(app.clone()).map_or_else(|_| error!("Failed to initialize keydown callback"), |_| ());
+        self.init_keyup_callback(app.clone()).map_or_else(|_| error!("Failed to initialize keyup callback"), |_| ());
+        self.init_keypress_callback(app.clone()).map_or_else(|_| error!("Failed to initialize keypress callback"), |_| ());
     }
 
     fn init_frame_callback<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>)
@@ -371,10 +369,14 @@ impl WindowContextWeb {
     }
 
     pub fn set_cursor_visibility(&mut self, visible: bool) {
-        match visible {
-            true => self.canvas.style().set_property("cursor", "default").unwrap(),
-            false => self.canvas.style().set_property("cursor", "none").unwrap(),
+        let result = match visible {
+            true => self.canvas.style().set_property("cursor", "default"),
+            false => self.canvas.style().set_property("cursor", "none"),
         };
+
+        if result.is_err() {
+            error!("Failed to set cursor visibility to {}", visible);
+        }
 
         self.cursor_visible = visible;
     }
@@ -384,7 +386,9 @@ impl WindowContextWeb {
     }
 
     pub fn swap_buffers(&self) {
-        self.window.request_animation_frame(self.frame_callback.as_ref().unchecked_ref()).unwrap();
+        if self.window.request_animation_frame(self.frame_callback.as_ref().unchecked_ref()).is_err() {
+            error!("Failed to request a new animation frame");
+        }
     }
 
     pub fn close(&self) {

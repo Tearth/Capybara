@@ -120,7 +120,7 @@ where
 
         #[cfg(web)]
         {
-            app_borrow.window.init_closures(app.clone())?;
+            app_borrow.window.init_closures(app.clone());
         }
 
         app_borrow.next_scene = Some(scene.to_string());

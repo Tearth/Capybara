@@ -50,14 +50,14 @@ impl Scene<GlobalData> for LoadingScene {
 
     fn frame(&mut self, state: ApplicationState<GlobalData>, _: f32, _: f32) -> Result<Option<FrameCommand>> {
         if state.global.assets.load("./data/main.zip")? == AssetsLoadingStatus::Finished {
-            state.renderer.instantiate_assets(&state.global.assets, None)?;
-            state.ui.instantiate_assets(&state.global.assets, None)?;
+            state.renderer.instantiate_assets(&state.global.assets, None);
+            state.ui.instantiate_assets(&state.global.assets, None);
 
             let music_track_id = state.global.music_track.as_ref().unwrap().id();
             let sound_track_id = state.global.sound_track.as_ref().unwrap().id();
 
-            state.audio.instantiate_assets(&state.global.assets, Some("/music/"), Some(music_track_id))?;
-            state.audio.instantiate_assets(&state.global.assets, Some("/sounds/"), Some(sound_track_id))?;
+            state.audio.instantiate_assets(&state.global.assets, Some("/music/"), Some(music_track_id));
+            state.audio.instantiate_assets(&state.global.assets, Some("/sounds/"), Some(sound_track_id));
 
             return Ok(Some(FrameCommand::ChangeScene { name: "MenuScene".to_string() }));
         }

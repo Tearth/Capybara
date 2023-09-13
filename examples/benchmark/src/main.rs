@@ -72,8 +72,8 @@ impl Scene<GlobalData> for MainScene {
         }
 
         if !self.initialized && state.global.assets.load("./data/data0.zip")? == AssetsLoadingStatus::Finished {
-            state.renderer.instantiate_assets(&state.global.assets, None)?;
-            state.ui.instantiate_assets(&state.global.assets, None)?;
+            state.renderer.instantiate_assets(&state.global.assets, None);
+            state.ui.instantiate_assets(&state.global.assets, None);
             state.window.set_swap_interval(0);
 
             for _ in 0..200000 {

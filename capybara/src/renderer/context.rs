@@ -23,6 +23,7 @@ use glow::Context;
 use glow::HasContext;
 use glow::VertexArray;
 use instant::Instant;
+use log::error;
 use rustc_hash::FxHashMap;
 use std::cmp;
 use std::path::Path;
@@ -220,51 +221,77 @@ impl RendererContext {
         }
     }
 
-    pub fn instantiate_assets(&mut self, assets: &AssetsLoader, prefix: Option<&str>) -> Result<()> {
-        for texture in &assets.raw_textures {
+    pub fn instantiate_assets(&mut self, assets: &AssetsLoader, prefix: Option<&str>) {
+        for raw in &assets.raw_textures {
             if let Some(prefix) = &prefix {
-                if !texture.path.starts_with(prefix) {
+                if !raw.path.starts_with(prefix) {
                     continue;
                 }
             }
 
-            self.textures.store_with_name(&texture.name, Texture::new(self, texture)?)?;
+            let texture = match Texture::new(self, raw) {
+                Ok(sound) => sound,
+                Err(_) => {
+                    error!("Failed to load texture {}", raw.name);
+                    continue;
+                }
+            };
+
+            if self.textures.store_with_name(&raw.name, texture).is_err() {
+                error!("Failed to instantiate texture {}", raw.name);
+            }
         }
 
-        for atlas in &assets.raw_atlases {
-            let path = Path::new(&atlas.name);
-            let name = path.file_stem().ok_or_else(|| anyhow!("Failed to get filename stem"))?;
-            let name_str = name.to_str().ok_or_else(|| anyhow!("Failed to get filename string"))?.to_string();
+        for raw in &assets.raw_atlases {
+            let path = Path::new(&raw.name);
+            let name = match path.file_stem() {
+                Some(name) => name,
+                None => {
+                    error!("Failed to get filename stem for atlas {}", raw.name);
+                    continue;
+                }
+            };
+            let name_str = match name.to_str() {
+                Some(name) => name,
+                None => {
+                    error!("Failed to get filename string for atlas {}", raw.name);
+                    continue;
+                }
+            };
 
             if self.textures.contains_by_name(&name_str) {
-                let texture = self.textures.get_by_name_mut(&name_str)?;
                 let mut entities = FxHashMap::default();
+                let texture = match self.textures.get_by_name_mut(&name_str) {
+                    Ok(texture) => texture,
+                    Err(_) => {
+                        error!("Texture not found, atlas {} orphaned", name_str);
+                        continue;
+                    }
+                };
 
-                for raw in &atlas.entities {
-                    entities.insert(raw.name.clone(), AtlasEntity::new(raw.position, raw.size));
+                for entity in &raw.entities {
+                    entities.insert(entity.name.clone(), AtlasEntity::new(entity.position, entity.size));
                 }
 
                 texture.kind = TextureKind::Atlas(entities);
             }
         }
-
-        Ok(())
     }
 
-    pub fn begin_frame(&mut self) -> Result<()> {
+    pub fn begin_frame(&mut self) {
         unsafe {
             self.gl.clear(glow::COLOR_BUFFER_BIT);
 
             if self.active_camera_id != self.default_camera_id {
-                self.activate_camera(self.default_camera_id)?;
+                if self.activate_camera(self.default_camera_id).is_err() {
+                    error!("Failed to activate camera {}", self.default_camera_id);
+                }
             }
-
-            Ok(())
         }
     }
 
-    pub fn end_frame(&mut self) -> Result<()> {
-        self.flush_buffer()?;
+    pub fn end_frame(&mut self) {
+        self.flush_buffer();
 
         unsafe {
             self.gl.flush();
@@ -278,8 +305,6 @@ impl RendererContext {
         } else {
             self.fps_count += 1;
         }
-
-        Ok(())
     }
 
     pub fn draw_sprite(&mut self, sprite: &Sprite) -> Result<()> {
@@ -327,7 +352,7 @@ impl RendererContext {
 
         if let Some(buffer_metadata) = &self.buffer_metadata {
             if buffer_metadata.content_type != BufferContentType::Sprite || buffer_metadata.texture_id != sprite.texture_id {
-                self.flush_buffer()?;
+                self.flush_buffer();
                 self.buffer_metadata = Some(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id));
             }
         } else {
@@ -418,7 +443,7 @@ impl RendererContext {
     pub fn draw_shape(&mut self, shape: &Shape) -> Result<()> {
         if let Some(buffer_metadata) = &self.buffer_metadata {
             if buffer_metadata.content_type != BufferContentType::Shape || buffer_metadata.texture_id != shape.texture_id {
-                self.flush_buffer()?;
+                self.flush_buffer();
                 self.buffer_metadata = Some(BufferMetadata::new(BufferContentType::Shape, shape.texture_id));
             }
         } else {
@@ -476,11 +501,9 @@ impl RendererContext {
         Ok(())
     }
 
-    pub fn flush_buffer(&mut self) -> Result<()> {
+    pub fn flush_buffer(&mut self) {
         unsafe {
             if let Some(buffer_metadata) = &self.buffer_metadata {
-                let camera = self.cameras.get_mut(self.active_camera_id)?;
-
                 if self.sprite_buffer_resized {
                     let buffer_vertices_size = self.sprite_buffer_vertices_queue.len() as i32 * 4;
 
@@ -504,15 +527,26 @@ impl RendererContext {
                     self.shape_buffer_resized = false;
                 }
 
+                let camera = match self.cameras.get_mut(self.active_camera_id) {
+                    Ok(camera) => camera,
+                    Err(msg) => {
+                        error!("{}", msg);
+                        return;
+                    }
+                };
                 let camera_changed = *camera != self.active_camera_data;
 
                 match buffer_metadata.content_type {
                     BufferContentType::Sprite => {
                         if self.active_shader_id != self.default_sprite_shader_id || camera_changed {
-                            let shader = self.shaders.get(self.default_sprite_shader_id)?;
-                            shader.activate();
-                            shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr())?;
-                            shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr())?;
+                            match self.shaders.get(self.default_sprite_shader_id) {
+                                Ok(shader) => {
+                                    shader.activate();
+                                    shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr());
+                                    shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr());
+                                }
+                                Err(_) => error!("Shader {} not found", self.default_sprite_shader_id),
+                            }
 
                             if camera_changed {
                                 self.active_camera_data = camera.clone();
@@ -533,9 +567,15 @@ impl RendererContext {
                         self.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, 0, models_u8);
 
                         if let Some(texture_id) = buffer_metadata.texture_id {
-                            self.textures.get(texture_id)?.activate();
+                            match self.textures.get(texture_id) {
+                                Ok(texture) => texture.activate(),
+                                Err(_) => error!("Texture {} not found", texture_id),
+                            };
                         } else {
-                            self.textures.get(self.default_texture_id)?.activate();
+                            match self.textures.get(self.default_texture_id) {
+                                Ok(texture) => texture.activate(),
+                                Err(_) => error!("Texture {} not found", self.default_texture_id),
+                            };
                         }
 
                         self.gl.draw_elements_instanced(glow::TRIANGLES, 6, glow::UNSIGNED_INT, 0, self.sprite_buffer_count as i32);
@@ -545,10 +585,14 @@ impl RendererContext {
                     }
                     BufferContentType::Shape => {
                         if self.active_shader_id != self.default_shape_shader_id || camera_changed {
-                            let shader = self.shaders.get(self.default_shape_shader_id)?;
-                            shader.activate();
-                            shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr())?;
-                            shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr())?;
+                            match self.shaders.get(self.default_shape_shader_id) {
+                                Ok(shader) => {
+                                    shader.activate();
+                                    shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr());
+                                    shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr());
+                                }
+                                Err(_) => error!("Shader {} not found", self.default_shape_shader_id),
+                            }
 
                             if camera_changed {
                                 self.active_camera_data = camera.clone();
@@ -571,9 +615,15 @@ impl RendererContext {
                         self.gl.buffer_sub_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, 0, indices_u8);
 
                         if let Some(texture_id) = buffer_metadata.texture_id {
-                            self.textures.get(texture_id)?.activate();
+                            match self.textures.get(texture_id) {
+                                Ok(texture) => texture.activate(),
+                                Err(_) => error!("Texture {} not found", texture_id),
+                            };
                         } else {
-                            self.textures.get(self.default_texture_id)?.activate();
+                            match self.textures.get(self.default_texture_id) {
+                                Ok(texture) => texture.activate(),
+                                Err(_) => error!("Texture {} not found", self.default_texture_id),
+                            };
                         }
 
                         self.gl.draw_elements(glow::TRIANGLES, self.shape_buffer_indices_count as i32, glow::UNSIGNED_INT, 0);
@@ -586,8 +636,6 @@ impl RendererContext {
 
                 self.buffer_metadata = None;
             }
-
-            Ok(())
         }
     }
 

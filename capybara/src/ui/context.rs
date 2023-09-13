@@ -68,31 +68,31 @@ impl UiContext {
         })
     }
 
-    pub fn instantiate_assets(&mut self, assets: &AssetsLoader, prefix: Option<&str>) -> Result<()> {
-        for texture in &assets.raw_textures {
+    pub fn instantiate_assets(&mut self, assets: &AssetsLoader, prefix: Option<&str>) {
+        for raw in &assets.raw_textures {
             if let Some(prefix) = &prefix {
-                if !texture.path.starts_with(prefix) {
+                if !raw.path.starts_with(prefix) {
                     continue;
                 }
             }
 
-            let size = [texture.size.x as usize, texture.size.y as usize];
+            let size = [raw.size.x as usize, raw.size.y as usize];
             let mut image = ColorImage::new(size, Color32::TRANSPARENT);
 
             for x in 0..size[0] {
                 for y in 0..size[1] {
                     let base = x * 4 + y * 4 * size[0];
-                    let r = texture.data[base + 0];
-                    let g = texture.data[base + 1];
-                    let b = texture.data[base + 2];
-                    let a = texture.data[base + 3];
+                    let r = raw.data[base + 0];
+                    let g = raw.data[base + 1];
+                    let b = raw.data[base + 2];
+                    let a = raw.data[base + 3];
 
                     image.pixels[x + y * size[0]] = Color32::from_rgba_unmultiplied(r, g, b, a);
                 }
             }
 
-            let handle = self.inner.write().unwrap().load_texture(texture.name.clone(), image, Default::default());
-            self.handles.insert(texture.name.clone(), handle);
+            let handle = self.inner.write().unwrap().load_texture(raw.name.clone(), image, Default::default());
+            self.handles.insert(raw.name.clone(), handle);
         }
 
         let mut fonts = FontDefinitions::default();
@@ -115,7 +115,6 @@ impl UiContext {
         }
 
         self.inner.write().unwrap().set_fonts(fonts);
-        Ok(())
     }
 
     pub fn collect_event(&mut self, event: &InputEvent) {
@@ -254,7 +253,7 @@ impl UiContext {
 
                 renderer.enable_scissor(scissor_position, scissor_size);
                 renderer.draw_shape(&shape)?;
-                renderer.flush_buffer()?;
+                renderer.flush_buffer();
             }
         }
 

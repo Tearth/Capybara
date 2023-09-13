@@ -6,6 +6,7 @@ use kira::manager::backend::cpal::CpalBackend;
 use kira::manager::AudioManager;
 use kira::manager::AudioManagerSettings;
 use kira::track::TrackId;
+use log::error;
 
 pub struct AudioContext {
     pub inner: AudioManager<CpalBackend>,
@@ -17,17 +18,25 @@ impl AudioContext {
         Ok(Self { inner: AudioManager::<CpalBackend>::new(AudioManagerSettings::default())?, sounds: Default::default() })
     }
 
-    pub fn instantiate_assets(&mut self, assets: &AssetsLoader, prefix: Option<&str>, track: Option<TrackId>) -> Result<()> {
-        for sound in &assets.raw_sounds {
+    pub fn instantiate_assets(&mut self, assets: &AssetsLoader, prefix: Option<&str>, track: Option<TrackId>) {
+        for raw in &assets.raw_sounds {
             if let Some(prefix) = &prefix {
-                if !sound.path.starts_with(prefix) {
+                if !raw.path.starts_with(prefix) {
                     continue;
                 }
             }
 
-            self.sounds.store_with_name(&sound.name, Sound::new(sound, track)?)?;
-        }
+            let sound = match Sound::new(raw, track) {
+                Ok(sound) => sound,
+                Err(_) => {
+                    error!("Failed to load sound {}", raw.name);
+                    continue;
+                }
+            };
 
-        Ok(())
+            if self.sounds.store_with_name(&raw.name, sound).is_err() {
+                error!("Failed to instantiate sound {}", raw.name);
+            }
+        }
     }
 }

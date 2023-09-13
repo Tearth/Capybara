@@ -7,6 +7,7 @@ use glow::Context;
 use glow::HasContext;
 use glow::Program;
 use glow::UniformLocation;
+use log::error;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::slice;
@@ -84,14 +85,17 @@ impl Shader {
         }
     }
 
-    pub fn set_uniform<T>(&self, name: &str, data: *const T) -> Result<()>
+    pub fn set_uniform<T>(&self, name: &str, data: *const T)
     where
         T: Copy + Into<f32>,
     {
         unsafe {
             let parameter = match self.uniforms.get(name) {
                 Some(parameter) => parameter,
-                None => return Ok(()),
+                None => {
+                    error!("Uniform parameter {} not found", name);
+                    return;
+                }
             };
 
             match parameter.r#type {
@@ -113,10 +117,8 @@ impl Shader {
                     let slice = slice::from_raw_parts::<f32>(data as *const f32, 16);
                     (self.gl.uniform_matrix_4_f32_slice(Some(&parameter.location), false, slice));
                 }
-                _ => bail!("Invalid shader parameter type".to_string()),
+                _ => error!("Invalid parameter type {} for uniform parameter {}", parameter.r#type, name),
             };
-
-            Ok(())
         }
     }
 

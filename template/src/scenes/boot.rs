@@ -35,7 +35,7 @@ impl Scene<GlobalData> for BootScene {
 
     fn frame(&mut self, state: ApplicationState<GlobalData>, _: f32, _: f32) -> Result<Option<FrameCommand>> {
         if state.global.assets.load("./data/boot.zip")? == AssetsLoadingStatus::Finished {
-            state.ui.instantiate_assets(&state.global.assets, None)?;
+            state.ui.instantiate_assets(&state.global.assets, None);
 
             let mut style = (*state.ui.inner.read().unwrap().style()).clone();
             style.text_styles = [

@@ -132,7 +132,7 @@ where
 
     pub fn run_internal(&mut self) -> Result<()> {
         while self.running {
-            self.renderer.begin_frame()?;
+            self.renderer.begin_frame();
 
             if let Some(next_scene) = &self.next_scene {
                 if !self.current_scene.is_empty() {
@@ -185,11 +185,11 @@ where
             let scene = self.scenes.get_by_name_mut(&self.current_scene)?;
             let command = scene.frame(state!(self), self.accumulator, delta)?;
             self.process_frame_command(command);
-            self.renderer.flush_buffer()?;
+            self.renderer.flush_buffer();
 
             self.ui.draw(&mut self.renderer, ui_output)?;
 
-            self.renderer.end_frame()?;
+            self.renderer.end_frame();
             self.window.swap_buffers();
 
             #[cfg(web)]

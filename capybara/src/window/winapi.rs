@@ -293,6 +293,7 @@ impl WindowContextWinApi {
             }
 
             self.wgl_context = Some(wgl_context);
+            self.wgl_extensions = Some(WglExtensions::new());
 
             Ok(())
         }

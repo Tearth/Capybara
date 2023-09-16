@@ -4,8 +4,10 @@ use anyhow::anyhow;
 use anyhow::Result;
 use glow::Context;
 use log::error;
+use log::Level;
 use std::cell::RefCell;
 use std::collections::VecDeque;
+use std::panic;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use web_sys::Document;
@@ -48,10 +50,13 @@ pub struct WindowContextWeb {
 impl WindowContextWeb {
     pub fn new(_: &str, _: WindowStyle) -> Result<Box<Self>> {
         #[cfg(debug_assertions)]
-        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+        panic::set_hook(Box::new(console_error_panic_hook::hook));
 
         #[cfg(debug_assertions)]
-        console_log::init_with_level(log::Level::Debug).map_err(|_| anyhow!("Logger initialization failed"))?;
+        console_log::init_with_level(Level::Info).map_err(|_| anyhow!("Logger initialization failed"))?;
+
+        #[cfg(not(debug_assertions))]
+        console_log::init_with_level(Level::Error).map_err(|_| anyhow!("Logger initialization failed"))?;
 
         let window = web_sys::window().ok_or_else(|| anyhow!("Window not found"))?;
         let document = window.document().ok_or_else(|| anyhow!("Document not found"))?;

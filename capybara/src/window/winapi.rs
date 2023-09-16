@@ -13,6 +13,7 @@ use anyhow::Result;
 use glow::Context;
 use log::debug;
 use log::error;
+use log::Level;
 use std::collections::VecDeque;
 use std::ffi::CString;
 use std::mem;
@@ -49,7 +50,10 @@ impl WindowContextWinApi {
     pub fn new(title: &str, style: WindowStyle) -> Result<Box<Self>> {
         unsafe {
             #[cfg(debug_assertions)]
-            simple_logger::init_with_level(log::Level::Debug)?;
+            simple_logger::init_with_level(Level::Info)?;
+
+            #[cfg(not(debug_assertions))]
+            simple_logger::init_with_level(Level::Error)?;
 
             let title_cstr = CString::new(title).unwrap();
             let class_cstr = CString::new("CapybaraWindow").unwrap();

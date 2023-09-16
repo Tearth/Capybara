@@ -49,7 +49,10 @@ impl WindowContextX11 {
     pub fn new(title: &str, style: WindowStyle) -> Result<Box<Self>> {
         unsafe {
             #[cfg(debug_assertions)]
-            simple_logger::init_with_level(Level::Debug)?;
+            simple_logger::init_with_level(Level::Info)?;
+
+            #[cfg(not(debug_assertions))]
+            simple_logger::init_with_level(Level::Error)?;
 
             let display = xlib::XOpenDisplay(ptr::null());
             if display.is_null() {

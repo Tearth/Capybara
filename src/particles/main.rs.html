@@ -145,7 +145,6 @@
 <a href="#145" id="145">145</a>
 <a href="#146" id="146">146</a>
 <a href="#147" id="147">147</a>
-<a href="#148" id="148">148</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>capybara::anyhow::Result;
 <span class="kw">use </span>capybara::app::ApplicationContext;
 <span class="kw">use </span>capybara::app::ApplicationState;
@@ -218,8 +217,8 @@
         }
 
         <span class="kw">if </span>!<span class="self">self</span>.initialized &amp;&amp; state.global.assets.load(<span class="string">&quot;./data/data0.zip&quot;</span>)<span class="question-mark">? </span>== AssetsLoadingStatus::Finished {
-            state.renderer.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-            state.ui.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+            state.renderer.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>);
+            state.ui.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>);
             state.window.set_swap_interval(<span class="number">0</span>);
 
             <span class="self">self</span>.emitter.size = Vec2::new(<span class="number">32.0</span>, <span class="number">8.0</span>);
@@ -248,8 +247,8 @@
         <span class="kw">if </span><span class="self">self</span>.initialized {
             <span class="kw">let </span>cursor_position = Vec2::new(state.window.cursor_position.x <span class="kw">as </span>f32, state.window.cursor_position.y <span class="kw">as </span>f32);
             <span class="self">self</span>.emitter.position = state.renderer.cameras.get(state.renderer.active_camera_id)<span class="question-mark">?</span>.from_window_to_screen_coordinates(cursor_position);
-            <span class="self">self</span>.emitter.update(Instant::now(), delta)<span class="question-mark">?</span>;
-            <span class="self">self</span>.emitter.draw(state.renderer)<span class="question-mark">?</span>;
+            <span class="self">self</span>.emitter.update(Instant::now(), delta);
+            <span class="self">self</span>.emitter.draw(state.renderer);
         }
 
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
@@ -289,8 +288,7 @@
 <span class="kw">fn </span>main_internal() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     ApplicationContext::&lt;GlobalData&gt;::new(<span class="string">&quot;Particles&quot;</span>, WindowStyle::Window { size: Coordinates::new(<span class="number">1280</span>, <span class="number">720</span>) })<span class="question-mark">?
         </span>.with_scene(<span class="string">&quot;MainScene&quot;</span>, Box::&lt;MainScene&gt;::default())<span class="question-mark">?
-        </span>.run(<span class="string">&quot;MainScene&quot;</span>)
-        .unwrap();
+        </span>.run(<span class="string">&quot;MainScene&quot;</span>);
 
     <span class="prelude-val">Ok</span>(())
 }

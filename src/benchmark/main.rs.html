@@ -218,8 +218,8 @@
         }
 
         <span class="kw">if </span>!<span class="self">self</span>.initialized &amp;&amp; state.global.assets.load(<span class="string">&quot;./data/data0.zip&quot;</span>)<span class="question-mark">? </span>== AssetsLoadingStatus::Finished {
-            state.renderer.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-            state.ui.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+            state.renderer.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>);
+            state.ui.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>);
             state.window.set_swap_interval(<span class="number">0</span>);
 
             <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">200000 </span>{
@@ -250,7 +250,7 @@
                 object.direction = Vec2::new(object.direction.x, -object.direction.y.abs());
             }
 
-            state.renderer.draw_sprite(<span class="kw-2">&amp;</span>object.sprite)<span class="question-mark">?</span>;
+            state.renderer.draw_sprite(<span class="kw-2">&amp;</span>object.sprite);
         }
 
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
@@ -286,7 +286,7 @@
 <span class="kw">fn </span>main_internal() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     ApplicationContext::&lt;GlobalData&gt;::new(<span class="string">&quot;Benchmark&quot;</span>, WindowStyle::Window { size: Coordinates::new(<span class="number">1280</span>, <span class="number">720</span>) })<span class="question-mark">?
         </span>.with_scene(<span class="string">&quot;MainScene&quot;</span>, Box::&lt;MainScene&gt;::default())<span class="question-mark">?
-        </span>.run(<span class="string">&quot;MainScene&quot;</span>)<span class="question-mark">?</span>;
+        </span>.run(<span class="string">&quot;MainScene&quot;</span>);
 
     <span class="prelude-val">Ok</span>(())
 }

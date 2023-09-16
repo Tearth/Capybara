@@ -76,19 +76,15 @@
 <a href="#76" id="76">76</a>
 <a href="#77" id="77">77</a>
 <a href="#78" id="78">78</a>
-<a href="#79" id="79">79</a>
-<a href="#80" id="80">80</a>
-<a href="#81" id="81">81</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::context::PhysicsContext;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::context::RendererContext;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::shape::Shape;
-<span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>glam::Vec2;
 <span class="kw">use </span>rapier2d::prelude::ShapeType;
 <span class="kw">use </span>std::sync::TryLockResult;
 
 <span class="kw">impl </span>PhysicsContext {
-    <span class="kw">pub fn </span>draw_debug(<span class="kw-2">&amp;</span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>RendererContext, pixels_per_meter: f32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">pub fn </span>draw_debug(<span class="kw-2">&amp;</span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>RendererContext, pixels_per_meter: f32) {
         <span class="kw">for </span>(<span class="kw">_</span>, collider) <span class="kw">in </span><span class="self">self</span>.colliders.iter() {
             <span class="kw">let </span>position = Vec2::from(collider.position().translation) * pixels_per_meter;
             <span class="kw">let </span>rotation = collider.rotation().angle();
@@ -112,8 +108,8 @@
                     <span class="kw">let </span>radius = ball.radius * pixels_per_meter;
                     <span class="kw">let </span>direction = Vec2::from_angle(rotation);
 
-                    context.draw_shape(<span class="kw-2">&amp;</span>Shape::new_circle(position, radius, <span class="prelude-val">None</span>, <span class="self">self</span>.debug.collider_thickness, color))<span class="question-mark">?</span>;
-                    context.draw_shape(<span class="kw-2">&amp;</span>Shape::new_line(position, position + direction * (radius - <span class="number">1.0</span>), <span class="self">self</span>.debug.collider_thickness, color))<span class="question-mark">?</span>;
+                    context.draw_shape(<span class="kw-2">&amp;</span>Shape::new_circle(position, radius, <span class="prelude-val">None</span>, <span class="self">self</span>.debug.collider_thickness, color));
+                    context.draw_shape(<span class="kw-2">&amp;</span>Shape::new_line(position, position + direction * (radius - <span class="number">1.0</span>), <span class="self">self</span>.debug.collider_thickness, color));
                 }
                 ShapeType::Cuboid =&gt; {
                     <span class="kw">let </span>cuboid = collider.shape().as_cuboid().unwrap();
@@ -122,7 +118,7 @@
 
                     shape.position = position;
                     shape.rotation = rotation;
-                    context.draw_shape(<span class="kw-2">&amp;</span>shape)<span class="question-mark">?</span>;
+                    context.draw_shape(<span class="kw-2">&amp;</span>shape);
                 }
                 <span class="kw">_ </span>=&gt; {}
             }
@@ -133,8 +129,8 @@
             <span class="kw">let </span>mass_center_position = Vec2::from(rigidbody.center_of_mass().xy()) * pixels_per_meter;
             <span class="kw">let </span>velocity = Vec2::from(rigidbody.linvel().xy()) / <span class="self">self</span>.integration_parameters.dt;
 
-            context.draw_shape(<span class="kw-2">&amp;</span>Shape::new_disc(mass_center_position, <span class="self">self</span>.debug.mass_center_radius, <span class="prelude-val">None</span>, <span class="self">self</span>.debug.mass_center_color))<span class="question-mark">?</span>;
-            context.draw_shape(<span class="kw-2">&amp;</span>Shape::new_line(position, position + velocity, <span class="self">self</span>.debug.force_thickness, <span class="self">self</span>.debug.force_color))<span class="question-mark">?</span>;
+            context.draw_shape(<span class="kw-2">&amp;</span>Shape::new_disc(mass_center_position, <span class="self">self</span>.debug.mass_center_radius, <span class="prelude-val">None</span>, <span class="self">self</span>.debug.mass_center_color));
+            context.draw_shape(<span class="kw-2">&amp;</span>Shape::new_line(position, position + velocity, <span class="self">self</span>.debug.force_thickness, <span class="self">self</span>.debug.force_color));
         }
 
         <span class="kw">if let </span>TryLockResult::Ok(contacts) = <span class="self">self</span>.events.contacts.try_write() {
@@ -151,13 +147,11 @@
                             contact_local_position.y * cos + contact_local_position.x * sin,
                         ) + collider_position;
 
-                        context.draw_shape(<span class="kw-2">&amp;</span>Shape::new_disc(position, <span class="self">self</span>.debug.contact_radius, <span class="prelude-val">None</span>, <span class="self">self</span>.debug.contact_color))<span class="question-mark">?</span>;
+                        context.draw_shape(<span class="kw-2">&amp;</span>Shape::new_disc(position, <span class="self">self</span>.debug.contact_radius, <span class="prelude-val">None</span>, <span class="self">self</span>.debug.contact_color));
                     }
                 }
             }
         }
-
-        <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div></section></main></body></html>

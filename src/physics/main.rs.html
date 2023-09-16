@@ -222,7 +222,6 @@
 <a href="#222" id="222">222</a>
 <a href="#223" id="223">223</a>
 <a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>capybara::anyhow::Result;
 <span class="kw">use </span>capybara::app::ApplicationContext;
 <span class="kw">use </span>capybara::app::ApplicationState;
@@ -329,8 +328,8 @@
         <span class="kw">const </span>PIXELS_PER_METER: f32 = <span class="number">50.0</span>;
 
         <span class="kw">if </span>!<span class="self">self</span>.initialized &amp;&amp; state.global.assets.load(<span class="string">&quot;./data/data0.zip&quot;</span>)<span class="question-mark">? </span>== AssetsLoadingStatus::Finished {
-            state.renderer.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-            state.ui.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+            state.renderer.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>);
+            state.ui.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>);
             state.window.set_swap_interval(<span class="number">0</span>);
 
             <span class="self">self</span>.terrain = Sprite { size: <span class="prelude-val">Some</span>(Vec2::new(state.renderer.viewport_size.x, <span class="number">50.0</span>)), ..Default::default() };
@@ -387,26 +386,26 @@
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(interpolation_data) = state.physics.interpolation_data.get(<span class="kw-2">&amp;</span>object.rigidbody) {
                     <span class="self">self</span>.objects[i].sprite.position = interpolation_data.get_position_interpolated(alpha) * PIXELS_PER_METER;
                     <span class="self">self</span>.objects[i].sprite.rotation = interpolation_data.get_rotation_interpolated(alpha);
-                    state.renderer.draw_sprite(<span class="kw-2">&amp;</span><span class="self">self</span>.objects[i].sprite)<span class="question-mark">?</span>;
+                    state.renderer.draw_sprite(<span class="kw-2">&amp;</span><span class="self">self</span>.objects[i].sprite);
                 }
             }
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(interpolation_data) = state.physics.interpolation_data.get(<span class="kw-2">&amp;</span><span class="self">self</span>.wheel_left_rigidbody) {
                 <span class="self">self</span>.wheel_left.position = interpolation_data.get_position_interpolated(alpha) * PIXELS_PER_METER;
                 <span class="self">self</span>.wheel_left.rotation = interpolation_data.get_rotation_interpolated(alpha);
-                state.renderer.draw_sprite(<span class="kw-2">&amp;</span><span class="self">self</span>.wheel_left)<span class="question-mark">?</span>;
+                state.renderer.draw_sprite(<span class="kw-2">&amp;</span><span class="self">self</span>.wheel_left);
             }
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(interpolation_data) = state.physics.interpolation_data.get(<span class="kw-2">&amp;</span><span class="self">self</span>.wheel_right_rigidbody) {
                 <span class="self">self</span>.wheel_right.position = interpolation_data.get_position_interpolated(alpha) * PIXELS_PER_METER;
                 <span class="self">self</span>.wheel_right.rotation = interpolation_data.get_rotation_interpolated(alpha);
-                state.renderer.draw_sprite(<span class="kw-2">&amp;</span><span class="self">self</span>.wheel_right)<span class="question-mark">?</span>;
+                state.renderer.draw_sprite(<span class="kw-2">&amp;</span><span class="self">self</span>.wheel_right);
             }
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(interpolation_data) = state.physics.interpolation_data.get(<span class="kw-2">&amp;</span><span class="self">self</span>.car_rigidbody) {
                 <span class="self">self</span>.car.position = interpolation_data.get_position_interpolated(alpha) * PIXELS_PER_METER;
                 <span class="self">self</span>.car.rotation = interpolation_data.get_rotation_interpolated(alpha);
-                state.renderer.draw_sprite(<span class="kw-2">&amp;</span><span class="self">self</span>.car)<span class="question-mark">?</span>;
+                state.renderer.draw_sprite(<span class="kw-2">&amp;</span><span class="self">self</span>.car);
             }
         }
 
@@ -443,8 +442,7 @@
 <span class="kw">fn </span>main_internal() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     ApplicationContext::&lt;GlobalData&gt;::new(<span class="string">&quot;Physics&quot;</span>, WindowStyle::Window { size: Coordinates::new(<span class="number">1280</span>, <span class="number">720</span>) })<span class="question-mark">?
         </span>.with_scene(<span class="string">&quot;MainScene&quot;</span>, Box::&lt;MainScene&gt;::default())<span class="question-mark">?
-        </span>.run(<span class="string">&quot;MainScene&quot;</span>)
-        .unwrap();
+        </span>.run(<span class="string">&quot;MainScene&quot;</span>);
 
     <span class="prelude-val">Ok</span>(())
 }

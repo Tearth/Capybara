@@ -207,7 +207,26 @@
 <a href="#207" id="207">207</a>
 <a href="#208" id="208">208</a>
 <a href="#209" id="209">209</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::renderer::context::RendererContext;
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::error_break;
+<span class="kw">use </span><span class="kw">crate</span>::error_continue;
+<span class="kw">use </span><span class="kw">crate</span>::renderer::context::RendererContext;
 <span class="kw">use </span><span class="kw">crate</span>::scene::FrameCommand;
 <span class="kw">use </span><span class="kw">crate</span>::scene::Scene;
 <span class="kw">use </span><span class="kw">crate</span>::ui::context::UiContext;
@@ -323,51 +342,63 @@
         <span class="prelude-val">Ok</span>(<span class="self">self</span>)
     }
 
-    <span class="kw">pub fn </span>run(<span class="self">self</span>, scene: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">pub fn </span>run(<span class="self">self</span>, scene: <span class="kw-2">&amp;</span>str) {
         <span class="kw">let </span>app = Rc::new(RefCell::new(<span class="self">self</span>));
         <span class="kw">let </span><span class="kw-2">mut </span>app_borrow = app.borrow_mut();
 
         <span class="attr">#[cfg(web)]
         </span>{
-            app_borrow.window.init_closures(app.clone())<span class="question-mark">?</span>;
+            app_borrow.window.init_closures(app.clone());
         }
 
         app_borrow.next_scene = <span class="prelude-val">Some</span>(scene.to_string());
         app_borrow.window.set_swap_interval(<span class="number">1</span>);
-        app_borrow.run_internal()<span class="question-mark">?</span>;
-
-        <span class="prelude-val">Ok</span>(())
+        app_borrow.run_internal();
     }
 
-    <span class="kw">pub fn </span>run_internal(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">pub fn </span>run_internal(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">while </span><span class="self">self</span>.running {
-            <span class="self">self</span>.renderer.begin_frame()<span class="question-mark">?</span>;
+            <span class="self">self</span>.renderer.begin_frame();
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(next_scene) = <span class="kw-2">&amp;</span><span class="self">self</span>.next_scene {
                 <span class="kw">if </span>!<span class="self">self</span>.current_scene.is_empty() {
-                    <span class="self">self</span>.scenes.get_by_name_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene)<span class="question-mark">?</span>.deactivation(<span class="macro">state!</span>(<span class="self">self</span>))<span class="question-mark">?</span>;
+                    <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.scenes.get_by_name_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene).and_then(|p| p.deactivation(<span class="macro">state!</span>(<span class="self">self</span>))) {
+                        <span class="macro">error_break!</span>(<span class="string">&quot;Failed to deactivate scene {} ({})&quot;</span>, <span class="self">self</span>.current_scene, err);
+                    };
                 }
 
-                <span class="self">self</span>.scenes.get_by_name_mut(next_scene)<span class="question-mark">?</span>.activation(<span class="macro">state!</span>(<span class="self">self</span>))<span class="question-mark">?</span>;
+                <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.scenes.get_by_name_mut(next_scene).and_then(|p| p.activation(<span class="macro">state!</span>(<span class="self">self</span>))) {
+                    <span class="macro">error_break!</span>(<span class="string">&quot;Failed to activate scene {} ({})&quot;</span>, next_scene, err);
+                };
+
                 <span class="self">self</span>.current_scene = next_scene.clone();
                 <span class="self">self</span>.next_scene = <span class="prelude-val">None</span>;
             }
 
-            <span class="kw">let </span>scene = <span class="self">self</span>.scenes.get_by_name_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene)<span class="question-mark">?</span>;
+            <span class="kw">let </span>scene = <span class="kw">match </span><span class="self">self</span>.scenes.get_by_name_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene) {
+                <span class="prelude-val">Ok</span>(scene) =&gt; scene,
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_break!</span>(<span class="string">&quot;Failed to get scene {} ({})&quot;</span>, <span class="self">self</span>.current_scene, err),
+            };
 
             <span class="kw">while let </span><span class="prelude-val">Some</span>(event) = <span class="self">self</span>.window.poll_event() {
                 <span class="kw">match </span>event {
-                    InputEvent::WindowSizeChange { size } =&gt; <span class="self">self</span>.renderer.set_viewport(Vec2::new(size.x <span class="kw">as </span>f32, size.y <span class="kw">as </span>f32))<span class="question-mark">?</span>,
-                    InputEvent::WindowClose =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
+                    InputEvent::WindowSizeChange { size } =&gt; <span class="self">self</span>.renderer.set_viewport(Vec2::new(size.x <span class="kw">as </span>f32, size.y <span class="kw">as </span>f32)),
+                    InputEvent::WindowClose =&gt; <span class="kw">return</span>,
                     <span class="kw">_ </span>=&gt; {}
                 }
 
                 <span class="self">self</span>.ui.collect_event(<span class="kw-2">&amp;</span>event);
-                scene.input(<span class="macro">state!</span>(<span class="self">self</span>), event)<span class="question-mark">?</span>;
+
+                <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = scene.input(<span class="macro">state!</span>(<span class="self">self</span>), event) {
+                    <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to process input event {:?} ({})&quot;</span>, event, err);
+                }
             }
 
             <span class="kw">let </span>ui_input = <span class="self">self</span>.ui.get_input();
-            <span class="kw">let </span>(ui_output, command) = scene.ui(<span class="macro">state!</span>(<span class="self">self</span>), ui_input)<span class="question-mark">?</span>;
+            <span class="kw">let </span>(ui_output, command) = <span class="kw">match </span>scene.ui(<span class="macro">state!</span>(<span class="self">self</span>), ui_input) {
+                <span class="prelude-val">Ok</span>((ui_output, command)) =&gt; (ui_output, command),
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to process UI ({})&quot;</span>, err),
+            };
             <span class="self">self</span>.process_frame_command(command);
 
             <span class="kw">let </span>now = Instant::now();
@@ -384,28 +415,31 @@
                 <span class="attr">#[cfg(feature = <span class="string">&quot;physics&quot;</span>)]
                 </span><span class="self">self</span>.physics.step(<span class="self">self</span>.timestep);
 
-                <span class="kw">let </span>scene = <span class="self">self</span>.scenes.get_by_name_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene)<span class="question-mark">?</span>;
-                <span class="kw">let </span>command = scene.fixed(<span class="macro">state!</span>(<span class="self">self</span>))<span class="question-mark">?</span>;
-                <span class="self">self</span>.process_frame_command(command);
+                <span class="kw">let </span>command = <span class="kw">match </span><span class="self">self</span>.scenes.get_by_name_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene).and_then(|p| p.fixed(<span class="macro">state!</span>(<span class="self">self</span>))) {
+                    <span class="prelude-val">Ok</span>(command) =&gt; command,
+                    <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to process fixed frame ({})&quot;</span>, err),
+                };
 
+                <span class="self">self</span>.process_frame_command(command);
                 <span class="self">self</span>.accumulator -= <span class="self">self</span>.timestep;
             }
 
-            <span class="kw">let </span>scene = <span class="self">self</span>.scenes.get_by_name_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene)<span class="question-mark">?</span>;
-            <span class="kw">let </span>command = scene.frame(<span class="macro">state!</span>(<span class="self">self</span>), <span class="self">self</span>.accumulator, delta)<span class="question-mark">?</span>;
+            <span class="kw">let </span>command = <span class="kw">match </span><span class="self">self</span>.scenes.get_by_name_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene).and_then(|p| p.frame(<span class="macro">state!</span>(<span class="self">self</span>), <span class="self">self</span>.accumulator, delta)) {
+                <span class="prelude-val">Ok</span>(command) =&gt; command,
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to process frame ({})&quot;</span>, err),
+            };
+
             <span class="self">self</span>.process_frame_command(command);
-            <span class="self">self</span>.renderer.flush_buffer()<span class="question-mark">?</span>;
+            <span class="self">self</span>.renderer.flush_buffer();
 
-            <span class="self">self</span>.ui.draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>.renderer, ui_output)<span class="question-mark">?</span>;
+            <span class="self">self</span>.ui.draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>.renderer, ui_output);
 
-            <span class="self">self</span>.renderer.end_frame()<span class="question-mark">?</span>;
+            <span class="self">self</span>.renderer.end_frame();
             <span class="self">self</span>.window.swap_buffers();
 
             <span class="attr">#[cfg(web)]
-            </span><span class="kw">return </span><span class="prelude-val">Ok</span>(());
+            </span><span class="kw">break</span>;
         }
-
-        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn </span>process_frame_command(<span class="kw-2">&amp;mut </span><span class="self">self</span>, command: <span class="prelude-ty">Option</span>&lt;FrameCommand&gt;) {

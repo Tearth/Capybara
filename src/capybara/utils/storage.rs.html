@@ -156,10 +156,8 @@
 <a href="#156" id="156">156</a>
 <a href="#157" id="157">157</a>
 <a href="#158" id="158">158</a>
-<a href="#159" id="159">159</a>
-<a href="#160" id="160">160</a>
-<a href="#161" id="161">161</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::anyhow;
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::error_return;
+<span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>anyhow::bail;
 <span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>std::collections::HashMap;
@@ -237,9 +235,9 @@
         }
     }
 
-    <span class="kw">pub fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">pub fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: usize) {
         <span class="kw">if </span>id &gt;= <span class="self">self</span>.data.len() || <span class="self">self</span>.data[id].is_none() {
-            <span class="macro">bail!</span>(<span class="string">&quot;Storage item {} not found&quot;</span>, id);
+            <span class="macro">error_return!</span>(<span class="string">&quot;Storage item {} not found&quot;</span>, id);
         }
 
         <span class="self">self</span>.data[id] = <span class="prelude-val">None</span>;
@@ -249,13 +247,11 @@
             <span class="self">self</span>.name_to_id_hashmap.remove(name);
             <span class="self">self</span>.id_to_name_hashmap.remove(<span class="kw-2">&amp;</span>id);
         }
-
-        <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>remove_by_name(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">pub fn </span>remove_by_name(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str) {
         <span class="kw">if </span>!<span class="self">self</span>.name_to_id_hashmap.contains_key(name) {
-            <span class="macro">bail!</span>(<span class="string">&quot;Name doesn&#39;t exist&quot;</span>.to_string());
+            <span class="macro">error_return!</span>(<span class="string">&quot;Name doesn&#39;t exist&quot;</span>);
         }
 
         <span class="kw">let </span>id = <span class="self">self</span>.name_to_id_hashmap[name];
@@ -265,8 +261,6 @@
 
         <span class="self">self</span>.name_to_id_hashmap.remove(name);
         <span class="self">self</span>.id_to_name_hashmap.remove(<span class="kw-2">&amp;</span>id);
-
-        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = <span class="kw-2">&amp;</span>T&gt; {

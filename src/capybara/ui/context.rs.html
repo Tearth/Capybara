@@ -401,8 +401,18 @@
 <a href="#401" id="401">401</a>
 <a href="#402" id="402">402</a>
 <a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::assets::loader::AssetsLoader;
 <span class="kw">use </span><span class="kw">crate</span>::assets::RawTexture;
+<span class="kw">use </span><span class="kw">crate</span>::error_return;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::camera::Camera;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::camera::CameraOrigin;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::context::RendererContext;
@@ -414,7 +424,6 @@
 <span class="kw">use </span><span class="kw">crate</span>::window::Modifiers;
 <span class="kw">use </span><span class="kw">crate</span>::window::MouseButton;
 <span class="kw">use </span><span class="kw">crate</span>::window::MouseWheelDirection;
-<span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>core::slice;
 <span class="kw">use </span>egui::epaint::Primitive;
@@ -436,6 +445,7 @@
 <span class="kw">use </span>glam::Vec2;
 <span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>instant::Instant;
+<span class="kw">use </span>log::error;
 <span class="kw">use </span>rustc_hash::FxHashMap;
 <span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::sync::RwLock;
@@ -471,31 +481,31 @@
         })
     }
 
-    <span class="kw">pub fn </span>instantiate_assets(<span class="kw-2">&amp;mut </span><span class="self">self</span>, assets: <span class="kw-2">&amp;</span>AssetsLoader, prefix: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">for </span>texture <span class="kw">in </span><span class="kw-2">&amp;</span>assets.raw_textures {
+    <span class="kw">pub fn </span>instantiate_assets(<span class="kw-2">&amp;mut </span><span class="self">self</span>, assets: <span class="kw-2">&amp;</span>AssetsLoader, prefix: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) {
+        <span class="kw">for </span>raw <span class="kw">in </span><span class="kw-2">&amp;</span>assets.raw_textures {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(prefix) = <span class="kw-2">&amp;</span>prefix {
-                <span class="kw">if </span>!texture.path.starts_with(prefix) {
+                <span class="kw">if </span>!raw.path.starts_with(prefix) {
                     <span class="kw">continue</span>;
                 }
             }
 
-            <span class="kw">let </span>size = [texture.size.x <span class="kw">as </span>usize, texture.size.y <span class="kw">as </span>usize];
+            <span class="kw">let </span>size = [raw.size.x <span class="kw">as </span>usize, raw.size.y <span class="kw">as </span>usize];
             <span class="kw">let </span><span class="kw-2">mut </span>image = ColorImage::new(size, Color32::TRANSPARENT);
 
             <span class="kw">for </span>x <span class="kw">in </span><span class="number">0</span>..size[<span class="number">0</span>] {
                 <span class="kw">for </span>y <span class="kw">in </span><span class="number">0</span>..size[<span class="number">1</span>] {
                     <span class="kw">let </span>base = x * <span class="number">4 </span>+ y * <span class="number">4 </span>* size[<span class="number">0</span>];
-                    <span class="kw">let </span>r = texture.data[base + <span class="number">0</span>];
-                    <span class="kw">let </span>g = texture.data[base + <span class="number">1</span>];
-                    <span class="kw">let </span>b = texture.data[base + <span class="number">2</span>];
-                    <span class="kw">let </span>a = texture.data[base + <span class="number">3</span>];
+                    <span class="kw">let </span>r = raw.data[base + <span class="number">0</span>];
+                    <span class="kw">let </span>g = raw.data[base + <span class="number">1</span>];
+                    <span class="kw">let </span>b = raw.data[base + <span class="number">2</span>];
+                    <span class="kw">let </span>a = raw.data[base + <span class="number">3</span>];
 
                     image.pixels[x + y * size[<span class="number">0</span>]] = Color32::from_rgba_unmultiplied(r, g, b, a);
                 }
             }
 
-            <span class="kw">let </span>handle = <span class="self">self</span>.inner.write().unwrap().load_texture(texture.name.clone(), image, Default::default());
-            <span class="self">self</span>.handles.insert(texture.name.clone(), handle);
+            <span class="kw">let </span>handle = <span class="self">self</span>.inner.write().unwrap().load_texture(raw.name.clone(), image, Default::default());
+            <span class="self">self</span>.handles.insert(raw.name.clone(), handle);
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>fonts = FontDefinitions::default();
@@ -518,7 +528,6 @@
         }
 
         <span class="self">self</span>.inner.write().unwrap().set_fonts(fonts);
-        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub fn </span>collect_event(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: <span class="kw-2">&amp;</span>InputEvent) {
@@ -608,8 +617,8 @@
         input
     }
 
-    <span class="kw">pub fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, renderer: <span class="kw-2">&amp;mut </span>RendererContext, output: FullOutput) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        renderer.activate_camera(<span class="self">self</span>.camera_id)<span class="question-mark">?</span>;
+    <span class="kw">pub fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, renderer: <span class="kw-2">&amp;mut </span>RendererContext, output: FullOutput) {
+        renderer.activate_camera(<span class="self">self</span>.camera_id);
 
         <span class="kw">for </span>(id, delta) <span class="kw">in </span>output.textures_delta.set {
             <span class="kw">let </span>position = delta.pos.map(|pos| Vec2::new(pos[<span class="number">0</span>] <span class="kw">as </span>f32, pos[<span class="number">1</span>] <span class="kw">as </span>f32));
@@ -618,13 +627,13 @@
                 ImageData::Font(font) =&gt; {
                     <span class="kw">let </span>data = font.srgba_pixels(<span class="prelude-val">None</span>).flat_map(|a| a.to_array()).collect::&lt;Vec&lt;u8&gt;&gt;();
                     <span class="kw">let </span>size = Vec2::new(font.size[<span class="number">0</span>] <span class="kw">as </span>f32, font.size[<span class="number">1</span>] <span class="kw">as </span>f32);
-                    <span class="self">self</span>.update_texture(id, renderer, <span class="kw-2">&amp;</span>data, position, size, delta.options)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.update_texture(id, renderer, <span class="kw-2">&amp;</span>data, position, size, delta.options);
                 }
                 ImageData::Color(image) =&gt; {
                     <span class="kw">let </span>pixels_ptr = image.pixels.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>u8;
                     <span class="kw">let </span>data = <span class="kw">unsafe </span>{ slice::from_raw_parts(pixels_ptr, image.pixels.len() * <span class="number">4</span>) };
                     <span class="kw">let </span>size = Vec2::new(image.size[<span class="number">0</span>] <span class="kw">as </span>f32, image.size[<span class="number">1</span>] <span class="kw">as </span>f32);
-                    <span class="self">self</span>.update_texture(id, renderer, data, position, size, delta.options)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.update_texture(id, renderer, data, position, size, delta.options);
                 }
             };
         }
@@ -656,8 +665,8 @@
                 <span class="kw">let </span>scissor_size = Vec2::new(mesh.clip_rect.width(), mesh.clip_rect.height());
 
                 renderer.enable_scissor(scissor_position, scissor_size);
-                renderer.draw_shape(<span class="kw-2">&amp;</span>shape)<span class="question-mark">?</span>;
-                renderer.flush_buffer()<span class="question-mark">?</span>;
+                renderer.draw_shape(<span class="kw-2">&amp;</span>shape);
+                renderer.flush_buffer();
             }
         }
 
@@ -665,11 +674,9 @@
 
         <span class="kw">for </span>id <span class="kw">in </span>output.textures_delta.free {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(texture_id) = <span class="self">self</span>.textures.get(<span class="kw-2">&amp;</span>id) {
-                renderer.textures.remove(<span class="kw-2">*</span>texture_id)<span class="question-mark">?</span>;
+                renderer.textures.remove(<span class="kw-2">*</span>texture_id);
             }
         }
-
-        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn </span>update_texture(
@@ -680,16 +687,26 @@
         position: <span class="prelude-ty">Option</span>&lt;Vec2&gt;,
         size: Vec2,
         options: TextureOptions,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    ) {
         <span class="kw">let </span>texture_id = <span class="kw">if let </span><span class="prelude-val">Some</span>(position) = position {
-            <span class="kw">let </span>texture_id = <span class="self">self</span>.textures.get(<span class="kw-2">&amp;</span>id).ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Texture id not found&quot;</span>))<span class="question-mark">?</span>;
-            <span class="kw">let </span>texture = renderer.textures.get(<span class="kw-2">*</span>texture_id)<span class="question-mark">?</span>;
-            texture.update(Vec2::new(position[<span class="number">0</span>], position[<span class="number">1</span>]), size, data);
+            <span class="kw">let </span>texture_id = <span class="kw">match </span><span class="self">self</span>.textures.get(<span class="kw-2">&amp;</span>id) {
+                <span class="prelude-val">Some</span>(texture_id) =&gt; texture_id,
+                <span class="prelude-val">None </span>=&gt; <span class="macro">error_return!</span>(<span class="string">&quot;Texture {:?} not found&quot;</span>, id),
+            };
+
+            <span class="kw">match </span>renderer.textures.get(<span class="kw-2">*</span>texture_id) {
+                <span class="prelude-val">Ok</span>(texture) =&gt; texture.update(Vec2::new(position[<span class="number">0</span>], position[<span class="number">1</span>]), size, data),
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_return!</span>(<span class="string">&quot;{}&quot;</span>, err),
+            };
 
             <span class="kw-2">*</span>texture_id
         } <span class="kw">else </span>{
             <span class="kw">let </span>raw = RawTexture::new(<span class="string">&quot;&quot;</span>, <span class="string">&quot;&quot;</span>, size, data);
-            <span class="kw">let </span>texture_id = renderer.textures.store(Texture::new(renderer, <span class="kw-2">&amp;</span>raw)<span class="question-mark">?</span>);
+            <span class="kw">let </span>texture = <span class="kw">match </span>Texture::new(renderer, <span class="kw-2">&amp;</span>raw) {
+                <span class="prelude-val">Ok</span>(texture) =&gt; texture,
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_return!</span>(<span class="string">&quot;Failed to create texture ({})&quot;</span>, err),
+            };
+            <span class="kw">let </span>texture_id = renderer.textures.store(texture);
             <span class="self">self</span>.textures.insert(id, texture_id);
 
             texture_id
@@ -705,9 +722,10 @@
             egui::TextureFilter::Nearest =&gt; TextureFilter::Nearest,
         };
 
-        renderer.textures.get(texture_id)<span class="question-mark">?</span>.set_filters(minification, magnification);
-
-        <span class="prelude-val">Ok</span>(())
+        <span class="kw">match </span>renderer.textures.get(texture_id) {
+            <span class="prelude-val">Ok</span>(texture) =&gt; texture.set_filters(minification, magnification),
+            <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, err),
+        };
     }
 }
 

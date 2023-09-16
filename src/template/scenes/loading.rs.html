@@ -103,8 +103,8 @@
         <span class="kw">let </span>music_track = state.audio.inner.add_sub_track(TrackBuilder::new())<span class="question-mark">?</span>;
         <span class="kw">let </span>sound_track = state.audio.inner.add_sub_track(TrackBuilder::new())<span class="question-mark">?</span>;
 
-        state.global.settings.set(SETTINGS_MUSIC_LEVEL, <span class="number">1.0</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
-        state.global.settings.set(SETTINGS_SOUND_LEVEL, <span class="number">1.0</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
+        state.global.settings.set(SETTINGS_MUSIC_LEVEL, <span class="number">1.0</span>, <span class="bool-val">false</span>);
+        state.global.settings.set(SETTINGS_SOUND_LEVEL, <span class="number">1.0</span>, <span class="bool-val">false</span>);
 
         music_track.set_volume(state.global.settings.get::&lt;f64&gt;(SETTINGS_MUSIC_LEVEL)<span class="question-mark">?</span>, Tween::default())<span class="question-mark">?</span>;
         sound_track.set_volume(state.global.settings.get::&lt;f64&gt;(SETTINGS_SOUND_LEVEL)<span class="question-mark">?</span>, Tween::default())<span class="question-mark">?</span>;
@@ -129,14 +129,14 @@
 
     <span class="kw">fn </span>frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;, <span class="kw">_</span>: f32, <span class="kw">_</span>: f32) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;FrameCommand&gt;&gt; {
         <span class="kw">if </span>state.global.assets.load(<span class="string">&quot;./data/main.zip&quot;</span>)<span class="question-mark">? </span>== AssetsLoadingStatus::Finished {
-            state.renderer.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-            state.ui.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+            state.renderer.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>);
+            state.ui.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>);
 
             <span class="kw">let </span>music_track_id = state.global.music_track.as_ref().unwrap().id();
             <span class="kw">let </span>sound_track_id = state.global.sound_track.as_ref().unwrap().id();
 
-            state.audio.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">Some</span>(<span class="string">&quot;/music/&quot;</span>), <span class="prelude-val">Some</span>(music_track_id))<span class="question-mark">?</span>;
-            state.audio.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">Some</span>(<span class="string">&quot;/sounds/&quot;</span>), <span class="prelude-val">Some</span>(sound_track_id))<span class="question-mark">?</span>;
+            state.audio.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">Some</span>(<span class="string">&quot;/music/&quot;</span>), <span class="prelude-val">Some</span>(music_track_id));
+            state.audio.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">Some</span>(<span class="string">&quot;/sounds/&quot;</span>), <span class="prelude-val">Some</span>(sound_track_id));
 
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(FrameCommand::ChangeScene { name: <span class="string">&quot;MenuScene&quot;</span>.to_string() }));
         }

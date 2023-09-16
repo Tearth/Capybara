@@ -143,6 +143,7 @@
 <a href="#143" id="143">143</a>
 <a href="#144" id="144">144</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::context::RendererContext;
+<span class="kw">use </span><span class="kw">crate</span>::error_return;
 <span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>anyhow::bail;
 <span class="kw">use </span>anyhow::Error;
@@ -151,6 +152,7 @@
 <span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>glow::Program;
 <span class="kw">use </span>glow::UniformLocation;
+<span class="kw">use </span>log::error;
 <span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::rc::Rc;
 <span class="kw">use </span>std::slice;
@@ -183,7 +185,7 @@
             gl.compile_shader(vertex_shader);
 
             <span class="kw">if </span>!gl.get_shader_compile_status(vertex_shader) {
-                <span class="macro">bail!</span>(<span class="string">&quot;Vertex shader: {}&quot;</span>, gl.get_shader_info_log(vertex_shader));
+                <span class="macro">bail!</span>(<span class="string">&quot;Failed to compile vertex shader: {}&quot;</span>, gl.get_shader_info_log(vertex_shader));
             }
 
             <span class="kw">let </span>fragment_shader = gl.create_shader(glow::FRAGMENT_SHADER).map_err(Error::msg)<span class="question-mark">?</span>;
@@ -191,7 +193,7 @@
             gl.compile_shader(fragment_shader);
 
             <span class="kw">if </span>!gl.get_shader_compile_status(fragment_shader) {
-                <span class="macro">bail!</span>(<span class="string">&quot;Fragment shader: {}&quot;</span>, gl.get_shader_info_log(fragment_shader));
+                <span class="macro">bail!</span>(<span class="string">&quot;Failed to compile fragment shader: {}&quot;</span>, gl.get_shader_info_log(fragment_shader));
             }
 
             <span class="kw">let </span>program = gl.create_program().map_err(Error::msg)<span class="question-mark">?</span>;
@@ -200,7 +202,7 @@
             gl.link_program(program);
 
             <span class="kw">if </span>!gl.get_program_link_status(program) {
-                <span class="macro">bail!</span>(<span class="string">&quot;Program: {}&quot;</span>, gl.get_program_info_log(program));
+                <span class="macro">bail!</span>(<span class="string">&quot;Failed to link program: {}&quot;</span>, gl.get_program_info_log(program));
             }
 
             gl.delete_shader(vertex_shader);
@@ -228,14 +230,14 @@
         }
     }
 
-    <span class="kw">pub fn </span>set_uniform&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, data: <span class="kw-2">*const </span>T) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;
+    <span class="kw">pub fn </span>set_uniform&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, data: <span class="kw-2">*const </span>T)
     <span class="kw">where
         </span>T: Copy + Into&lt;f32&gt;,
     {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>parameter = <span class="kw">match </span><span class="self">self</span>.uniforms.get(name) {
                 <span class="prelude-val">Some</span>(parameter) =&gt; parameter,
-                <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
+                <span class="prelude-val">None </span>=&gt; <span class="macro">error_return!</span>(<span class="string">&quot;Uniform parameter {} not found&quot;</span>, name),
             };
 
             <span class="kw">match </span>parameter.r#type {
@@ -257,10 +259,8 @@
                     <span class="kw">let </span>slice = slice::from_raw_parts::&lt;f32&gt;(data <span class="kw">as </span><span class="kw-2">*const </span>f32, <span class="number">16</span>);
                     (<span class="self">self</span>.gl.uniform_matrix_4_f32_slice(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>parameter.location), <span class="bool-val">false</span>, slice));
                 }
-                <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Invalid shader parameter type&quot;</span>.to_string()),
+                <span class="kw">_ </span>=&gt; <span class="macro">error!</span>(<span class="string">&quot;Invalid parameter type {} for uniform parameter {}&quot;</span>, parameter.r#type, name),
             };
-
-            <span class="prelude-val">Ok</span>(())
         }
     }
 

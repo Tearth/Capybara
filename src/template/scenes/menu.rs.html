@@ -436,8 +436,8 @@
 
                     ui.horizontal(|ui| {
                         <span class="kw">if </span>widgets::button_orange(ui, state.ui, <span class="kw-2">&amp;</span>state.renderer, <span class="string">&quot;Save&quot;</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.play_button_state).clicked() {
-                            state.global.settings.set(SETTINGS_MUSIC_LEVEL, <span class="self">self</span>.settings.unwrap().music_level, <span class="bool-val">true</span>).unwrap();
-                            state.global.settings.set(SETTINGS_SOUND_LEVEL, <span class="self">self</span>.settings.unwrap().sound_level, <span class="bool-val">true</span>).unwrap();
+                            state.global.settings.set(SETTINGS_MUSIC_LEVEL, <span class="self">self</span>.settings.unwrap().music_level, <span class="bool-val">true</span>);
+                            state.global.settings.set(SETTINGS_SOUND_LEVEL, <span class="self">self</span>.settings.unwrap().sound_level, <span class="bool-val">true</span>);
 
                             <span class="self">self</span>.settings = <span class="prelude-val">None</span>;
                             <span class="self">self</span>.sub_scene = MenuSubScene::Main;

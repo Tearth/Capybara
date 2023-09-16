@@ -219,22 +219,16 @@
 <a href="#219" id="219">219</a>
 <a href="#220" id="220">220</a>
 <a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::context::RendererContext;
 <span class="kw">use </span><span class="kw">super</span>::sprite::Sprite;
 <span class="kw">use </span><span class="kw">super</span>::sprite::TextureType;
 <span class="kw">use </span><span class="kw">crate</span>::utils::rand::NewRand;
 <span class="kw">use </span><span class="kw">crate</span>::utils::storage::Storage;
-<span class="kw">use </span>anyhow::bail;
-<span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>glam::Vec2;
 <span class="kw">use </span>glam::Vec4;
 <span class="kw">use </span>instant::Instant;
+<span class="kw">use </span>log::error;
 <span class="kw">use </span>std::f32::consts;
 <span class="kw">use </span>std::ops::Add;
 <span class="kw">use </span>std::ops::Div;
@@ -296,7 +290,7 @@
         Default::default()
     }
 
-    <span class="kw">pub fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, now: Instant, delta: f32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">pub fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, now: Instant, delta: f32) {
         <span class="kw">let </span><span class="kw-2">mut </span>fire = <span class="kw">if let </span><span class="prelude-val">Some</span>(last_burst_time) = <span class="self">self</span>.last_burst_time {
             (now - last_burst_time).as_secs_f32() &gt;= <span class="self">self</span>.period
         } <span class="kw">else </span>{
@@ -362,19 +356,17 @@
         }
 
         <span class="kw">for </span>index <span class="kw">in </span>removed_ids {
-            <span class="self">self</span>.particles.remove(index)<span class="question-mark">?</span>;
+            <span class="self">self</span>.particles.remove(index);
         }
-
-        <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, renderer: <span class="kw-2">&amp;mut </span>RendererContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">pub fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, renderer: <span class="kw-2">&amp;mut </span>RendererContext) {
         <span class="kw">let </span><span class="kw-2">mut </span>sprite = Sprite::new();
         sprite.texture_id = <span class="self">self</span>.particle_texture_id;
         sprite.texture_type = <span class="self">self</span>.particle_texture_type.clone();
 
         <span class="kw">if </span>sprite.is_animation() {
-            <span class="macro">bail!</span>(<span class="string">&quot;Animations in particles aren&#39;t supported&quot;</span>);
+            <span class="macro">error!</span>(<span class="string">&quot;Animations in particles aren&#39;t supported&quot;</span>);
         }
 
         <span class="kw">for </span>particle <span class="kw">in </span><span class="self">self</span>.particles.iter() {
@@ -384,10 +376,8 @@
             sprite.size = particle.size;
             sprite.color = particle.color;
 
-            renderer.draw_sprite(<span class="kw-2">&amp;</span>sprite)<span class="question-mark">?</span>;
+            renderer.draw_sprite(<span class="kw-2">&amp;</span>sprite);
         }
-
-        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">pub fn </span>is_finished(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {

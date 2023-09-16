@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"macro":["fast_gpu"],"mod":["app","assets","audio","filesystem","physics","renderer","scene","ui","utils","window"]};
+window.SIDEBAR_ITEMS = {"macro":["error_break","error_continue","error_return","fast_gpu"],"mod":["app","assets","audio","filesystem","physics","renderer","scene","ui","utils","window"]};

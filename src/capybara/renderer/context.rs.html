@@ -634,6 +634,53 @@
 <a href="#634" id="634">634</a>
 <a href="#635" id="635">635</a>
 <a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
+<a href="#652" id="652">652</a>
+<a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
+<a href="#655" id="655">655</a>
+<a href="#656" id="656">656</a>
+<a href="#657" id="657">657</a>
+<a href="#658" id="658">658</a>
+<a href="#659" id="659">659</a>
+<a href="#660" id="660">660</a>
+<a href="#661" id="661">661</a>
+<a href="#662" id="662">662</a>
+<a href="#663" id="663">663</a>
+<a href="#664" id="664">664</a>
+<a href="#665" id="665">665</a>
+<a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
+<a href="#670" id="670">670</a>
+<a href="#671" id="671">671</a>
+<a href="#672" id="672">672</a>
+<a href="#673" id="673">673</a>
+<a href="#674" id="674">674</a>
+<a href="#675" id="675">675</a>
+<a href="#676" id="676">676</a>
+<a href="#677" id="677">677</a>
+<a href="#678" id="678">678</a>
+<a href="#679" id="679">679</a>
+<a href="#680" id="680">680</a>
+<a href="#681" id="681">681</a>
+<a href="#682" id="682">682</a>
+<a href="#683" id="683">683</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::camera::Camera;
 <span class="kw">use </span><span class="kw">super</span>::camera::CameraOrigin;
 <span class="kw">use </span><span class="kw">super</span>::shader::Shader;
@@ -646,10 +693,10 @@
 <span class="kw">use </span><span class="kw">super</span>::texture::TextureKind;
 <span class="kw">use </span><span class="kw">crate</span>::assets::loader::AssetsLoader;
 <span class="kw">use </span><span class="kw">crate</span>::assets::RawTexture;
+<span class="kw">use </span><span class="kw">crate</span>::error_continue;
+<span class="kw">use </span><span class="kw">crate</span>::error_return;
 <span class="kw">use </span><span class="kw">crate</span>::utils::color::Vec4Color;
 <span class="kw">use </span><span class="kw">crate</span>::utils::storage::Storage;
-<span class="kw">use </span>anyhow::anyhow;
-<span class="kw">use </span>anyhow::bail;
 <span class="kw">use </span>anyhow::Error;
 <span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>glam::Vec2;
@@ -659,6 +706,7 @@
 <span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>glow::VertexArray;
 <span class="kw">use </span>instant::Instant;
+<span class="kw">use </span>log::error;
 <span class="kw">use </span>rustc_hash::FxHashMap;
 <span class="kw">use </span>std::cmp;
 <span class="kw">use </span>std::path::Path;
@@ -774,38 +822,31 @@
                 fps_timestamp: Instant::now(),
                 fps_count: <span class="number">0</span>,
             };
-            context.init()<span class="question-mark">?</span>;
 
-            <span class="prelude-val">Ok</span>(context)
-        }
-    }
-
-    <span class="kw">fn </span>init(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">unsafe </span>{
-            <span class="self">self</span>.gl.enable(glow::BLEND);
-            <span class="self">self</span>.gl.blend_func(glow::ONE, glow::ONE_MINUS_SRC_ALPHA);
-            <span class="self">self</span>.set_clear_color(Vec4::new(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>));
+            context.gl.enable(glow::BLEND);
+            context.gl.blend_func(glow::ONE, glow::ONE_MINUS_SRC_ALPHA);
+            context.set_clear_color(Vec4::new(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>));
 
             <span class="kw">let </span>camera = Camera::new(Default::default(), Default::default(), CameraOrigin::LeftBottom);
-            <span class="self">self</span>.default_camera_id = <span class="self">self</span>.cameras.store(camera);
-            <span class="self">self</span>.activate_camera(<span class="self">self</span>.default_camera_id)<span class="question-mark">?</span>;
+            context.default_camera_id = context.cameras.store(camera);
+            context.activate_camera(context.default_camera_id);
 
-            <span class="kw">let </span>sprite_shader = Shader::new(<span class="self">self</span>, SPRITE_VERTEX_SHADER, SPRITE_FRAGMENT_SHADER)<span class="question-mark">?</span>;
-            <span class="self">self</span>.default_sprite_shader_id = <span class="self">self</span>.shaders.store(sprite_shader);
+            <span class="kw">let </span>sprite_shader = Shader::new(<span class="kw-2">&amp;</span>context, SPRITE_VERTEX_SHADER, SPRITE_FRAGMENT_SHADER)<span class="question-mark">?</span>;
+            context.default_sprite_shader_id = context.shaders.store(sprite_shader);
 
-            <span class="kw">let </span>shape_shader = Shader::new(<span class="self">self</span>, SHAPE_VERTEX_SHADER, SHAPE_FRAGMENT_SHADER)<span class="question-mark">?</span>;
-            <span class="self">self</span>.default_shape_shader_id = <span class="self">self</span>.shaders.store(shape_shader);
+            <span class="kw">let </span>shape_shader = Shader::new(<span class="kw-2">&amp;</span>context, SHAPE_VERTEX_SHADER, SHAPE_FRAGMENT_SHADER)<span class="question-mark">?</span>;
+            context.default_shape_shader_id = context.shaders.store(shape_shader);
 
-            <span class="kw">let </span>default_texture = Texture::new(<span class="self">self</span>, <span class="kw-2">&amp;</span>RawTexture::new(<span class="string">&quot;&quot;</span>, <span class="string">&quot;&quot;</span>, Vec2::new(<span class="number">1.0</span>, <span class="number">1.0</span>), <span class="kw-2">&amp;</span>[<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>]))<span class="question-mark">?</span>;
-            <span class="self">self</span>.default_texture_id = <span class="self">self</span>.textures.store(default_texture);
+            <span class="kw">let </span>default_texture = Texture::new(<span class="kw-2">&amp;</span>context, <span class="kw-2">&amp;</span>RawTexture::new(<span class="string">&quot;&quot;</span>, <span class="string">&quot;&quot;</span>, Vec2::new(<span class="number">1.0</span>, <span class="number">1.0</span>), <span class="kw-2">&amp;</span>[<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>]))<span class="question-mark">?</span>;
+            context.default_texture_id = context.textures.store(default_texture);
 
             <span class="comment">// Sprite buffers
-            </span><span class="self">self</span>.gl.bind_vertex_array(<span class="prelude-val">Some</span>(<span class="self">self</span>.sprite_buffer_vao));
-            <span class="self">self</span>.gl.bind_buffer(glow::ARRAY_BUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.sprite_buffer_base_vbo));
+            </span>context.gl.bind_vertex_array(<span class="prelude-val">Some</span>(context.sprite_buffer_vao));
+            context.gl.bind_buffer(glow::ARRAY_BUFFER, <span class="prelude-val">Some</span>(context.sprite_buffer_base_vbo));
 
-            <span class="self">self</span>.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.sprite_buffer_ebo));
-            <span class="self">self</span>.gl.enable_vertex_attrib_array(<span class="number">0</span>);
-            <span class="self">self</span>.gl.vertex_attrib_pointer_f32(<span class="number">0</span>, <span class="number">2</span>, glow::FLOAT, <span class="bool-val">false</span>, <span class="number">2 </span>* <span class="number">4</span>, <span class="number">0</span>);
+            context.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, <span class="prelude-val">Some</span>(context.sprite_buffer_ebo));
+            context.gl.enable_vertex_attrib_array(<span class="number">0</span>);
+            context.gl.vertex_attrib_pointer_f32(<span class="number">0</span>, <span class="number">2</span>, glow::FLOAT, <span class="bool-val">false</span>, <span class="number">2 </span>* <span class="number">4</span>, <span class="number">0</span>);
 
             <span class="kw">let </span>vertices: [f32; <span class="number">8</span>] = [<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>];
             <span class="kw">let </span>indices = [<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">0</span>, <span class="number">2</span>, <span class="number">3</span>];
@@ -813,94 +854,106 @@
             <span class="kw">let </span>models_u8 = core::slice::from_raw_parts(vertices.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>u8, <span class="number">8 </span>* <span class="number">4</span>);
             <span class="kw">let </span>indices_u8 = core::slice::from_raw_parts(indices.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>u8, <span class="number">6 </span>* <span class="number">4</span>);
 
-            <span class="self">self</span>.gl.buffer_data_u8_slice(glow::ARRAY_BUFFER, models_u8, glow::STATIC_DRAW);
-            <span class="self">self</span>.gl.buffer_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, indices_u8, glow::STATIC_DRAW);
+            context.gl.buffer_data_u8_slice(glow::ARRAY_BUFFER, models_u8, glow::STATIC_DRAW);
+            context.gl.buffer_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, indices_u8, glow::STATIC_DRAW);
 
-            <span class="self">self</span>.gl.bind_buffer(glow::ARRAY_BUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.sprite_buffer_data_vbo));
+            context.gl.bind_buffer(glow::ARRAY_BUFFER, <span class="prelude-val">Some</span>(context.sprite_buffer_data_vbo));
 
-            <span class="self">self</span>.gl.enable_vertex_attrib_array(<span class="number">1</span>);
-            <span class="self">self</span>.gl.enable_vertex_attrib_array(<span class="number">2</span>);
-            <span class="self">self</span>.gl.enable_vertex_attrib_array(<span class="number">3</span>);
-            <span class="self">self</span>.gl.enable_vertex_attrib_array(<span class="number">4</span>);
-            <span class="self">self</span>.gl.enable_vertex_attrib_array(<span class="number">5</span>);
-            <span class="self">self</span>.gl.enable_vertex_attrib_array(<span class="number">6</span>);
+            context.gl.enable_vertex_attrib_array(<span class="number">1</span>);
+            context.gl.enable_vertex_attrib_array(<span class="number">2</span>);
+            context.gl.enable_vertex_attrib_array(<span class="number">3</span>);
+            context.gl.enable_vertex_attrib_array(<span class="number">4</span>);
+            context.gl.enable_vertex_attrib_array(<span class="number">5</span>);
+            context.gl.enable_vertex_attrib_array(<span class="number">6</span>);
 
-            <span class="self">self</span>.gl.vertex_attrib_pointer_f32(<span class="number">1</span>, <span class="number">2</span>, glow::FLOAT, <span class="bool-val">false</span>, <span class="number">12 </span>* <span class="number">4</span>, <span class="number">0</span>);
-            <span class="self">self</span>.gl.vertex_attrib_pointer_f32(<span class="number">2</span>, <span class="number">2</span>, glow::FLOAT, <span class="bool-val">false</span>, <span class="number">12 </span>* <span class="number">4</span>, <span class="number">2 </span>* <span class="number">4</span>);
-            <span class="self">self</span>.gl.vertex_attrib_pointer_f32(<span class="number">3</span>, <span class="number">1</span>, glow::FLOAT, <span class="bool-val">false</span>, <span class="number">12 </span>* <span class="number">4</span>, <span class="number">4 </span>* <span class="number">4</span>);
-            <span class="self">self</span>.gl.vertex_attrib_pointer_f32(<span class="number">4</span>, <span class="number">2</span>, glow::FLOAT, <span class="bool-val">false</span>, <span class="number">12 </span>* <span class="number">4</span>, <span class="number">5 </span>* <span class="number">4</span>);
-            <span class="self">self</span>.gl.vertex_attrib_pointer_i32(<span class="number">5</span>, <span class="number">4</span>, glow::UNSIGNED_BYTE, <span class="number">12 </span>* <span class="number">4</span>, <span class="number">7 </span>* <span class="number">4</span>);
-            <span class="self">self</span>.gl.vertex_attrib_pointer_f32(<span class="number">6</span>, <span class="number">4</span>, glow::FLOAT, <span class="bool-val">false</span>, <span class="number">12 </span>* <span class="number">4</span>, <span class="number">8 </span>* <span class="number">4</span>);
+            context.gl.vertex_attrib_pointer_f32(<span class="number">1</span>, <span class="number">2</span>, glow::FLOAT, <span class="bool-val">false</span>, <span class="number">12 </span>* <span class="number">4</span>, <span class="number">0</span>);
+            context.gl.vertex_attrib_pointer_f32(<span class="number">2</span>, <span class="number">2</span>, glow::FLOAT, <span class="bool-val">false</span>, <span class="number">12 </span>* <span class="number">4</span>, <span class="number">2 </span>* <span class="number">4</span>);
+            context.gl.vertex_attrib_pointer_f32(<span class="number">3</span>, <span class="number">1</span>, glow::FLOAT, <span class="bool-val">false</span>, <span class="number">12 </span>* <span class="number">4</span>, <span class="number">4 </span>* <span class="number">4</span>);
+            context.gl.vertex_attrib_pointer_f32(<span class="number">4</span>, <span class="number">2</span>, glow::FLOAT, <span class="bool-val">false</span>, <span class="number">12 </span>* <span class="number">4</span>, <span class="number">5 </span>* <span class="number">4</span>);
+            context.gl.vertex_attrib_pointer_i32(<span class="number">5</span>, <span class="number">4</span>, glow::UNSIGNED_BYTE, <span class="number">12 </span>* <span class="number">4</span>, <span class="number">7 </span>* <span class="number">4</span>);
+            context.gl.vertex_attrib_pointer_f32(<span class="number">6</span>, <span class="number">4</span>, glow::FLOAT, <span class="bool-val">false</span>, <span class="number">12 </span>* <span class="number">4</span>, <span class="number">8 </span>* <span class="number">4</span>);
 
-            <span class="self">self</span>.gl.vertex_attrib_divisor(<span class="number">1</span>, <span class="number">1</span>);
-            <span class="self">self</span>.gl.vertex_attrib_divisor(<span class="number">2</span>, <span class="number">1</span>);
-            <span class="self">self</span>.gl.vertex_attrib_divisor(<span class="number">3</span>, <span class="number">1</span>);
-            <span class="self">self</span>.gl.vertex_attrib_divisor(<span class="number">4</span>, <span class="number">1</span>);
-            <span class="self">self</span>.gl.vertex_attrib_divisor(<span class="number">5</span>, <span class="number">1</span>);
-            <span class="self">self</span>.gl.vertex_attrib_divisor(<span class="number">6</span>, <span class="number">1</span>);
+            context.gl.vertex_attrib_divisor(<span class="number">1</span>, <span class="number">1</span>);
+            context.gl.vertex_attrib_divisor(<span class="number">2</span>, <span class="number">1</span>);
+            context.gl.vertex_attrib_divisor(<span class="number">3</span>, <span class="number">1</span>);
+            context.gl.vertex_attrib_divisor(<span class="number">4</span>, <span class="number">1</span>);
+            context.gl.vertex_attrib_divisor(<span class="number">5</span>, <span class="number">1</span>);
+            context.gl.vertex_attrib_divisor(<span class="number">6</span>, <span class="number">1</span>);
 
             <span class="comment">// UI buffers
-            </span><span class="self">self</span>.gl.bind_vertex_array(<span class="prelude-val">Some</span>(<span class="self">self</span>.shape_buffer_vao));
-            <span class="self">self</span>.gl.bind_buffer(glow::ARRAY_BUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.shape_buffer_vbo));
-            <span class="self">self</span>.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.shape_buffer_ebo));
+            </span>context.gl.bind_vertex_array(<span class="prelude-val">Some</span>(context.shape_buffer_vao));
+            context.gl.bind_buffer(glow::ARRAY_BUFFER, <span class="prelude-val">Some</span>(context.shape_buffer_vbo));
+            context.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, <span class="prelude-val">Some</span>(context.shape_buffer_ebo));
 
-            <span class="self">self</span>.gl.vertex_attrib_pointer_f32(<span class="number">0</span>, <span class="number">2</span>, glow::FLOAT, <span class="bool-val">false</span>, <span class="number">5 </span>* <span class="number">4</span>, <span class="number">0</span>);
-            <span class="self">self</span>.gl.vertex_attrib_pointer_i32(<span class="number">1</span>, <span class="number">4</span>, glow::UNSIGNED_BYTE, <span class="number">5 </span>* <span class="number">4</span>, <span class="number">2 </span>* <span class="number">4</span>);
-            <span class="self">self</span>.gl.vertex_attrib_pointer_f32(<span class="number">2</span>, <span class="number">2</span>, glow::FLOAT, <span class="bool-val">false</span>, <span class="number">5 </span>* <span class="number">4</span>, <span class="number">3 </span>* <span class="number">4</span>);
+            context.gl.vertex_attrib_pointer_f32(<span class="number">0</span>, <span class="number">2</span>, glow::FLOAT, <span class="bool-val">false</span>, <span class="number">5 </span>* <span class="number">4</span>, <span class="number">0</span>);
+            context.gl.vertex_attrib_pointer_i32(<span class="number">1</span>, <span class="number">4</span>, glow::UNSIGNED_BYTE, <span class="number">5 </span>* <span class="number">4</span>, <span class="number">2 </span>* <span class="number">4</span>);
+            context.gl.vertex_attrib_pointer_f32(<span class="number">2</span>, <span class="number">2</span>, glow::FLOAT, <span class="bool-val">false</span>, <span class="number">5 </span>* <span class="number">4</span>, <span class="number">3 </span>* <span class="number">4</span>);
 
-            <span class="self">self</span>.gl.enable_vertex_attrib_array(<span class="number">0</span>);
-            <span class="self">self</span>.gl.enable_vertex_attrib_array(<span class="number">1</span>);
-            <span class="self">self</span>.gl.enable_vertex_attrib_array(<span class="number">2</span>);
+            context.gl.enable_vertex_attrib_array(<span class="number">0</span>);
+            context.gl.enable_vertex_attrib_array(<span class="number">1</span>);
+            context.gl.enable_vertex_attrib_array(<span class="number">2</span>);
 
-            <span class="prelude-val">Ok</span>(())
+            <span class="prelude-val">Ok</span>(context)
         }
     }
 
-    <span class="kw">pub fn </span>instantiate_assets(<span class="kw-2">&amp;mut </span><span class="self">self</span>, assets: <span class="kw-2">&amp;</span>AssetsLoader, prefix: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">for </span>texture <span class="kw">in </span><span class="kw-2">&amp;</span>assets.raw_textures {
+    <span class="kw">pub fn </span>instantiate_assets(<span class="kw-2">&amp;mut </span><span class="self">self</span>, assets: <span class="kw-2">&amp;</span>AssetsLoader, prefix: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) {
+        <span class="kw">for </span>raw <span class="kw">in </span><span class="kw-2">&amp;</span>assets.raw_textures {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(prefix) = <span class="kw-2">&amp;</span>prefix {
-                <span class="kw">if </span>!texture.path.starts_with(prefix) {
+                <span class="kw">if </span>!raw.path.starts_with(prefix) {
                     <span class="kw">continue</span>;
                 }
             }
 
-            <span class="self">self</span>.textures.store_with_name(<span class="kw-2">&amp;</span>texture.name, Texture::new(<span class="self">self</span>, texture)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>texture = <span class="kw">match </span>Texture::new(<span class="self">self</span>, raw) {
+                <span class="prelude-val">Ok</span>(sound) =&gt; sound,
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to load texture {} ({})&quot;</span>, raw.name, err),
+            };
+
+            <span class="kw">if </span><span class="self">self</span>.textures.store_with_name(<span class="kw-2">&amp;</span>raw.name, texture).is_err() {
+                <span class="macro">error!</span>(<span class="string">&quot;Failed to instantiate texture {}&quot;</span>, raw.name);
+            }
         }
 
-        <span class="kw">for </span>atlas <span class="kw">in </span><span class="kw-2">&amp;</span>assets.raw_atlases {
-            <span class="kw">let </span>path = Path::new(<span class="kw-2">&amp;</span>atlas.name);
-            <span class="kw">let </span>name = path.file_stem().ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to get filename stem&quot;</span>))<span class="question-mark">?</span>;
-            <span class="kw">let </span>name_str = name.to_str().ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to get filename string&quot;</span>))<span class="question-mark">?</span>.to_string();
+        <span class="kw">for </span>raw <span class="kw">in </span><span class="kw-2">&amp;</span>assets.raw_atlases {
+            <span class="kw">let </span>path = Path::new(<span class="kw-2">&amp;</span>raw.name);
+            <span class="kw">let </span>name = <span class="kw">match </span>path.file_stem() {
+                <span class="prelude-val">Some</span>(name) =&gt; name,
+                <span class="prelude-val">None </span>=&gt; <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to get filename stem for atlas {}&quot;</span>, raw.name),
+            };
+            <span class="kw">let </span>name_str = <span class="kw">match </span>name.to_str() {
+                <span class="prelude-val">Some</span>(name) =&gt; name,
+                <span class="prelude-val">None </span>=&gt; <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to get filename string for atlas {}&quot;</span>, raw.name),
+            };
 
             <span class="kw">if </span><span class="self">self</span>.textures.contains_by_name(<span class="kw-2">&amp;</span>name_str) {
-                <span class="kw">let </span>texture = <span class="self">self</span>.textures.get_by_name_mut(<span class="kw-2">&amp;</span>name_str)<span class="question-mark">?</span>;
                 <span class="kw">let </span><span class="kw-2">mut </span>entities = FxHashMap::default();
+                <span class="kw">let </span>texture = <span class="kw">match </span><span class="self">self</span>.textures.get_by_name_mut(<span class="kw-2">&amp;</span>name_str) {
+                    <span class="prelude-val">Ok</span>(texture) =&gt; texture,
+                    <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_continue!</span>(<span class="string">&quot;{}, atlas {} orphaned&quot;</span>, err, name_str),
+                };
 
-                <span class="kw">for </span>raw <span class="kw">in </span><span class="kw-2">&amp;</span>atlas.entities {
-                    entities.insert(raw.name.clone(), AtlasEntity::new(raw.position, raw.size));
+                <span class="kw">for </span>entity <span class="kw">in </span><span class="kw-2">&amp;</span>raw.entities {
+                    entities.insert(entity.name.clone(), AtlasEntity::new(entity.position, entity.size));
                 }
 
                 texture.kind = TextureKind::Atlas(entities);
             }
         }
-
-        <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>begin_frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">pub fn </span>begin_frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.gl.clear(glow::COLOR_BUFFER_BIT);
 
             <span class="kw">if </span><span class="self">self</span>.active_camera_id != <span class="self">self</span>.default_camera_id {
-                <span class="self">self</span>.activate_camera(<span class="self">self</span>.default_camera_id)<span class="question-mark">?</span>;
+                <span class="self">self</span>.activate_camera(<span class="self">self</span>.default_camera_id);
             }
-
-            <span class="prelude-val">Ok</span>(())
         }
     }
 
-    <span class="kw">pub fn </span>end_frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.flush_buffer()<span class="question-mark">?</span>;
+    <span class="kw">pub fn </span>end_frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.flush_buffer();
 
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.gl.flush();
@@ -914,14 +967,19 @@
         } <span class="kw">else </span>{
             <span class="self">self</span>.fps_count += <span class="number">1</span>;
         }
-
-        <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>draw_sprite(<span class="kw-2">&amp;mut </span><span class="self">self</span>, sprite: <span class="kw-2">&amp;</span>Sprite) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>camera = <span class="self">self</span>.cameras.get(<span class="self">self</span>.active_camera_id)<span class="question-mark">?</span>;
+    <span class="kw">pub fn </span>draw_sprite(<span class="kw-2">&amp;mut </span><span class="self">self</span>, sprite: <span class="kw-2">&amp;</span>Sprite) {
+        <span class="kw">let </span>camera = <span class="kw">match </span><span class="self">self</span>.cameras.get(<span class="self">self</span>.active_camera_id) {
+            <span class="prelude-val">Ok</span>(camera) =&gt; camera,
+            <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_return!</span>(<span class="string">&quot;{}&quot;</span>, err),
+        };
+
         <span class="kw">let </span>sprite_size = <span class="kw">if let </span><span class="prelude-val">Some</span>(texture_id) = sprite.texture_id {
-            <span class="kw">let </span>texture = <span class="self">self</span>.textures.get(texture_id)<span class="question-mark">?</span>;
+            <span class="kw">let </span>texture = <span class="kw">match </span><span class="self">self</span>.textures.get(texture_id) {
+                <span class="prelude-val">Ok</span>(texture) =&gt; texture,
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_return!</span>(<span class="string">&quot;{}&quot;</span>, err),
+            };
 
             <span class="kw">match </span><span class="kw-2">&amp;</span>sprite.texture_type {
                 TextureType::Simple =&gt; sprite.size.unwrap_or(texture.size),
@@ -930,19 +988,25 @@
                 TextureType::TilemapAnimation { size, frames: <span class="kw">_ </span>} =&gt; sprite.size.unwrap_or(<span class="kw-2">*</span>size),
                 TextureType::AtlasEntity { name } =&gt; {
                     <span class="kw">if let </span>TextureKind::Atlas(atlas_entities) = <span class="kw-2">&amp;</span>texture.kind {
-                        <span class="kw">let </span>entity = atlas_entities.get(name).ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Entity not found&quot;</span>))<span class="question-mark">?</span>;
+                        <span class="kw">let </span>entity = <span class="kw">match </span>atlas_entities.get(name) {
+                            <span class="prelude-val">Some</span>(entity) =&gt; entity,
+                            <span class="prelude-val">None </span>=&gt; <span class="macro">error_return!</span>(<span class="string">&quot;Entity {} not found&quot;</span>, name),
+                        };
                         sprite.size.unwrap_or(entity.size)
                     } <span class="kw">else </span>{
-                        <span class="macro">bail!</span>(<span class="string">&quot;Texture is not an atlas&quot;</span>);
+                        <span class="macro">error_return!</span>(<span class="string">&quot;Texture {} is not an atlas&quot;</span>, texture_id);
                     }
                 }
                 TextureType::AtlasAnimation { entities } =&gt; {
                     <span class="kw">if let </span>TextureKind::Atlas(atlas_entities) = <span class="kw-2">&amp;</span>texture.kind {
                         <span class="kw">let </span>name = <span class="kw-2">&amp;</span>entities[sprite.animation_frame];
-                        <span class="kw">let </span>entity = atlas_entities.get(name).ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Entity not found&quot;</span>))<span class="question-mark">?</span>;
+                        <span class="kw">let </span>entity = <span class="kw">match </span>atlas_entities.get(name) {
+                            <span class="prelude-val">Some</span>(entity) =&gt; entity,
+                            <span class="prelude-val">None </span>=&gt; <span class="macro">error_return!</span>(<span class="string">&quot;Entity {} not found&quot;</span>, name),
+                        };
                         sprite.size.unwrap_or(entity.size)
                     } <span class="kw">else </span>{
-                        <span class="macro">bail!</span>(<span class="string">&quot;Texture is not an atlas&quot;</span>);
+                        <span class="macro">error_return!</span>(<span class="string">&quot;Texture {} is not an atlas&quot;</span>, texture_id);
                     }
                 }
             }
@@ -952,16 +1016,18 @@
 
         <span class="kw">let </span>camera_min = camera.position;
         <span class="kw">let </span>camera_max = camera.position + camera.size;
-        <span class="kw">let </span>sprite_min = sprite.position - sprite.anchor * sprite_size;
-        <span class="kw">let </span>sprite_max = sprite.position + (Vec2::new(<span class="number">1.0</span>, <span class="number">1.0</span>) - sprite.anchor) * sprite_size;
+
+        <span class="kw">let </span>radius = sprite.anchor.length() + <span class="number">2.0</span>;
+        <span class="kw">let </span>sprite_min = sprite.position - radius * sprite_size.max_element() * sprite.scale.max_element();
+        <span class="kw">let </span>sprite_max = sprite.position + radius * sprite_size.max_element() * sprite.scale.max_element();
 
         <span class="kw">if </span>sprite_min.x &gt; camera_max.x || sprite_min.y &gt; camera_max.y || sprite_max.x &lt; camera_min.x || sprite_max.y &lt; camera_min.y {
-            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+            <span class="kw">return</span>;
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_metadata) = <span class="kw-2">&amp;</span><span class="self">self</span>.buffer_metadata {
             <span class="kw">if </span>buffer_metadata.content_type != BufferContentType::Sprite || buffer_metadata.texture_id != sprite.texture_id {
-                <span class="self">self</span>.flush_buffer()<span class="question-mark">?</span>;
+                <span class="self">self</span>.flush_buffer();
                 <span class="self">self</span>.buffer_metadata = <span class="prelude-val">Some</span>(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id));
             }
         } <span class="kw">else </span>{
@@ -974,7 +1040,10 @@
         }
 
         <span class="kw">let </span>(uv_position, uv_size) = <span class="kw">if let </span><span class="prelude-val">Some</span>(texture_id) = sprite.texture_id {
-            <span class="kw">let </span>texture = <span class="self">self</span>.textures.get(texture_id)<span class="question-mark">?</span>;
+            <span class="kw">let </span>texture = <span class="kw">match </span><span class="self">self</span>.textures.get(texture_id) {
+                <span class="prelude-val">Ok</span>(texture) =&gt; texture,
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_return!</span>(<span class="string">&quot;{}&quot;</span>, err),
+            };
 
             <span class="kw">match </span><span class="kw-2">&amp;</span>sprite.texture_type {
                 TextureType::Simple =&gt; (Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>), Vec2::new(<span class="number">1.0</span>, <span class="number">1.0</span>)),
@@ -1007,20 +1076,26 @@
                 }
                 TextureType::AtlasEntity { name } =&gt; {
                     <span class="kw">if let </span>TextureKind::Atlas(atlas_entities) = <span class="kw-2">&amp;</span>texture.kind {
-                        <span class="kw">let </span>entity = atlas_entities.get(name).ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Entity not found&quot;</span>))<span class="question-mark">?</span>;
+                        <span class="kw">let </span>entity = <span class="kw">match </span>atlas_entities.get(name) {
+                            <span class="prelude-val">Some</span>(entity) =&gt; entity,
+                            <span class="prelude-val">None </span>=&gt; <span class="macro">error_return!</span>(<span class="string">&quot;Entity {} not found&quot;</span>, name),
+                        };
                         (entity.position / texture.size, entity.size / texture.size)
                     } <span class="kw">else </span>{
-                        <span class="macro">bail!</span>(<span class="string">&quot;Texture is not an atlas&quot;</span>);
+                        <span class="macro">error_return!</span>(<span class="string">&quot;Texture {} is not an atlas&quot;</span>, texture_id);
                     }
                 }
                 TextureType::AtlasAnimation { entities } =&gt; {
                     <span class="kw">if let </span>TextureKind::Atlas(atlas_entities) = <span class="kw-2">&amp;</span>texture.kind {
                         <span class="kw">let </span>name = <span class="kw-2">&amp;</span>entities[sprite.animation_frame];
-                        <span class="kw">let </span>entity = atlas_entities.get(name).ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Entity not found&quot;</span>))<span class="question-mark">?</span>;
+                        <span class="kw">let </span>entity = <span class="kw">match </span>atlas_entities.get(name) {
+                            <span class="prelude-val">Some</span>(entity) =&gt; entity,
+                            <span class="prelude-val">None </span>=&gt; <span class="macro">error_return!</span>(<span class="string">&quot;Entity {} not found&quot;</span>, name),
+                        };
 
                         (entity.position / texture.size, entity.size / texture.size)
                     } <span class="kw">else </span>{
-                        <span class="macro">bail!</span>(<span class="string">&quot;Texture is not an atlas&quot;</span>);
+                        <span class="macro">error_return!</span>(<span class="string">&quot;Texture {} is not an atlas&quot;</span>, texture_id);
                     }
                 }
             }
@@ -1045,14 +1120,12 @@
 
         <span class="self">self</span>.sprite_buffer_count += <span class="number">1</span>;
         <span class="self">self</span>.sprite_buffer_vertices_count += <span class="number">12</span>;
-
-        <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>draw_shape(<span class="kw-2">&amp;mut </span><span class="self">self</span>, shape: <span class="kw-2">&amp;</span>Shape) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">pub fn </span>draw_shape(<span class="kw-2">&amp;mut </span><span class="self">self</span>, shape: <span class="kw-2">&amp;</span>Shape) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_metadata) = <span class="kw-2">&amp;</span><span class="self">self</span>.buffer_metadata {
             <span class="kw">if </span>buffer_metadata.content_type != BufferContentType::Shape || buffer_metadata.texture_id != shape.texture_id {
-                <span class="self">self</span>.flush_buffer()<span class="question-mark">?</span>;
+                <span class="self">self</span>.flush_buffer();
                 <span class="self">self</span>.buffer_metadata = <span class="prelude-val">Some</span>(BufferMetadata::new(BufferContentType::Shape, shape.texture_id));
             }
         } <span class="kw">else </span>{
@@ -1106,15 +1179,11 @@
 
         <span class="self">self</span>.shape_buffer_vertices_count += shape.vertices.len();
         <span class="self">self</span>.shape_buffer_indices_count += shape.indices.len();
-
-        <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>flush_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">pub fn </span>flush_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{
             <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_metadata) = <span class="kw-2">&amp;</span><span class="self">self</span>.buffer_metadata {
-                <span class="kw">let </span>camera = <span class="self">self</span>.cameras.get_mut(<span class="self">self</span>.active_camera_id)<span class="question-mark">?</span>;
-
                 <span class="kw">if </span><span class="self">self</span>.sprite_buffer_resized {
                     <span class="kw">let </span>buffer_vertices_size = <span class="self">self</span>.sprite_buffer_vertices_queue.len() <span class="kw">as </span>i32 * <span class="number">4</span>;
 
@@ -1138,15 +1207,23 @@
                     <span class="self">self</span>.shape_buffer_resized = <span class="bool-val">false</span>;
                 }
 
+                <span class="kw">let </span>camera = <span class="kw">match </span><span class="self">self</span>.cameras.get_mut(<span class="self">self</span>.active_camera_id) {
+                    <span class="prelude-val">Ok</span>(camera) =&gt; camera,
+                    <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_return!</span>(<span class="string">&quot;{}&quot;</span>, err),
+                };
                 <span class="kw">let </span>camera_changed = <span class="kw-2">*</span>camera != <span class="self">self</span>.active_camera_data;
 
                 <span class="kw">match </span>buffer_metadata.content_type {
                     BufferContentType::Sprite =&gt; {
                         <span class="kw">if </span><span class="self">self</span>.active_shader_id != <span class="self">self</span>.default_sprite_shader_id || camera_changed {
-                            <span class="kw">let </span>shader = <span class="self">self</span>.shaders.get(<span class="self">self</span>.default_sprite_shader_id)<span class="question-mark">?</span>;
-                            shader.activate();
-                            shader.set_uniform(<span class="string">&quot;proj&quot;</span>, camera.get_projection_matrix().as_ref().as_ptr())<span class="question-mark">?</span>;
-                            shader.set_uniform(<span class="string">&quot;view&quot;</span>, camera.get_view_matrix().as_ref().as_ptr())<span class="question-mark">?</span>;
+                            <span class="kw">match </span><span class="self">self</span>.shaders.get(<span class="self">self</span>.default_sprite_shader_id) {
+                                <span class="prelude-val">Ok</span>(shader) =&gt; {
+                                    shader.activate();
+                                    shader.set_uniform(<span class="string">&quot;proj&quot;</span>, camera.get_projection_matrix().as_ref().as_ptr());
+                                    shader.set_uniform(<span class="string">&quot;view&quot;</span>, camera.get_view_matrix().as_ref().as_ptr());
+                                }
+                                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, err),
+                            }
 
                             <span class="kw">if </span>camera_changed {
                                 <span class="self">self</span>.active_camera_data = camera.clone();
@@ -1167,9 +1244,15 @@
                         <span class="self">self</span>.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, <span class="number">0</span>, models_u8);
 
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(texture_id) = buffer_metadata.texture_id {
-                            <span class="self">self</span>.textures.get(texture_id)<span class="question-mark">?</span>.activate();
+                            <span class="kw">match </span><span class="self">self</span>.textures.get(texture_id) {
+                                <span class="prelude-val">Ok</span>(texture) =&gt; texture.activate(),
+                                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, err),
+                            };
                         } <span class="kw">else </span>{
-                            <span class="self">self</span>.textures.get(<span class="self">self</span>.default_texture_id)<span class="question-mark">?</span>.activate();
+                            <span class="kw">match </span><span class="self">self</span>.textures.get(<span class="self">self</span>.default_texture_id) {
+                                <span class="prelude-val">Ok</span>(texture) =&gt; texture.activate(),
+                                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, err),
+                            };
                         }
 
                         <span class="self">self</span>.gl.draw_elements_instanced(glow::TRIANGLES, <span class="number">6</span>, glow::UNSIGNED_INT, <span class="number">0</span>, <span class="self">self</span>.sprite_buffer_count <span class="kw">as </span>i32);
@@ -1179,10 +1262,14 @@
                     }
                     BufferContentType::Shape =&gt; {
                         <span class="kw">if </span><span class="self">self</span>.active_shader_id != <span class="self">self</span>.default_shape_shader_id || camera_changed {
-                            <span class="kw">let </span>shader = <span class="self">self</span>.shaders.get(<span class="self">self</span>.default_shape_shader_id)<span class="question-mark">?</span>;
-                            shader.activate();
-                            shader.set_uniform(<span class="string">&quot;proj&quot;</span>, camera.get_projection_matrix().as_ref().as_ptr())<span class="question-mark">?</span>;
-                            shader.set_uniform(<span class="string">&quot;view&quot;</span>, camera.get_view_matrix().as_ref().as_ptr())<span class="question-mark">?</span>;
+                            <span class="kw">match </span><span class="self">self</span>.shaders.get(<span class="self">self</span>.default_shape_shader_id) {
+                                <span class="prelude-val">Ok</span>(shader) =&gt; {
+                                    shader.activate();
+                                    shader.set_uniform(<span class="string">&quot;proj&quot;</span>, camera.get_projection_matrix().as_ref().as_ptr());
+                                    shader.set_uniform(<span class="string">&quot;view&quot;</span>, camera.get_view_matrix().as_ref().as_ptr());
+                                }
+                                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, err),
+                            }
 
                             <span class="kw">if </span>camera_changed {
                                 <span class="self">self</span>.active_camera_data = camera.clone();
@@ -1205,9 +1292,15 @@
                         <span class="self">self</span>.gl.buffer_sub_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, <span class="number">0</span>, indices_u8);
 
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(texture_id) = buffer_metadata.texture_id {
-                            <span class="self">self</span>.textures.get(texture_id)<span class="question-mark">?</span>.activate();
+                            <span class="kw">match </span><span class="self">self</span>.textures.get(texture_id) {
+                                <span class="prelude-val">Ok</span>(texture) =&gt; texture.activate(),
+                                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, err),
+                            };
                         } <span class="kw">else </span>{
-                            <span class="self">self</span>.textures.get(<span class="self">self</span>.default_texture_id)<span class="question-mark">?</span>.activate();
+                            <span class="kw">match </span><span class="self">self</span>.textures.get(<span class="self">self</span>.default_texture_id) {
+                                <span class="prelude-val">Ok</span>(texture) =&gt; texture.activate(),
+                                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, err),
+                            };
                         }
 
                         <span class="self">self</span>.gl.draw_elements(glow::TRIANGLES, <span class="self">self</span>.shape_buffer_indices_count <span class="kw">as </span>i32, glow::UNSIGNED_INT, <span class="number">0</span>);
@@ -1220,28 +1313,29 @@
 
                 <span class="self">self</span>.buffer_metadata = <span class="prelude-val">None</span>;
             }
-
-            <span class="prelude-val">Ok</span>(())
         }
     }
 
-    <span class="kw">pub fn </span>activate_camera(<span class="kw-2">&amp;mut </span><span class="self">self</span>, camera_id: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>camera = <span class="self">self</span>.cameras.get_mut(camera_id)<span class="question-mark">?</span>;
+    <span class="kw">pub fn </span>activate_camera(<span class="kw-2">&amp;mut </span><span class="self">self</span>, camera_id: usize) {
+        <span class="kw">let </span>camera = <span class="kw">match </span><span class="self">self</span>.cameras.get_mut(camera_id) {
+            <span class="prelude-val">Ok</span>(camera) =&gt; camera,
+            <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_return!</span>(<span class="string">&quot;{}&quot;</span>, err),
+        };
+
         <span class="self">self</span>.active_camera_id = camera_id;
         camera.size = <span class="self">self</span>.viewport_size;
-
-        <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub fn </span>set_viewport(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: Vec2) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">pub fn </span>set_viewport(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: Vec2) {
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.gl.viewport(<span class="number">0</span>, <span class="number">0</span>, size.x <span class="kw">as </span>i32, size.y <span class="kw">as </span>i32);
             <span class="self">self</span>.viewport_size = size;
 
-            <span class="kw">let </span>camera = <span class="self">self</span>.cameras.get_mut(<span class="self">self</span>.active_camera_id)<span class="question-mark">?</span>;
+            <span class="kw">let </span>camera = <span class="kw">match </span><span class="self">self</span>.cameras.get_mut(<span class="self">self</span>.active_camera_id) {
+                <span class="prelude-val">Ok</span>(camera) =&gt; camera,
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_return!</span>(<span class="string">&quot;{}&quot;</span>, err),
+            };
             camera.size = <span class="self">self</span>.viewport_size;
-
-            <span class="prelude-val">Ok</span>(())
         }
     }
 

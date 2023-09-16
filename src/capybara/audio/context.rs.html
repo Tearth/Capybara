@@ -31,14 +31,23 @@
 <a href="#31" id="31">31</a>
 <a href="#32" id="32">32</a>
 <a href="#33" id="33">33</a>
+<a href="#34" id="34">34</a>
+<a href="#35" id="35">35</a>
+<a href="#36" id="36">36</a>
+<a href="#37" id="37">37</a>
+<a href="#38" id="38">38</a>
+<a href="#39" id="39">39</a>
+<a href="#40" id="40">40</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::sound::Sound;
 <span class="kw">use </span><span class="kw">crate</span>::assets::loader::AssetsLoader;
+<span class="kw">use </span><span class="kw">crate</span>::error_continue;
 <span class="kw">use </span><span class="kw">crate</span>::utils::storage::Storage;
 <span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>kira::manager::backend::cpal::CpalBackend;
 <span class="kw">use </span>kira::manager::AudioManager;
 <span class="kw">use </span>kira::manager::AudioManagerSettings;
 <span class="kw">use </span>kira::track::TrackId;
+<span class="kw">use </span>log::error;
 
 <span class="kw">pub struct </span>AudioContext {
     <span class="kw">pub </span>inner: AudioManager&lt;CpalBackend&gt;,
@@ -50,18 +59,23 @@
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ inner: AudioManager::&lt;CpalBackend&gt;::new(AudioManagerSettings::default())<span class="question-mark">?</span>, sounds: Default::default() })
     }
 
-    <span class="kw">pub fn </span>instantiate_assets(<span class="kw-2">&amp;mut </span><span class="self">self</span>, assets: <span class="kw-2">&amp;</span>AssetsLoader, prefix: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;, track: <span class="prelude-ty">Option</span>&lt;TrackId&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">for </span>sound <span class="kw">in </span><span class="kw-2">&amp;</span>assets.raw_sounds {
+    <span class="kw">pub fn </span>instantiate_assets(<span class="kw-2">&amp;mut </span><span class="self">self</span>, assets: <span class="kw-2">&amp;</span>AssetsLoader, prefix: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;, track: <span class="prelude-ty">Option</span>&lt;TrackId&gt;) {
+        <span class="kw">for </span>raw <span class="kw">in </span><span class="kw-2">&amp;</span>assets.raw_sounds {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(prefix) = <span class="kw-2">&amp;</span>prefix {
-                <span class="kw">if </span>!sound.path.starts_with(prefix) {
+                <span class="kw">if </span>!raw.path.starts_with(prefix) {
                     <span class="kw">continue</span>;
                 }
             }
 
-            <span class="self">self</span>.sounds.store_with_name(<span class="kw-2">&amp;</span>sound.name, Sound::new(sound, track)<span class="question-mark">?</span>)<span class="question-mark">?</span>;
-        }
+            <span class="kw">let </span>sound = <span class="kw">match </span>Sound::new(raw, track) {
+                <span class="prelude-val">Ok</span>(sound) =&gt; sound,
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to create sound {} ({})&quot;</span>, raw.name, err),
+            };
 
-        <span class="prelude-val">Ok</span>(())
+            <span class="kw">if </span><span class="self">self</span>.sounds.store_with_name(<span class="kw-2">&amp;</span>raw.name, sound).is_err() {
+                <span class="macro">error!</span>(<span class="string">&quot;Failed to instantiate sound {}&quot;</span>, raw.name);
+            }
+        }
     }
 }
 </code></pre></div></section></main></body></html>

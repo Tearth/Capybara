@@ -94,7 +94,7 @@
 
     <span class="kw">fn </span>frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;, <span class="kw">_</span>: f32, <span class="kw">_</span>: f32) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;FrameCommand&gt;&gt; {
         <span class="kw">if </span>state.global.assets.load(<span class="string">&quot;./data/boot.zip&quot;</span>)<span class="question-mark">? </span>== AssetsLoadingStatus::Finished {
-            state.ui.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+            state.ui.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>);
 
             <span class="kw">let </span><span class="kw-2">mut </span>style = (<span class="kw-2">*</span>state.ui.inner.read().unwrap().style()).clone();
             style.text_styles = [

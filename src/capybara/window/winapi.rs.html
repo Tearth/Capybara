@@ -660,6 +660,96 @@
 <a href="#660" id="660">660</a>
 <a href="#661" id="661">661</a>
 <a href="#662" id="662">662</a>
+<a href="#663" id="663">663</a>
+<a href="#664" id="664">664</a>
+<a href="#665" id="665">665</a>
+<a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
+<a href="#670" id="670">670</a>
+<a href="#671" id="671">671</a>
+<a href="#672" id="672">672</a>
+<a href="#673" id="673">673</a>
+<a href="#674" id="674">674</a>
+<a href="#675" id="675">675</a>
+<a href="#676" id="676">676</a>
+<a href="#677" id="677">677</a>
+<a href="#678" id="678">678</a>
+<a href="#679" id="679">679</a>
+<a href="#680" id="680">680</a>
+<a href="#681" id="681">681</a>
+<a href="#682" id="682">682</a>
+<a href="#683" id="683">683</a>
+<a href="#684" id="684">684</a>
+<a href="#685" id="685">685</a>
+<a href="#686" id="686">686</a>
+<a href="#687" id="687">687</a>
+<a href="#688" id="688">688</a>
+<a href="#689" id="689">689</a>
+<a href="#690" id="690">690</a>
+<a href="#691" id="691">691</a>
+<a href="#692" id="692">692</a>
+<a href="#693" id="693">693</a>
+<a href="#694" id="694">694</a>
+<a href="#695" id="695">695</a>
+<a href="#696" id="696">696</a>
+<a href="#697" id="697">697</a>
+<a href="#698" id="698">698</a>
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
+<a href="#738" id="738">738</a>
+<a href="#739" id="739">739</a>
+<a href="#740" id="740">740</a>
+<a href="#741" id="741">741</a>
+<a href="#742" id="742">742</a>
+<a href="#743" id="743">743</a>
+<a href="#744" id="744">744</a>
+<a href="#745" id="745">745</a>
+<a href="#746" id="746">746</a>
+<a href="#747" id="747">747</a>
+<a href="#748" id="748">748</a>
+<a href="#749" id="749">749</a>
+<a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>::winapi::shared::basetsd::<span class="kw-2">*</span>;
 <span class="kw">use </span>::winapi::shared::minwindef::<span class="kw-2">*</span>;
@@ -673,6 +763,9 @@
 <span class="kw">use </span>anyhow::bail;
 <span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>glow::Context;
+<span class="kw">use </span>log::debug;
+<span class="kw">use </span>log::error;
+<span class="kw">use </span>log::Level;
 <span class="kw">use </span>std::collections::VecDeque;
 <span class="kw">use </span>std::ffi::CString;
 <span class="kw">use </span>std::mem;
@@ -709,7 +802,10 @@
     <span class="kw">pub fn </span>new(title: <span class="kw-2">&amp;</span>str, style: WindowStyle) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="self">Self</span>&gt;&gt; {
         <span class="kw">unsafe </span>{
             <span class="attr">#[cfg(debug_assertions)]
-            </span>simple_logger::init_with_level(log::Level::Debug)<span class="question-mark">?</span>;
+            </span>simple_logger::init_with_level(Level::Info)<span class="question-mark">?</span>;
+
+            <span class="attr">#[cfg(not(debug_assertions))]
+            </span>simple_logger::init_with_level(Level::Error)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>title_cstr = CString::new(title).unwrap();
             <span class="kw">let </span>class_cstr = CString::new(<span class="string">&quot;CapybaraWindow&quot;</span>).unwrap();
@@ -731,7 +827,7 @@
             };
 
             <span class="kw">if </span>winuser::RegisterClassA(<span class="kw-2">&amp;</span>window_class) == <span class="number">0 </span>{
-                <span class="macro">bail!</span>(<span class="string">&quot;RegisterClassA error: {}&quot;</span>, errhandlingapi::GetLastError());
+                <span class="macro">bail!</span>(<span class="string">&quot;Failed to register window class, code {}&quot;</span>, errhandlingapi::GetLastError());
             }
 
             <span class="kw">let </span><span class="kw-2">mut </span>context = Box::new(<span class="self">Self </span>{
@@ -767,7 +863,7 @@
             );
 
             <span class="kw">if </span>hwnd.is_null() {
-                <span class="macro">bail!</span>(<span class="string">&quot;CreateWindowExA error: {}&quot;</span>, errhandlingapi::GetLastError());
+                <span class="macro">bail!</span>(<span class="string">&quot;Failed to create window, code {}&quot;</span>, errhandlingapi::GetLastError());
             }
 
             <span class="comment">// Wait for WM_CREATE, where the context is initialized
@@ -776,7 +872,9 @@
             context.init_gl_context()<span class="question-mark">?</span>;
             context.set_style(style);
 
-            winapi::SetForegroundWindow(context.hwnd);
+            <span class="kw">if </span>winapi::SetForegroundWindow(context.hwnd) == <span class="number">0 </span>{
+                <span class="macro">error!</span>(<span class="string">&quot;Failed to set foreground window&quot;</span>);
+            }
 
             <span class="prelude-val">Ok</span>(context)
         }
@@ -802,7 +900,7 @@
             };
 
             <span class="kw">if </span>winuser::RegisterClassA(<span class="kw-2">&amp;</span>phantom_window_class) == <span class="number">0 </span>{
-                <span class="macro">bail!</span>(<span class="string">&quot;RegisterClassA error: {}&quot;</span>, errhandlingapi::GetLastError());
+                <span class="macro">bail!</span>(<span class="string">&quot;Failed to register phantom window class, code {}&quot;</span>, errhandlingapi::GetLastError());
             }
 
             <span class="kw">let </span><span class="kw-2">mut </span>phantom_context = Box::new(<span class="self">Self </span>{
@@ -838,7 +936,7 @@
             );
 
             <span class="kw">if </span>phantom_hwnd.is_null() {
-                <span class="macro">bail!</span>(<span class="string">&quot;CreateWindowExA error: {}&quot;</span>, errhandlingapi::GetLastError());
+                <span class="macro">bail!</span>(<span class="string">&quot;Failed to create phantom window, code {}&quot;</span>, errhandlingapi::GetLastError());
             }
 
             <span class="comment">// Wait for WM_CREATE, where the context is initialized
@@ -875,18 +973,23 @@
 
             <span class="kw">let </span>phantom_pixel_format = winapi::ChoosePixelFormat(phantom_context.hdc, <span class="kw-2">&amp;</span>phantom_pixel_format_attributes);
             <span class="kw">if </span>winapi::SetPixelFormat(phantom_context.hdc, phantom_pixel_format, <span class="kw-2">&amp;</span>phantom_pixel_format_attributes) == <span class="number">0 </span>{
-                <span class="macro">bail!</span>(<span class="string">&quot;SetPixelFormat error: {}&quot;</span>, errhandlingapi::GetLastError());
+                <span class="macro">bail!</span>(<span class="string">&quot;Failed to set phantom pixel format, code {}&quot;</span>, errhandlingapi::GetLastError());
             }
 
             <span class="kw">let </span>phantom_gl_context = winapi::wglCreateContext(phantom_context.hdc);
             <span class="kw">if </span>winapi::wglMakeCurrent(phantom_context.hdc, phantom_gl_context) == <span class="number">0 </span>{
-                <span class="macro">bail!</span>(<span class="string">&quot;wglMakeCurrent error: {}&quot;</span>, errhandlingapi::GetLastError());
+                <span class="macro">bail!</span>(<span class="string">&quot;Failed to make phantom current context, code {}&quot;</span>, errhandlingapi::GetLastError());
             }
 
             <span class="kw">let </span>phantom_wgl_extensions = WglExtensions::new();
 
-            winapi::wglDeleteContext(phantom_gl_context);
-            winapi::DestroyWindow(phantom_hwnd);
+            <span class="kw">if </span>winapi::wglDeleteContext(phantom_gl_context) == <span class="number">0 </span>{
+                <span class="macro">error!</span>(<span class="string">&quot;Failed to delete phantom context, code {}&quot;</span>, errhandlingapi::GetLastError());
+            }
+
+            <span class="kw">if </span>winapi::DestroyWindow(phantom_hwnd) == <span class="number">0 </span>{
+                <span class="macro">error!</span>(<span class="string">&quot;Failed to destroy phantom window, code {}&quot;</span>, errhandlingapi::GetLastError());
+            }
 
             <span class="kw">let </span><span class="kw-2">mut </span>wgl_attributes = [
                 <span class="number">8193</span>, <span class="comment">/* WGL_DRAW_TO_WINDOW_ARB */
@@ -916,14 +1019,14 @@
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(wgl_choose_pixel_format_arb) = phantom_wgl_extensions.wgl_choose_pixel_format_arb {
                 <span class="kw">if </span>(wgl_choose_pixel_format_arb)(<span class="self">self</span>.hdc, wgl_attributes_ptr, ptr::null_mut(), <span class="number">1</span>, <span class="kw-2">&amp;mut </span>pixel_format, <span class="kw-2">&amp;mut </span>formats_count) == <span class="number">0 </span>{
-                    <span class="macro">bail!</span>(<span class="string">&quot;wglChoosePixelFormatARB error&quot;</span>);
+                    <span class="macro">bail!</span>(<span class="string">&quot;Failed to choose pixel format&quot;</span>);
                 }
             } <span class="kw">else </span>{
-                <span class="macro">bail!</span>(<span class="string">&quot;wglChoosePixelFormatARB error&quot;</span>);
+                <span class="macro">bail!</span>(<span class="string">&quot;Failed to choose pixel format&quot;</span>);
             }
 
             <span class="kw">if </span>winapi::SetPixelFormat(<span class="self">self</span>.hdc, pixel_format, <span class="kw-2">&amp;</span>phantom_pixel_format_attributes) == <span class="number">0 </span>{
-                <span class="macro">bail!</span>(<span class="string">&quot;SetPixelFormat error: {}&quot;</span>, errhandlingapi::GetLastError());
+                <span class="macro">bail!</span>(<span class="string">&quot;Failed to set pixel format, code {}&quot;</span>, errhandlingapi::GetLastError());
             }
 
             <span class="kw">let </span><span class="kw-2">mut </span>wgl_context_attributes = [
@@ -938,11 +1041,11 @@
             <span class="kw">let </span>wgl_context = <span class="kw">if let </span><span class="prelude-val">Some</span>(wgl_create_context_attribs_arb) = phantom_wgl_extensions.wgl_create_context_attribs_arb {
                 (wgl_create_context_attribs_arb)(<span class="self">self</span>.hdc, ptr::null_mut(), wgl_context_attributes_ptr)
             } <span class="kw">else </span>{
-                <span class="macro">bail!</span>(<span class="string">&quot;wglCreateContextAttribsARB error&quot;</span>);
+                <span class="macro">bail!</span>(<span class="string">&quot;Failed to create WGL context&quot;</span>);
             };
 
             <span class="kw">if </span>winapi::wglMakeCurrent(<span class="self">self</span>.hdc, wgl_context) == <span class="number">0 </span>{
-                <span class="macro">bail!</span>(<span class="string">&quot;wglMakeCurrent error: {}&quot;</span>, errhandlingapi::GetLastError());
+                <span class="macro">bail!</span>(<span class="string">&quot;Failed to make current context, code {}&quot;</span>, errhandlingapi::GetLastError());
             }
 
             <span class="self">self</span>.wgl_context = <span class="prelude-val">Some</span>(wgl_context);
@@ -965,6 +1068,12 @@
                     proc = libloaderapi::GetProcAddress(opengl32_dll_handle, name_cstr.as_ptr());
                 }
 
+                <span class="kw">if </span>proc.is_null() {
+                    <span class="macro">debug!</span>(<span class="string">&quot;GL function {} unavailable&quot;</span>, name);
+                } <span class="kw">else </span>{
+                    <span class="macro">debug!</span>(<span class="string">&quot;GL function {} loaded ({:?})&quot;</span>, name, proc);
+                }
+
                 proc <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_
             </span>})
         }
@@ -973,7 +1082,9 @@
     <span class="kw">pub fn </span>set_style(<span class="kw-2">&amp;mut </span><span class="self">self</span>, style: WindowStyle) {
         <span class="kw">unsafe </span>{
             <span class="kw">if let </span>WindowStyle::Fullscreen = style {
-                winuser::ChangeDisplaySettingsA(ptr::null_mut(), <span class="number">0</span>);
+                <span class="kw">if </span>winuser::ChangeDisplaySettingsA(ptr::null_mut(), <span class="number">0</span>) != winapi::DISP_CHANGE_SUCCESSFUL {
+                    <span class="macro">error!</span>(<span class="string">&quot;Failed to change display settings, code {}&quot;</span>, errhandlingapi::GetLastError());
+                }
             }
 
             <span class="kw">match </span>style {
@@ -982,14 +1093,29 @@
                     <span class="kw">let </span><span class="kw-2">mut </span>rect = RECT { left: <span class="number">0</span>, top: <span class="number">0</span>, right: size.x, bottom: size.y };
                     <span class="kw">let </span>style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
 
-                    winuser::GetWindowRect(winuser::GetDesktopWindow(), <span class="kw-2">&amp;mut </span>desktop_rect);
+                    <span class="kw">if </span>winuser::GetWindowRect(winuser::GetDesktopWindow(), <span class="kw-2">&amp;mut </span>desktop_rect) == <span class="number">0 </span>{
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed to retrieve window rect, code {}&quot;</span>, errhandlingapi::GetLastError());
+                    }
+
+                    errhandlingapi::SetLastError(<span class="number">0</span>);
                     winuser::SetWindowLongA(<span class="self">self</span>.hwnd, GWL_STYLE, style <span class="kw">as </span>i32);
-                    winuser::AdjustWindowRect(<span class="kw-2">&amp;mut </span>rect, WS_OVERLAPPEDWINDOW, <span class="number">0</span>);
+
+                    <span class="kw">if </span>errhandlingapi::GetLastError() != <span class="number">0 </span>{
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed to set window long, code {}&quot;</span>, errhandlingapi::GetLastError());
+                    }
+
+                    <span class="kw">if </span>winuser::AdjustWindowRect(<span class="kw-2">&amp;mut </span>rect, WS_OVERLAPPEDWINDOW, <span class="number">0</span>) == <span class="number">0 </span>{
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed adjust window rect, code {}&quot;</span>, errhandlingapi::GetLastError());
+                    }
 
                     <span class="kw">let </span>width = rect.right - rect.left;
                     <span class="kw">let </span>height = rect.bottom - rect.top;
+                    <span class="kw">let </span>x = desktop_rect.right / <span class="number">2 </span>- width / <span class="number">2</span>;
+                    <span class="kw">let </span>y = desktop_rect.bottom / <span class="number">2 </span>- height / <span class="number">2</span>;
 
-                    winuser::MoveWindow(<span class="self">self</span>.hwnd, desktop_rect.right / <span class="number">2 </span>- width / <span class="number">2</span>, desktop_rect.bottom / <span class="number">2 </span>- height / <span class="number">2</span>, width, height, <span class="number">1</span>);
+                    <span class="kw">if </span>winuser::MoveWindow(<span class="self">self</span>.hwnd, x, y, width, height, <span class="number">1</span>) == <span class="number">0 </span>{
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed to move window, code {}&quot;</span>, errhandlingapi::GetLastError());
+                    }
 
                     <span class="self">self</span>.size = size;
                 }
@@ -997,17 +1123,45 @@
                     <span class="kw">let </span><span class="kw-2">mut </span>desktop_rect = mem::zeroed();
                     <span class="kw">let </span>style = WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE;
 
-                    winuser::GetWindowRect(winuser::GetDesktopWindow(), <span class="kw-2">&amp;mut </span>desktop_rect);
+                    <span class="kw">if </span>winuser::GetWindowRect(winuser::GetDesktopWindow(), <span class="kw-2">&amp;mut </span>desktop_rect) == <span class="number">0 </span>{
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed to retrieve window rect, code {}&quot;</span>, errhandlingapi::GetLastError());
+                    }
+
+                    errhandlingapi::SetLastError(<span class="number">0</span>);
                     winuser::SetWindowLongA(<span class="self">self</span>.hwnd, GWL_STYLE, style <span class="kw">as </span>i32);
-                    winuser::MoveWindow(<span class="self">self</span>.hwnd, <span class="number">0</span>, <span class="number">0</span>, desktop_rect.right - desktop_rect.left, desktop_rect.bottom - desktop_rect.top, <span class="number">1</span>);
+
+                    <span class="kw">if </span>errhandlingapi::GetLastError() != <span class="number">0 </span>{
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed to set window long, code {}&quot;</span>, errhandlingapi::GetLastError());
+                    }
+
+                    <span class="kw">let </span>width = desktop_rect.right - desktop_rect.left;
+                    <span class="kw">let </span>height = desktop_rect.bottom - desktop_rect.top;
+
+                    <span class="kw">if </span>winuser::MoveWindow(<span class="self">self</span>.hwnd, <span class="number">0</span>, <span class="number">0</span>, width, height, <span class="number">1</span>) == <span class="number">0 </span>{
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed to move window, code {}&quot;</span>, errhandlingapi::GetLastError());
+                    }
                 }
                 WindowStyle::Fullscreen =&gt; {
                     <span class="kw">let </span><span class="kw-2">mut </span>desktop_rec = mem::zeroed();
                     <span class="kw">let </span>style = WS_SYSMENU | WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS | WS_VISIBLE;
 
-                    winuser::GetWindowRect(winuser::GetDesktopWindow(), <span class="kw-2">&amp;mut </span>desktop_rec);
+                    <span class="kw">if </span>winuser::GetWindowRect(winuser::GetDesktopWindow(), <span class="kw-2">&amp;mut </span>desktop_rec) == <span class="number">0 </span>{
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed to retrieve window rect, code {}&quot;</span>, errhandlingapi::GetLastError());
+                    }
+
+                    errhandlingapi::SetLastError(<span class="number">0</span>);
                     winuser::SetWindowLongA(<span class="self">self</span>.hwnd, GWL_STYLE, style <span class="kw">as </span>i32);
-                    winuser::MoveWindow(<span class="self">self</span>.hwnd, <span class="number">0</span>, <span class="number">0</span>, desktop_rec.right - desktop_rec.left, desktop_rec.bottom - desktop_rec.top, <span class="number">1</span>);
+
+                    <span class="kw">if </span>errhandlingapi::GetLastError() != <span class="number">0 </span>{
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed to set window long, code {}&quot;</span>, errhandlingapi::GetLastError());
+                    }
+
+                    <span class="kw">let </span>width = desktop_rec.right - desktop_rec.left;
+                    <span class="kw">let </span>height = desktop_rec.bottom - desktop_rec.top;
+
+                    <span class="kw">if </span>winuser::MoveWindow(<span class="self">self</span>.hwnd, <span class="number">0</span>, <span class="number">0</span>, width, height, <span class="number">1</span>) == <span class="number">0 </span>{
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed to move window, code {}&quot;</span>, errhandlingapi::GetLastError());
+                    }
 
                     <span class="kw">let </span><span class="kw-2">mut </span>mode: DEVMODEA = mem::zeroed();
                     mode.dmSize = mem::size_of::&lt;DEVMODEA&gt;() <span class="kw">as </span>u16;
@@ -1016,7 +1170,9 @@
                     mode.dmBitsPerPel = <span class="number">32</span>;
                     mode.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL;
 
-                    winuser::ChangeDisplaySettingsA(<span class="kw-2">&amp;mut </span>mode, CDS_FULLSCREEN);
+                    <span class="kw">if </span>winuser::ChangeDisplaySettingsA(<span class="kw-2">&amp;mut </span>mode, CDS_FULLSCREEN) != winapi::DISP_CHANGE_SUCCESSFUL {
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed to change display settings, code {}&quot;</span>, errhandlingapi::GetLastError());
+                    }
                 }
             }
         }
@@ -1026,7 +1182,7 @@
         <span class="kw">unsafe </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>event: MSG = mem::zeroed();
 
-            <span class="kw">while </span>winuser::PeekMessageA(<span class="kw-2">&amp;mut </span>event, ptr::null_mut(), <span class="number">0</span>, <span class="number">0</span>, PM_REMOVE) &gt; <span class="number">0 </span>{
+            <span class="kw">while </span>winuser::PeekMessageA(<span class="kw-2">&amp;mut </span>event, ptr::null_mut(), <span class="number">0</span>, <span class="number">0</span>, PM_REMOVE) != <span class="number">0 </span>{
                 winuser::TranslateMessage(<span class="kw-2">&amp;</span>event);
                 winuser::DispatchMessageA(<span class="kw-2">&amp;</span>event);
 
@@ -1036,12 +1192,16 @@
                         <span class="kw">let </span>y = (event.lParam <span class="kw">as </span>i32) &gt;&gt; <span class="number">16</span>;
 
                         <span class="kw">if </span>!<span class="self">self</span>.cursor_in_window {
-                            winuser::TrackMouseEvent(<span class="kw-2">&amp;mut </span>TRACKMOUSEEVENT {
+                            <span class="kw">let </span><span class="kw-2">mut </span>mouse_event = TRACKMOUSEEVENT {
                                 cbSize: mem::size_of::&lt;TRACKMOUSEEVENT&gt;() <span class="kw">as </span>u32,
                                 dwFlags: TME_LEAVE,
                                 hwndTrack: <span class="self">self</span>.hwnd,
                                 dwHoverTime: <span class="number">0</span>,
-                            });
+                            };
+
+                            <span class="kw">if </span>winuser::TrackMouseEvent(<span class="kw-2">&amp;mut </span>mouse_event) == <span class="number">0 </span>{
+                                <span class="macro">error!</span>(<span class="string">&quot;Failed to track mouse event, code {}&quot;</span>, errhandlingapi::GetLastError());
+                            }
 
                             <span class="kw">let </span>coordinates = Coordinates::new(x, y);
                             <span class="kw">let </span>modifiers = <span class="self">self</span>.get_modifiers();
@@ -1142,21 +1302,33 @@
 
     <span class="kw">pub fn </span>set_swap_interval(<span class="kw-2">&amp;</span><span class="self">self</span>, interval: u32) {
         <span class="kw">unsafe </span>{
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(wgl_swap_interval_ext) = <span class="self">self</span>.wgl_extensions.as_ref().unwrap().wgl_swap_interval_ext {
-                (wgl_swap_interval_ext)(interval <span class="kw">as </span>i32);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(wgl_extension) = <span class="kw-2">&amp;</span><span class="self">self</span>.wgl_extensions {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(wgl_swap_interval_ext) = wgl_extension.wgl_swap_interval_ext {
+                    <span class="kw">if </span>(wgl_swap_interval_ext)(interval <span class="kw">as </span>i32) == <span class="number">0 </span>{
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed to change swap interval, code {}&quot;</span>, errhandlingapi::GetLastError());
+                    }
+                } <span class="kw">else </span>{
+                    <span class="macro">error!</span>(<span class="string">&quot;WGL extension wglSwapIntervalEXT not available&quot;</span>);
+                }
+            } <span class="kw">else </span>{
+                <span class="macro">error!</span>(<span class="string">&quot;WGL extensions not loaded&quot;</span>);
             }
         }
     }
 
     <span class="kw">pub fn </span>swap_buffers(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{
-            winapi::SwapBuffers(<span class="self">self</span>.hdc);
+            <span class="kw">if </span>winapi::SwapBuffers(<span class="self">self</span>.hdc) == <span class="number">0 </span>{
+                <span class="macro">error!</span>(<span class="string">&quot;Failed to swap buffer, code {}&quot;</span>, errhandlingapi::GetLastError());
+            }
         }
     }
 
     <span class="kw">pub fn </span>close(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{
-            winapi::DestroyWindow(<span class="self">self</span>.hwnd);
+            <span class="kw">if </span>winapi::DestroyWindow(<span class="self">self</span>.hwnd) == <span class="number">0 </span>{
+                <span class="macro">error!</span>(<span class="string">&quot;Failed to close window, code {}&quot;</span>, errhandlingapi::GetLastError());
+            }
         }
     }
 }
@@ -1167,10 +1339,16 @@
             WM_CREATE =&gt; {
                 <span class="kw">let </span>create_struct = <span class="kw-2">&amp;mut *</span>(l_param <span class="kw">as </span><span class="kw-2">*mut </span>CREATESTRUCTA);
                 <span class="kw">let </span>window = <span class="kw-2">&amp;mut *</span>(create_struct.lpCreateParams <span class="kw">as </span><span class="kw-2">*mut </span>WindowContext);
-                <span class="kw">let </span>hdc: HDC = GetDC(hwnd);
+                <span class="kw">let </span>hdc: HDC = winuser::GetDC(hwnd);
+
+                errhandlingapi::SetLastError(<span class="number">0</span>);
 
                 <span class="comment">// Save pointer to the window context, so it can be used in all future events
                 </span>winuser::SetWindowLongPtrA(hwnd, GWLP_USERDATA, window <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_ as </span>LONG_PTR);
+
+                <span class="kw">if </span>errhandlingapi::GetLastError() != <span class="number">0 </span>{
+                    <span class="macro">error!</span>(<span class="string">&quot;Failed to set window long, code {}&quot;</span>, errhandlingapi::GetLastError());
+                }
 
                 window.hwnd = hwnd;
                 window.hdc = hdc;
@@ -1235,9 +1413,11 @@
         <span class="kw">let </span>extension_proc = winapi::wglGetProcAddress(extension_cstr.as_ptr());
 
         <span class="kw">if </span>extension_proc.is_null() {
+            <span class="macro">debug!</span>(<span class="string">&quot;WGL extension {} not available&quot;</span>, name);
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
+        <span class="macro">debug!</span>(<span class="string">&quot;WGL extension {} loaded ({:?})&quot;</span>, name, extension_proc);
         <span class="prelude-val">Some</span>(mem::transmute_copy::&lt;<span class="kw">_</span>, T&gt;(<span class="kw-2">&amp;</span>extension_proc))
     }
 }

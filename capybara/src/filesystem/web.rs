@@ -3,6 +3,7 @@ use anyhow::bail;
 use anyhow::Result;
 use js_sys::ArrayBuffer;
 use js_sys::Uint8Array;
+use log::error;
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::Closure;
@@ -74,8 +75,8 @@ impl FileSystem {
         Ok(*self.status.borrow())
     }
 
-    pub fn write(&self, _: &str, _: &str) -> Result<()> {
-        bail!("Writing files not supported on Web")
+    pub fn write(&self, _: &str, _: &str) {
+        error!("Writing files not supported on Web")
     }
 
     pub fn read_local(&self, path: &str) -> Result<String> {
@@ -90,9 +91,10 @@ impl FileSystem {
         bail!("Local storage is not available")
     }
 
-    pub fn write_local(&self, path: &str, content: &str) -> Result<()> {
-        self.storage.set(path, content).unwrap();
-        Ok(())
+    pub fn write_local(&self, path: &str, content: &str) {
+        if self.storage.set(path, content).is_err() {
+            error!("Failed to write into local storage");
+        }
     }
 }
 

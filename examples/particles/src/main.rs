@@ -100,8 +100,8 @@ impl Scene<GlobalData> for MainScene {
         if self.initialized {
             let cursor_position = Vec2::new(state.window.cursor_position.x as f32, state.window.cursor_position.y as f32);
             self.emitter.position = state.renderer.cameras.get(state.renderer.active_camera_id)?.from_window_to_screen_coordinates(cursor_position);
-            self.emitter.update(Instant::now(), delta)?;
-            self.emitter.draw(state.renderer)?;
+            self.emitter.update(Instant::now(), delta);
+            self.emitter.draw(state.renderer);
         }
 
         Ok(None)
@@ -141,8 +141,7 @@ fn main() {
 fn main_internal() -> Result<()> {
     ApplicationContext::<GlobalData>::new("Particles", WindowStyle::Window { size: Coordinates::new(1280, 720) })?
         .with_scene("MainScene", Box::<MainScene>::default())?
-        .run("MainScene")
-        .unwrap();
+        .run("MainScene");
 
     Ok(())
 }

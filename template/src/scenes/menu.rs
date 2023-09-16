@@ -149,8 +149,8 @@ impl MenuScene {
 
                     ui.horizontal(|ui| {
                         if widgets::button_orange(ui, state.ui, &state.renderer, "Save", &mut self.play_button_state).clicked() {
-                            state.global.settings.set(SETTINGS_MUSIC_LEVEL, self.settings.unwrap().music_level, true).unwrap();
-                            state.global.settings.set(SETTINGS_SOUND_LEVEL, self.settings.unwrap().sound_level, true).unwrap();
+                            state.global.settings.set(SETTINGS_MUSIC_LEVEL, self.settings.unwrap().music_level, true);
+                            state.global.settings.set(SETTINGS_SOUND_LEVEL, self.settings.unwrap().sound_level, true);
 
                             self.settings = None;
                             self.sub_scene = MenuSubScene::Main;

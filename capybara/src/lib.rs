@@ -51,3 +51,18 @@ macro_rules! fast_gpu {
         pub static AmdPowerXpressRequestHighPerformance: i32 = 1;
     };
 }
+
+#[macro_export]
+macro_rules! error_return {
+    ($($arg:tt)+) => { { log::error!($($arg)+); return; } };
+}
+
+#[macro_export]
+macro_rules! error_break {
+    ($($arg:tt)+) => { { log::error!($($arg)+); break; } };
+}
+
+#[macro_export]
+macro_rules! error_continue {
+    ($($arg:tt)+) => { { log::error!($($arg)+); continue; } };
+}

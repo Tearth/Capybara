@@ -24,8 +24,8 @@ impl Scene<GlobalData> for LoadingScene {
         let music_track = state.audio.inner.add_sub_track(TrackBuilder::new())?;
         let sound_track = state.audio.inner.add_sub_track(TrackBuilder::new())?;
 
-        state.global.settings.set(SETTINGS_MUSIC_LEVEL, 1.0, false)?;
-        state.global.settings.set(SETTINGS_SOUND_LEVEL, 1.0, false)?;
+        state.global.settings.set(SETTINGS_MUSIC_LEVEL, 1.0, false);
+        state.global.settings.set(SETTINGS_SOUND_LEVEL, 1.0, false);
 
         music_track.set_volume(state.global.settings.get::<f64>(SETTINGS_MUSIC_LEVEL)?, Tween::default())?;
         sound_track.set_volume(state.global.settings.get::<f64>(SETTINGS_SOUND_LEVEL)?, Tween::default())?;

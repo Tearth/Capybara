@@ -1,4 +1,5 @@
 use super::context::RendererContext;
+use crate::error_return;
 use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Error;
@@ -40,7 +41,7 @@ impl Shader {
             gl.compile_shader(vertex_shader);
 
             if !gl.get_shader_compile_status(vertex_shader) {
-                bail!("Vertex shader: {}", gl.get_shader_info_log(vertex_shader));
+                bail!("Failed to compile vertex shader: {}", gl.get_shader_info_log(vertex_shader));
             }
 
             let fragment_shader = gl.create_shader(glow::FRAGMENT_SHADER).map_err(Error::msg)?;
@@ -48,7 +49,7 @@ impl Shader {
             gl.compile_shader(fragment_shader);
 
             if !gl.get_shader_compile_status(fragment_shader) {
-                bail!("Fragment shader: {}", gl.get_shader_info_log(fragment_shader));
+                bail!("Failed to compile fragment shader: {}", gl.get_shader_info_log(fragment_shader));
             }
 
             let program = gl.create_program().map_err(Error::msg)?;
@@ -57,7 +58,7 @@ impl Shader {
             gl.link_program(program);
 
             if !gl.get_program_link_status(program) {
-                bail!("Program: {}", gl.get_program_info_log(program));
+                bail!("Failed to link program: {}", gl.get_program_info_log(program));
             }
 
             gl.delete_shader(vertex_shader);
@@ -92,10 +93,7 @@ impl Shader {
         unsafe {
             let parameter = match self.uniforms.get(name) {
                 Some(parameter) => parameter,
-                None => {
-                    error!("Uniform parameter {} not found", name);
-                    return;
-                }
+                None => error_return!("Uniform parameter {} not found", name),
             };
 
             match parameter.r#type {

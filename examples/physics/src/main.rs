@@ -162,26 +162,26 @@ impl Scene<GlobalData> for MainScene {
                 if let Some(interpolation_data) = state.physics.interpolation_data.get(&object.rigidbody) {
                     self.objects[i].sprite.position = interpolation_data.get_position_interpolated(alpha) * PIXELS_PER_METER;
                     self.objects[i].sprite.rotation = interpolation_data.get_rotation_interpolated(alpha);
-                    state.renderer.draw_sprite(&self.objects[i].sprite)?;
+                    state.renderer.draw_sprite(&self.objects[i].sprite);
                 }
             }
 
             if let Some(interpolation_data) = state.physics.interpolation_data.get(&self.wheel_left_rigidbody) {
                 self.wheel_left.position = interpolation_data.get_position_interpolated(alpha) * PIXELS_PER_METER;
                 self.wheel_left.rotation = interpolation_data.get_rotation_interpolated(alpha);
-                state.renderer.draw_sprite(&self.wheel_left)?;
+                state.renderer.draw_sprite(&self.wheel_left);
             }
 
             if let Some(interpolation_data) = state.physics.interpolation_data.get(&self.wheel_right_rigidbody) {
                 self.wheel_right.position = interpolation_data.get_position_interpolated(alpha) * PIXELS_PER_METER;
                 self.wheel_right.rotation = interpolation_data.get_rotation_interpolated(alpha);
-                state.renderer.draw_sprite(&self.wheel_right)?;
+                state.renderer.draw_sprite(&self.wheel_right);
             }
 
             if let Some(interpolation_data) = state.physics.interpolation_data.get(&self.car_rigidbody) {
                 self.car.position = interpolation_data.get_position_interpolated(alpha) * PIXELS_PER_METER;
                 self.car.rotation = interpolation_data.get_rotation_interpolated(alpha);
-                state.renderer.draw_sprite(&self.car)?;
+                state.renderer.draw_sprite(&self.car);
             }
         }
 
@@ -218,8 +218,7 @@ fn main() {
 fn main_internal() -> Result<()> {
     ApplicationContext::<GlobalData>::new("Physics", WindowStyle::Window { size: Coordinates::new(1280, 720) })?
         .with_scene("MainScene", Box::<MainScene>::default())?
-        .run("MainScene")
-        .unwrap();
+        .run("MainScene");
 
     Ok(())
 }

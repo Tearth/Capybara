@@ -1,5 +1,6 @@
 use super::sound::Sound;
 use crate::assets::loader::AssetsLoader;
+use crate::error_continue;
 use crate::utils::storage::Storage;
 use anyhow::Result;
 use kira::manager::backend::cpal::CpalBackend;
@@ -28,10 +29,7 @@ impl AudioContext {
 
             let sound = match Sound::new(raw, track) {
                 Ok(sound) => sound,
-                Err(_) => {
-                    error!("Failed to load sound {}", raw.name);
-                    continue;
-                }
+                Err(err) => error_continue!("Failed to create sound {} ({})", raw.name, err),
             };
 
             if self.sounds.store_with_name(&raw.name, sound).is_err() {

@@ -3,12 +3,11 @@ use super::sprite::Sprite;
 use super::sprite::TextureType;
 use crate::utils::rand::NewRand;
 use crate::utils::storage::Storage;
-use anyhow::bail;
-use anyhow::Result;
 use arrayvec::ArrayVec;
 use glam::Vec2;
 use glam::Vec4;
 use instant::Instant;
+use log::error;
 use std::f32::consts;
 use std::ops::Add;
 use std::ops::Div;
@@ -70,7 +69,7 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
         Default::default()
     }
 
-    pub fn update(&mut self, now: Instant, delta: f32) -> Result<()> {
+    pub fn update(&mut self, now: Instant, delta: f32) {
         let mut fire = if let Some(last_burst_time) = self.last_burst_time {
             (now - last_burst_time).as_secs_f32() >= self.period
         } else {
@@ -136,19 +135,17 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
         }
 
         for index in removed_ids {
-            self.particles.remove(index)?;
+            self.particles.remove(index);
         }
-
-        Ok(())
     }
 
-    pub fn draw(&mut self, renderer: &mut RendererContext) -> Result<()> {
+    pub fn draw(&mut self, renderer: &mut RendererContext) {
         let mut sprite = Sprite::new();
         sprite.texture_id = self.particle_texture_id;
         sprite.texture_type = self.particle_texture_type.clone();
 
         if sprite.is_animation() {
-            bail!("Animations in particles aren't supported");
+            error!("Animations in particles aren't supported");
         }
 
         for particle in self.particles.iter() {
@@ -158,10 +155,8 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
             sprite.size = particle.size;
             sprite.color = particle.color;
 
-            renderer.draw_sprite(&sprite)?;
+            renderer.draw_sprite(&sprite);
         }
-
-        Ok(())
     }
 
     pub fn is_finished(&self) -> bool {

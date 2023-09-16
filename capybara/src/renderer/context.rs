@@ -10,10 +10,10 @@ use super::texture::Texture;
 use super::texture::TextureKind;
 use crate::assets::loader::AssetsLoader;
 use crate::assets::RawTexture;
+use crate::error_continue;
+use crate::error_return;
 use crate::utils::color::Vec4Color;
 use crate::utils::storage::Storage;
-use anyhow::anyhow;
-use anyhow::bail;
 use anyhow::Error;
 use anyhow::Result;
 use glam::Vec2;
@@ -139,38 +139,31 @@ impl RendererContext {
                 fps_timestamp: Instant::now(),
                 fps_count: 0,
             };
-            context.init()?;
 
-            Ok(context)
-        }
-    }
-
-    fn init(&mut self) -> Result<()> {
-        unsafe {
-            self.gl.enable(glow::BLEND);
-            self.gl.blend_func(glow::ONE, glow::ONE_MINUS_SRC_ALPHA);
-            self.set_clear_color(Vec4::new(0.0, 0.0, 0.0, 1.0));
+            context.gl.enable(glow::BLEND);
+            context.gl.blend_func(glow::ONE, glow::ONE_MINUS_SRC_ALPHA);
+            context.set_clear_color(Vec4::new(0.0, 0.0, 0.0, 1.0));
 
             let camera = Camera::new(Default::default(), Default::default(), CameraOrigin::LeftBottom);
-            self.default_camera_id = self.cameras.store(camera);
-            self.activate_camera(self.default_camera_id)?;
+            context.default_camera_id = context.cameras.store(camera);
+            context.activate_camera(context.default_camera_id);
 
-            let sprite_shader = Shader::new(self, SPRITE_VERTEX_SHADER, SPRITE_FRAGMENT_SHADER)?;
-            self.default_sprite_shader_id = self.shaders.store(sprite_shader);
+            let sprite_shader = Shader::new(&context, SPRITE_VERTEX_SHADER, SPRITE_FRAGMENT_SHADER)?;
+            context.default_sprite_shader_id = context.shaders.store(sprite_shader);
 
-            let shape_shader = Shader::new(self, SHAPE_VERTEX_SHADER, SHAPE_FRAGMENT_SHADER)?;
-            self.default_shape_shader_id = self.shaders.store(shape_shader);
+            let shape_shader = Shader::new(&context, SHAPE_VERTEX_SHADER, SHAPE_FRAGMENT_SHADER)?;
+            context.default_shape_shader_id = context.shaders.store(shape_shader);
 
-            let default_texture = Texture::new(self, &RawTexture::new("", "", Vec2::new(1.0, 1.0), &[255, 255, 255, 255]))?;
-            self.default_texture_id = self.textures.store(default_texture);
+            let default_texture = Texture::new(&context, &RawTexture::new("", "", Vec2::new(1.0, 1.0), &[255, 255, 255, 255]))?;
+            context.default_texture_id = context.textures.store(default_texture);
 
             // Sprite buffers
-            self.gl.bind_vertex_array(Some(self.sprite_buffer_vao));
-            self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.sprite_buffer_base_vbo));
+            context.gl.bind_vertex_array(Some(context.sprite_buffer_vao));
+            context.gl.bind_buffer(glow::ARRAY_BUFFER, Some(context.sprite_buffer_base_vbo));
 
-            self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.sprite_buffer_ebo));
-            self.gl.enable_vertex_attrib_array(0);
-            self.gl.vertex_attrib_pointer_f32(0, 2, glow::FLOAT, false, 2 * 4, 0);
+            context.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(context.sprite_buffer_ebo));
+            context.gl.enable_vertex_attrib_array(0);
+            context.gl.vertex_attrib_pointer_f32(0, 2, glow::FLOAT, false, 2 * 4, 0);
 
             let vertices: [f32; 8] = [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0];
             let indices = [0, 1, 2, 0, 2, 3];
@@ -178,46 +171,46 @@ impl RendererContext {
             let models_u8 = core::slice::from_raw_parts(vertices.as_ptr() as *const u8, 8 * 4);
             let indices_u8 = core::slice::from_raw_parts(indices.as_ptr() as *const u8, 6 * 4);
 
-            self.gl.buffer_data_u8_slice(glow::ARRAY_BUFFER, models_u8, glow::STATIC_DRAW);
-            self.gl.buffer_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, indices_u8, glow::STATIC_DRAW);
+            context.gl.buffer_data_u8_slice(glow::ARRAY_BUFFER, models_u8, glow::STATIC_DRAW);
+            context.gl.buffer_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, indices_u8, glow::STATIC_DRAW);
 
-            self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.sprite_buffer_data_vbo));
+            context.gl.bind_buffer(glow::ARRAY_BUFFER, Some(context.sprite_buffer_data_vbo));
 
-            self.gl.enable_vertex_attrib_array(1);
-            self.gl.enable_vertex_attrib_array(2);
-            self.gl.enable_vertex_attrib_array(3);
-            self.gl.enable_vertex_attrib_array(4);
-            self.gl.enable_vertex_attrib_array(5);
-            self.gl.enable_vertex_attrib_array(6);
+            context.gl.enable_vertex_attrib_array(1);
+            context.gl.enable_vertex_attrib_array(2);
+            context.gl.enable_vertex_attrib_array(3);
+            context.gl.enable_vertex_attrib_array(4);
+            context.gl.enable_vertex_attrib_array(5);
+            context.gl.enable_vertex_attrib_array(6);
 
-            self.gl.vertex_attrib_pointer_f32(1, 2, glow::FLOAT, false, 12 * 4, 0);
-            self.gl.vertex_attrib_pointer_f32(2, 2, glow::FLOAT, false, 12 * 4, 2 * 4);
-            self.gl.vertex_attrib_pointer_f32(3, 1, glow::FLOAT, false, 12 * 4, 4 * 4);
-            self.gl.vertex_attrib_pointer_f32(4, 2, glow::FLOAT, false, 12 * 4, 5 * 4);
-            self.gl.vertex_attrib_pointer_i32(5, 4, glow::UNSIGNED_BYTE, 12 * 4, 7 * 4);
-            self.gl.vertex_attrib_pointer_f32(6, 4, glow::FLOAT, false, 12 * 4, 8 * 4);
+            context.gl.vertex_attrib_pointer_f32(1, 2, glow::FLOAT, false, 12 * 4, 0);
+            context.gl.vertex_attrib_pointer_f32(2, 2, glow::FLOAT, false, 12 * 4, 2 * 4);
+            context.gl.vertex_attrib_pointer_f32(3, 1, glow::FLOAT, false, 12 * 4, 4 * 4);
+            context.gl.vertex_attrib_pointer_f32(4, 2, glow::FLOAT, false, 12 * 4, 5 * 4);
+            context.gl.vertex_attrib_pointer_i32(5, 4, glow::UNSIGNED_BYTE, 12 * 4, 7 * 4);
+            context.gl.vertex_attrib_pointer_f32(6, 4, glow::FLOAT, false, 12 * 4, 8 * 4);
 
-            self.gl.vertex_attrib_divisor(1, 1);
-            self.gl.vertex_attrib_divisor(2, 1);
-            self.gl.vertex_attrib_divisor(3, 1);
-            self.gl.vertex_attrib_divisor(4, 1);
-            self.gl.vertex_attrib_divisor(5, 1);
-            self.gl.vertex_attrib_divisor(6, 1);
+            context.gl.vertex_attrib_divisor(1, 1);
+            context.gl.vertex_attrib_divisor(2, 1);
+            context.gl.vertex_attrib_divisor(3, 1);
+            context.gl.vertex_attrib_divisor(4, 1);
+            context.gl.vertex_attrib_divisor(5, 1);
+            context.gl.vertex_attrib_divisor(6, 1);
 
             // UI buffers
-            self.gl.bind_vertex_array(Some(self.shape_buffer_vao));
-            self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.shape_buffer_vbo));
-            self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.shape_buffer_ebo));
+            context.gl.bind_vertex_array(Some(context.shape_buffer_vao));
+            context.gl.bind_buffer(glow::ARRAY_BUFFER, Some(context.shape_buffer_vbo));
+            context.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(context.shape_buffer_ebo));
 
-            self.gl.vertex_attrib_pointer_f32(0, 2, glow::FLOAT, false, 5 * 4, 0);
-            self.gl.vertex_attrib_pointer_i32(1, 4, glow::UNSIGNED_BYTE, 5 * 4, 2 * 4);
-            self.gl.vertex_attrib_pointer_f32(2, 2, glow::FLOAT, false, 5 * 4, 3 * 4);
+            context.gl.vertex_attrib_pointer_f32(0, 2, glow::FLOAT, false, 5 * 4, 0);
+            context.gl.vertex_attrib_pointer_i32(1, 4, glow::UNSIGNED_BYTE, 5 * 4, 2 * 4);
+            context.gl.vertex_attrib_pointer_f32(2, 2, glow::FLOAT, false, 5 * 4, 3 * 4);
 
-            self.gl.enable_vertex_attrib_array(0);
-            self.gl.enable_vertex_attrib_array(1);
-            self.gl.enable_vertex_attrib_array(2);
+            context.gl.enable_vertex_attrib_array(0);
+            context.gl.enable_vertex_attrib_array(1);
+            context.gl.enable_vertex_attrib_array(2);
 
-            Ok(())
+            Ok(context)
         }
     }
 
@@ -231,10 +224,7 @@ impl RendererContext {
 
             let texture = match Texture::new(self, raw) {
                 Ok(sound) => sound,
-                Err(_) => {
-                    error!("Failed to load texture {}", raw.name);
-                    continue;
-                }
+                Err(err) => error_continue!("Failed to load texture {} ({})", raw.name, err),
             };
 
             if self.textures.store_with_name(&raw.name, texture).is_err() {
@@ -246,27 +236,18 @@ impl RendererContext {
             let path = Path::new(&raw.name);
             let name = match path.file_stem() {
                 Some(name) => name,
-                None => {
-                    error!("Failed to get filename stem for atlas {}", raw.name);
-                    continue;
-                }
+                None => error_continue!("Failed to get filename stem for atlas {}", raw.name),
             };
             let name_str = match name.to_str() {
                 Some(name) => name,
-                None => {
-                    error!("Failed to get filename string for atlas {}", raw.name);
-                    continue;
-                }
+                None => error_continue!("Failed to get filename string for atlas {}", raw.name),
             };
 
             if self.textures.contains_by_name(&name_str) {
                 let mut entities = FxHashMap::default();
                 let texture = match self.textures.get_by_name_mut(&name_str) {
                     Ok(texture) => texture,
-                    Err(_) => {
-                        error!("Texture not found, atlas {} orphaned", name_str);
-                        continue;
-                    }
+                    Err(err) => error_continue!("{}, atlas {} orphaned", err, name_str),
                 };
 
                 for entity in &raw.entities {
@@ -283,9 +264,7 @@ impl RendererContext {
             self.gl.clear(glow::COLOR_BUFFER_BIT);
 
             if self.active_camera_id != self.default_camera_id {
-                if self.activate_camera(self.default_camera_id).is_err() {
-                    error!("Failed to activate camera {}", self.default_camera_id);
-                }
+                self.activate_camera(self.default_camera_id);
             }
         }
     }
@@ -307,10 +286,17 @@ impl RendererContext {
         }
     }
 
-    pub fn draw_sprite(&mut self, sprite: &Sprite) -> Result<()> {
-        let camera = self.cameras.get(self.active_camera_id)?;
+    pub fn draw_sprite(&mut self, sprite: &Sprite) {
+        let camera = match self.cameras.get(self.active_camera_id) {
+            Ok(camera) => camera,
+            Err(err) => error_return!("{}", err),
+        };
+
         let sprite_size = if let Some(texture_id) = sprite.texture_id {
-            let texture = self.textures.get(texture_id)?;
+            let texture = match self.textures.get(texture_id) {
+                Ok(texture) => texture,
+                Err(err) => error_return!("{}", err),
+            };
 
             match &sprite.texture_type {
                 TextureType::Simple => sprite.size.unwrap_or(texture.size),
@@ -319,19 +305,25 @@ impl RendererContext {
                 TextureType::TilemapAnimation { size, frames: _ } => sprite.size.unwrap_or(*size),
                 TextureType::AtlasEntity { name } => {
                     if let TextureKind::Atlas(atlas_entities) = &texture.kind {
-                        let entity = atlas_entities.get(name).ok_or_else(|| anyhow!("Entity not found"))?;
+                        let entity = match atlas_entities.get(name) {
+                            Some(entity) => entity,
+                            None => error_return!("Entity {} not found", name),
+                        };
                         sprite.size.unwrap_or(entity.size)
                     } else {
-                        bail!("Texture is not an atlas");
+                        error_return!("Texture {} is not an atlas", texture_id);
                     }
                 }
                 TextureType::AtlasAnimation { entities } => {
                     if let TextureKind::Atlas(atlas_entities) = &texture.kind {
                         let name = &entities[sprite.animation_frame];
-                        let entity = atlas_entities.get(name).ok_or_else(|| anyhow!("Entity not found"))?;
+                        let entity = match atlas_entities.get(name) {
+                            Some(entity) => entity,
+                            None => error_return!("Entity {} not found", name),
+                        };
                         sprite.size.unwrap_or(entity.size)
                     } else {
-                        bail!("Texture is not an atlas");
+                        error_return!("Texture {} is not an atlas", texture_id);
                     }
                 }
             }
@@ -347,7 +339,7 @@ impl RendererContext {
         let sprite_max = sprite.position + radius * sprite_size.max_element() * sprite.scale.max_element();
 
         if sprite_min.x > camera_max.x || sprite_min.y > camera_max.y || sprite_max.x < camera_min.x || sprite_max.y < camera_min.y {
-            return Ok(());
+            return;
         }
 
         if let Some(buffer_metadata) = &self.buffer_metadata {
@@ -365,7 +357,10 @@ impl RendererContext {
         }
 
         let (uv_position, uv_size) = if let Some(texture_id) = sprite.texture_id {
-            let texture = self.textures.get(texture_id)?;
+            let texture = match self.textures.get(texture_id) {
+                Ok(texture) => texture,
+                Err(err) => error_return!("{}", err),
+            };
 
             match &sprite.texture_type {
                 TextureType::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0)),
@@ -398,20 +393,26 @@ impl RendererContext {
                 }
                 TextureType::AtlasEntity { name } => {
                     if let TextureKind::Atlas(atlas_entities) = &texture.kind {
-                        let entity = atlas_entities.get(name).ok_or_else(|| anyhow!("Entity not found"))?;
+                        let entity = match atlas_entities.get(name) {
+                            Some(entity) => entity,
+                            None => error_return!("Entity {} not found", name),
+                        };
                         (entity.position / texture.size, entity.size / texture.size)
                     } else {
-                        bail!("Texture is not an atlas");
+                        error_return!("Texture {} is not an atlas", texture_id);
                     }
                 }
                 TextureType::AtlasAnimation { entities } => {
                     if let TextureKind::Atlas(atlas_entities) = &texture.kind {
                         let name = &entities[sprite.animation_frame];
-                        let entity = atlas_entities.get(name).ok_or_else(|| anyhow!("Entity not found"))?;
+                        let entity = match atlas_entities.get(name) {
+                            Some(entity) => entity,
+                            None => error_return!("Entity {} not found", name),
+                        };
 
                         (entity.position / texture.size, entity.size / texture.size)
                     } else {
-                        bail!("Texture is not an atlas");
+                        error_return!("Texture {} is not an atlas", texture_id);
                     }
                 }
             }
@@ -436,11 +437,9 @@ impl RendererContext {
 
         self.sprite_buffer_count += 1;
         self.sprite_buffer_vertices_count += 12;
-
-        Ok(())
     }
 
-    pub fn draw_shape(&mut self, shape: &Shape) -> Result<()> {
+    pub fn draw_shape(&mut self, shape: &Shape) {
         if let Some(buffer_metadata) = &self.buffer_metadata {
             if buffer_metadata.content_type != BufferContentType::Shape || buffer_metadata.texture_id != shape.texture_id {
                 self.flush_buffer();
@@ -497,8 +496,6 @@ impl RendererContext {
 
         self.shape_buffer_vertices_count += shape.vertices.len();
         self.shape_buffer_indices_count += shape.indices.len();
-
-        Ok(())
     }
 
     pub fn flush_buffer(&mut self) {
@@ -529,10 +526,7 @@ impl RendererContext {
 
                 let camera = match self.cameras.get_mut(self.active_camera_id) {
                     Ok(camera) => camera,
-                    Err(msg) => {
-                        error!("{}", msg);
-                        return;
-                    }
+                    Err(err) => error_return!("{}", err),
                 };
                 let camera_changed = *camera != self.active_camera_data;
 
@@ -545,7 +539,7 @@ impl RendererContext {
                                     shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr());
                                     shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr());
                                 }
-                                Err(_) => error!("Shader {} not found", self.default_sprite_shader_id),
+                                Err(err) => error!("{}", err),
                             }
 
                             if camera_changed {
@@ -569,12 +563,12 @@ impl RendererContext {
                         if let Some(texture_id) = buffer_metadata.texture_id {
                             match self.textures.get(texture_id) {
                                 Ok(texture) => texture.activate(),
-                                Err(_) => error!("Texture {} not found", texture_id),
+                                Err(err) => error!("{}", err),
                             };
                         } else {
                             match self.textures.get(self.default_texture_id) {
                                 Ok(texture) => texture.activate(),
-                                Err(_) => error!("Texture {} not found", self.default_texture_id),
+                                Err(err) => error!("{}", err),
                             };
                         }
 
@@ -591,7 +585,7 @@ impl RendererContext {
                                     shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr());
                                     shader.set_uniform("view", camera.get_view_matrix().as_ref().as_ptr());
                                 }
-                                Err(_) => error!("Shader {} not found", self.default_shape_shader_id),
+                                Err(err) => error!("{}", err),
                             }
 
                             if camera_changed {
@@ -617,12 +611,12 @@ impl RendererContext {
                         if let Some(texture_id) = buffer_metadata.texture_id {
                             match self.textures.get(texture_id) {
                                 Ok(texture) => texture.activate(),
-                                Err(_) => error!("Texture {} not found", texture_id),
+                                Err(err) => error!("{}", err),
                             };
                         } else {
                             match self.textures.get(self.default_texture_id) {
                                 Ok(texture) => texture.activate(),
-                                Err(_) => error!("Texture {} not found", self.default_texture_id),
+                                Err(err) => error!("{}", err),
                             };
                         }
 
@@ -639,23 +633,26 @@ impl RendererContext {
         }
     }
 
-    pub fn activate_camera(&mut self, camera_id: usize) -> Result<()> {
-        let camera = self.cameras.get_mut(camera_id)?;
+    pub fn activate_camera(&mut self, camera_id: usize) {
+        let camera = match self.cameras.get_mut(camera_id) {
+            Ok(camera) => camera,
+            Err(err) => error_return!("{}", err),
+        };
+
         self.active_camera_id = camera_id;
         camera.size = self.viewport_size;
-
-        Ok(())
     }
 
-    pub fn set_viewport(&mut self, size: Vec2) -> Result<()> {
+    pub fn set_viewport(&mut self, size: Vec2) {
         unsafe {
             self.gl.viewport(0, 0, size.x as i32, size.y as i32);
             self.viewport_size = size;
 
-            let camera = self.cameras.get_mut(self.active_camera_id)?;
+            let camera = match self.cameras.get_mut(self.active_camera_id) {
+                Ok(camera) => camera,
+                Err(err) => error_return!("{}", err),
+            };
             camera.size = self.viewport_size;
-
-            Ok(())
         }
     }
 

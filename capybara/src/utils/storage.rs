@@ -1,3 +1,4 @@
+use crate::error_return;
 use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Result;
@@ -76,9 +77,9 @@ impl<T> Storage<T> {
         }
     }
 
-    pub fn remove(&mut self, id: usize) -> Result<()> {
+    pub fn remove(&mut self, id: usize) {
         if id >= self.data.len() || self.data[id].is_none() {
-            bail!("Storage item {} not found", id);
+            error_return!("Storage item {} not found", id);
         }
 
         self.data[id] = None;
@@ -88,13 +89,11 @@ impl<T> Storage<T> {
             self.name_to_id_hashmap.remove(name);
             self.id_to_name_hashmap.remove(&id);
         }
-
-        Ok(())
     }
 
-    pub fn remove_by_name(&mut self, name: &str) -> Result<()> {
+    pub fn remove_by_name(&mut self, name: &str) {
         if !self.name_to_id_hashmap.contains_key(name) {
-            bail!("Name doesn't exist".to_string());
+            error_return!("Name doesn't exist");
         }
 
         let id = self.name_to_id_hashmap[name];
@@ -104,8 +103,6 @@ impl<T> Storage<T> {
 
         self.name_to_id_hashmap.remove(name);
         self.id_to_name_hashmap.remove(&id);
-
-        Ok(())
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &T> {

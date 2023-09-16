@@ -1,5 +1,6 @@
 use super::*;
 use anyhow::Result;
+use log::error;
 use std::cell::RefCell;
 use std::fs;
 use std::fs::File;
@@ -34,16 +35,16 @@ impl FileSystem {
         Ok(*self.status.borrow())
     }
 
-    pub fn write(&self, path: &str, content: &str) -> Result<()> {
-        Ok(fs::write(path, content)?)
+    pub fn write(&self, path: &str, content: &str) {
+        fs::write(path, content).map_or_else(|err| error!("Failed to write into {} ({})", path, err), |_| ());
     }
 
     pub fn read_local(&mut self, path: &str) -> Result<String> {
         Ok(fs::read_to_string(path)?)
     }
 
-    pub fn write_local(&self, path: &str, content: &str) -> Result<()> {
-        Ok(fs::write(path, content)?)
+    pub fn write_local(&self, path: &str, content: &str) {
+        fs::write(path, content).map_or_else(|err| error!("Failed to write into {} ({})", path, err), |_| ());
     }
 }
 

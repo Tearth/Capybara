@@ -1,3 +1,4 @@
+use crate::error_return;
 use crate::filesystem::FileSystem;
 use anyhow::anyhow;
 use anyhow::Result;
@@ -32,22 +33,23 @@ impl SettingsStorage {
         Ok(value.parse().map_err(|_| anyhow!("Failed to parse {}", value))?)
     }
 
-    pub fn set<T>(&mut self, key: &str, value: T, overwrite: bool) -> Result<()>
+    pub fn set<T>(&mut self, key: &str, value: T, overwrite: bool)
     where
         T: FromStr + ToString,
     {
         if self.cache.is_empty() {
             if let Ok(content) = self.filesystem.read_local(&self.path) {
-                self.cache = self.deserialize(&content)?;
+                self.cache = match self.deserialize(&content) {
+                    Ok(cache) => cache,
+                    Err(err) => error_return!("Failed to deserialize settings ({})", err),
+                };
             }
         }
 
         if self.cache.get(key).is_none() || overwrite {
             self.cache.insert(key.to_string(), value.to_string());
-            self.filesystem.write_local(&self.path, &self.serialize(&self.cache))?;
+            self.filesystem.write_local(&self.path, &self.serialize(&self.cache));
         }
-
-        Ok(())
     }
 
     fn serialize(&self, settings: &FxHashMap<String, String>) -> String {

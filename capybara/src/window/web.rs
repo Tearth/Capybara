@@ -126,7 +126,7 @@ impl WindowContextWeb {
         G: Default + 'static,
     {
         self.frame_callback = Closure::<dyn FnMut()>::new(move || {
-            app.borrow_mut().run_internal().unwrap();
+            app.borrow_mut().run_internal();
         });
     }
 

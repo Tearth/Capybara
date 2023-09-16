@@ -24,7 +24,7 @@ fn main_internal() -> Result<()> {
         .with_scene("LoadingScene", Box::<LoadingScene>::default())?
         .with_scene("MenuScene", Box::<MenuScene>::default())?
         .with_scene("GameScene", Box::<GameScene>::default())?
-        .run("BootScene")?;
+        .run("BootScene");
 
     Ok(())
 }

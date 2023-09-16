@@ -1,5 +1,6 @@
 use crate::assets::loader::AssetsLoader;
 use crate::assets::RawTexture;
+use crate::error_return;
 use crate::renderer::camera::Camera;
 use crate::renderer::camera::CameraOrigin;
 use crate::renderer::context::RendererContext;
@@ -11,7 +12,6 @@ use crate::window::Key;
 use crate::window::Modifiers;
 use crate::window::MouseButton;
 use crate::window::MouseWheelDirection;
-use anyhow::anyhow;
 use anyhow::Result;
 use core::slice;
 use egui::epaint::Primitive;
@@ -33,6 +33,7 @@ use egui::TextureOptions;
 use glam::Vec2;
 use glow::HasContext;
 use instant::Instant;
+use log::error;
 use rustc_hash::FxHashMap;
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -204,8 +205,8 @@ impl UiContext {
         input
     }
 
-    pub fn draw(&mut self, renderer: &mut RendererContext, output: FullOutput) -> Result<()> {
-        renderer.activate_camera(self.camera_id)?;
+    pub fn draw(&mut self, renderer: &mut RendererContext, output: FullOutput) {
+        renderer.activate_camera(self.camera_id);
 
         for (id, delta) in output.textures_delta.set {
             let position = delta.pos.map(|pos| Vec2::new(pos[0] as f32, pos[1] as f32));
@@ -214,13 +215,13 @@ impl UiContext {
                 ImageData::Font(font) => {
                     let data = font.srgba_pixels(None).flat_map(|a| a.to_array()).collect::<Vec<u8>>();
                     let size = Vec2::new(font.size[0] as f32, font.size[1] as f32);
-                    self.update_texture(id, renderer, &data, position, size, delta.options)?;
+                    self.update_texture(id, renderer, &data, position, size, delta.options);
                 }
                 ImageData::Color(image) => {
                     let pixels_ptr = image.pixels.as_ptr() as *const u8;
                     let data = unsafe { slice::from_raw_parts(pixels_ptr, image.pixels.len() * 4) };
                     let size = Vec2::new(image.size[0] as f32, image.size[1] as f32);
-                    self.update_texture(id, renderer, data, position, size, delta.options)?;
+                    self.update_texture(id, renderer, data, position, size, delta.options);
                 }
             };
         }
@@ -252,7 +253,7 @@ impl UiContext {
                 let scissor_size = Vec2::new(mesh.clip_rect.width(), mesh.clip_rect.height());
 
                 renderer.enable_scissor(scissor_position, scissor_size);
-                renderer.draw_shape(&shape)?;
+                renderer.draw_shape(&shape);
                 renderer.flush_buffer();
             }
         }
@@ -261,11 +262,9 @@ impl UiContext {
 
         for id in output.textures_delta.free {
             if let Some(texture_id) = self.textures.get(&id) {
-                renderer.textures.remove(*texture_id)?;
+                renderer.textures.remove(*texture_id);
             }
         }
-
-        Ok(())
     }
 
     fn update_texture(
@@ -276,16 +275,26 @@ impl UiContext {
         position: Option<Vec2>,
         size: Vec2,
         options: TextureOptions,
-    ) -> Result<()> {
+    ) {
         let texture_id = if let Some(position) = position {
-            let texture_id = self.textures.get(&id).ok_or_else(|| anyhow!("Texture id not found"))?;
-            let texture = renderer.textures.get(*texture_id)?;
-            texture.update(Vec2::new(position[0], position[1]), size, data);
+            let texture_id = match self.textures.get(&id) {
+                Some(texture_id) => texture_id,
+                None => error_return!("Texture {:?} not found", id),
+            };
+
+            match renderer.textures.get(*texture_id) {
+                Ok(texture) => texture.update(Vec2::new(position[0], position[1]), size, data),
+                Err(err) => error_return!("{}", err),
+            };
 
             *texture_id
         } else {
             let raw = RawTexture::new("", "", size, data);
-            let texture_id = renderer.textures.store(Texture::new(renderer, &raw)?);
+            let texture = match Texture::new(renderer, &raw) {
+                Ok(texture) => texture,
+                Err(err) => error_return!("Failed to create texture ({})", err),
+            };
+            let texture_id = renderer.textures.store(texture);
             self.textures.insert(id, texture_id);
 
             texture_id
@@ -301,9 +310,10 @@ impl UiContext {
             egui::TextureFilter::Nearest => TextureFilter::Nearest,
         };
 
-        renderer.textures.get(texture_id)?.set_filters(minification, magnification);
-
-        Ok(())
+        match renderer.textures.get(texture_id) {
+            Ok(texture) => texture.set_filters(minification, magnification),
+            Err(err) => error!("{}", err),
+        };
     }
 }
 

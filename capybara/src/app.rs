@@ -1,3 +1,5 @@
+use crate::error_break;
+use crate::error_continue;
 use crate::renderer::context::RendererContext;
 use crate::scene::FrameCommand;
 use crate::scene::Scene;
@@ -114,7 +116,7 @@ where
         Ok(self)
     }
 
-    pub fn run(self, scene: &str) -> Result<()> {
+    pub fn run(self, scene: &str) {
         let app = Rc::new(RefCell::new(self));
         let mut app_borrow = app.borrow_mut();
 
@@ -125,40 +127,52 @@ where
 
         app_borrow.next_scene = Some(scene.to_string());
         app_borrow.window.set_swap_interval(1);
-        app_borrow.run_internal()?;
-
-        Ok(())
+        app_borrow.run_internal();
     }
 
-    pub fn run_internal(&mut self) -> Result<()> {
+    pub fn run_internal(&mut self) {
         while self.running {
             self.renderer.begin_frame();
 
             if let Some(next_scene) = &self.next_scene {
                 if !self.current_scene.is_empty() {
-                    self.scenes.get_by_name_mut(&self.current_scene)?.deactivation(state!(self))?;
+                    if let Err(err) = self.scenes.get_by_name_mut(&self.current_scene).and_then(|p| p.deactivation(state!(self))) {
+                        error_break!("Failed to deactivate scene {} ({})", self.current_scene, err);
+                    };
                 }
 
-                self.scenes.get_by_name_mut(next_scene)?.activation(state!(self))?;
+                if let Err(err) = self.scenes.get_by_name_mut(next_scene).and_then(|p| p.activation(state!(self))) {
+                    error_break!("Failed to activate scene {} ({})", next_scene, err);
+                };
+
                 self.current_scene = next_scene.clone();
                 self.next_scene = None;
             }
 
-            let scene = self.scenes.get_by_name_mut(&self.current_scene)?;
+            let scene = match self.scenes.get_by_name_mut(&self.current_scene) {
+                Ok(scene) => scene,
+                Err(err) => error_break!("Failed to get scene {} ({})", self.current_scene, err),
+            };
 
             while let Some(event) = self.window.poll_event() {
                 match event {
-                    InputEvent::WindowSizeChange { size } => self.renderer.set_viewport(Vec2::new(size.x as f32, size.y as f32))?,
-                    InputEvent::WindowClose => return Ok(()),
+                    InputEvent::WindowSizeChange { size } => self.renderer.set_viewport(Vec2::new(size.x as f32, size.y as f32)),
+                    InputEvent::WindowClose => return,
                     _ => {}
                 }
 
                 self.ui.collect_event(&event);
-                scene.input(state!(self), event)?;
+
+                if let Err(err) = scene.input(state!(self), event) {
+                    error_continue!("Failed to process input event {:?} ({})", event, err);
+                }
             }
 
             let ui_input = self.ui.get_input();
-            let (ui_output, command) = scene.ui(state!(self), ui_input)?;
+            let (ui_output, command) = match scene.ui(state!(self), ui_input) {
+                Ok((ui_output, command)) => (ui_output, command),
+                Err(err) => error_continue!("Failed to process UI ({})", err),
+            };
             self.process_frame_command(command);
 
             let now = Instant::now();
@@ -175,28 +189,31 @@ where
                 #[cfg(feature = "physics")]
                 self.physics.step(self.timestep);
 
-                let scene = self.scenes.get_by_name_mut(&self.current_scene)?;
-                let command = scene.fixed(state!(self))?;
-                self.process_frame_command(command);
+                let command = match self.scenes.get_by_name_mut(&self.current_scene).and_then(|p| p.fixed(state!(self))) {
+                    Ok(command) => command,
+                    Err(err) => error_continue!("Failed to process fixed frame ({})", err),
+                };
 
+                self.process_frame_command(command);
                 self.accumulator -= self.timestep;
             }
 
-            let scene = self.scenes.get_by_name_mut(&self.current_scene)?;
-            let command = scene.frame(state!(self), self.accumulator, delta)?;
+            let command = match self.scenes.get_by_name_mut(&self.current_scene).and_then(|p| p.frame(state!(self), self.accumulator, delta)) {
+                Ok(command) => command,
+                Err(err) => error_continue!("Failed to process frame ({})", err),
+            };
+
             self.process_frame_command(command);
             self.renderer.flush_buffer();
 
-            self.ui.draw(&mut self.renderer, ui_output)?;
+            self.ui.draw(&mut self.renderer, ui_output);
 
             self.renderer.end_frame();
             self.window.swap_buffers();
 
             #[cfg(web)]
-            return Ok(());
+            break;
         }
-
-        Ok(())
     }
 
     fn process_frame_command(&mut self, command: Option<FrameCommand>) {

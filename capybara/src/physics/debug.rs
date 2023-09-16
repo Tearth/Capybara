@@ -1,13 +1,12 @@
 use super::context::PhysicsContext;
 use crate::renderer::context::RendererContext;
 use crate::renderer::shape::Shape;
-use anyhow::Result;
 use glam::Vec2;
 use rapier2d::prelude::ShapeType;
 use std::sync::TryLockResult;
 
 impl PhysicsContext {
-    pub fn draw_debug(&self, context: &mut RendererContext, pixels_per_meter: f32) -> Result<()> {
+    pub fn draw_debug(&self, context: &mut RendererContext, pixels_per_meter: f32) {
         for (_, collider) in self.colliders.iter() {
             let position = Vec2::from(collider.position().translation) * pixels_per_meter;
             let rotation = collider.rotation().angle();
@@ -31,8 +30,8 @@ impl PhysicsContext {
                     let radius = ball.radius * pixels_per_meter;
                     let direction = Vec2::from_angle(rotation);
 
-                    context.draw_shape(&Shape::new_circle(position, radius, None, self.debug.collider_thickness, color))?;
-                    context.draw_shape(&Shape::new_line(position, position + direction * (radius - 1.0), self.debug.collider_thickness, color))?;
+                    context.draw_shape(&Shape::new_circle(position, radius, None, self.debug.collider_thickness, color));
+                    context.draw_shape(&Shape::new_line(position, position + direction * (radius - 1.0), self.debug.collider_thickness, color));
                 }
                 ShapeType::Cuboid => {
                     let cuboid = collider.shape().as_cuboid().unwrap();
@@ -41,7 +40,7 @@ impl PhysicsContext {
 
                     shape.position = position;
                     shape.rotation = rotation;
-                    context.draw_shape(&shape)?;
+                    context.draw_shape(&shape);
                 }
                 _ => {}
             }
@@ -52,8 +51,8 @@ impl PhysicsContext {
             let mass_center_position = Vec2::from(rigidbody.center_of_mass().xy()) * pixels_per_meter;
             let velocity = Vec2::from(rigidbody.linvel().xy()) / self.integration_parameters.dt;
 
-            context.draw_shape(&Shape::new_disc(mass_center_position, self.debug.mass_center_radius, None, self.debug.mass_center_color))?;
-            context.draw_shape(&Shape::new_line(position, position + velocity, self.debug.force_thickness, self.debug.force_color))?;
+            context.draw_shape(&Shape::new_disc(mass_center_position, self.debug.mass_center_radius, None, self.debug.mass_center_color));
+            context.draw_shape(&Shape::new_line(position, position + velocity, self.debug.force_thickness, self.debug.force_color));
         }
 
         if let TryLockResult::Ok(contacts) = self.events.contacts.try_write() {
@@ -70,12 +69,10 @@ impl PhysicsContext {
                             contact_local_position.y * cos + contact_local_position.x * sin,
                         ) + collider_position;
 
-                        context.draw_shape(&Shape::new_disc(position, self.debug.contact_radius, None, self.debug.contact_color))?;
+                        context.draw_shape(&Shape::new_disc(position, self.debug.contact_radius, None, self.debug.contact_color));
                     }
                 }
             }
         }
-
-        Ok(())
     }
 }

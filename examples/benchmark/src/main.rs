@@ -104,7 +104,7 @@ impl Scene<GlobalData> for MainScene {
                 object.direction = Vec2::new(object.direction.x, -object.direction.y.abs());
             }
 
-            state.renderer.draw_sprite(&object.sprite)?;
+            state.renderer.draw_sprite(&object.sprite);
         }
 
         Ok(None)
@@ -140,7 +140,7 @@ fn main() {
 fn main_internal() -> Result<()> {
     ApplicationContext::<GlobalData>::new("Benchmark", WindowStyle::Window { size: Coordinates::new(1280, 720) })?
         .with_scene("MainScene", Box::<MainScene>::default())?
-        .run("MainScene")?;
+        .run("MainScene");
 
     Ok(())
 }

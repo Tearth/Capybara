@@ -67,13 +67,13 @@ impl Scene<GlobalData> for GameScene {
                     .show(context, |ui| {
                         ui.add_space(15.0);
                         ui.horizontal(|ui| {
-                            if widgets::button_orange(ui, state.ui, &state.renderer, "Yes", &mut self.play_button_state).clicked() {
+                            if widgets::button_orange(ui, state.ui, state.renderer, "Yes", &mut self.play_button_state).clicked() {
                                 command = Some(FrameCommand::ChangeScene { name: "MenuScene".to_string() });
                             }
 
                             ui.add_space(32.0);
 
-                            if widgets::button_green(ui, state.ui, &state.renderer, "No", &mut self.exit_button_state).clicked() {
+                            if widgets::button_green(ui, state.ui, state.renderer, "No", &mut self.exit_button_state).clicked() {
                                 self.exit_menu_visible = false;
                             }
                         });

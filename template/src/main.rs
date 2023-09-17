@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 use capybara::anyhow::Result;
 use capybara::app::ApplicationContext;
 use capybara::fast_gpu;

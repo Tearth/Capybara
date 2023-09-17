@@ -22,7 +22,7 @@ impl SettingsStorage {
     {
         if !self.cache.is_empty() {
             if let Some(value) = self.cache.get(key).cloned() {
-                return Ok(value.parse().map_err(|_| anyhow!("Failed to parse {}", value))?);
+                return value.parse().map_err(|_| anyhow!("Failed to parse {}", value));
             }
         }
 
@@ -30,7 +30,7 @@ impl SettingsStorage {
         self.cache = self.deserialize(&content)?;
 
         let value = self.cache.get(key).cloned().ok_or_else(|| anyhow!("Key not found"))?;
-        Ok(value.parse().map_err(|_| anyhow!("Failed to parse {}", value))?)
+        value.parse().map_err(|_| anyhow!("Failed to parse {}", value))
     }
 
     pub fn set<T>(&mut self, key: &str, value: T, overwrite: bool)

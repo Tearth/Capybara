@@ -243,9 +243,9 @@ impl RendererContext {
                 None => error_continue!("Failed to get filename string for atlas {}", raw.name),
             };
 
-            if self.textures.contains_by_name(&name_str) {
+            if self.textures.contains_by_name(name_str) {
                 let mut entities = FxHashMap::default();
-                let texture = match self.textures.get_by_name_mut(&name_str) {
+                let texture = match self.textures.get_by_name_mut(name_str) {
                     Ok(texture) => texture,
                     Err(err) => error_continue!("{}, atlas {} orphaned", err, name_str),
                 };

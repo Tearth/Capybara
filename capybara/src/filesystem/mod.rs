@@ -13,4 +13,5 @@ pub enum FileLoadingStatus {
     Idle,
     Loading,
     Finished,
+    Error,
 }

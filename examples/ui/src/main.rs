@@ -48,7 +48,7 @@ impl Scene<GlobalData> for MainScene {
     }
 
     fn frame(&mut self, state: ApplicationState<GlobalData>, _: f32, _: f32) -> Result<Option<FrameCommand>> {
-        if state.global.assets.load("./data/data0.zip")? == AssetsLoadingStatus::Finished {
+        if state.global.assets.load("./data/data0.zip") == AssetsLoadingStatus::Finished {
             state.ui.instantiate_assets(&state.global.assets, None);
             self.initialized = true;
         }

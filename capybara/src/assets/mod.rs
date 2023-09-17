@@ -5,10 +5,10 @@ pub mod loader;
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum AssetsLoadingStatus {
     Idle,
-    Initializing,
     Loading,
     Parsing,
     Finished,
+    Error,
 }
 
 pub struct RawTexture {

@@ -1,9 +1,11 @@
 use super::*;
+use crate::error_return;
 use anyhow::bail;
 use anyhow::Result;
 use js_sys::ArrayBuffer;
 use js_sys::Uint8Array;
 use log::error;
+use log::info;
 use std::cell::RefCell;
 use std::rc::Rc;
 use wasm_bindgen::prelude::Closure;
@@ -33,9 +35,17 @@ impl FileSystem {
 
         let status_clone = status.clone();
         let buffer_clone = buffer.clone();
-
         let blob_closure = Closure::<dyn FnMut(_)>::new(move |blob: JsValue| {
-            let blob = blob.dyn_into::<ArrayBuffer>().unwrap();
+            let blob = match blob.dyn_into::<ArrayBuffer>() {
+                Ok(blob) => blob,
+                Err(_) => {
+                    *status_clone.borrow_mut() = FileLoadingStatus::Error;
+                    error_return!("Failed to cast blob")
+                }
+            };
+
+            info!("Retrieved blob from response ({} bytes)", blob.byte_length());
+
             let array = Uint8Array::new(&blob);
             let mut buffer = buffer_clone.borrow_mut();
 
@@ -43,11 +53,30 @@ impl FileSystem {
             array.copy_to(&mut buffer);
 
             *status_clone.borrow_mut() = FileLoadingStatus::Finished;
+            info!("Fetching finished");
         });
 
+        let status_clone = status.clone();
         let fetch_closure = Rc::new(RefCell::new(Closure::<dyn FnMut(_)>::new(move |response: JsValue| {
-            let response = response.dyn_into::<Response>().unwrap();
-            let _ = response.array_buffer().unwrap().then(&blob_closure);
+            let response = match response.dyn_into::<Response>() {
+                Ok(response) => response,
+                Err(_) => {
+                    *status_clone.borrow_mut() = FileLoadingStatus::Error;
+                    error_return!("Failed to cast response")
+                }
+            };
+
+            info!("Response received with code {} ({})", response.status(), response.status_text());
+
+            let array_buffer = match response.array_buffer() {
+                Ok(array_buffer) => array_buffer,
+                Err(_) => {
+                    *status_clone.borrow_mut() = FileLoadingStatus::Error;
+                    error_return!("Failed to load array buffer from response")
+                }
+            };
+
+            let _ = array_buffer.then(&blob_closure);
         })));
 
         let window = web_sys::window().unwrap();
@@ -56,10 +85,10 @@ impl FileSystem {
         Self { input, status, buffer, window, storage, fetch_closure }
     }
 
-    pub fn read(&mut self, input: &str) -> Result<FileLoadingStatus> {
+    pub fn read(&mut self, input: &str) -> FileLoadingStatus {
         let status = *self.status.borrow_mut();
 
-        if status == FileLoadingStatus::Finished && *self.input.borrow() != input {
+        if (status == FileLoadingStatus::Finished || status == FileLoadingStatus::Error) && *self.input.borrow() != input {
             *self.status.borrow_mut() = FileLoadingStatus::Idle;
         }
 
@@ -68,11 +97,13 @@ impl FileSystem {
             let fetch_closure_clone = self.fetch_closure.clone();
             let _ = self.window.fetch_with_request(&request).then(&fetch_closure_clone.borrow());
 
+            info!("Fetching {}", input);
+
             *self.input.borrow_mut() = input.to_string();
             *self.status.borrow_mut() = FileLoadingStatus::Loading;
         }
 
-        Ok(*self.status.borrow())
+        *self.status.borrow()
     }
 
     pub fn write(&self, _: &str, _: &str) {

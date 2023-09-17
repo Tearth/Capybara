@@ -22,17 +22,29 @@ impl FileSystem {
         Self { input, status, buffer }
     }
 
-    pub fn read(&mut self, path: &str) -> Result<FileLoadingStatus> {
+    pub fn read(&mut self, path: &str) -> FileLoadingStatus {
         let mut buffer = self.buffer.borrow_mut();
-        let mut file = File::open(path)?;
+        let mut file = match File::open(path) {
+            Ok(file) => file,
+            Err(err) => {
+                error!("Failed to open file ({})", err);
+                *self.status.borrow_mut() = FileLoadingStatus::Error;
+                return *self.status.borrow();
+            }
+        };
 
         buffer.clear();
-        file.read_to_end(&mut buffer)?;
+
+        if let Err(err) = file.read_to_end(&mut buffer) {
+            error!("Failed to read file ({})", err);
+            *self.status.borrow_mut() = FileLoadingStatus::Error;
+            return *self.status.borrow();
+        }
 
         *self.input.borrow_mut() = path.to_string();
         *self.status.borrow_mut() = FileLoadingStatus::Finished;
 
-        Ok(*self.status.borrow())
+        *self.status.borrow()
     }
 
     pub fn write(&self, path: &str, content: &str) {

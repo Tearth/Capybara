@@ -42,21 +42,21 @@ impl AssetsLoader {
         }
     }
 
-    pub fn load(&mut self, input: &str) -> AssetsLoadingStatus {
-        if (self.status == AssetsLoadingStatus::Finished || self.status == AssetsLoadingStatus::Error) && self.input != input {
+    pub fn load(&mut self, path: &str) -> AssetsLoadingStatus {
+        if (self.status == AssetsLoadingStatus::Finished || self.status == AssetsLoadingStatus::Error) && self.input != path {
             self.status = AssetsLoadingStatus::Idle;
         }
 
         match self.status {
             AssetsLoadingStatus::Idle => {
-                info!("Loading assets from {}", input);
+                info!("Loading assets from {}", path);
 
-                self.filesystem.read(input);
-                self.input = input.to_string();
+                self.filesystem.read(path);
+                self.input = path.to_string();
                 self.status = AssetsLoadingStatus::Loading;
             }
             AssetsLoadingStatus::Loading => {
-                match self.filesystem.read(input) {
+                match self.filesystem.read(path) {
                     FileLoadingStatus::Finished => {
                         let buffer = self.filesystem.buffer.clone();
                         let buffer = buffer.borrow();
@@ -82,7 +82,10 @@ impl AssetsLoader {
 
                             if entry.is_file() {
                                 let path = Path::new(entry.name());
-                                let asset_path = format!("/{:?}", path);
+                                let path_str = match path.to_str() {
+                                    Some(name) => name.to_string(),
+                                    None => error_continue!("Failed to get string path {:?}", path),
+                                };
                                 let name = match path.file_stem().and_then(|p| p.to_str()) {
                                     Some(name) => name.to_string(),
                                     None => error_continue!("Failed to get name from path {:?}", path),
@@ -91,6 +94,7 @@ impl AssetsLoader {
                                     Some(extension) => extension.to_string(),
                                     None => error_continue!("Failed to get extension from path {:?}", path),
                                 };
+                                let asset_path = format!("/{}", path_str);
 
                                 data.clear();
 
@@ -116,7 +120,6 @@ impl AssetsLoader {
                         }
 
                         self.status = AssetsLoadingStatus::Finished;
-                        info!("Loading assets finished");
                     }
                     FileLoadingStatus::Error => {
                         self.status = AssetsLoadingStatus::Error;

@@ -11,6 +11,8 @@ use crate::window::WindowStyle;
 use anyhow::Result;
 use glam::Vec2;
 use instant::Instant;
+use log::error;
+use log::info;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -81,7 +83,7 @@ where
     pub fn new(title: &str, style: WindowStyle) -> Result<Self> {
         let window = WindowContext::new(title, style)?;
         let mut renderer = RendererContext::new(window.load_gl_pointers())?;
-        let ui = UiContext::new(&mut renderer)?;
+        let ui = UiContext::new(&mut renderer);
 
         #[cfg(feature = "audio")]
         let audio = AudioContext::new()?;
@@ -102,7 +104,7 @@ where
             #[cfg(feature = "physics")]
             physics,
 
-            current_scene: "".to_string(),
+            current_scene: Default::default(),
             next_scene: None,
             frame_timestamp: Instant::now(),
             running: true,
@@ -111,9 +113,12 @@ where
         })
     }
 
-    pub fn with_scene(mut self, name: &str, scene: Box<dyn Scene<G>>) -> Result<Self> {
-        self.scenes.store_with_name(name, scene)?;
-        Ok(self)
+    pub fn with_scene(mut self, name: &str, scene: Box<dyn Scene<G>>) -> Self {
+        if let Err(err) = self.scenes.store_with_name(name, scene) {
+            error!("Failed to register scene {} ({})", name, err);
+        }
+
+        self
     }
 
     pub fn run(self, scene: &str) {
@@ -124,6 +129,8 @@ where
         {
             app_borrow.window.init_closures(app.clone());
         }
+
+        info!("Engine initialization completed, going to main loop");
 
         app_borrow.next_scene = Some(scene.to_string());
         app_borrow.window.set_swap_interval(1);

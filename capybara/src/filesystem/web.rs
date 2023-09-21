@@ -85,21 +85,25 @@ impl FileSystem {
         Self { input, status, buffer, window, storage, fetch_closure }
     }
 
-    pub fn read(&mut self, input: &str) -> FileLoadingStatus {
+    pub fn read(&mut self, path: &str) -> FileLoadingStatus {
         let status = *self.status.borrow_mut();
 
-        if (status == FileLoadingStatus::Finished || status == FileLoadingStatus::Error) && *self.input.borrow() != input {
+        if status == FileLoadingStatus::Idle {
+            info!("Reading from file {}", path);
+        }
+
+        if (status == FileLoadingStatus::Finished || status == FileLoadingStatus::Error) && *self.input.borrow() != path {
             *self.status.borrow_mut() = FileLoadingStatus::Idle;
         }
 
         if let FileLoadingStatus::Idle = status {
-            let request = Request::new_with_str_and_init(input, &RequestInit::new()).unwrap();
+            let request = Request::new_with_str_and_init(path, &RequestInit::new()).unwrap();
             let fetch_closure_clone = self.fetch_closure.clone();
             let _ = self.window.fetch_with_request(&request).then(&fetch_closure_clone.borrow());
 
-            info!("Fetching {}", input);
+            info!("Fetching {}", path);
 
-            *self.input.borrow_mut() = input.to_string();
+            *self.input.borrow_mut() = path.to_string();
             *self.status.borrow_mut() = FileLoadingStatus::Loading;
         }
 
@@ -111,11 +115,13 @@ impl FileSystem {
     }
 
     pub fn read_local(&self, path: &str) -> Result<String> {
+        info!("Reading from local file {}", path);
+
         if let Ok(settings) = self.storage.get(path) {
             if let Some(settings) = settings {
                 return Ok(settings);
             } else {
-                return Ok("".to_string());
+                return Ok(String::new());
             }
         }
 
@@ -123,6 +129,8 @@ impl FileSystem {
     }
 
     pub fn write_local(&self, path: &str, content: &str) {
+        info!("Writing to local file {} ({} bytes)", path, content.len());
+
         if self.storage.set(path, content).is_err() {
             error!("Failed to write into local storage");
         }

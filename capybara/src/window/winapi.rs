@@ -1,4 +1,5 @@
 use super::*;
+use crate::*;
 use ::winapi::shared::basetsd::*;
 use ::winapi::shared::minwindef::*;
 use ::winapi::shared::windef::*;
@@ -11,8 +12,10 @@ use ::winapi::um::winuser::*;
 use anyhow::bail;
 use anyhow::Result;
 use glow::Context;
+use glow::HasContext;
 use log::debug;
 use log::error;
+use log::info;
 use log::Level;
 use std::collections::VecDeque;
 use std::ffi::CString;
@@ -54,6 +57,9 @@ impl WindowContextWinApi {
 
             #[cfg(not(debug_assertions))]
             simple_logger::init_with_level(Level::Error)?;
+
+            info!("Capybara {}", VERSION);
+            info!("Window initialization");
 
             let title_cstr = CString::new(title).unwrap();
             let class_cstr = CString::new("CapybaraWindow").unwrap();
@@ -130,6 +136,8 @@ impl WindowContextWinApi {
 
     fn init_gl_context(&mut self) -> Result<()> {
         unsafe {
+            info!("OpenGL context initialization");
+
             let phantom_title_cstr = CString::new("Phantom").unwrap();
             let phantom_class_cstr = CString::new("CapybaraPhantom").unwrap();
             let phantom_module_handle = libloaderapi::GetModuleHandleA(ptr::null_mut());
@@ -308,7 +316,7 @@ impl WindowContextWinApi {
             let opengl32_dll_cstr = CString::new("opengl32.dll").unwrap();
             let opengl32_dll_handle = libloaderapi::LoadLibraryA(opengl32_dll_cstr.as_ptr());
 
-            glow::Context::from_loader_function(|name| {
+            let gl = glow::Context::from_loader_function(|name| {
                 let name_cstr = CString::new(name).unwrap();
                 let mut proc = winapi::wglGetProcAddress(name_cstr.as_ptr());
 
@@ -323,7 +331,12 @@ impl WindowContextWinApi {
                 }
 
                 proc as *const _
-            })
+            });
+
+            let version = gl.version();
+            info!("OpenGL {}.{} {}", version.major, version.minor, version.vendor_info);
+
+            gl
         }
     }
 

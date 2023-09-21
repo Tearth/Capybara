@@ -8,6 +8,7 @@ use kira::manager::AudioManager;
 use kira::manager::AudioManagerSettings;
 use kira::track::TrackId;
 use log::error;
+use log::info;
 
 pub struct AudioContext {
     pub inner: AudioManager<CpalBackend>,
@@ -20,6 +21,8 @@ impl AudioContext {
     }
 
     pub fn instantiate_assets(&mut self, assets: &AssetsLoader, prefix: Option<&str>, track: Option<TrackId>) {
+        info!("Instancing audio assets, prefix {}", prefix.unwrap_or("none"));
+
         for raw in &assets.raw_sounds {
             if let Some(prefix) = &prefix {
                 if !raw.path.starts_with(prefix) {
@@ -32,8 +35,8 @@ impl AudioContext {
                 Err(err) => error_continue!("Failed to create sound {} ({})", raw.name, err),
             };
 
-            if self.sounds.store_with_name(&raw.name, sound).is_err() {
-                error!("Failed to instantiate sound {}", raw.name);
+            if let Err(err) = self.sounds.store_with_name(&raw.name, sound) {
+                error!("Failed to instantiate sound {} ({})", raw.name, err);
             }
         }
     }

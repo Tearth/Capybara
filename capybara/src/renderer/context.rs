@@ -24,6 +24,7 @@ use glow::HasContext;
 use glow::VertexArray;
 use instant::Instant;
 use log::error;
+use log::info;
 use rustc_hash::FxHashMap;
 use std::cmp;
 use std::path::Path;
@@ -148,13 +149,13 @@ impl RendererContext {
             context.default_camera_id = context.cameras.store(camera);
             context.activate_camera(context.default_camera_id);
 
-            let sprite_shader = Shader::new(&context, SPRITE_VERTEX_SHADER, SPRITE_FRAGMENT_SHADER)?;
+            let sprite_shader = Shader::new(&context, "sprite_default", SPRITE_VERTEX_SHADER, SPRITE_FRAGMENT_SHADER)?;
             context.default_sprite_shader_id = context.shaders.store(sprite_shader);
 
-            let shape_shader = Shader::new(&context, SHAPE_VERTEX_SHADER, SHAPE_FRAGMENT_SHADER)?;
+            let shape_shader = Shader::new(&context, "shape_default", SHAPE_VERTEX_SHADER, SHAPE_FRAGMENT_SHADER)?;
             context.default_shape_shader_id = context.shaders.store(shape_shader);
 
-            let default_texture = Texture::new(&context, &RawTexture::new("", "", Vec2::new(1.0, 1.0), &[255, 255, 255, 255]))?;
+            let default_texture = Texture::new(&context, &RawTexture::new("blank", "", Vec2::new(1.0, 1.0), &[255, 255, 255, 255]))?;
             context.default_texture_id = context.textures.store(default_texture);
 
             // Sprite buffers
@@ -215,6 +216,8 @@ impl RendererContext {
     }
 
     pub fn instantiate_assets(&mut self, assets: &AssetsLoader, prefix: Option<&str>) {
+        info!("Instancing renderer assets, prefix {}", prefix.unwrap_or("none"));
+
         for raw in &assets.raw_textures {
             if let Some(prefix) = &prefix {
                 if !raw.path.starts_with(prefix) {
@@ -227,8 +230,8 @@ impl RendererContext {
                 Err(err) => error_continue!("Failed to load texture {} ({})", raw.name, err),
             };
 
-            if self.textures.store_with_name(&raw.name, texture).is_err() {
-                error!("Failed to instantiate texture {}", raw.name);
+            if let Err(err) = self.textures.store_with_name(&raw.name, texture) {
+                error!("Failed to instantiate texture {} ({})", raw.name, err);
             }
         }
 

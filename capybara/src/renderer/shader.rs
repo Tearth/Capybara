@@ -9,6 +9,7 @@ use glow::HasContext;
 use glow::Program;
 use glow::UniformLocation;
 use log::error;
+use log::info;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::slice;
@@ -20,6 +21,7 @@ pub const SHAPE_VERTEX_SHADER: &str = include_str!("./shaders/shape.vert");
 pub const SHAPE_FRAGMENT_SHADER: &str = include_str!("./shaders/shape.frag");
 
 pub struct Shader {
+    pub name: String,
     pub program: Program,
     pub uniforms: HashMap<String, ShaderParameter>,
 
@@ -32,9 +34,12 @@ pub struct ShaderParameter {
 }
 
 impl Shader {
-    pub fn new(renderer: &RendererContext, vertex_shader_source: &str, fragment_shader_source: &str) -> Result<Self> {
+    pub fn new(renderer: &RendererContext, name: &str, vertex_shader_source: &str, fragment_shader_source: &str) -> Result<Self> {
+        info!("Creating shader {} (VS {} bytes, FS {} bytes)", name, vertex_shader_source.len(), fragment_shader_source.len());
+
         unsafe {
             let gl = renderer.gl.clone();
+            info!("Compiling vertex shader");
 
             let vertex_shader = gl.create_shader(glow::VERTEX_SHADER).map_err(Error::msg)?;
             gl.shader_source(vertex_shader, preprocess_shader_source(vertex_shader_source).as_str());
@@ -44,6 +49,8 @@ impl Shader {
                 bail!("Failed to compile vertex shader: {}", gl.get_shader_info_log(vertex_shader));
             }
 
+            info!("Compiling fragment shader");
+
             let fragment_shader = gl.create_shader(glow::FRAGMENT_SHADER).map_err(Error::msg)?;
             gl.shader_source(fragment_shader, preprocess_shader_source(fragment_shader_source).as_str());
             gl.compile_shader(fragment_shader);
@@ -51,6 +58,8 @@ impl Shader {
             if !gl.get_shader_compile_status(fragment_shader) {
                 bail!("Failed to compile fragment shader: {}", gl.get_shader_info_log(fragment_shader));
             }
+
+            info!("Linking program");
 
             let program = gl.create_program().map_err(Error::msg)?;
             gl.attach_shader(program, vertex_shader);
@@ -72,17 +81,21 @@ impl Shader {
 
                 if uniform.size == 1 {
                     let location = gl.get_uniform_location(program, &uniform.name).ok_or_else(|| anyhow!("Uniform location not found"))?;
+                    info!("Uniform {} located, size {}", uniform.name, uniform.size);
+
                     uniforms.insert(uniform.name, ShaderParameter::new(location, uniform.utype));
                 } else {
                     for array_index in 0..uniform.size {
                         let name_with_index = uniform.name.replace("[0]", &format!("[{}]", array_index));
                         let location = gl.get_uniform_location(program, &name_with_index).ok_or_else(|| anyhow!("Uniform location not found"))?;
+                        info!("Uniform array {} located, size {}", uniform.name, uniform.size);
+
                         uniforms.insert(name_with_index, ShaderParameter::new(location, uniform.utype));
                     }
                 }
             }
 
-            Ok(Shader { program, uniforms, gl })
+            Ok(Shader { name: name.to_string(), program, uniforms, gl })
         }
     }
 

@@ -140,7 +140,7 @@ fn main() {
 
 fn main_internal() -> Result<()> {
     ApplicationContext::<GlobalData>::new("Particles", WindowStyle::Window { size: Coordinates::new(1280, 720) })?
-        .with_scene("MainScene", Box::<MainScene>::default())?
+        .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene");
 
     Ok(())

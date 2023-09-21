@@ -12,7 +12,6 @@ use crate::window::Key;
 use crate::window::Modifiers;
 use crate::window::MouseButton;
 use crate::window::MouseWheelDirection;
-use anyhow::Result;
 use core::slice;
 use egui::epaint::Primitive;
 use egui::Color32;
@@ -34,6 +33,7 @@ use glam::Vec2;
 use glow::HasContext;
 use instant::Instant;
 use log::error;
+use log::info;
 use rustc_hash::FxHashMap;
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -53,8 +53,8 @@ pub struct UiContext {
 }
 
 impl UiContext {
-    pub fn new(renderer: &mut RendererContext) -> Result<Self> {
-        Ok(Self {
+    pub fn new(renderer: &mut RendererContext) -> Self {
+        Self {
             inner: Default::default(),
             screen_size: Default::default(),
             collected_events: Default::default(),
@@ -66,10 +66,12 @@ impl UiContext {
 
             time: Instant::now(),
             max_texture_size: unsafe { renderer.gl.get_parameter_i32(glow::MAX_TEXTURE_SIZE) },
-        })
+        }
     }
 
     pub fn instantiate_assets(&mut self, assets: &AssetsLoader, prefix: Option<&str>) {
+        info!("Instancing UI assets, prefix {}", prefix.unwrap_or("none"));
+
         for raw in &assets.raw_textures {
             if let Some(prefix) = &prefix {
                 if !raw.path.starts_with(prefix) {
@@ -276,20 +278,22 @@ impl UiContext {
         size: Vec2,
         options: TextureOptions,
     ) {
-        let texture_id = if let Some(position) = position {
-            let texture_id = match self.textures.get(&id) {
-                Some(texture_id) => texture_id,
-                None => error_return!("Texture {:?} not found", id),
-            };
-
-            match renderer.textures.get(*texture_id) {
-                Ok(texture) => texture.update(Vec2::new(position[0], position[1]), size, data),
+        let texture_id = if let Some(texture_id) = self.textures.get(&id) {
+            let texture = match renderer.textures.get(*texture_id) {
+                Ok(texture) => texture,
                 Err(err) => error_return!("{}", err),
             };
+            let position = position.unwrap_or(Vec2::ZERO);
 
+            texture.update(Vec2::new(position[0], position[1]), size, data);
             *texture_id
         } else {
-            let raw = RawTexture::new("", "", size, data);
+            let name = match id {
+                TextureId::Managed(id) => format!("ui_managed_{}", id),
+                TextureId::User(id) => format!("ui_user_{}", id),
+            };
+
+            let raw = RawTexture::new(&name, "", size, data);
             let texture = match Texture::new(renderer, &raw) {
                 Ok(texture) => texture,
                 Err(err) => error_return!("Failed to create texture ({})", err),

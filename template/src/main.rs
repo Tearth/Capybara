@@ -22,10 +22,10 @@ fn main() {
 
 fn main_internal() -> Result<()> {
     ApplicationContext::<GlobalData>::new("Template", WindowStyle::Window { size: Coordinates::new(1280, 720) })?
-        .with_scene("BootScene", Box::<BootScene>::default())?
-        .with_scene("LoadingScene", Box::<LoadingScene>::default())?
-        .with_scene("MenuScene", Box::<MenuScene>::default())?
-        .with_scene("GameScene", Box::<GameScene>::default())?
+        .with_scene("BootScene", Box::<BootScene>::default())
+        .with_scene("LoadingScene", Box::<LoadingScene>::default())
+        .with_scene("MenuScene", Box::<MenuScene>::default())
+        .with_scene("GameScene", Box::<GameScene>::default())
         .run("BootScene");
 
     Ok(())

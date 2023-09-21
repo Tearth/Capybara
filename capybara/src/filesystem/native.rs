@@ -1,6 +1,6 @@
 use super::*;
 use anyhow::Result;
-use log::error;
+use log::{error, info};
 use std::cell::RefCell;
 use std::fs;
 use std::fs::File;
@@ -23,40 +23,60 @@ impl FileSystem {
     }
 
     pub fn read(&mut self, path: &str) -> FileLoadingStatus {
+        let mut input = self.input.borrow_mut();
         let mut buffer = self.buffer.borrow_mut();
-        let mut file = match File::open(path) {
-            Ok(file) => file,
-            Err(err) => {
-                error!("Failed to open file ({})", err);
-                *self.status.borrow_mut() = FileLoadingStatus::Error;
-                return *self.status.borrow();
-            }
-        };
+        let mut status = self.status.borrow_mut();
 
-        buffer.clear();
-
-        if let Err(err) = file.read_to_end(&mut buffer) {
-            error!("Failed to read file ({})", err);
-            *self.status.borrow_mut() = FileLoadingStatus::Error;
-            return *self.status.borrow();
+        if matches!(*status, FileLoadingStatus::Finished | FileLoadingStatus::Error) && *input != path {
+            *status = FileLoadingStatus::Idle;
         }
 
-        *self.input.borrow_mut() = path.to_string();
-        *self.status.borrow_mut() = FileLoadingStatus::Finished;
+        if *status == FileLoadingStatus::Idle {
+            info!("Reading from file {}", path);
 
-        *self.status.borrow()
+            let mut file = match File::open(path) {
+                Ok(file) => file,
+                Err(err) => {
+                    error!("Failed to open file ({})", err);
+                    *status = FileLoadingStatus::Error;
+                    return *status;
+                }
+            };
+
+            buffer.clear();
+
+            if let Err(err) = file.read_to_end(&mut buffer) {
+                error!("Failed to read file ({})", err);
+                *status = FileLoadingStatus::Error;
+                return *status;
+            }
+
+            *input = path.to_string();
+            *status = FileLoadingStatus::Finished;
+        }
+
+        *status
     }
 
     pub fn write(&self, path: &str, content: &str) {
-        fs::write(path, content).map_or_else(|err| error!("Failed to write into {} ({})", path, err), |_| ());
+        info!("Writing to file {} ({} bytes)", path, content.len());
+
+        if let Err(err) = fs::write(path, content) {
+            error!("Failed to write into {} ({})", path, err);
+        }
     }
 
     pub fn read_local(&mut self, path: &str) -> Result<String> {
+        info!("Reading from local file {}", path);
         Ok(fs::read_to_string(path)?)
     }
 
     pub fn write_local(&self, path: &str, content: &str) {
-        fs::write(path, content).map_or_else(|err| error!("Failed to write into {} ({})", path, err), |_| ());
+        info!("Writing to local file {} ({} bytes)", path, content.len());
+
+        if let Err(err) = fs::write(path, content) {
+            error!("Failed to write into {} ({})", path, err);
+        }
     }
 }
 

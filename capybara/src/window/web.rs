@@ -1,9 +1,12 @@
 use super::*;
 use crate::app::ApplicationContext;
+use crate::*;
 use anyhow::anyhow;
 use anyhow::Result;
 use glow::Context;
+use glow::HasContext;
 use log::error;
+use log::info;
 use log::Level;
 use std::cell::RefCell;
 use std::collections::VecDeque;
@@ -58,11 +61,16 @@ impl WindowContextWeb {
         #[cfg(not(debug_assertions))]
         console_log::init_with_level(Level::Error).map_err(|_| anyhow!("Logger initialization failed"))?;
 
+        info!("Capybara {}", VERSION);
+        info!("Window initialization");
+
         let window = web_sys::window().ok_or_else(|| anyhow!("Window not found"))?;
         let document = window.document().ok_or_else(|| anyhow!("Document not found"))?;
         let canvas = document.get_element_by_id("canvas").ok_or_else(|| anyhow!("Canvas not found"))?;
         let canvas = canvas.dyn_into::<HtmlCanvasElement>().map_err(|_| anyhow!("HtmlCanvasElement not found"))?;
         let last_canvas_size = Coordinates::new(canvas.scroll_width(), canvas.scroll_height());
+
+        info!("WebGL context initialization");
 
         let webgl = canvas
             .get_context("webgl2")
@@ -101,7 +109,12 @@ impl WindowContextWeb {
     }
 
     pub fn load_gl_pointers(&self) -> Context {
-        Context::from_webgl2_context(self.webgl_context.clone())
+        let gl = Context::from_webgl2_context(self.webgl_context.clone());
+        let version = gl.version();
+
+        info!("OpenGL {}.{} {}", version.major, version.minor, version.vendor_info);
+
+        gl
     }
 
     pub fn set_style(&mut self, _: WindowStyle) {

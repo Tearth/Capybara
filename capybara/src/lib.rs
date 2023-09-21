@@ -66,3 +66,5 @@ macro_rules! error_break {
 macro_rules! error_continue {
     ($($arg:tt)+) => { { log::error!($($arg)+); continue; } };
 }
+
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");

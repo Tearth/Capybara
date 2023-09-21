@@ -5,10 +5,12 @@ use anyhow::Result;
 use glam::Vec2;
 use glow::Context;
 use glow::HasContext;
+use log::info;
 use rustc_hash::FxHashMap;
 use std::rc::Rc;
 
 pub struct Texture {
+    pub name: String,
     pub size: Vec2,
     pub inner: glow::Texture,
     pub kind: TextureKind,
@@ -40,6 +42,8 @@ pub enum TextureWrapMode {
 impl Texture {
     pub fn new(renderer: &RendererContext, raw: &RawTexture) -> Result<Self> {
         unsafe {
+            info!("Creating texture {} ({}x{}, {} bytes)", raw.name, raw.size.x, raw.size.y, raw.data.len());
+
             let gl = renderer.gl.clone();
             let inner = gl.create_texture().map_err(Error::msg)?;
 
@@ -61,12 +65,14 @@ impl Texture {
             );
             gl.generate_mipmap(glow::TEXTURE_2D);
 
-            Ok(Self { size: raw.size, inner, kind: TextureKind::Simple, gl })
+            Ok(Self { name: raw.name.to_string(), size: raw.size, inner, kind: TextureKind::Simple, gl })
         }
     }
 
     pub fn update(&self, position: Vec2, size: Vec2, data: &[u8]) {
         unsafe {
+            info!("Updating texture {} ({}x{}, {} bytes)", self.name, size.x, size.y, data.len());
+
             self.gl.bind_texture(glow::TEXTURE_2D, Some(self.inner));
             self.gl.tex_sub_image_2d(
                 glow::TEXTURE_2D,
@@ -84,6 +90,8 @@ impl Texture {
     }
 
     pub fn set_filters(&self, minification: TextureFilter, magnification: TextureFilter) {
+        info!("Updating texture {} (minification {:?}, magnification {:?})", self.name, minification, magnification);
+
         let minification_value = match minification {
             TextureFilter::Linear => glow::LINEAR_MIPMAP_LINEAR,
             TextureFilter::Nearest => glow::NEAREST_MIPMAP_NEAREST,
@@ -103,6 +111,8 @@ impl Texture {
     }
 
     pub fn set_wrap_mode(&self, mode: TextureWrapMode) {
+        info!("Updating texture {} (wrap mode {:?})", self.name, mode);
+
         let value = match mode {
             TextureWrapMode::Repeat => glow::REPEAT,
             TextureWrapMode::Clamp => glow::CLAMP_TO_EDGE,
@@ -125,6 +135,7 @@ impl Texture {
 impl Drop for Texture {
     fn drop(&mut self) {
         unsafe {
+            info!("Releasing texture {}", self.name);
             self.gl.delete_texture(self.inner);
         }
     }

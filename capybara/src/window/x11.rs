@@ -1,6 +1,7 @@
 #![allow(non_upper_case_globals)]
 
 use super::*;
+use crate::*;
 use ::x11::glx;
 use ::x11::glx::*;
 use ::x11::keysym::*;
@@ -53,6 +54,9 @@ impl WindowContextX11 {
 
             #[cfg(not(debug_assertions))]
             simple_logger::init_with_level(Level::Error)?;
+
+            info!("Capybara {}", VERSION);
+            info!("Window initialization");
 
             let display = xlib::XOpenDisplay(ptr::null());
             if display.is_null() {
@@ -209,6 +213,8 @@ impl WindowContextX11 {
     }
 
     fn init_gl_context(&mut self) -> Result<()> {
+        info!("OpenGL context initialization");
+
         unsafe {
             let glx_extensions = GlxExtensions::new();
             let context_attributes = [
@@ -244,10 +250,23 @@ impl WindowContextX11 {
 
     pub fn load_gl_pointers(&self) -> Context {
         unsafe {
-            glow::Context::from_loader_function(|name| {
+            let gl = glow::Context::from_loader_function(|name| {
                 let name_cstr = CString::new(name).unwrap();
-                glx::glXGetProcAddressARB(name_cstr.as_ptr() as *const u8).unwrap() as *const _
-            })
+                let proc = glx::glXGetProcAddressARB(name_cstr.as_ptr() as *const u8).unwrap() as *const _;
+
+                if proc.is_null() {
+                    debug!("GL function {} unavailable", name);
+                } else {
+                    debug!("GL function {} loaded ({:?})", name, proc);
+                }
+
+                proc
+            });
+
+            let version = gl.version();
+            info!("OpenGL {}.{} {}", version.major, version.minor, version.vendor_info);
+
+            gl
         }
     }
 

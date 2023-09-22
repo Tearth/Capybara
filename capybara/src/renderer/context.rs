@@ -147,7 +147,7 @@ impl RendererContext {
 
             let camera = Camera::new(Default::default(), Default::default(), CameraOrigin::LeftBottom);
             context.default_camera_id = context.cameras.store(camera);
-            context.activate_camera(context.default_camera_id);
+            context.set_camera(context.default_camera_id);
 
             let sprite_shader = Shader::new(&context, "sprite_default", SPRITE_VERTEX_SHADER, SPRITE_FRAGMENT_SHADER)?;
             context.default_sprite_shader_id = context.shaders.store(sprite_shader);
@@ -267,7 +267,7 @@ impl RendererContext {
             self.gl.clear(glow::COLOR_BUFFER_BIT);
 
             if self.active_camera_id != self.default_camera_id {
-                self.activate_camera(self.default_camera_id);
+                self.set_camera(self.default_camera_id);
             }
         }
     }
@@ -292,13 +292,13 @@ impl RendererContext {
     pub fn draw_sprite(&mut self, sprite: &Sprite) {
         let camera = match self.cameras.get(self.active_camera_id) {
             Ok(camera) => camera,
-            Err(err) => error_return!("{}", err),
+            Err(err) => error_return!("Failed to draw sprite ({})", err),
         };
 
         let sprite_size = if let Some(texture_id) = sprite.texture_id {
             let texture = match self.textures.get(texture_id) {
                 Ok(texture) => texture,
-                Err(err) => error_return!("{}", err),
+                Err(err) => error_return!("Failed to draw sprite ({})", err),
             };
 
             match &sprite.texture_type {
@@ -362,7 +362,7 @@ impl RendererContext {
         let (uv_position, uv_size) = if let Some(texture_id) = sprite.texture_id {
             let texture = match self.textures.get(texture_id) {
                 Ok(texture) => texture,
-                Err(err) => error_return!("{}", err),
+                Err(err) => error_return!("Failed to draw sprite ({})", err),
             };
 
             match &sprite.texture_type {
@@ -529,7 +529,7 @@ impl RendererContext {
 
                 let camera = match self.cameras.get_mut(self.active_camera_id) {
                     Ok(camera) => camera,
-                    Err(err) => error_return!("{}", err),
+                    Err(err) => error_return!("Failed to flush buffer ({})", err),
                 };
                 let camera_changed = *camera != self.active_camera_data;
 
@@ -636,10 +636,10 @@ impl RendererContext {
         }
     }
 
-    pub fn activate_camera(&mut self, camera_id: usize) {
+    pub fn set_camera(&mut self, camera_id: usize) {
         let camera = match self.cameras.get_mut(camera_id) {
             Ok(camera) => camera,
-            Err(err) => error_return!("{}", err),
+            Err(err) => error_return!("Failed to set camera ({})", err),
         };
 
         self.active_camera_id = camera_id;
@@ -653,7 +653,7 @@ impl RendererContext {
 
             let camera = match self.cameras.get_mut(self.active_camera_id) {
                 Ok(camera) => camera,
-                Err(err) => error_return!("{}", err),
+                Err(err) => error_return!("Failed to set viewport ({})", err),
             };
             camera.size = self.viewport_size;
         }

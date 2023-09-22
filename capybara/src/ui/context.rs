@@ -208,7 +208,7 @@ impl UiContext {
     }
 
     pub fn draw(&mut self, renderer: &mut RendererContext, output: FullOutput) {
-        renderer.activate_camera(self.camera_id);
+        renderer.set_camera(self.camera_id);
 
         for (id, delta) in output.textures_delta.set {
             let position = delta.pos.map(|pos| Vec2::new(pos[0] as f32, pos[1] as f32));
@@ -281,7 +281,7 @@ impl UiContext {
         let texture_id = if let Some(texture_id) = self.textures.get(&id) {
             let texture = match renderer.textures.get(*texture_id) {
                 Ok(texture) => texture,
-                Err(err) => error_return!("{}", err),
+                Err(err) => error_return!("Failed to update texture ({})", err),
             };
             let position = position.unwrap_or(Vec2::ZERO);
 

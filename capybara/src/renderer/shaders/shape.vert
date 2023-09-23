@@ -18,11 +18,6 @@ void main()
 {
     gl_Position = proj * view * vec4(position, 0.0, 1.0);
     
-    vertexColor = vec4(
-        float(color.x) / 255.0, 
-        float(color.y) / 255.0, 
-        float(color.z) / 255.0, 
-        float(color.w) / 255.0
-    );
+    vertexColor = vec4(color) / 255.0;
     vertexUv = uv;
 }

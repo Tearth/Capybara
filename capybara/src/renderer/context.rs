@@ -52,8 +52,7 @@ pub struct RendererContext {
     buffer_metadata: Option<BufferMetadata>,
 
     sprite_buffer_vao: VertexArray,
-    sprite_buffer_base_vbo: Buffer,
-    sprite_buffer_data_vbo: Buffer,
+    sprite_buffer_vbo: Buffer,
     sprite_buffer_ebo: Buffer,
     sprite_buffer_resized: bool,
     sprite_buffer_count: usize,
@@ -90,7 +89,6 @@ impl RendererContext {
     pub fn new(gl: Context) -> Result<Self> {
         unsafe {
             let sprite_buffer_vao = gl.create_vertex_array().map_err(Error::msg)?;
-            let sprite_buffer_base_vbo = gl.create_buffer().map_err(Error::msg)?;
             let sprite_buffer_data_vbo = gl.create_buffer().map_err(Error::msg)?;
             let sprite_buffer_ebo = gl.create_buffer().map_err(Error::msg)?;
 
@@ -118,8 +116,7 @@ impl RendererContext {
                 buffer_metadata: None,
 
                 sprite_buffer_vao,
-                sprite_buffer_base_vbo,
-                sprite_buffer_data_vbo,
+                sprite_buffer_vbo: sprite_buffer_data_vbo,
                 sprite_buffer_ebo,
                 sprite_buffer_resized: true,
                 sprite_buffer_count: 0,
@@ -160,43 +157,32 @@ impl RendererContext {
 
             // Sprite buffers
             context.gl.bind_vertex_array(Some(context.sprite_buffer_vao));
-            context.gl.bind_buffer(glow::ARRAY_BUFFER, Some(context.sprite_buffer_base_vbo));
-
+            context.gl.bind_buffer(glow::ARRAY_BUFFER, Some(context.sprite_buffer_vbo));
             context.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(context.sprite_buffer_ebo));
-            context.gl.enable_vertex_attrib_array(0);
-            context.gl.vertex_attrib_pointer_f32(0, 2, glow::FLOAT, false, 2 * 4, 0);
 
-            let vertices: [f32; 8] = [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0];
-            let indices = [0, 1, 2, 0, 2, 3];
-
-            let models_u8 = core::slice::from_raw_parts(vertices.as_ptr() as *const u8, 8 * 4);
-            let indices_u8 = core::slice::from_raw_parts(indices.as_ptr() as *const u8, 6 * 4);
-
-            context.gl.buffer_data_u8_slice(glow::ARRAY_BUFFER, models_u8, glow::STATIC_DRAW);
+            let indices_u8 = slice::from_raw_parts([0, 1, 2, 0, 2, 3].as_ptr() as *const u8, 6 * 4);
             context.gl.buffer_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, indices_u8, glow::STATIC_DRAW);
 
-            context.gl.bind_buffer(glow::ARRAY_BUFFER, Some(context.sprite_buffer_data_vbo));
-
+            context.gl.enable_vertex_attrib_array(0);
             context.gl.enable_vertex_attrib_array(1);
             context.gl.enable_vertex_attrib_array(2);
             context.gl.enable_vertex_attrib_array(3);
             context.gl.enable_vertex_attrib_array(4);
             context.gl.enable_vertex_attrib_array(5);
-            context.gl.enable_vertex_attrib_array(6);
 
-            context.gl.vertex_attrib_pointer_f32(1, 2, glow::FLOAT, false, 12 * 4, 0);
-            context.gl.vertex_attrib_pointer_f32(2, 2, glow::FLOAT, false, 12 * 4, 2 * 4);
-            context.gl.vertex_attrib_pointer_f32(3, 1, glow::FLOAT, false, 12 * 4, 4 * 4);
-            context.gl.vertex_attrib_pointer_f32(4, 2, glow::FLOAT, false, 12 * 4, 5 * 4);
-            context.gl.vertex_attrib_pointer_i32(5, 4, glow::UNSIGNED_BYTE, 12 * 4, 7 * 4);
-            context.gl.vertex_attrib_pointer_f32(6, 4, glow::FLOAT, false, 12 * 4, 8 * 4);
+            context.gl.vertex_attrib_pointer_f32(0, 2, glow::FLOAT, false, 12 * 4, 0);
+            context.gl.vertex_attrib_pointer_f32(1, 2, glow::FLOAT, false, 12 * 4, 2 * 4);
+            context.gl.vertex_attrib_pointer_f32(2, 1, glow::FLOAT, false, 12 * 4, 4 * 4);
+            context.gl.vertex_attrib_pointer_f32(3, 2, glow::FLOAT, false, 12 * 4, 5 * 4);
+            context.gl.vertex_attrib_pointer_i32(4, 4, glow::UNSIGNED_BYTE, 12 * 4, 7 * 4);
+            context.gl.vertex_attrib_pointer_f32(5, 4, glow::FLOAT, false, 12 * 4, 8 * 4);
 
+            context.gl.vertex_attrib_divisor(0, 1);
             context.gl.vertex_attrib_divisor(1, 1);
             context.gl.vertex_attrib_divisor(2, 1);
             context.gl.vertex_attrib_divisor(3, 1);
             context.gl.vertex_attrib_divisor(4, 1);
             context.gl.vertex_attrib_divisor(5, 1);
-            context.gl.vertex_attrib_divisor(6, 1);
 
             // UI buffers
             context.gl.bind_vertex_array(Some(context.shape_buffer_vao));
@@ -508,7 +494,7 @@ impl RendererContext {
                     let buffer_vertices_size = self.sprite_buffer_vertices_queue.len() as i32 * 4;
 
                     self.gl.bind_vertex_array(Some(self.sprite_buffer_vao));
-                    self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.sprite_buffer_data_vbo));
+                    self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.sprite_buffer_vbo));
                     self.gl.buffer_data_size(glow::ARRAY_BUFFER, buffer_vertices_size, glow::DYNAMIC_DRAW);
 
                     self.sprite_buffer_resized = false;
@@ -553,13 +539,11 @@ impl RendererContext {
                         }
 
                         self.gl.bind_vertex_array(Some(self.sprite_buffer_vao));
-                        self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.sprite_buffer_data_vbo));
+                        self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.sprite_buffer_vbo));
                         self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.sprite_buffer_ebo));
 
-                        let models_u8 = core::slice::from_raw_parts(
-                            self.sprite_buffer_vertices_queue.as_ptr() as *const u8,
-                            self.sprite_buffer_vertices_count * 4,
-                        );
+                        let models_u8 =
+                            slice::from_raw_parts(self.sprite_buffer_vertices_queue.as_ptr() as *const u8, self.sprite_buffer_vertices_count * 4);
 
                         self.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, 0, models_u8);
 

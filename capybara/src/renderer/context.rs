@@ -41,7 +41,9 @@ pub struct RendererContext {
     pub default_texture_id: usize,
 
     pub active_camera_id: usize,
-    pub active_shader_id: usize,
+    pub active_sprite_shader_id: usize,
+    pub active_shape_shader_id: usize,
+    pub selected_shader_id: usize,
 
     pub cameras: Storage<Camera>,
     pub shaders: Storage<Shader>,
@@ -105,7 +107,9 @@ impl RendererContext {
                 default_texture_id: usize::MAX,
 
                 active_camera_id: usize::MAX,
-                active_shader_id: usize::MAX,
+                active_sprite_shader_id: usize::MAX,
+                active_shape_shader_id: usize::MAX,
+                selected_shader_id: usize::MAX,
 
                 cameras: Default::default(),
                 shaders: Default::default(),
@@ -148,9 +152,11 @@ impl RendererContext {
 
             let sprite_shader = Shader::new(&context, "sprite_default", SPRITE_VERTEX_SHADER, SPRITE_FRAGMENT_SHADER)?;
             context.default_sprite_shader_id = context.shaders.store(sprite_shader);
+            context.active_sprite_shader_id = context.default_sprite_shader_id;
 
             let shape_shader = Shader::new(&context, "shape_default", SHAPE_VERTEX_SHADER, SHAPE_FRAGMENT_SHADER)?;
             context.default_shape_shader_id = context.shaders.store(shape_shader);
+            context.active_shape_shader_id = context.default_shape_shader_id;
 
             let default_texture = Texture::new(&context, &RawTexture::new("blank", "", Vec2::new(1.0, 1.0), &[255, 255, 255, 255]))?;
             context.default_texture_id = context.textures.store(default_texture);
@@ -521,8 +527,8 @@ impl RendererContext {
 
                 match buffer_metadata.content_type {
                     BufferContentType::Sprite => {
-                        if self.active_shader_id != self.default_sprite_shader_id || camera_changed {
-                            match self.shaders.get(self.default_sprite_shader_id) {
+                        if self.selected_shader_id != self.active_sprite_shader_id || camera_changed {
+                            match self.shaders.get(self.active_sprite_shader_id) {
                                 Ok(shader) => {
                                     shader.activate();
                                     shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr());
@@ -535,7 +541,7 @@ impl RendererContext {
                                 self.active_camera_data = camera.clone();
                             }
 
-                            self.active_shader_id = self.default_sprite_shader_id;
+                            self.selected_shader_id = self.active_sprite_shader_id;
                         }
 
                         self.gl.bind_vertex_array(Some(self.sprite_buffer_vao));
@@ -565,8 +571,8 @@ impl RendererContext {
                         self.sprite_buffer_vertices_count = 0;
                     }
                     BufferContentType::Shape => {
-                        if self.active_shader_id != self.default_shape_shader_id || camera_changed {
-                            match self.shaders.get(self.default_shape_shader_id) {
+                        if self.selected_shader_id != self.active_shape_shader_id || camera_changed {
+                            match self.shaders.get(self.active_shape_shader_id) {
                                 Ok(shader) => {
                                     shader.activate();
                                     shader.set_uniform("proj", camera.get_projection_matrix().as_ref().as_ptr());
@@ -579,7 +585,7 @@ impl RendererContext {
                                 self.active_camera_data = camera.clone();
                             }
 
-                            self.active_shader_id = self.default_shape_shader_id;
+                            self.selected_shader_id = self.active_shape_shader_id;
                         }
 
                         self.gl.bind_vertex_array(Some(self.shape_buffer_vao));
@@ -628,6 +634,20 @@ impl RendererContext {
 
         self.active_camera_id = camera_id;
         camera.size = self.viewport_size;
+    }
+
+    pub fn set_sprite_shader(&mut self, shader_id: Option<usize>) {
+        match shader_id {
+            Some(shader_id) => self.active_sprite_shader_id = shader_id,
+            None => self.active_sprite_shader_id = self.default_sprite_shader_id,
+        }
+    }
+
+    pub fn set_shape_shader(&mut self, shader_id: Option<usize>) {
+        match shader_id {
+            Some(shader_id) => self.active_shape_shader_id = shader_id,
+            None => self.active_shape_shader_id = self.default_shape_shader_id,
+        }
     }
 
     pub fn set_viewport(&mut self, size: Vec2) {

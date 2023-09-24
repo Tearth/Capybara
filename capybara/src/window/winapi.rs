@@ -622,7 +622,13 @@ extern "system" fn wnd_proc(hwnd: HWND, message: u32, w_param: usize, l_param: i
                 let y = (l_param >> 16) as i32;
                 let size = Coordinates::new(x, y);
 
-                window.event_queue.push_back(InputEvent::WindowSizeChange { size });
+                // Squish window size changes, so application is not flooded by events
+                if let Some(InputEvent::WindowSizeChange { size: last_size }) = window.event_queue.back_mut() {
+                    *last_size = size;
+                } else {
+                    window.event_queue.push_back(InputEvent::WindowSizeChange { size });
+                }
+
                 window.size = size;
             }
             WM_MOUSELEAVE => {

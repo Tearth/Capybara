@@ -14,13 +14,16 @@ use crate::error_continue;
 use crate::error_return;
 use crate::utils::color::Vec4Color;
 use crate::utils::storage::Storage;
+use anyhow::bail;
 use anyhow::Error;
 use anyhow::Result;
 use glam::Vec2;
 use glam::Vec4;
 use glow::Buffer;
 use glow::Context;
+use glow::Framebuffer;
 use glow::HasContext;
+use glow::Renderbuffer;
 use glow::VertexArray;
 use instant::Instant;
 use log::error;
@@ -53,6 +56,11 @@ pub struct RendererContext {
     active_camera_data: Camera,
     buffer_metadata: Option<BufferMetadata>,
 
+    framebuffer_default: Framebuffer,
+    framebuffer_texture_id: Option<usize>,
+    framebuffer_depth_stencil: Renderbuffer,
+    framebuffer_autofit: bool,
+
     sprite_buffer_vao: VertexArray,
     sprite_buffer_vbo: Buffer,
     sprite_buffer_ebo: Buffer,
@@ -79,6 +87,8 @@ pub struct RendererContext {
 pub struct BufferMetadata {
     pub content_type: BufferContentType,
     pub texture_id: Option<usize>,
+    pub framebuffer_texture_id: Option<usize>,
+    pub selected_shader_id: usize,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -90,6 +100,9 @@ pub enum BufferContentType {
 impl RendererContext {
     pub fn new(gl: Context) -> Result<Self> {
         unsafe {
+            let fbo_default = gl.create_framebuffer().unwrap();
+            let fbo_depth_stencil = gl.create_renderbuffer().unwrap();
+
             let sprite_buffer_vao = gl.create_vertex_array().map_err(Error::msg)?;
             let sprite_buffer_data_vbo = gl.create_buffer().map_err(Error::msg)?;
             let sprite_buffer_ebo = gl.create_buffer().map_err(Error::msg)?;
@@ -119,6 +132,11 @@ impl RendererContext {
                 active_camera_data: Default::default(),
                 buffer_metadata: None,
 
+                framebuffer_default: fbo_default,
+                framebuffer_texture_id: None,
+                framebuffer_depth_stencil: fbo_depth_stencil,
+                framebuffer_autofit: true,
+
                 sprite_buffer_vao,
                 sprite_buffer_vbo: sprite_buffer_data_vbo,
                 sprite_buffer_ebo,
@@ -146,6 +164,9 @@ impl RendererContext {
             context.gl.blend_func(glow::ONE, glow::ONE_MINUS_SRC_ALPHA);
             context.set_clear_color(Vec4::new(0.0, 0.0, 0.0, 1.0));
 
+            #[cfg(not(web))]
+            context.gl.enable(glow::FRAMEBUFFER_SRGB);
+
             let camera = Camera::new(Default::default(), Default::default(), CameraOrigin::LeftBottom);
             context.default_camera_id = context.cameras.store(camera);
             context.set_camera(context.default_camera_id);
@@ -160,6 +181,25 @@ impl RendererContext {
 
             let default_texture = Texture::new(&context, &RawTexture::new("blank", "", Vec2::new(1.0, 1.0), &[255, 255, 255, 255]))?;
             context.default_texture_id = context.textures.store(default_texture);
+
+            // Framebuffer
+            context.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(context.framebuffer_default));
+            context.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(context.framebuffer_depth_stencil));
+            context.gl.renderbuffer_storage(glow::RENDERBUFFER, glow::DEPTH24_STENCIL8, 1, 1);
+            context.gl.bind_renderbuffer(glow::RENDERBUFFER, None);
+
+            context.gl.framebuffer_renderbuffer(
+                glow::FRAMEBUFFER,
+                glow::DEPTH_STENCIL_ATTACHMENT,
+                glow::RENDERBUFFER,
+                Some(context.framebuffer_depth_stencil),
+            );
+
+            if context.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
+                bail!("Failed to initialize framebuffer (code {})", context.gl.get_error());
+            }
+
+            context.gl.bind_framebuffer(glow::FRAMEBUFFER, None);
 
             // Sprite buffers
             context.gl.bind_vertex_array(Some(context.sprite_buffer_vao));
@@ -254,13 +294,17 @@ impl RendererContext {
         }
     }
 
-    pub fn begin_frame(&mut self) {
+    pub fn clear(&self) {
         unsafe {
             self.gl.clear(glow::COLOR_BUFFER_BIT);
+        }
+    }
 
-            if self.active_camera_id != self.default_camera_id {
-                self.set_camera(self.default_camera_id);
-            }
+    pub fn begin_frame(&mut self) {
+        self.clear();
+
+        if self.active_camera_id != self.default_camera_id {
+            self.set_camera(self.default_camera_id);
         }
     }
 
@@ -340,10 +384,12 @@ impl RendererContext {
         if let Some(buffer_metadata) = &self.buffer_metadata {
             if buffer_metadata.content_type != BufferContentType::Sprite || buffer_metadata.texture_id != sprite.texture_id {
                 self.flush_buffer();
-                self.buffer_metadata = Some(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id));
+                self.buffer_metadata =
+                    Some(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id, self.framebuffer_texture_id, self.selected_shader_id));
             }
         } else {
-            self.buffer_metadata = Some(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id));
+            self.buffer_metadata =
+                Some(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id, self.framebuffer_texture_id, self.selected_shader_id));
         }
 
         if self.sprite_buffer_vertices_count + 12 >= self.sprite_buffer_vertices_queue.len() {
@@ -438,10 +484,12 @@ impl RendererContext {
         if let Some(buffer_metadata) = &self.buffer_metadata {
             if buffer_metadata.content_type != BufferContentType::Shape || buffer_metadata.texture_id != shape.texture_id {
                 self.flush_buffer();
-                self.buffer_metadata = Some(BufferMetadata::new(BufferContentType::Shape, shape.texture_id));
+                self.buffer_metadata =
+                    Some(BufferMetadata::new(BufferContentType::Shape, shape.texture_id, self.framebuffer_texture_id, self.selected_shader_id));
             }
         } else {
-            self.buffer_metadata = Some(BufferMetadata::new(BufferContentType::Shape, shape.texture_id));
+            self.buffer_metadata =
+                Some(BufferMetadata::new(BufferContentType::Shape, shape.texture_id, self.framebuffer_texture_id, self.selected_shader_id));
         }
 
         loop {
@@ -637,6 +685,10 @@ impl RendererContext {
     }
 
     pub fn set_sprite_shader(&mut self, shader_id: Option<usize>) {
+        if Some(self.active_sprite_shader_id) != shader_id {
+            self.flush_buffer();
+        }
+
         match shader_id {
             Some(shader_id) => self.active_sprite_shader_id = shader_id,
             None => self.active_sprite_shader_id = self.default_sprite_shader_id,
@@ -644,9 +696,57 @@ impl RendererContext {
     }
 
     pub fn set_shape_shader(&mut self, shader_id: Option<usize>) {
+        if Some(self.active_shape_shader_id) != shader_id {
+            self.flush_buffer();
+        }
+
         match shader_id {
             Some(shader_id) => self.active_shape_shader_id = shader_id,
             None => self.active_shape_shader_id = self.default_shape_shader_id,
+        }
+    }
+
+    pub fn set_target_texture(&mut self, texture_id: Option<usize>, autofit: bool) {
+        if self.framebuffer_texture_id != texture_id {
+            self.flush_buffer();
+        }
+
+        unsafe {
+            match texture_id {
+                Some(texture_id) => {
+                    let texture = match self.textures.get_mut(texture_id) {
+                        Ok(texture) => texture,
+                        Err(err) => error_return!("Failed to set target texture ({})", err),
+                    };
+
+                    if autofit && texture.size != self.viewport_size {
+                        texture.resize(self.viewport_size);
+                    }
+
+                    self.framebuffer_texture_id = Some(texture_id);
+                    self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer_default));
+                    self.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(self.framebuffer_depth_stencil));
+                    self.gl.renderbuffer_storage(glow::RENDERBUFFER, glow::DEPTH24_STENCIL8, texture.size.x as i32, texture.size.y as i32);
+                    self.gl.bind_renderbuffer(glow::RENDERBUFFER, None);
+
+                    self.gl.framebuffer_texture_2d(glow::FRAMEBUFFER, glow::COLOR_ATTACHMENT0, glow::TEXTURE_2D, Some(texture.inner), 0);
+                    self.gl.framebuffer_renderbuffer(
+                        glow::FRAMEBUFFER,
+                        glow::DEPTH_STENCIL_ATTACHMENT,
+                        glow::RENDERBUFFER,
+                        Some(self.framebuffer_depth_stencil),
+                    );
+
+                    if self.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
+                        error_return!("Framebuffer initialization error (code {})", self.gl.get_error());
+                    }
+
+                    self.framebuffer_autofit = autofit;
+                }
+                None => {
+                    self.gl.bind_framebuffer(glow::FRAMEBUFFER, None);
+                }
+            }
         }
     }
 
@@ -660,6 +760,34 @@ impl RendererContext {
                 Err(err) => error_return!("Failed to set viewport ({})", err),
             };
             camera.size = self.viewport_size;
+
+            if let Some(framebuffer_texture_id) = self.framebuffer_texture_id {
+                if self.framebuffer_autofit {
+                    let texture = match self.textures.get_mut(framebuffer_texture_id) {
+                        Ok(texture) => texture,
+                        Err(err) => error_return!("Failed to set target texture ({})", err),
+                    };
+
+                    texture.resize(size);
+
+                    self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer_default));
+                    self.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(self.framebuffer_depth_stencil));
+                    self.gl.renderbuffer_storage(glow::RENDERBUFFER, glow::DEPTH24_STENCIL8, texture.size.x as i32, texture.size.y as i32);
+                    self.gl.bind_renderbuffer(glow::RENDERBUFFER, None);
+
+                    self.gl.framebuffer_texture_2d(glow::FRAMEBUFFER, glow::COLOR_ATTACHMENT0, glow::TEXTURE_2D, Some(texture.inner), 0);
+                    self.gl.framebuffer_renderbuffer(
+                        glow::FRAMEBUFFER,
+                        glow::DEPTH_STENCIL_ATTACHMENT,
+                        glow::RENDERBUFFER,
+                        Some(self.framebuffer_depth_stencil),
+                    );
+
+                    if self.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
+                        error_return!("Framebuffer initialization error (code {})", self.gl.get_error());
+                    }
+                }
+            }
         }
     }
 
@@ -684,7 +812,7 @@ impl RendererContext {
 }
 
 impl BufferMetadata {
-    pub fn new(content_type: BufferContentType, texture_id: Option<usize>) -> Self {
-        Self { content_type, texture_id }
+    pub fn new(content_type: BufferContentType, texture_id: Option<usize>, framebuffer_texture_id: Option<usize>, selected_shader_id: usize) -> Self {
+        Self { content_type, texture_id, framebuffer_texture_id, selected_shader_id }
     }
 }

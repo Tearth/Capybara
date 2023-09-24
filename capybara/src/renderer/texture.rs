@@ -46,6 +46,7 @@ impl Texture {
 
             let gl = renderer.gl.clone();
             let inner = gl.create_texture().map_err(Error::msg)?;
+            let data = if raw.data.len() != 0 { Some(&raw.data) } else { None };
 
             gl.bind_texture(glow::TEXTURE_2D, Some(inner));
             gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, glow::CLAMP_TO_EDGE as i32);
@@ -61,7 +62,7 @@ impl Texture {
                 0,
                 glow::RGBA,
                 glow::UNSIGNED_BYTE,
-                Some(&raw.data),
+                data.map(|p| p.as_slice()),
             );
             gl.generate_mipmap(glow::TEXTURE_2D);
 
@@ -86,6 +87,31 @@ impl Texture {
                 glow::PixelUnpackData::Slice(data),
             );
             self.gl.generate_mipmap(glow::TEXTURE_2D);
+        }
+    }
+
+    pub fn resize(&mut self, size: Vec2) {
+        unsafe {
+            info!("Resizing texture {} ({}x{})", self.name, size.x, size.y);
+
+            self.gl.bind_texture(glow::TEXTURE_2D, Some(self.inner));
+            self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, glow::CLAMP_TO_EDGE as i32);
+            self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_T, glow::CLAMP_TO_EDGE as i32);
+            self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MIN_FILTER, glow::LINEAR_MIPMAP_LINEAR as i32);
+            self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MAG_FILTER, glow::LINEAR as i32);
+            self.gl.tex_image_2d(
+                glow::TEXTURE_2D,
+                0,
+                glow::SRGB8_ALPHA8 as i32,
+                size.x as i32,
+                size.y as i32,
+                0,
+                glow::RGBA,
+                glow::UNSIGNED_BYTE,
+                None,
+            );
+            self.gl.generate_mipmap(glow::TEXTURE_2D);
+            self.size = size;
         }
     }
 

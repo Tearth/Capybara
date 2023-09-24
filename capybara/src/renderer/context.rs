@@ -12,6 +12,8 @@ use crate::assets::loader::AssetsLoader;
 use crate::assets::RawTexture;
 use crate::error_continue;
 use crate::error_return;
+use crate::renderer::texture::TextureFilterMag;
+use crate::renderer::texture::TextureFilterMin;
 use crate::utils::color::Vec4Color;
 use crate::utils::storage::Storage;
 use anyhow::bail;
@@ -257,10 +259,12 @@ impl RendererContext {
                 }
             }
 
-            let texture = match Texture::new(self, raw) {
-                Ok(sound) => sound,
+            let mut texture = match Texture::new(self, raw) {
+                Ok(texture) => texture,
                 Err(err) => error_continue!("Failed to load texture {} ({})", raw.name, err),
             };
+
+            texture.set_filters(TextureFilterMin::LinearMipmap, TextureFilterMag::Linear);
 
             if let Err(err) = self.textures.store_with_name(&raw.name, texture) {
                 error!("Failed to instantiate texture {} ({})", raw.name, err);

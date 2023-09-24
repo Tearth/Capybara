@@ -6,7 +6,8 @@ use crate::renderer::camera::CameraOrigin;
 use crate::renderer::context::RendererContext;
 use crate::renderer::shape::Shape;
 use crate::renderer::texture::Texture;
-use crate::renderer::texture::TextureFilter;
+use crate::renderer::texture::TextureFilterMag;
+use crate::renderer::texture::TextureFilterMin;
 use crate::window::InputEvent;
 use crate::window::Key;
 use crate::window::Modifiers;
@@ -305,16 +306,16 @@ impl UiContext {
         };
 
         let minification = match options.minification {
-            egui::TextureFilter::Linear => TextureFilter::Linear,
-            egui::TextureFilter::Nearest => TextureFilter::Nearest,
+            egui::TextureFilter::Linear => TextureFilterMin::Linear,
+            egui::TextureFilter::Nearest => TextureFilterMin::Nearest,
         };
 
         let magnification = match options.magnification {
-            egui::TextureFilter::Linear => TextureFilter::Linear,
-            egui::TextureFilter::Nearest => TextureFilter::Nearest,
+            egui::TextureFilter::Linear => TextureFilterMag::Linear,
+            egui::TextureFilter::Nearest => TextureFilterMag::Nearest,
         };
 
-        match renderer.textures.get(texture_id) {
+        match renderer.textures.get_mut(texture_id) {
             Ok(texture) => texture.set_filters(minification, magnification),
             Err(err) => error!("{}", err),
         };

@@ -14,6 +14,9 @@ pub struct Texture {
     pub size: Vec2,
     pub inner: glow::Texture,
     pub kind: TextureKind,
+    pub filtering_min: TextureFilterMin,
+    pub filtering_mag: TextureFilterMag,
+    pub wrap_mode: TextureWrapMode,
     gl: Rc<Context>,
 }
 
@@ -28,15 +31,23 @@ pub enum TextureKind {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum TextureFilter {
+pub enum TextureFilterMin {
+    Linear,
+    Nearest,
+    LinearMipmap,
+    NearestMipmap,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum TextureFilterMag {
     Linear,
     Nearest,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum TextureWrapMode {
-    Repeat,
     Clamp,
+    Repeat,
 }
 
 impl Texture {
@@ -51,8 +62,8 @@ impl Texture {
             gl.bind_texture(glow::TEXTURE_2D, Some(inner));
             gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, glow::CLAMP_TO_EDGE as i32);
             gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_T, glow::CLAMP_TO_EDGE as i32);
-            gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MIN_FILTER, glow::LINEAR_MIPMAP_LINEAR as i32);
-            gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MAG_FILTER, glow::LINEAR as i32);
+            gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MIN_FILTER, glow::NEAREST as i32);
+            gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MAG_FILTER, glow::NEAREST as i32);
             gl.tex_image_2d(
                 glow::TEXTURE_2D,
                 0,
@@ -64,9 +75,17 @@ impl Texture {
                 glow::UNSIGNED_BYTE,
                 data.map(|p| p.as_slice()),
             );
-            gl.generate_mipmap(glow::TEXTURE_2D);
 
-            Ok(Self { name: raw.name.to_string(), size: raw.size, inner, kind: TextureKind::Simple, gl })
+            Ok(Self {
+                name: raw.name.to_string(),
+                size: raw.size,
+                inner,
+                kind: TextureKind::Simple,
+                filtering_min: TextureFilterMin::Nearest,
+                filtering_mag: TextureFilterMag::Nearest,
+                wrap_mode: TextureWrapMode::Clamp,
+                gl,
+            })
         }
     }
 
@@ -86,7 +105,10 @@ impl Texture {
                 glow::UNSIGNED_BYTE,
                 glow::PixelUnpackData::Slice(data),
             );
-            self.gl.generate_mipmap(glow::TEXTURE_2D);
+
+            if self.filtering_min == TextureFilterMin::LinearMipmap || self.filtering_min == TextureFilterMin::NearestMipmap {
+                self.gl.generate_mipmap(glow::TEXTURE_2D);
+            }
         }
     }
 
@@ -95,10 +117,6 @@ impl Texture {
             info!("Resizing texture {} ({}x{})", self.name, size.x, size.y);
 
             self.gl.bind_texture(glow::TEXTURE_2D, Some(self.inner));
-            self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, glow::CLAMP_TO_EDGE as i32);
-            self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_T, glow::CLAMP_TO_EDGE as i32);
-            self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MIN_FILTER, glow::LINEAR_MIPMAP_LINEAR as i32);
-            self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MAG_FILTER, glow::LINEAR as i32);
             self.gl.tex_image_2d(
                 glow::TEXTURE_2D,
                 0,
@@ -110,33 +128,45 @@ impl Texture {
                 glow::UNSIGNED_BYTE,
                 None,
             );
-            self.gl.generate_mipmap(glow::TEXTURE_2D);
+
+            if self.filtering_min == TextureFilterMin::LinearMipmap || self.filtering_min == TextureFilterMin::NearestMipmap {
+                self.gl.generate_mipmap(glow::TEXTURE_2D);
+            }
+
             self.size = size;
         }
     }
 
-    pub fn set_filters(&self, minification: TextureFilter, magnification: TextureFilter) {
+    pub fn set_filters(&mut self, minification: TextureFilterMin, magnification: TextureFilterMag) {
         info!("Updating texture {} (minification {:?}, magnification {:?})", self.name, minification, magnification);
 
         let minification_value = match minification {
-            TextureFilter::Linear => glow::LINEAR_MIPMAP_LINEAR,
-            TextureFilter::Nearest => glow::NEAREST_MIPMAP_NEAREST,
+            TextureFilterMin::Linear => glow::LINEAR,
+            TextureFilterMin::Nearest => glow::NEAREST,
+            TextureFilterMin::LinearMipmap => glow::LINEAR_MIPMAP_LINEAR,
+            TextureFilterMin::NearestMipmap => glow::NEAREST_MIPMAP_NEAREST,
         } as i32;
 
         let magnification_value = match magnification {
-            TextureFilter::Linear => glow::LINEAR,
-            TextureFilter::Nearest => glow::NEAREST,
+            TextureFilterMag::Linear => glow::LINEAR,
+            TextureFilterMag::Nearest => glow::NEAREST,
         } as i32;
 
         unsafe {
             self.gl.bind_texture(glow::TEXTURE_2D, Some(self.inner));
             self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MIN_FILTER, minification_value);
             self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MAG_FILTER, magnification_value);
-            self.gl.generate_mipmap(glow::TEXTURE_2D);
+
+            if minification == TextureFilterMin::LinearMipmap || minification == TextureFilterMin::NearestMipmap {
+                self.gl.generate_mipmap(glow::TEXTURE_2D);
+            }
         }
+
+        self.filtering_min = minification;
+        self.filtering_mag = magnification;
     }
 
-    pub fn set_wrap_mode(&self, mode: TextureWrapMode) {
+    pub fn set_wrap_mode(&mut self, mode: TextureWrapMode) {
         info!("Updating texture {} (wrap mode {:?})", self.name, mode);
 
         let value = match mode {
@@ -149,6 +179,8 @@ impl Texture {
             self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, value);
             self.gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_T, value);
         }
+
+        self.wrap_mode = mode;
     }
 
     pub fn activate(&self) {

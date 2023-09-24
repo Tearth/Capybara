@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["TextureFilter","TextureKind","TextureWrapMode"],"struct":["AtlasEntity","Texture"]};
+window.SIDEBAR_ITEMS = {"enum":["TextureFilterMag","TextureFilterMin","TextureKind","TextureWrapMode"],"struct":["AtlasEntity","Texture"]};

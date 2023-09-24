@@ -7,6 +7,7 @@ pub struct Camera {
     pub position: Vec2,
     pub size: Vec2,
     pub origin: CameraOrigin,
+    pub autofit: bool,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -16,8 +17,8 @@ pub enum CameraOrigin {
 }
 
 impl Camera {
-    pub fn new(position: Vec2, size: Vec2, origin: CameraOrigin) -> Self {
-        Self { position, size, origin }
+    pub fn new(position: Vec2, size: Vec2, origin: CameraOrigin, autofit: bool) -> Self {
+        Self { position, size, origin, autofit }
     }
 
     pub fn get_center_position(&self) -> Vec2 {
@@ -58,6 +59,6 @@ impl Camera {
 
 impl Default for Camera {
     fn default() -> Self {
-        Self::new(Vec2::ZERO, Vec2::ZERO, CameraOrigin::LeftBottom)
+        Self::new(Vec2::ZERO, Vec2::ZERO, CameraOrigin::LeftBottom, true)
     }
 }

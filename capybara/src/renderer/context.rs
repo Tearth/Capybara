@@ -167,7 +167,7 @@ impl RendererContext {
             #[cfg(not(web))]
             context.gl.enable(glow::FRAMEBUFFER_SRGB);
 
-            let camera = Camera::new(Default::default(), Default::default(), CameraOrigin::LeftBottom);
+            let camera = Camera::new(Default::default(), Default::default(), CameraOrigin::LeftBottom, true);
             context.default_camera_id = context.cameras.store(camera);
             context.set_camera(context.default_camera_id);
 
@@ -680,8 +680,11 @@ impl RendererContext {
             Err(err) => error_return!("Failed to set camera ({})", err),
         };
 
+        if camera.autofit {
+            camera.size = self.viewport_size;
+        }
+
         self.active_camera_id = camera_id;
-        camera.size = self.viewport_size;
     }
 
     pub fn set_sprite_shader(&mut self, shader_id: Option<usize>) {
@@ -759,7 +762,10 @@ impl RendererContext {
                 Ok(camera) => camera,
                 Err(err) => error_return!("Failed to set viewport ({})", err),
             };
-            camera.size = self.viewport_size;
+
+            if camera.autofit {
+                camera.size = self.viewport_size;
+            }
 
             if let Some(framebuffer_texture_id) = self.framebuffer_texture_id {
                 if self.framebuffer_autofit {

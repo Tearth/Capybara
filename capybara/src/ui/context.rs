@@ -60,7 +60,7 @@ impl UiContext {
             collected_events: Default::default(),
             modifiers: Default::default(),
 
-            camera_id: renderer.cameras.store(Camera::new(Default::default(), renderer.viewport_size, CameraOrigin::LeftTop)),
+            camera_id: renderer.cameras.store(Camera::new(Default::default(), renderer.viewport_size, CameraOrigin::LeftTop, true)),
             textures: Default::default(),
             handles: Default::default(),
 

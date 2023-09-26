@@ -166,9 +166,6 @@ impl RendererContext {
             context.gl.blend_func(glow::ONE, glow::ONE_MINUS_SRC_ALPHA);
             context.set_clear_color(Vec4::new(0.0, 0.0, 0.0, 1.0));
 
-            #[cfg(not(web))]
-            context.gl.enable(glow::FRAMEBUFFER_SRGB);
-
             let camera = Camera::new(Default::default(), Default::default(), CameraOrigin::LeftBottom, true);
             context.default_camera_id = context.cameras.store(camera);
             context.set_camera(context.default_camera_id);
@@ -744,6 +741,9 @@ impl RendererContext {
                         Some(self.framebuffer_depth_stencil),
                     );
 
+                    #[cfg(not(web))]
+                    self.gl.enable(glow::FRAMEBUFFER_SRGB);
+
                     if self.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
                         error_return!("Framebuffer initialization error (code {})", self.gl.get_error());
                     }
@@ -752,6 +752,9 @@ impl RendererContext {
                 }
                 None => {
                     self.gl.bind_framebuffer(glow::FRAMEBUFFER, None);
+
+                    #[cfg(not(web))]
+                    self.gl.disable(glow::FRAMEBUFFER_SRGB);
                 }
             }
         }

@@ -1,5 +1,3 @@
-#![allow(non_upper_case_globals)]
-
 use super::*;
 use crate::*;
 use ::x11::glx;
@@ -11,6 +9,9 @@ use ::x11::xlib::*;
 use anyhow::bail;
 use anyhow::Result;
 use glow::Context;
+use glow::HasContext;
+use log::debug;
+use log::info;
 use log::Level;
 use std::collections::VecDeque;
 use std::ffi::*;
@@ -60,7 +61,7 @@ impl WindowContextX11 {
 
             let display = xlib::XOpenDisplay(ptr::null());
             if display.is_null() {
-                bail!("XOpenDisplay error");
+                bail!("Failed to open display");
             }
 
             let screen = xlib::XDefaultScreen(display);
@@ -95,13 +96,11 @@ impl WindowContextX11 {
             let frame_buffer_config = glx::glXChooseFBConfig(display, screen, attributes_ptr, &mut frame_buffers_count);
 
             if frame_buffer_config.is_null() {
-                bail!("glXChooseFBConfig error");
+                bail!("Failed to choose framebuffer config");
             }
 
             let mut best_frame_buffer_config_index = -1;
-            let mut worst_frame_buffer_config_index = -1;
             let mut best_samples = -1;
-            let mut worst_samples = 999;
             let frame_buffer_config_slice = slice::from_raw_parts_mut(frame_buffer_config, frame_buffers_count as usize);
 
             for i in 0..frame_buffers_count {
@@ -112,19 +111,13 @@ impl WindowContextX11 {
                     let mut samp_buf = 0;
                     let mut samples = 0;
 
-                    glx::glXGetFBConfigAttrib(display, config, GLX_SAMPLE_BUFFERS as i32, &mut samp_buf);
-                    glx::glXGetFBConfigAttrib(display, config, GLX_SAMPLES as i32, &mut samples);
+                    glx::glXGetFBConfigAttrib(display, config, GLX_SAMPLE_BUFFERS, &mut samp_buf);
+                    glx::glXGetFBConfigAttrib(display, config, GLX_SAMPLES, &mut samples);
 
                     if best_frame_buffer_config_index < 0 || (samp_buf != 0 && samples > best_samples) {
                         best_frame_buffer_config_index = i;
                         best_samples = samples;
                     }
-
-                    if worst_frame_buffer_config_index < 0 || samp_buf == 0 || samples < worst_samples {
-                        worst_frame_buffer_config_index = i;
-                    }
-
-                    worst_samples = samples;
                 }
 
                 xlib::XFree(visual_info as *mut c_void);
@@ -134,14 +127,14 @@ impl WindowContextX11 {
             let visual_info = glx::glXGetVisualFromFBConfig(display, best_frame_buffer_config);
 
             if visual_info.is_null() || screen != (*visual_info).screen {
-                bail!("glXGetVisualFromFBConfig error");
+                bail!("Failed to get visual from framebuffer config");
             }
 
             xlib::XFree(frame_buffer_config as *mut c_void);
 
             let event_mask =
                 ExposureMask | StructureNotifyMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | PointerMotionMask;
-            let colormap = xlib::XCreateColormap(display, xlib::XRootWindow(display, screen), (*visual_info).visual, AllocNone as i32);
+            let colormap = xlib::XCreateColormap(display, xlib::XRootWindow(display, screen), (*visual_info).visual, AllocNone);
 
             let mut window_attributes = XSetWindowAttributes {
                 background_pixmap: 0,
@@ -231,11 +224,11 @@ impl WindowContextX11 {
             let glx_context = if let Some(glx_create_context_attribs_arb) = glx_extensions.glx_create_context_attribs_arb {
                 (glx_create_context_attribs_arb)(self.display, self.frame_buffer_config, ptr::null_mut(), 1, context_attributes_ptr)
             } else {
-                bail!("glXCreateContextAttribsARB error");
+                bail!("Failed to create GLX context (glXCreateContextAttribsARB not available)");
             };
 
             if glx_context.is_null() {
-                bail!("glXCreateContextAttribsARB error");
+                bail!("Failed to create GLX context");
             }
 
             x11::XSync(self.display, 0);
@@ -252,7 +245,7 @@ impl WindowContextX11 {
         unsafe {
             let gl = glow::Context::from_loader_function(|name| {
                 let name_cstr = CString::new(name).unwrap();
-                let proc = glx::glXGetProcAddressARB(name_cstr.as_ptr() as *const u8).unwrap() as *const _;
+                let proc = glx::glXGetProcAddressARB(name_cstr.as_ptr() as *const u8).unwrap() as *const c_void;
 
                 if proc.is_null() {
                     debug!("GL function {} unavailable", name);
@@ -284,7 +277,7 @@ impl WindowContextX11 {
                     let wm_fullscreen = xlib::XInternAtom(self.display, net_wm_state_fullscreen_cstr.as_ptr(), 1);
 
                     let mut event: XEvent = mem::zeroed();
-                    event.type_ = ClientMessage as i32;
+                    event.type_ = ClientMessage;
                     event.client_message.window = self.window;
                     event.client_message.format = 32;
                     event.client_message.message_type = wm_state;
@@ -297,7 +290,7 @@ impl WindowContextX11 {
                         self.display,
                         xlib::XDefaultRootWindow(self.display),
                         0,
-                        SubstructureNotifyMask as i64 | SubstructureRedirectMask as i64,
+                        SubstructureNotifyMask | SubstructureRedirectMask,
                         &mut event,
                     );
 
@@ -312,7 +305,7 @@ impl WindowContextX11 {
                     let wm_fullscreen = xlib::XInternAtom(self.display, net_wm_state_fullscreen_cstr.as_ptr(), 1);
 
                     let mut event: XEvent = mem::zeroed();
-                    event.type_ = ClientMessage as i32;
+                    event.type_ = ClientMessage;
                     event.client_message.window = self.window;
                     event.client_message.format = 32;
                     event.client_message.message_type = wm_state;
@@ -325,7 +318,7 @@ impl WindowContextX11 {
                         self.display,
                         xlib::XDefaultRootWindow(self.display),
                         0,
-                        SubstructureNotifyMask as i64 | SubstructureRedirectMask as i64,
+                        SubstructureNotifyMask | SubstructureRedirectMask,
                         &mut event,
                     );
                 }
@@ -341,7 +334,7 @@ impl WindowContextX11 {
 
                 match event.type_ {
                     ConfigureNotify => {
-                        if event.configure.width != (self.size.x as i32) || event.configure.height != (self.size.y as i32) {
+                        if event.configure.width != self.size.x || event.configure.height != self.size.y {
                             let size = Coordinates::new(event.configure.width, event.configure.height);
                             self.event_queue.push_back(InputEvent::WindowSizeChange { size });
                             self.size = size;

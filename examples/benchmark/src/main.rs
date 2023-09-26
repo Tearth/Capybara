@@ -16,7 +16,6 @@ use capybara::egui::SidePanel;
 use capybara::fast_gpu;
 use capybara::fastrand;
 use capybara::glam::Vec2;
-use capybara::glam::Vec4;
 use capybara::renderer::shader::Shader;
 use capybara::renderer::sprite::Sprite;
 use capybara::renderer::sprite::TextureType;
@@ -210,7 +209,10 @@ impl MainScene {
             }
         }
 
-        state.renderer.shaders.get_mut(state.renderer.selected_shader_id)?.activate();
+        if state.renderer.selected_shader_id != usize::MAX {
+            state.renderer.shaders.get_mut(state.renderer.selected_shader_id)?.activate();
+        }
+
         Ok(())
     }
 }

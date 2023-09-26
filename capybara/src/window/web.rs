@@ -10,7 +10,6 @@ use log::info;
 use log::Level;
 use std::cell::RefCell;
 use std::collections::VecDeque;
-use std::panic;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use web_sys::Document;
@@ -53,7 +52,7 @@ pub struct WindowContextWeb {
 impl WindowContextWeb {
     pub fn new(_: &str, _: WindowStyle) -> Result<Box<Self>> {
         #[cfg(debug_assertions)]
-        panic::set_hook(Box::new(console_error_panic_hook::hook));
+        std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
         #[cfg(debug_assertions)]
         console_log::init_with_level(Level::Info).map_err(|_| anyhow!("Logger initialization failed"))?;

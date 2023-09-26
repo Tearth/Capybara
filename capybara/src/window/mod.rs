@@ -168,3 +168,9 @@ impl From<Coordinates> for Vec2 {
         Vec2::new(coordinates.x as f32, coordinates.y as f32)
     }
 }
+
+impl From<Vec2> for Coordinates {
+    fn from(vec: Vec2) -> Self {
+        Coordinates::new(vec.x as i32, vec.y as i32)
+    }
+}

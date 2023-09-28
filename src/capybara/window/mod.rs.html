@@ -168,6 +168,12 @@
 <a href="#168" id="168">168</a>
 <a href="#169" id="169">169</a>
 <a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glam::Vec2;
 
 <span class="attr">#[cfg(windows)]
@@ -336,6 +342,12 @@
 <span class="kw">impl </span>From&lt;Coordinates&gt; <span class="kw">for </span>Vec2 {
     <span class="kw">fn </span>from(coordinates: Coordinates) -&gt; <span class="self">Self </span>{
         Vec2::new(coordinates.x <span class="kw">as </span>f32, coordinates.y <span class="kw">as </span>f32)
+    }
+}
+
+<span class="kw">impl </span>From&lt;Vec2&gt; <span class="kw">for </span>Coordinates {
+    <span class="kw">fn </span>from(vec: Vec2) -&gt; <span class="self">Self </span>{
+        Coordinates::new(vec.x <span class="kw">as </span>i32, vec.y <span class="kw">as </span>i32)
     }
 }
 </code></pre></div></section></main></body></html>

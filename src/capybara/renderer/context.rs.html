@@ -826,6 +826,9 @@
 <a href="#826" id="826">826</a>
 <a href="#827" id="827">827</a>
 <a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::camera::Camera;
 <span class="kw">use </span><span class="kw">super</span>::camera::CameraOrigin;
 <span class="kw">use </span><span class="kw">super</span>::shader::Shader;
@@ -993,9 +996,6 @@
             context.gl.enable(glow::BLEND);
             context.gl.blend_func(glow::ONE, glow::ONE_MINUS_SRC_ALPHA);
             context.set_clear_color(Vec4::new(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>));
-
-            <span class="attr">#[cfg(not(web))]
-            </span>context.gl.enable(glow::FRAMEBUFFER_SRGB);
 
             <span class="kw">let </span>camera = Camera::new(Default::default(), Default::default(), CameraOrigin::LeftBottom, <span class="bool-val">true</span>);
             context.default_camera_id = context.cameras.store(camera);
@@ -1572,6 +1572,9 @@
                         <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer_depth_stencil),
                     );
 
+                    <span class="attr">#[cfg(not(web))]
+                    </span><span class="self">self</span>.gl.enable(glow::FRAMEBUFFER_SRGB);
+
                     <span class="kw">if </span><span class="self">self</span>.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
                         <span class="macro">error_return!</span>(<span class="string">&quot;Framebuffer initialization error (code {})&quot;</span>, <span class="self">self</span>.gl.get_error());
                     }
@@ -1580,6 +1583,9 @@
                 }
                 <span class="prelude-val">None </span>=&gt; {
                     <span class="self">self</span>.gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">None</span>);
+
+                    <span class="attr">#[cfg(not(web))]
+                    </span><span class="self">self</span>.gl.disable(glow::FRAMEBUFFER_SRGB);
                 }
             }
         }

@@ -144,11 +144,96 @@
 <a href="#144" id="144">144</a>
 <a href="#145" id="145">145</a>
 <a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>capybara::anyhow::Result;
 <span class="kw">use </span>capybara::app::ApplicationContext;
 <span class="kw">use </span>capybara::app::ApplicationState;
 <span class="kw">use </span>capybara::assets::loader::AssetsLoader;
 <span class="kw">use </span>capybara::assets::AssetsLoadingStatus;
+<span class="kw">use </span>capybara::assets::RawTexture;
 <span class="kw">use </span>capybara::egui::panel::Side;
 <span class="kw">use </span>capybara::egui::Color32;
 <span class="kw">use </span>capybara::egui::FontFamily;
@@ -161,7 +246,10 @@
 <span class="kw">use </span>capybara::fast_gpu;
 <span class="kw">use </span>capybara::fastrand;
 <span class="kw">use </span>capybara::glam::Vec2;
+<span class="kw">use </span>capybara::renderer::shader::Shader;
 <span class="kw">use </span>capybara::renderer::sprite::Sprite;
+<span class="kw">use </span>capybara::renderer::sprite::TextureType;
+<span class="kw">use </span>capybara::renderer::texture::Texture;
 <span class="kw">use </span>capybara::scene::FrameCommand;
 <span class="kw">use </span>capybara::scene::Scene;
 <span class="kw">use </span>capybara::window::Coordinates;
@@ -182,11 +270,24 @@
     objects: Vec&lt;Object&gt;,
     initialized: bool,
     delta_history: VecDeque&lt;f32&gt;,
+    target_texture_id: usize,
+    selected_shader: SelectedShader,
+
+    blur_shader_id: usize,
+    grayscale_shader_id: usize,
 }
 
 <span class="kw">struct </span>Object {
     sprite: Sprite,
     direction: Vec2,
+}
+
+<span class="attr">#[derive(Default, PartialEq)]
+</span><span class="kw">enum </span>SelectedShader {
+    <span class="attr">#[default]
+    </span><span class="prelude-val">None</span>,
+    Blur,
+    Grayscale,
 }
 
 <span class="kw">impl </span>Scene&lt;GlobalData&gt; <span class="kw">for </span>MainScene {
@@ -198,9 +299,11 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>input(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;, event: InputEvent) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">fn </span>input(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>state: ApplicationState&lt;GlobalData&gt;, event: InputEvent) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">if let </span>InputEvent::KeyPress { key: Key::Escape, repeat: <span class="kw">_</span>, modifiers: <span class="kw">_ </span>} = event {
             state.window.close();
+        } <span class="kw">else if let </span>InputEvent::WindowSizeChange { size } = event {
+            <span class="self">self</span>.update_shaders_resolution(<span class="kw-2">&amp;mut </span>state, size)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -210,7 +313,7 @@
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
     }
 
-    <span class="kw">fn </span>frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;, <span class="kw">_</span>: f32, delta: f32) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;FrameCommand&gt;&gt; {
+    <span class="kw">fn </span>frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>state: ApplicationState&lt;GlobalData&gt;, <span class="kw">_</span>: f32, delta: f32) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;FrameCommand&gt;&gt; {
         <span class="self">self</span>.delta_history.push_back(delta);
 
         <span class="kw">if </span><span class="self">self</span>.delta_history.len() &gt; <span class="number">100 </span>{
@@ -222,7 +325,7 @@
             state.ui.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>);
             state.window.set_swap_interval(<span class="number">0</span>);
 
-            <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">200000 </span>{
+            <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">5000 </span>{
                 <span class="kw">let </span>position = Vec2::new(
                     fastrand::u32(<span class="number">0</span>..state.renderer.viewport_size.x <span class="kw">as </span>u32) <span class="kw">as </span>f32,
                     fastrand::u32(<span class="number">0</span>..state.renderer.viewport_size.y <span class="kw">as </span>u32) <span class="kw">as </span>f32,
@@ -234,7 +337,25 @@
                 });
             }
 
+            <span class="kw">let </span>target_texture = Texture::new(<span class="kw-2">&amp;</span>state.renderer, <span class="kw-2">&amp;</span>RawTexture::new(<span class="string">&quot;target_texture&quot;</span>, <span class="string">&quot;&quot;</span>, Vec2::new(<span class="number">400.0</span>, <span class="number">400.0</span>), <span class="kw-2">&amp;</span>Vec::new()))<span class="question-mark">?</span>;
+            <span class="self">self</span>.target_texture_id = state.renderer.textures.store(target_texture);
+
+            <span class="kw">let </span>blur_shader = Shader::new(<span class="kw-2">&amp;</span>state.renderer, <span class="string">&quot;blur&quot;</span>, <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/blur.vert&quot;</span>), <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/blur.frag&quot;</span>))<span class="question-mark">?</span>;
+            <span class="self">self</span>.blur_shader_id = state.renderer.shaders.store(blur_shader);
+
+            <span class="kw">let </span>grayscale_shader =
+                Shader::new(<span class="kw-2">&amp;</span>state.renderer, <span class="string">&quot;grayscale&quot;</span>, <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/grayscale.vert&quot;</span>), <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/grayscale.frag&quot;</span>))<span class="question-mark">?</span>;
+            <span class="self">self</span>.grayscale_shader_id = state.renderer.shaders.store(grayscale_shader);
+
+            <span class="kw">let </span>resolution = state.renderer.viewport_size.into();
+            <span class="self">self</span>.update_shaders_resolution(<span class="kw-2">&amp;mut </span>state, resolution)<span class="question-mark">?</span>;
+
             <span class="self">self</span>.initialized = <span class="bool-val">true</span>;
+        }
+
+        <span class="kw">if </span><span class="self">self</span>.initialized &amp;&amp; <span class="self">self</span>.selected_shader != SelectedShader::None {
+            state.renderer.set_target_texture(<span class="prelude-val">Some</span>(<span class="self">self</span>.target_texture_id), <span class="bool-val">true</span>);
+            state.renderer.clear();
         }
 
         <span class="kw">for </span>object <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.objects {
@@ -253,12 +374,32 @@
             state.renderer.draw_sprite(<span class="kw-2">&amp;</span>object.sprite);
         }
 
+        <span class="kw">if </span><span class="self">self</span>.initialized &amp;&amp; <span class="self">self</span>.selected_shader != SelectedShader::None {
+            <span class="kw">let </span>shader_id = <span class="kw">match </span><span class="self">self</span>.selected_shader {
+                SelectedShader::Blur =&gt; <span class="self">self</span>.blur_shader_id,
+                SelectedShader::Grayscale =&gt; <span class="self">self</span>.grayscale_shader_id,
+                <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Invalid shader&quot;</span>),
+            };
+
+            state.renderer.set_target_texture(<span class="prelude-val">None</span>, <span class="bool-val">false</span>);
+            state.renderer.set_sprite_shader(<span class="prelude-val">Some</span>(shader_id));
+
+            state.renderer.draw_sprite(<span class="kw-2">&amp;</span>Sprite {
+                texture_id: <span class="prelude-val">Some</span>(<span class="self">self</span>.target_texture_id),
+                texture_type: TextureType::Simple,
+                anchor: Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>),
+                ..Default::default()
+            });
+
+            state.renderer.set_sprite_shader(<span class="prelude-val">None</span>);
+        }
+
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
     }
 
     <span class="kw">fn </span>ui(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;, input: RawInput) -&gt; <span class="prelude-ty">Result</span>&lt;(FullOutput, <span class="prelude-ty">Option</span>&lt;FrameCommand&gt;)&gt; {
         <span class="kw">let </span>output = state.ui.inner.read().unwrap().run(input, |context| {
-            SidePanel::new(Side::Left, Id::new(<span class="string">&quot;side&quot;</span>)).resizable(<span class="bool-val">false</span>).show(context, |ui| {
+            SidePanel::new(Side::Left, Id::new(<span class="string">&quot;side&quot;</span>)).exact_width(<span class="number">120.0</span>).resizable(<span class="bool-val">false</span>).show(context, |ui| {
                 <span class="kw">if </span><span class="self">self</span>.initialized {
                     <span class="kw">let </span>font = FontId { size: <span class="number">24.0</span>, family: FontFamily::Name(<span class="string">&quot;Kenney Pixel&quot;</span>.into()) };
                     <span class="kw">let </span>color = Color32::from_rgb(<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>);
@@ -270,12 +411,39 @@
                     <span class="kw">let </span>label = <span class="macro">format!</span>(<span class="string">&quot;Delta: {:.2}&quot;</span>, delta_average * <span class="number">1000.0</span>);
 
                     ui.label(RichText::new(label).font(font.clone()).heading().color(color));
-                    ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">&quot;N: {}&quot;</span>, <span class="self">self</span>.objects.len())).font(font).heading().color(color));
+                    ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">&quot;N: {}&quot;</span>, <span class="self">self</span>.objects.len())).font(font.clone()).heading().color(color));
+
+                    ui.add_space(<span class="number">20.0</span>);
+                    ui.label(RichText::new(<span class="string">&quot;Shaders:&quot;</span>).font(font.clone()).heading().color(color));
+                    ui.radio_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>.selected_shader, SelectedShader::None, RichText::new(<span class="string">&quot;None&quot;</span>).font(font.clone()).heading().color(color));
+                    ui.radio_value(<span class="kw-2">&amp;mut </span><span class="self">self</span>.selected_shader, SelectedShader::Blur, RichText::new(<span class="string">&quot;Blur&quot;</span>).font(font.clone()).heading().color(color));
+                    ui.radio_value(
+                        <span class="kw-2">&amp;mut </span><span class="self">self</span>.selected_shader,
+                        SelectedShader::Grayscale,
+                        RichText::new(<span class="string">&quot;Grayscale&quot;</span>).font(font.clone()).heading().color(color),
+                    );
                 }
             });
         });
 
         <span class="prelude-val">Ok</span>((output, <span class="prelude-val">None</span>))
+    }
+}
+
+<span class="kw">impl </span>MainScene {
+    <span class="kw">fn </span>update_shaders_resolution(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>ApplicationState&lt;GlobalData&gt;, size: Coordinates) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">for </span>shader <span class="kw">in </span>state.renderer.shaders.iter_mut() {
+            <span class="kw">if </span>shader.uniforms.contains_key(<span class="string">&quot;resolution&quot;</span>) {
+                shader.activate();
+                shader.set_uniform(<span class="string">&quot;resolution&quot;</span>, [size.x <span class="kw">as </span>f32, size.y <span class="kw">as </span>f32].as_ptr());
+            }
+        }
+
+        <span class="kw">if </span>state.renderer.selected_shader_id != usize::MAX {
+            state.renderer.shaders.get_mut(state.renderer.selected_shader_id)<span class="question-mark">?</span>.activate();
+        }
+
+        <span class="prelude-val">Ok</span>(())
     }
 }
 

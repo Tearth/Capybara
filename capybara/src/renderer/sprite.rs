@@ -9,13 +9,22 @@ pub struct Sprite {
     pub size: Option<Vec2>,
     pub anchor: Vec2,
     pub color: Vec4,
-    pub texture_id: Option<usize>,
+    pub texture_id: TextureId,
     pub texture_type: TextureType,
 
     pub animation_frame: usize,
     pub animation_speed: f32,
     pub animation_loop: bool,
     pub animation_timestamp: Instant,
+}
+
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+pub enum TextureId {
+    #[default]
+    Default,
+
+    Some(usize),
+    None,
 }
 
 #[rustfmt::skip]
@@ -39,7 +48,7 @@ impl Sprite {
             size: Default::default(),
             anchor: Vec2::new(0.5, 0.5),
             color: Vec4::new(1.0, 1.0, 1.0, 1.0),
-            texture_id: None,
+            texture_id: TextureId::Default,
             texture_type: TextureType::Simple,
 
             animation_frame: 0,

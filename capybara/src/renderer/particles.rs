@@ -1,5 +1,6 @@
 use super::context::RendererContext;
 use super::sprite::Sprite;
+use super::sprite::TextureId;
 use super::sprite::TextureType;
 use crate::utils::rand::NewRand;
 use crate::utils::storage::Storage;
@@ -141,7 +142,10 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
 
     pub fn draw(&mut self, renderer: &mut RendererContext) {
         let mut sprite = Sprite::new();
-        sprite.texture_id = self.particle_texture_id;
+        sprite.texture_id = match self.particle_texture_id {
+            Some(texture_id) => TextureId::Some(texture_id),
+            None => TextureId::Default,
+        };
         sprite.texture_type = self.particle_texture_type.clone();
 
         if sprite.is_animation() {

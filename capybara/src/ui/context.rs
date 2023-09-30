@@ -4,7 +4,9 @@ use crate::error_return;
 use crate::renderer::camera::Camera;
 use crate::renderer::camera::CameraOrigin;
 use crate::renderer::context::RendererContext;
+use crate::renderer::shape;
 use crate::renderer::shape::Shape;
+use crate::renderer::sprite;
 use crate::renderer::texture::Texture;
 use crate::renderer::texture::TextureFilterMag;
 use crate::renderer::texture::TextureFilterMin;
@@ -249,7 +251,13 @@ impl UiContext {
                 let mut shape = Shape::new();
                 shape.vertices = vertices;
                 shape.indices = data.indices;
-                shape.texture_id = self.textures.get(&data.texture_id).cloned();
+                shape.texture_id = match self.textures.get(&data.texture_id) {
+                    Some(texture_id) => sprite::TextureId::Some(*texture_id),
+                    None => {
+                        error!("Failed to read texture {:?}", data.texture_id);
+                        sprite::TextureId::Default
+                    }
+                };
                 shape.apply_model = false;
 
                 let scissor_position = Vec2::new(mesh.clip_rect.left(), renderer.viewport_size.y - mesh.clip_rect.height() - mesh.clip_rect.top());

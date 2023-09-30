@@ -1,3 +1,4 @@
+use super::sprite::TextureId;
 use crate::utils::color::Vec4Color;
 use glam::Mat4;
 use glam::Vec2;
@@ -9,7 +10,7 @@ pub struct Shape {
     pub position: Vec2,
     pub rotation: f32,
     pub scale: Vec2,
-    pub texture_id: Option<usize>,
+    pub texture_id: TextureId,
     pub apply_model: bool,
 
     pub vertices: Vec<u32>,
@@ -22,7 +23,7 @@ impl Shape {
             position: Default::default(),
             rotation: 0.0,
             scale: Vec2::ONE,
-            texture_id: None,
+            texture_id: TextureId::Default,
             apply_model: true,
 
             vertices: Default::default(),
@@ -63,7 +64,15 @@ impl Shape {
             0.0f32.to_bits(),
         ];
 
-        Shape { position: from, rotation: angle, scale: Vec2::ONE, texture_id: None, apply_model: true, vertices, indices: vec![0, 1, 2, 0, 2, 3] }
+        Shape {
+            position: from,
+            rotation: angle,
+            scale: Vec2::ONE,
+            texture_id: TextureId::Default,
+            apply_model: true,
+            vertices,
+            indices: vec![0, 1, 2, 0, 2, 3],
+        }
     }
 
     pub fn new_rectangle(left_bottom: Vec2, right_top: Vec2, color: Vec4) -> Self {
@@ -100,7 +109,7 @@ impl Shape {
             position: Vec2::ZERO,
             rotation: 0.0,
             scale: Vec2::ONE,
-            texture_id: None,
+            texture_id: TextureId::Default,
             apply_model: true,
             vertices,
             indices: vec![0, 1, 2, 0, 2, 3],
@@ -166,7 +175,7 @@ impl Shape {
             position: Vec2::ZERO,
             rotation: 0.0,
             scale: Vec2::ONE,
-            texture_id: None,
+            texture_id: TextureId::Default,
             apply_model: true,
             vertices,
             indices: vec![0, 2, 1, 2, 3, 1, 2, 4, 5, 2, 5, 3, 4, 6, 5, 6, 7, 5, 6, 0, 1, 6, 1, 7],
@@ -207,7 +216,7 @@ impl Shape {
 
         indices.extend_from_slice(&[0, sides, 1]);
 
-        Shape { position: Vec2::ZERO, rotation: 0.0, scale: Vec2::ONE, texture_id: None, apply_model: true, vertices, indices }
+        Shape { position: Vec2::ZERO, rotation: 0.0, scale: Vec2::ONE, texture_id: TextureId::Default, apply_model: true, vertices, indices }
     }
 
     pub fn new_circle(center: Vec2, radius: f32, sides: Option<u32>, thickness: f32, color: Vec4) -> Self {
@@ -247,7 +256,8 @@ impl Shape {
         let i = sides * 2;
         indices.extend_from_slice(&[i - 2, i - 1, 1, i - 2, 0, 1]);
 
-        Shape { position: Vec2::ZERO, rotation: 0.0, scale: Vec2::ONE, texture_id: None, apply_model: true, vertices, indices }
+        Shape { position: Vec2::ZERO, rotation: 0.0, scale: Vec2::ONE, texture_id: TextureId::Default, apply_model: true, vertices, indices }
+    }
     }
 
     pub fn get_model(&self) -> Mat4 {

@@ -4,6 +4,7 @@ use super::shader::Shader;
 use super::shader::*;
 use super::shape::Shape;
 use super::sprite::Sprite;
+use super::sprite::TextureId;
 use super::sprite::TextureType;
 use super::texture::AtlasEntity;
 use super::texture::Texture;
@@ -88,7 +89,7 @@ pub struct RendererContext {
 
 pub struct BufferMetadata {
     pub content_type: BufferContentType,
-    pub texture_id: Option<usize>,
+    pub texture_id: TextureId,
     pub framebuffer_texture_id: Option<usize>,
     pub selected_shader_id: usize,
 }
@@ -332,7 +333,7 @@ impl RendererContext {
             Err(err) => error_return!("Failed to draw sprite ({})", err),
         };
 
-        let sprite_size = if let Some(texture_id) = sprite.texture_id {
+        let sprite_size = if let TextureId::Some(texture_id) = sprite.texture_id {
             let texture = match self.textures.get(texture_id) {
                 Ok(texture) => texture,
                 Err(err) => error_return!("Failed to draw sprite ({})", err),
@@ -398,7 +399,7 @@ impl RendererContext {
             self.sprite_buffer_resized = true;
         }
 
-        let (uv_position, uv_size) = if let Some(texture_id) = sprite.texture_id {
+        let (uv_position, uv_size) = if let TextureId::Some(texture_id) = sprite.texture_id {
             let texture = match self.textures.get(texture_id) {
                 Ok(texture) => texture,
                 Err(err) => error_return!("Failed to draw sprite ({})", err),
@@ -602,14 +603,14 @@ impl RendererContext {
 
                         self.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, 0, models_u8);
 
-                        if let Some(texture_id) = buffer_metadata.texture_id {
+                        if let TextureId::Some(texture_id) = buffer_metadata.texture_id {
                             match self.textures.get(texture_id) {
-                                Ok(texture) => texture.activate(),
+                                Ok(texture) => texture.activate(0),
                                 Err(err) => error!("{}", err),
                             };
-                        } else {
+                        } else if let TextureId::Default = buffer_metadata.texture_id {
                             match self.textures.get(self.default_texture_id) {
-                                Ok(texture) => texture.activate(),
+                                Ok(texture) => texture.activate(0),
                                 Err(err) => error!("{}", err),
                             };
                         }
@@ -650,14 +651,14 @@ impl RendererContext {
                         self.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, 0, models_u8);
                         self.gl.buffer_sub_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, 0, indices_u8);
 
-                        if let Some(texture_id) = buffer_metadata.texture_id {
+                        if let TextureId::Some(texture_id) = buffer_metadata.texture_id {
                             match self.textures.get(texture_id) {
-                                Ok(texture) => texture.activate(),
+                                Ok(texture) => texture.activate(0),
                                 Err(err) => error!("{}", err),
                             };
-                        } else {
+                        } else if let TextureId::Default = buffer_metadata.texture_id {
                             match self.textures.get(self.default_texture_id) {
-                                Ok(texture) => texture.activate(),
+                                Ok(texture) => texture.activate(0),
                                 Err(err) => error!("{}", err),
                             };
                         }
@@ -825,7 +826,7 @@ impl RendererContext {
 }
 
 impl BufferMetadata {
-    pub fn new(content_type: BufferContentType, texture_id: Option<usize>, framebuffer_texture_id: Option<usize>, selected_shader_id: usize) -> Self {
+    pub fn new(content_type: BufferContentType, texture_id: TextureId, framebuffer_texture_id: Option<usize>, selected_shader_id: usize) -> Self {
         Self { content_type, texture_id, framebuffer_texture_id, selected_shader_id }
     }
 }

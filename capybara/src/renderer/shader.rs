@@ -110,7 +110,7 @@ impl Shader {
             };
 
             match parameter.r#type {
-                glow::INT => {
+                glow::INT | glow::SAMPLER_2D => {
                     (self.gl.uniform_1_i32(Some(&parameter.location), (*data).into() as i32));
                 }
                 glow::FLOAT => {

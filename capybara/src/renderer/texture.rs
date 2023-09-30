@@ -183,8 +183,9 @@ impl Texture {
         self.wrap_mode = mode;
     }
 
-    pub fn activate(&self) {
+    pub fn activate(&self, unit: u32) {
         unsafe {
+            self.gl.active_texture(glow::TEXTURE0 + unit);
             self.gl.bind_texture(glow::TEXTURE_2D, Some(self.inner));
         }
     }

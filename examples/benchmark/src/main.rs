@@ -18,6 +18,7 @@ use capybara::fastrand;
 use capybara::glam::Vec2;
 use capybara::renderer::shader::Shader;
 use capybara::renderer::sprite::Sprite;
+use capybara::renderer::sprite::TextureId;
 use capybara::renderer::sprite::TextureType;
 use capybara::renderer::texture::Texture;
 use capybara::scene::FrameCommand;
@@ -102,7 +103,7 @@ impl Scene<GlobalData> for MainScene {
                 );
 
                 self.objects.push(Object {
-                    sprite: Sprite { position, texture_id: Some(state.renderer.textures.get_id("Takodachi")?), ..Default::default() },
+                    sprite: Sprite { position, texture_id: TextureId::Some(state.renderer.textures.get_id("Takodachi")?), ..Default::default() },
                     direction: Vec2::new(fastrand::f32() * 2.0 - 1.0, fastrand::f32() * 2.0 - 1.0),
                 });
             }
@@ -155,7 +156,7 @@ impl Scene<GlobalData> for MainScene {
             state.renderer.set_sprite_shader(Some(shader_id));
 
             state.renderer.draw_sprite(&Sprite {
-                texture_id: Some(self.target_texture_id),
+                texture_id: TextureId::Some(self.target_texture_id),
                 texture_type: TextureType::Simple,
                 anchor: Vec2::new(0.0, 0.0),
                 ..Default::default()

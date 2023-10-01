@@ -15,6 +15,7 @@ pub struct LightEmitter {
     pub angle: f32,
     pub arc: f32,
     pub max_length: f32,
+    pub frame_rays: u32,
     pub debug_settings: LightDebugSettings,
 }
 
@@ -54,6 +55,7 @@ impl LightEmitter {
             angle: 0.0,
             arc: consts::TAU,
             max_length: 10000.0,
+            frame_rays: 32,
             debug_settings: LightDebugSettings {
                 edge_color: Vec4::new(1.0, 1.0, 0.0, 1.0),
                 ray_color: Vec4::new(1.0, 1.0, 0.0, 1.0),
@@ -95,6 +97,18 @@ impl LightEmitter {
 
             points.push(LightRayTarget::new(p + d1 * self.max_length, angle_from));
             points.push(LightRayTarget::new(p + d2 * self.max_length, angle_to));
+        }
+
+        if self.frame_rays > 0 {
+            let p = self.position;
+            let step = self.arc / self.frame_rays as f32;
+
+            for i in 0..self.frame_rays {
+                let a = (angle_from + (i as f32 * step)).normalize_angle();
+                let d = Vec2::from_angle(a);
+
+                points.push(LightRayTarget::new(p + d * self.max_length, a));
+            }
         }
 
         for edge in &self.edges {
@@ -139,8 +153,8 @@ impl LightEmitter {
         // ----------------------------------------------------------------------------------------------
 
         for point in &points {
-            // Ray  = pa + da * ta, 0.0 <= ta
-            // Edge = pb + db * tb, 0.0 <= tb <= 1.0
+            // Ray  = pa + da * ta, 0.0 < ta
+            // Edge = pb + db * tb, 0.0 < tb < 1.0
 
             let pa = self.position;
             let da = Vec2::from_angle(point.angle);
@@ -150,17 +164,17 @@ impl LightEmitter {
                 let pb = edge.a;
                 let db = edge.b - edge.a;
 
+                let ta = (db.x * (pa.y - pb.y) - db.y * (pa.x - pb.x)) / (db.y * da.x - db.x * da.y);
                 let tb = (da.x * (pb.y - pa.y) - da.y * (pb.x - pa.x)) / (da.y * db.x - da.x * db.y);
-                let ta = (pb.x + db.x * tb - pa.x) / da.x;
 
-                if ta >= 0.0 && tb >= 0.0 && tb <= 1.0 {
+                if ta > 0.0 && tb > 0.0 && tb < 1.0 {
                     if ta < smallest_ta {
                         smallest_ta = ta;
                     }
                 }
             }
 
-            if smallest_ta != f32::MAX && smallest_ta != 0.0 {
+            if smallest_ta != f32::MAX {
                 hits.push(LightRayTarget::new(pa + da * smallest_ta.min(self.max_length), point.angle));
             }
         }

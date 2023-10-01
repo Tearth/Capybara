@@ -10,7 +10,8 @@ pub struct LightEmitter {
     pub position: Vec2,
     pub edges: Vec<Edge>,
     pub offsets: Vec<f32>,
-    pub color: Vec4,
+    pub color_begin: Vec4,
+    pub color_end: Vec4,
     pub angle: f32,
     pub arc: f32,
     pub max_length: f32,
@@ -48,7 +49,8 @@ impl LightEmitter {
             position: Vec2::ZERO,
             edges: Vec::new(),
             offsets: vec![-0.002, 0.0, 0.002],
-            color: Vec4::new(1.0, 1.0, 1.0, 1.0),
+            color_begin: Vec4::new(1.0, 0.0, 1.0, 1.0),
+            color_end: Vec4::new(1.0, 0.0, 0.0, 1.0),
             angle: 0.0,
             arc: consts::TAU,
             max_length: 10000.0,
@@ -168,11 +170,14 @@ impl LightEmitter {
         // -----------------------------------------------------------------------------------
 
         let mut shape = Shape::new();
-        let color = self.color.to_rgb_packed();
 
-        shape.add_vertice(self.position, color, Vec2::new(0.0, 0.0));
+        shape.add_vertice(self.position, self.color_begin.to_rgb_packed(), Vec2::new(0.0, 0.0));
         for (index, hit) in hits.iter().enumerate() {
-            shape.add_vertice((*hit).position, color, Vec2::new(1.0, 1.0));
+            let distance = (*hit).position.distance(self.position);
+            let ratio = distance / self.max_length;
+            let color = self.color_begin.lerp(self.color_end, ratio);
+
+            shape.add_vertice((*hit).position, color.to_rgb_packed(), Vec2::new(1.0, 1.0));
             if index > 0 {
                 shape.indices.push(0);
                 shape.indices.push(index as u32);

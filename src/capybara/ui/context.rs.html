@@ -415,6 +415,13 @@
 <a href="#415" id="415">415</a>
 <a href="#416" id="416">416</a>
 <a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::assets::loader::AssetsLoader;
 <span class="kw">use </span><span class="kw">crate</span>::assets::RawTexture;
 <span class="kw">use </span><span class="kw">crate</span>::error_return;
@@ -422,6 +429,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::renderer::camera::CameraOrigin;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::context::RendererContext;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::shape::Shape;
+<span class="kw">use </span><span class="kw">crate</span>::renderer::sprite;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::texture::Texture;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::texture::TextureFilterMag;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::texture::TextureFilterMin;
@@ -666,7 +674,13 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>shape = Shape::new();
                 shape.vertices = vertices;
                 shape.indices = data.indices;
-                shape.texture_id = <span class="self">self</span>.textures.get(<span class="kw-2">&amp;</span>data.texture_id).cloned();
+                shape.texture_id = <span class="kw">match </span><span class="self">self</span>.textures.get(<span class="kw-2">&amp;</span>data.texture_id) {
+                    <span class="prelude-val">Some</span>(texture_id) =&gt; sprite::TextureId::Some(<span class="kw-2">*</span>texture_id),
+                    <span class="prelude-val">None </span>=&gt; {
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed to read texture {:?}&quot;</span>, data.texture_id);
+                        sprite::TextureId::Default
+                    }
+                };
                 shape.apply_model = <span class="bool-val">false</span>;
 
                 <span class="kw">let </span>scissor_position = Vec2::new(mesh.clip_rect.left(), renderer.viewport_size.y - mesh.clip_rect.height() - mesh.clip_rect.top());

@@ -264,7 +264,25 @@
 <a href="#264" id="264">264</a>
 <a href="#265" id="265">265</a>
 <a href="#266" id="266">266</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils::color::Vec4Color;
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::sprite::TextureId;
+<span class="kw">use </span><span class="kw">crate</span>::utils::color::Vec4Color;
 <span class="kw">use </span>glam::Mat4;
 <span class="kw">use </span>glam::Vec2;
 <span class="kw">use </span>glam::Vec3;
@@ -275,7 +293,7 @@
     <span class="kw">pub </span>position: Vec2,
     <span class="kw">pub </span>rotation: f32,
     <span class="kw">pub </span>scale: Vec2,
-    <span class="kw">pub </span>texture_id: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+    <span class="kw">pub </span>texture_id: TextureId,
     <span class="kw">pub </span>apply_model: bool,
 
     <span class="kw">pub </span>vertices: Vec&lt;u32&gt;,
@@ -288,7 +306,7 @@
             position: Default::default(),
             rotation: <span class="number">0.0</span>,
             scale: Vec2::ONE,
-            texture_id: <span class="prelude-val">None</span>,
+            texture_id: TextureId::Default,
             apply_model: <span class="bool-val">true</span>,
 
             vertices: Default::default(),
@@ -329,7 +347,15 @@
             <span class="number">0.0f32</span>.to_bits(),
         ];
 
-        Shape { position: from, rotation: angle, scale: Vec2::ONE, texture_id: <span class="prelude-val">None</span>, apply_model: <span class="bool-val">true</span>, vertices, indices: <span class="macro">vec!</span>[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">0</span>, <span class="number">2</span>, <span class="number">3</span>] }
+        Shape {
+            position: from,
+            rotation: angle,
+            scale: Vec2::ONE,
+            texture_id: TextureId::Default,
+            apply_model: <span class="bool-val">true</span>,
+            vertices,
+            indices: <span class="macro">vec!</span>[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">0</span>, <span class="number">2</span>, <span class="number">3</span>],
+        }
     }
 
     <span class="kw">pub fn </span>new_rectangle(left_bottom: Vec2, right_top: Vec2, color: Vec4) -&gt; <span class="self">Self </span>{
@@ -366,7 +392,7 @@
             position: Vec2::ZERO,
             rotation: <span class="number">0.0</span>,
             scale: Vec2::ONE,
-            texture_id: <span class="prelude-val">None</span>,
+            texture_id: TextureId::Default,
             apply_model: <span class="bool-val">true</span>,
             vertices,
             indices: <span class="macro">vec!</span>[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">0</span>, <span class="number">2</span>, <span class="number">3</span>],
@@ -432,7 +458,7 @@
             position: Vec2::ZERO,
             rotation: <span class="number">0.0</span>,
             scale: Vec2::ONE,
-            texture_id: <span class="prelude-val">None</span>,
+            texture_id: TextureId::Default,
             apply_model: <span class="bool-val">true</span>,
             vertices,
             indices: <span class="macro">vec!</span>[<span class="number">0</span>, <span class="number">2</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">2</span>, <span class="number">5</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">6</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">0</span>, <span class="number">1</span>, <span class="number">6</span>, <span class="number">1</span>, <span class="number">7</span>],
@@ -473,7 +499,7 @@
 
         indices.extend_from_slice(<span class="kw-2">&amp;</span>[<span class="number">0</span>, sides, <span class="number">1</span>]);
 
-        Shape { position: Vec2::ZERO, rotation: <span class="number">0.0</span>, scale: Vec2::ONE, texture_id: <span class="prelude-val">None</span>, apply_model: <span class="bool-val">true</span>, vertices, indices }
+        Shape { position: Vec2::ZERO, rotation: <span class="number">0.0</span>, scale: Vec2::ONE, texture_id: TextureId::Default, apply_model: <span class="bool-val">true</span>, vertices, indices }
     }
 
     <span class="kw">pub fn </span>new_circle(center: Vec2, radius: f32, sides: <span class="prelude-ty">Option</span>&lt;u32&gt;, thickness: f32, color: Vec4) -&gt; <span class="self">Self </span>{
@@ -513,7 +539,15 @@
         <span class="kw">let </span>i = sides * <span class="number">2</span>;
         indices.extend_from_slice(<span class="kw-2">&amp;</span>[i - <span class="number">2</span>, i - <span class="number">1</span>, <span class="number">1</span>, i - <span class="number">2</span>, <span class="number">0</span>, <span class="number">1</span>]);
 
-        Shape { position: Vec2::ZERO, rotation: <span class="number">0.0</span>, scale: Vec2::ONE, texture_id: <span class="prelude-val">None</span>, apply_model: <span class="bool-val">true</span>, vertices, indices }
+        Shape { position: Vec2::ZERO, rotation: <span class="number">0.0</span>, scale: Vec2::ONE, texture_id: TextureId::Default, apply_model: <span class="bool-val">true</span>, vertices, indices }
+    }
+
+    <span class="kw">pub fn </span>add_vertice(<span class="kw-2">&amp;mut </span><span class="self">self</span>, position: Vec2, color: u32, uv: Vec2) {
+        <span class="self">self</span>.vertices.push(position.x.to_bits());
+        <span class="self">self</span>.vertices.push(position.y.to_bits());
+        <span class="self">self</span>.vertices.push(color);
+        <span class="self">self</span>.vertices.push(uv.x.to_bits());
+        <span class="self">self</span>.vertices.push(uv.y.to_bits());
     }
 
     <span class="kw">pub fn </span>get_model(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Mat4 {

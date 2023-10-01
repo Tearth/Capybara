@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["TextureType"],"struct":["Sprite"]};
+window.SIDEBAR_ITEMS = {"enum":["TextureId","TextureType"],"struct":["Sprite"]};

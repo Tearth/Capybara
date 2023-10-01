@@ -219,8 +219,13 @@
 <a href="#219" id="219">219</a>
 <a href="#220" id="220">220</a>
 <a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::context::RendererContext;
 <span class="kw">use </span><span class="kw">super</span>::sprite::Sprite;
+<span class="kw">use </span><span class="kw">super</span>::sprite::TextureId;
 <span class="kw">use </span><span class="kw">super</span>::sprite::TextureType;
 <span class="kw">use </span><span class="kw">crate</span>::utils::rand::NewRand;
 <span class="kw">use </span><span class="kw">crate</span>::utils::storage::Storage;
@@ -362,7 +367,10 @@
 
     <span class="kw">pub fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, renderer: <span class="kw-2">&amp;mut </span>RendererContext) {
         <span class="kw">let </span><span class="kw-2">mut </span>sprite = Sprite::new();
-        sprite.texture_id = <span class="self">self</span>.particle_texture_id;
+        sprite.texture_id = <span class="kw">match </span><span class="self">self</span>.particle_texture_id {
+            <span class="prelude-val">Some</span>(texture_id) =&gt; TextureId::Some(texture_id),
+            <span class="prelude-val">None </span>=&gt; TextureId::Default,
+        };
         sprite.texture_type = <span class="self">self</span>.particle_texture_type.clone();
 
         <span class="kw">if </span>sprite.is_animation() {
@@ -435,7 +443,7 @@
 {
     <span class="kw">let </span>offset = <span class="kw">match </span>interpolation {
         ParticleInterpolation::Linear =&gt; offset,
-        ParticleInterpolation::Cosine =&gt; ((offset * consts::PI - consts::PI / <span class="number">2.0</span>).sin() + <span class="number">1.0</span>) / <span class="number">2.0</span>,
+        ParticleInterpolation::Cosine =&gt; ((offset * consts::FRAC_PI_2 / <span class="number">2.0</span>).sin() + <span class="number">1.0</span>) / <span class="number">2.0</span>,
     };
 
     from + (to - from) * offset

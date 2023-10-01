@@ -222,6 +222,7 @@
 <a href="#222" id="222">222</a>
 <a href="#223" id="223">223</a>
 <a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>capybara::anyhow::Result;
 <span class="kw">use </span>capybara::app::ApplicationContext;
 <span class="kw">use </span>capybara::app::ApplicationState;
@@ -242,6 +243,7 @@
 <span class="kw">use </span>capybara::glam::Vec4;
 <span class="kw">use </span>capybara::rapier2d::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>capybara::renderer::sprite::Sprite;
+<span class="kw">use </span>capybara::renderer::sprite::TextureId;
 <span class="kw">use </span>capybara::scene::FrameCommand;
 <span class="kw">use </span>capybara::scene::Scene;
 <span class="kw">use </span>capybara::window::Coordinates;
@@ -335,8 +337,8 @@
             <span class="self">self</span>.terrain = Sprite { size: <span class="prelude-val">Some</span>(Vec2::new(state.renderer.viewport_size.x, <span class="number">50.0</span>)), ..Default::default() };
             <span class="self">self</span>.terrain_collider = <span class="prelude-val">Some</span>(state.physics.colliders.insert(ColliderBuilder::cuboid(<span class="number">100.0</span>, <span class="number">0.1</span>).build()));
 
-            <span class="self">self</span>.wheel_left = Sprite { texture_id: <span class="prelude-val">Some</span>(state.renderer.textures.get_id(<span class="string">&quot;Wheel&quot;</span>)<span class="question-mark">?</span>), ..Default::default() };
-            <span class="self">self</span>.wheel_right = Sprite { texture_id: <span class="prelude-val">Some</span>(state.renderer.textures.get_id(<span class="string">&quot;Wheel&quot;</span>)<span class="question-mark">?</span>), ..Default::default() };
+            <span class="self">self</span>.wheel_left = Sprite { texture_id: TextureId::Some(state.renderer.textures.get_id(<span class="string">&quot;Wheel&quot;</span>)<span class="question-mark">?</span>), ..Default::default() };
+            <span class="self">self</span>.wheel_right = Sprite { texture_id: TextureId::Some(state.renderer.textures.get_id(<span class="string">&quot;Wheel&quot;</span>)<span class="question-mark">?</span>), ..Default::default() };
             <span class="self">self</span>.car = Sprite { size: <span class="prelude-val">Some</span>(Vec2::new(<span class="number">100.0</span>, <span class="number">50.0</span>)), color: Vec4::new(<span class="number">0.8</span>, <span class="number">0.8</span>, <span class="number">0.8</span>, <span class="number">1.0</span>), ..Default::default() };
 
             <span class="kw">let </span>collider = ColliderBuilder::ball(<span class="number">0.3</span>).restitution(<span class="number">0.7</span>).build();
@@ -365,7 +367,7 @@
                     fastrand::u32(<span class="number">0</span>..state.renderer.viewport_size.x <span class="kw">as </span>u32) <span class="kw">as </span>f32,
                     fastrand::u32(<span class="number">0</span>..state.renderer.viewport_size.y <span class="kw">as </span>u32) <span class="kw">as </span>f32,
                 );
-                <span class="kw">let </span>sprite = Sprite { position, texture_id: <span class="prelude-val">Some</span>(state.renderer.textures.get_id(<span class="string">&quot;Takodachi&quot;</span>)<span class="question-mark">?</span>), ..Default::default() };
+                <span class="kw">let </span>sprite = Sprite { position, texture_id: TextureId::Some(state.renderer.textures.get_id(<span class="string">&quot;Takodachi&quot;</span>)<span class="question-mark">?</span>), ..Default::default() };
                 <span class="kw">let </span>collider_flags = ActiveEvents::COLLISION_EVENTS | ActiveEvents::CONTACT_FORCE_EVENTS;
                 <span class="kw">let </span>collider = ColliderBuilder::ball(<span class="number">0.3</span>).restitution(<span class="number">0.7</span>).active_events(collider_flags).build();
                 <span class="kw">let </span>rigidbody = RigidBodyBuilder::dynamic().translation(<span class="macro">vector!</span>[position.x, position.y] / PIXELS_PER_METER).build();

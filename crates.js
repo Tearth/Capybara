@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["benchmark","capybara","particles","physics","template","ui"];
+window.ALL_CRATES = ["benchmark","capybara","lighting","particles","physics","template","ui"];

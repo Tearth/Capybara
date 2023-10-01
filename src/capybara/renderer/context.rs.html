@@ -829,12 +829,14 @@
 <a href="#829" id="829">829</a>
 <a href="#830" id="830">830</a>
 <a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::camera::Camera;
 <span class="kw">use </span><span class="kw">super</span>::camera::CameraOrigin;
 <span class="kw">use </span><span class="kw">super</span>::shader::Shader;
 <span class="kw">use </span><span class="kw">super</span>::shader::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">super</span>::shape::Shape;
 <span class="kw">use </span><span class="kw">super</span>::sprite::Sprite;
+<span class="kw">use </span><span class="kw">super</span>::sprite::TextureId;
 <span class="kw">use </span><span class="kw">super</span>::sprite::TextureType;
 <span class="kw">use </span><span class="kw">super</span>::texture::AtlasEntity;
 <span class="kw">use </span><span class="kw">super</span>::texture::Texture;
@@ -919,7 +921,7 @@
 
 <span class="kw">pub struct </span>BufferMetadata {
     <span class="kw">pub </span>content_type: BufferContentType,
-    <span class="kw">pub </span>texture_id: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+    <span class="kw">pub </span>texture_id: TextureId,
     <span class="kw">pub </span>framebuffer_texture_id: <span class="prelude-ty">Option</span>&lt;usize&gt;,
     <span class="kw">pub </span>selected_shader_id: usize,
 }
@@ -1163,7 +1165,7 @@
             <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_return!</span>(<span class="string">&quot;Failed to draw sprite ({})&quot;</span>, err),
         };
 
-        <span class="kw">let </span>sprite_size = <span class="kw">if let </span><span class="prelude-val">Some</span>(texture_id) = sprite.texture_id {
+        <span class="kw">let </span>sprite_size = <span class="kw">if let </span>TextureId::Some(texture_id) = sprite.texture_id {
             <span class="kw">let </span>texture = <span class="kw">match </span><span class="self">self</span>.textures.get(texture_id) {
                 <span class="prelude-val">Ok</span>(texture) =&gt; texture,
                 <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_return!</span>(<span class="string">&quot;Failed to draw sprite ({})&quot;</span>, err),
@@ -1229,7 +1231,7 @@
             <span class="self">self</span>.sprite_buffer_resized = <span class="bool-val">true</span>;
         }
 
-        <span class="kw">let </span>(uv_position, uv_size) = <span class="kw">if let </span><span class="prelude-val">Some</span>(texture_id) = sprite.texture_id {
+        <span class="kw">let </span>(uv_position, uv_size) = <span class="kw">if let </span>TextureId::Some(texture_id) = sprite.texture_id {
             <span class="kw">let </span>texture = <span class="kw">match </span><span class="self">self</span>.textures.get(texture_id) {
                 <span class="prelude-val">Ok</span>(texture) =&gt; texture,
                 <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_return!</span>(<span class="string">&quot;Failed to draw sprite ({})&quot;</span>, err),
@@ -1433,14 +1435,14 @@
 
                         <span class="self">self</span>.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, <span class="number">0</span>, models_u8);
 
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(texture_id) = buffer_metadata.texture_id {
+                        <span class="kw">if let </span>TextureId::Some(texture_id) = buffer_metadata.texture_id {
                             <span class="kw">match </span><span class="self">self</span>.textures.get(texture_id) {
-                                <span class="prelude-val">Ok</span>(texture) =&gt; texture.activate(),
+                                <span class="prelude-val">Ok</span>(texture) =&gt; texture.activate(<span class="number">0</span>),
                                 <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, err),
                             };
-                        } <span class="kw">else </span>{
+                        } <span class="kw">else if let </span>TextureId::Default = buffer_metadata.texture_id {
                             <span class="kw">match </span><span class="self">self</span>.textures.get(<span class="self">self</span>.default_texture_id) {
-                                <span class="prelude-val">Ok</span>(texture) =&gt; texture.activate(),
+                                <span class="prelude-val">Ok</span>(texture) =&gt; texture.activate(<span class="number">0</span>),
                                 <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, err),
                             };
                         }
@@ -1481,14 +1483,14 @@
                         <span class="self">self</span>.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, <span class="number">0</span>, models_u8);
                         <span class="self">self</span>.gl.buffer_sub_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, <span class="number">0</span>, indices_u8);
 
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(texture_id) = buffer_metadata.texture_id {
+                        <span class="kw">if let </span>TextureId::Some(texture_id) = buffer_metadata.texture_id {
                             <span class="kw">match </span><span class="self">self</span>.textures.get(texture_id) {
-                                <span class="prelude-val">Ok</span>(texture) =&gt; texture.activate(),
+                                <span class="prelude-val">Ok</span>(texture) =&gt; texture.activate(<span class="number">0</span>),
                                 <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, err),
                             };
-                        } <span class="kw">else </span>{
+                        } <span class="kw">else if let </span>TextureId::Default = buffer_metadata.texture_id {
                             <span class="kw">match </span><span class="self">self</span>.textures.get(<span class="self">self</span>.default_texture_id) {
-                                <span class="prelude-val">Ok</span>(texture) =&gt; texture.activate(),
+                                <span class="prelude-val">Ok</span>(texture) =&gt; texture.activate(<span class="number">0</span>),
                                 <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error!</span>(<span class="string">&quot;{}&quot;</span>, err),
                             };
                         }
@@ -1656,7 +1658,7 @@
 }
 
 <span class="kw">impl </span>BufferMetadata {
-    <span class="kw">pub fn </span>new(content_type: BufferContentType, texture_id: <span class="prelude-ty">Option</span>&lt;usize&gt;, framebuffer_texture_id: <span class="prelude-ty">Option</span>&lt;usize&gt;, selected_shader_id: usize) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>new(content_type: BufferContentType, texture_id: TextureId, framebuffer_texture_id: <span class="prelude-ty">Option</span>&lt;usize&gt;, selected_shader_id: usize) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ content_type, texture_id, framebuffer_texture_id, selected_shader_id }
     }
 }

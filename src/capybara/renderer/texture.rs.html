@@ -204,6 +204,7 @@
 <a href="#204" id="204">204</a>
 <a href="#205" id="205">205</a>
 <a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::context::RendererContext;
 <span class="kw">use </span><span class="kw">crate</span>::assets::RawTexture;
 <span class="kw">use </span>anyhow::Error;
@@ -389,8 +390,9 @@
         <span class="self">self</span>.wrap_mode = mode;
     }
 
-    <span class="kw">pub fn </span>activate(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+    <span class="kw">pub fn </span>activate(<span class="kw-2">&amp;</span><span class="self">self</span>, unit: u32) {
         <span class="kw">unsafe </span>{
+            <span class="self">self</span>.gl.active_texture(glow::TEXTURE0 + unit);
             <span class="self">self</span>.gl.bind_texture(glow::TEXTURE_2D, <span class="prelude-val">Some</span>(<span class="self">self</span>.inner));
         }
     }

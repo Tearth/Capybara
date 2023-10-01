@@ -1,3 +1,4 @@
+use super::*;
 use glam::Vec2;
 use glam::Vec4;
 use instant::Instant;
@@ -56,6 +57,17 @@ impl Sprite {
             animation_loop: true,
             animation_timestamp: Instant::now(),
         }
+    }
+
+    pub fn get_edges(&self, texture_size: Vec2) -> Vec<Edge> {
+        let size = self.size.unwrap_or(texture_size) * self.scale;
+        let a = Vec2::new(self.position.x, self.position.y) - size * self.anchor;
+        let b = Vec2::new(self.position.x + size.x, self.position.y) - size * self.anchor;
+        let c = Vec2::new(self.position.x + size.x, self.position.y + size.y) - size * self.anchor;
+        let d = Vec2::new(self.position.x, self.position.y + size.y) - size * self.anchor;
+
+        // TODO: support for rotations
+        vec![Edge::new(a, b), Edge::new(b, c), Edge::new(c, d), Edge::new(d, a)]
     }
 
     pub fn is_animation(&self) -> bool {

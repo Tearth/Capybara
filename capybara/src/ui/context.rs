@@ -4,7 +4,6 @@ use crate::error_return;
 use crate::renderer::camera::Camera;
 use crate::renderer::camera::CameraOrigin;
 use crate::renderer::context::RendererContext;
-use crate::renderer::shape;
 use crate::renderer::shape::Shape;
 use crate::renderer::sprite;
 use crate::renderer::texture::Texture;

@@ -5,6 +5,7 @@ members = [
     "template",
 
     "examples/benchmark",
+    "examples/lighting",
     "examples/particles",
     "examples/physics",
     "examples/ui",

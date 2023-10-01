@@ -258,6 +258,13 @@ impl Shape {
 
         Shape { position: Vec2::ZERO, rotation: 0.0, scale: Vec2::ONE, texture_id: TextureId::Default, apply_model: true, vertices, indices }
     }
+
+    pub fn add_vertice(&mut self, position: Vec2, color: u32, uv: Vec2) {
+        self.vertices.push(position.x.to_bits());
+        self.vertices.push(position.y.to_bits());
+        self.vertices.push(color);
+        self.vertices.push(uv.x.to_bits());
+        self.vertices.push(uv.y.to_bits());
     }
 
     pub fn get_model(&self) -> Mat4 {

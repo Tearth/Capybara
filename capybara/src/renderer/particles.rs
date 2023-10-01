@@ -218,7 +218,7 @@ where
 {
     let offset = match interpolation {
         ParticleInterpolation::Linear => offset,
-        ParticleInterpolation::Cosine => ((offset * consts::PI - consts::PI / 2.0).sin() + 1.0) / 2.0,
+        ParticleInterpolation::Cosine => ((offset * consts::FRAC_PI_2 / 2.0).sin() + 1.0) / 2.0,
     };
 
     from + (to - from) * offset

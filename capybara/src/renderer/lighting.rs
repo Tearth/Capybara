@@ -16,6 +16,7 @@ pub struct LightEmitter {
     pub arc: f32,
     pub max_length: f32,
     pub frame_rays: u32,
+    pub merge_distance: f32,
     pub debug: LightDebugSettings,
 }
 
@@ -56,6 +57,7 @@ impl LightEmitter {
             arc: consts::TAU,
             max_length: 10000.0,
             frame_rays: 32,
+            merge_distance: 1.0,
             debug: LightDebugSettings {
                 edge_color: Vec4::new(1.0, 1.0, 0.0, 1.0),
                 ray_color: Vec4::new(1.0, 1.0, 0.0, 1.0),
@@ -189,9 +191,15 @@ impl LightEmitter {
         // -----------------------------------------------------------------------------------
 
         let mut shape = Shape::new();
+        let mut last_position = Vec2::new(0.0, 0.0);
 
         shape.add_vertice(self.position, self.color_begin.to_rgb_packed(), Vec2::new(0.0, 0.0));
-        for (index, hit) in hits.iter().enumerate() {
+        for hit in &hits {
+            if (*hit).position.distance(last_position) <= self.merge_distance {
+                continue;
+            }
+
+            let index = (shape.vertices.len() / 5) - 1;
             let distance = (*hit).position.distance(self.position);
             let ratio = distance / self.max_length;
             let color = self.color_begin.lerp(self.color_end, ratio);
@@ -202,11 +210,13 @@ impl LightEmitter {
                 shape.indices.push(index as u32);
                 shape.indices.push(index as u32 + 1);
             }
+
+            last_position = (*hit).position;
         }
 
         if self.arc == consts::TAU {
             shape.indices.push(0);
-            shape.indices.push(hits.len() as u32);
+            shape.indices.push((shape.vertices.len() / 5 - 1) as u32);
             shape.indices.push(1);
         }
 

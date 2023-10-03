@@ -13,11 +13,14 @@ use capybara::egui::Id;
 use capybara::egui::RawInput;
 use capybara::egui::RichText;
 use capybara::egui::SidePanel;
+use capybara::egui::Slider;
+use capybara::egui::TextStyle;
 use capybara::fast_gpu;
 use capybara::fastrand;
 use capybara::glam::Vec2;
 use capybara::glam::Vec4;
 use capybara::renderer::lighting::LightEmitter;
+use capybara::renderer::lighting::LightResponse;
 use capybara::renderer::shader::Shader;
 use capybara::renderer::sprite::Sprite;
 use capybara::renderer::sprite::TextureId;
@@ -30,6 +33,7 @@ use capybara::window::InputEvent;
 use capybara::window::Key;
 use capybara::window::WindowStyle;
 use std::collections::VecDeque;
+use std::f32::consts;
 
 fast_gpu!();
 
@@ -44,6 +48,8 @@ struct MainScene {
     initialized: bool,
     delta_history: VecDeque<f32>,
     emitter: LightEmitter,
+    emitter_last_response: Option<LightResponse>,
+    debug: bool,
 
     main_texture_id: usize,
     light_texture_id: usize,
@@ -97,7 +103,12 @@ impl Scene<GlobalData> for MainScene {
                 );
 
                 self.objects.push(Object {
-                    sprite: Sprite { position, texture_id: TextureId::Some(state.renderer.textures.get_id("Takodachi")?), ..Default::default() },
+                    sprite: Sprite {
+                        position,
+                        //position: Vec2::new(500.0, 500.0),
+                        texture_id: TextureId::Some(state.renderer.textures.get_id("Takodachi")?),
+                        ..Default::default()
+                    },
                     direction: Vec2::new(fastrand::f32() * 2.0 - 1.0, fastrand::f32() * 2.0 - 1.0),
                 });
             }
@@ -117,6 +128,7 @@ impl Scene<GlobalData> for MainScene {
             let resolution = state.renderer.viewport_size.into();
             self.update_shaders_resolution(&mut state, resolution)?;
 
+            self.emitter.max_length = 200.0;
             self.initialized = true;
         }
 
@@ -159,7 +171,6 @@ impl Scene<GlobalData> for MainScene {
 
             self.emitter.position = state.renderer.cameras.get(0)?.from_window_to_screen_coordinates(state.window.cursor_position.into());
             self.emitter.edges = edges;
-            self.emitter.debug = true;
 
             let response = self.emitter.generate();
             state.renderer.set_target_texture(Some(self.light_texture_id), true);
@@ -178,7 +189,12 @@ impl Scene<GlobalData> for MainScene {
                 ..Default::default()
             });
             state.renderer.set_sprite_shader(None);
-            //self.emitter.draw_debug(state.renderer, &response);
+
+            if self.debug {
+                self.emitter.draw_debug(state.renderer, &response);
+            }
+
+            self.emitter_last_response = Some(response);
         }
 
         Ok(None)
@@ -186,19 +202,56 @@ impl Scene<GlobalData> for MainScene {
 
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let output = state.ui.inner.read().unwrap().run(input, |context| {
-            SidePanel::new(Side::Left, Id::new("side")).exact_width(120.0).resizable(false).show(context, |ui| {
+            SidePanel::new(Side::Left, Id::new("side")).exact_width(150.0).resizable(false).show(context, |ui| {
                 if self.initialized {
                     let font = FontId { size: 24.0, family: FontFamily::Name("Kenney Pixel".into()) };
                     let color = Color32::from_rgb(255, 255, 255);
-                    let label = format!("FPS: {}", state.renderer.fps);
-
-                    ui.label(RichText::new(label).font(font.clone()).heading().color(color));
-
                     let delta_average = self.delta_history.iter().sum::<f32>() / self.delta_history.len() as f32;
-                    let label = format!("Delta: {:.2}", delta_average * 1000.0);
 
-                    ui.label(RichText::new(label).font(font.clone()).heading().color(color));
+                    ui.label(RichText::new(format!("FPS: {}", state.renderer.fps)).font(font.clone()).heading().color(color));
+                    ui.label(RichText::new(format!("Delta: {:.2}", delta_average * 1000.0)).font(font.clone()).heading().color(color));
                     ui.label(RichText::new(format!("N: {}", self.objects.len())).font(font.clone()).heading().color(color));
+
+                    ui.add_space(20.0);
+
+                    if let Some(response) = &self.emitter_last_response {
+                        ui.label(RichText::new(format!("Rays: {}", response.points.len())).font(font.clone()).heading().color(color));
+                        ui.label(RichText::new(format!("Tris: {}", response.shape.indices.len())).font(font.clone()).heading().color(color));
+                    }
+
+                    ui.style_mut().drag_value_text_style = TextStyle::Monospace;
+                    ui.style_mut().text_styles.get_mut(&TextStyle::Monospace).unwrap().size = 20.0;
+
+                    ui.add_space(20.0);
+                    ui.label(RichText::new("Distance:").font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(&mut self.emitter.max_length, 0.0..=1000.0).text_color(color));
+
+                    ui.add_space(10.0);
+                    ui.label(RichText::new("Angle:").font(font.clone()).heading().color(color));
+                    ui.add(
+                        Slider::new(&mut self.emitter.angle, -consts::PI..=consts::PI)
+                            .custom_formatter(|v, _| format!("{:.2}", v))
+                            .text_color(color),
+                    );
+
+                    ui.add_space(10.0);
+                    ui.label(RichText::new("Arc:").font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(&mut self.emitter.arc, 0.0..=consts::TAU).custom_formatter(|v, _| format!("{:.2}", v)).text_color(color));
+
+                    ui.add_space(10.0);
+                    ui.label(RichText::new("Frame rays:").font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(&mut self.emitter.frame_rays, 0..=256).text_color(color));
+
+                    ui.add_space(10.0);
+                    ui.label(RichText::new("Offset:").font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(&mut self.emitter.offset, 0.0..=0.02).custom_formatter(|v, _| format!("{:.3}", v)).text_color(color));
+
+                    ui.add_space(10.0);
+                    ui.label(RichText::new("Merge distance:").font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(&mut self.emitter.merge_distance, 0.0..=10.0).custom_formatter(|v, _| format!("{:.1}", v)).text_color(color));
+
+                    ui.add_space(10.0);
+                    ui.checkbox(&mut self.debug, RichText::new("Debug mode").font(font.clone()).heading().color(color));
                 }
             });
         });

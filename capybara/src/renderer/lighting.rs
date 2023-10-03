@@ -9,14 +9,14 @@ use std::f32::consts;
 pub struct LightEmitter {
     pub position: Vec2,
     pub edges: Vec<Edge>,
-    pub offsets: Vec<f32>,
+    pub offset: f32,
     pub color_begin: Vec4,
     pub color_end: Vec4,
     pub angle: f32,
     pub arc: f32,
     pub max_length: f32,
     pub frame_rays: u32,
-    pub debug_settings: LightDebugSettings,
+    pub debug: LightDebugSettings,
 }
 
 pub struct LightDebugSettings {
@@ -49,14 +49,14 @@ impl LightEmitter {
         Self {
             position: Vec2::ZERO,
             edges: Vec::new(),
-            offsets: vec![-0.002, 0.0, 0.002],
+            offset: 0.002,
             color_begin: Vec4::new(1.0, 0.0, 1.0, 1.0),
             color_end: Vec4::new(1.0, 0.0, 0.0, 1.0),
             angle: 0.0,
             arc: consts::TAU,
             max_length: 10000.0,
             frame_rays: 32,
-            debug_settings: LightDebugSettings {
+            debug: LightDebugSettings {
                 edge_color: Vec4::new(1.0, 1.0, 0.0, 1.0),
                 ray_color: Vec4::new(1.0, 1.0, 0.0, 1.0),
                 arc_color: Vec4::new(1.0, 0.0, 1.0, 1.0),
@@ -83,9 +83,15 @@ impl LightEmitter {
 
         let mut points = Vec::new();
         let mut hits = Vec::new();
-        let angle_from = (self.angle - self.arc / 2.0).normalize_angle();
-        let mut angle_to = (self.angle + self.arc / 2.0).normalize_angle();
 
+        // Do not calculate angles if arc is TAU, or else angle_from will be PI in some cases due to calculation errors
+        let (angle_from, mut angle_to) = if self.arc < consts::TAU {
+            ((self.angle - self.arc / 2.0).normalize_angle(), (self.angle + self.arc / 2.0).normalize_angle())
+        } else {
+            (-consts::PI, consts::PI)
+        };
+
+        // Normalize order if desired angle is between PI and -PI (sign changes backwards)
         if angle_from > angle_to {
             angle_to += consts::TAU;
         }
@@ -104,7 +110,7 @@ impl LightEmitter {
             let step = self.arc / self.frame_rays as f32;
 
             for i in 0..self.frame_rays {
-                let a = (angle_from + (i as f32 * step)).normalize_angle();
+                let a = angle_from + (i as f32 * step);
                 let d = Vec2::from_angle(a);
 
                 points.push(LightRayTarget::new(p + d * self.max_length, a));
@@ -112,7 +118,7 @@ impl LightEmitter {
         }
 
         for edge in &self.edges {
-            for offset in &self.offsets {
+            for offset in [-self.offset, 0.0, self.offset] {
                 let angle_a = Vec2::new(0.0, 1.0).angle_between(self.position - edge.a) - consts::FRAC_PI_2 + offset;
                 let angle_b = Vec2::new(0.0, 1.0).angle_between(self.position - edge.b) - consts::FRAC_PI_2 + offset;
 
@@ -123,6 +129,7 @@ impl LightEmitter {
                 let mut angle_a = angle_a.normalize_angle();
                 let mut angle_b = angle_b.normalize_angle();
 
+                // Normalize order if desired angle is between PI and -PI (sign changes)
                 if self.arc < consts::TAU {
                     if angle_a < angle_from {
                         angle_a += consts::TAU;
@@ -167,10 +174,8 @@ impl LightEmitter {
                 let ta = (db.x * (pa.y - pb.y) - db.y * (pa.x - pb.x)) / (db.y * da.x - db.x * da.y);
                 let tb = (da.x * (pb.y - pa.y) - da.y * (pb.x - pa.x)) / (da.y * db.x - da.x * db.y);
 
-                if ta > 0.0 && tb > 0.0 && tb < 1.0 {
-                    if ta < smallest_ta {
-                        smallest_ta = ta;
-                    }
+                if ta > 0.0 && tb > 0.0 && tb < 1.0 && ta < smallest_ta {
+                    smallest_ta = ta;
                 }
             }
 
@@ -210,19 +215,19 @@ impl LightEmitter {
 
     pub fn draw_debug(&self, renderer: &mut RendererContext, response: &LightResponse) {
         for edge in &self.edges {
-            renderer.draw_shape(&Shape::new_line(edge.a, edge.b, self.debug_settings.edge_thickness, self.debug_settings.edge_color));
+            renderer.draw_shape(&Shape::new_line(edge.a, edge.b, self.debug.edge_thickness, self.debug.edge_color));
         }
 
         for point in &response.points {
             let p = self.position;
             let d = Vec2::from_angle(point.angle);
 
-            renderer.draw_shape(&Shape::new_line(p, p + d * self.max_length, self.debug_settings.ray_thickness, self.debug_settings.ray_color));
-            renderer.draw_shape(&Shape::new_disc(point.position, self.debug_settings.point_radius, None, self.debug_settings.point_color));
+            renderer.draw_shape(&Shape::new_line(p, p + d * self.max_length, self.debug.ray_thickness, self.debug.ray_color));
+            renderer.draw_shape(&Shape::new_disc(point.position, self.debug.point_radius, None, self.debug.point_color, self.debug.point_color));
         }
 
         for hit in &response.hits {
-            renderer.draw_shape(&Shape::new_disc((*hit).position, self.debug_settings.hit_radius, None, self.debug_settings.hit_color));
+            renderer.draw_shape(&Shape::new_disc((*hit).position, self.debug.hit_radius, None, self.debug.hit_color, self.debug.hit_color));
         }
 
         if self.arc < consts::TAU {
@@ -230,8 +235,8 @@ impl LightEmitter {
             let d1 = Vec2::from_angle(self.angle - self.arc / 2.0);
             let d2 = Vec2::from_angle(self.angle + self.arc / 2.0);
 
-            renderer.draw_shape(&Shape::new_line(p, p + d1 * self.max_length, self.debug_settings.arc_thickness, self.debug_settings.arc_color));
-            renderer.draw_shape(&Shape::new_line(p, p + d2 * self.max_length, self.debug_settings.arc_thickness, self.debug_settings.arc_color));
+            renderer.draw_shape(&Shape::new_line(p, p + d1 * self.max_length, self.debug.arc_thickness, self.debug.arc_color));
+            renderer.draw_shape(&Shape::new_line(p, p + d2 * self.max_length, self.debug.arc_thickness, self.debug.arc_color));
         }
     }
 }

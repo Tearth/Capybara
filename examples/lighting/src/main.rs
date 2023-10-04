@@ -19,6 +19,7 @@ use capybara::fast_gpu;
 use capybara::fastrand;
 use capybara::glam::Vec2;
 use capybara::glam::Vec4;
+use capybara::renderer::context::RendererContext;
 use capybara::renderer::lighting::LightEmitter;
 use capybara::renderer::lighting::LightResponse;
 use capybara::renderer::shader::Shader;
@@ -51,6 +52,10 @@ struct MainScene {
     emitter_last_response: Option<LightResponse>,
     debug: bool,
 
+    blur_directions: f32,
+    blur_quality: f32,
+    blur_size: f32,
+
     main_texture_id: usize,
     light_texture_id: usize,
     mult_shader_id: usize,
@@ -74,7 +79,7 @@ impl Scene<GlobalData> for MainScene {
         if let InputEvent::KeyPress { key: Key::Escape, repeat: _, modifiers: _ } = event {
             state.window.close();
         } else if let InputEvent::WindowSizeChange { size } = event {
-            self.update_shaders_resolution(&mut state, size)?;
+            self.update_shader_uniforms(&mut state.renderer)?;
         }
 
         Ok(())
@@ -96,7 +101,7 @@ impl Scene<GlobalData> for MainScene {
             state.ui.instantiate_assets(&state.global.assets, None);
             state.window.set_swap_interval(0);
 
-            for _ in 0..200 {
+            for _ in 0..1000 {
                 let position = Vec2::new(
                     fastrand::u32(0..state.renderer.viewport_size.x as u32) as f32,
                     fastrand::u32(0..state.renderer.viewport_size.y as u32) as f32,
@@ -125,10 +130,12 @@ impl Scene<GlobalData> for MainScene {
             mult_shader.set_uniform("lightSampler", &1.0);
             self.mult_shader_id = state.renderer.shaders.store(mult_shader);
 
-            let resolution = state.renderer.viewport_size.into();
-            self.update_shaders_resolution(&mut state, resolution)?;
-
             self.emitter.max_length = 200.0;
+            self.blur_directions = 32.0;
+            self.blur_quality = 4.0;
+            self.blur_size = 16.0;
+
+            self.update_shader_uniforms(&mut state.renderer)?;
             self.initialized = true;
         }
 
@@ -200,9 +207,9 @@ impl Scene<GlobalData> for MainScene {
         Ok(None)
     }
 
-    fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
+    fn ui(&mut self, mut state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let output = state.ui.inner.read().unwrap().run(input, |context| {
-            SidePanel::new(Side::Left, Id::new("side")).exact_width(150.0).resizable(false).show(context, |ui| {
+            SidePanel::new(Side::Left, Id::new("side")).exact_width(160.0).resizable(false).show(context, |ui| {
                 if self.initialized {
                     let font = FontId { size: 24.0, family: FontFamily::Name("Kenney Pixel".into()) };
                     let color = Color32::from_rgb(255, 255, 255);
@@ -251,6 +258,28 @@ impl Scene<GlobalData> for MainScene {
                     ui.add(Slider::new(&mut self.emitter.merge_distance, 0.0..=10.0).custom_formatter(|v, _| format!("{:.1}", v)).text_color(color));
 
                     ui.add_space(10.0);
+                    ui.label(RichText::new("Tolerance:").font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(&mut self.emitter.tolerance, 0.0..=0.003).custom_formatter(|v, _| format!("{:.4}", v)).text_color(color));
+
+                    ui.add_space(10.0);
+                    ui.label(RichText::new("Blur directions:").font(font.clone()).heading().color(color));
+                    if ui.add(Slider::new(&mut self.blur_directions, 0.0..=64.0).text_color(color)).changed() {
+                        self.update_shader_uniforms(&mut state.renderer).unwrap();
+                    }
+
+                    ui.add_space(10.0);
+                    ui.label(RichText::new("Blur quality:").font(font.clone()).heading().color(color));
+                    if ui.add(Slider::new(&mut self.blur_quality, 0.0..=64.0).text_color(color)).changed() {
+                        self.update_shader_uniforms(&mut state.renderer).unwrap();
+                    }
+
+                    ui.add_space(10.0);
+                    ui.label(RichText::new("Blur size:").font(font.clone()).heading().color(color));
+                    if ui.add(Slider::new(&mut self.blur_size, 0.0..=64.0).text_color(color)).changed() {
+                        self.update_shader_uniforms(&mut state.renderer).unwrap();
+                    }
+
+                    ui.add_space(10.0);
                     ui.checkbox(&mut self.debug, RichText::new("Debug mode").font(font.clone()).heading().color(color));
                 }
             });
@@ -261,16 +290,19 @@ impl Scene<GlobalData> for MainScene {
 }
 
 impl MainScene {
-    fn update_shaders_resolution(&mut self, state: &mut ApplicationState<GlobalData>, size: Coordinates) -> Result<()> {
-        for shader in state.renderer.shaders.iter_mut() {
+    fn update_shader_uniforms(&mut self, renderer: &mut RendererContext) -> Result<()> {
+        for shader in renderer.shaders.iter_mut() {
             if shader.uniforms.contains_key("resolution") {
                 shader.activate();
-                shader.set_uniform("resolution", [size.x as f32, size.y as f32].as_ptr());
+                shader.set_uniform("resolution", [renderer.viewport_size.x, renderer.viewport_size.y].as_ptr());
+                shader.set_uniform("directions", &self.blur_directions);
+                shader.set_uniform("quality", &self.blur_quality);
+                shader.set_uniform("size", &self.blur_size);
             }
         }
 
-        if state.renderer.selected_shader_id != usize::MAX {
-            state.renderer.shaders.get_mut(state.renderer.selected_shader_id)?.activate();
+        if renderer.selected_shader_id != usize::MAX {
+            renderer.shaders.get_mut(renderer.selected_shader_id)?.activate();
         }
 
         Ok(())

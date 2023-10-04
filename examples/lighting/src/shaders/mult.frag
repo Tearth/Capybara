@@ -9,27 +9,27 @@ in vec4 vertexColor;
 out vec4 fragmentColor;
 
 uniform vec2 resolution;
+uniform float directions;
+uniform float quality;
+uniform float size;
 uniform sampler2D mainSampler;
 uniform sampler2D lightSampler;
 
 void main()
 {
-    const float Pi2 = 6.28318530718;
-    const float Directions = 32.0;
-    const float Quality = 4.0;
-    const float Size = 16.0;
+    const float TAU = 6.28318530718;
    
-    vec2 radius = Size/resolution.xy;
+    vec2 radius = size/resolution.xy;
     vec4 lightColor = texture(lightSampler, vertexUv);
 
-    for (float d = 0.0; d < Pi2; d += Pi2 / Directions)
+    for (float d = 0.0; d < TAU; d += TAU / directions)
     {
-		for (float q = 1.0 / Quality; q <= 1.0; q += 1.0 / Quality)
+		for (float q = 1.0 / quality; q <= 1.0; q += 1.0 / quality)
         {
 			lightColor += texture(lightSampler, vertexUv + vec2(cos(d), sin(d)) * radius * q);		
         }
     }
 
-    lightColor /= Quality * Directions;
+    lightColor /= quality * directions;
     fragmentColor = lightColor * texture(mainSampler, vertexUv) * vertexColor;
 }

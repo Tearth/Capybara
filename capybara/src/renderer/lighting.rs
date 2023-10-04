@@ -17,6 +17,7 @@ pub struct LightEmitter {
     pub max_length: f32,
     pub frame_rays: u32,
     pub merge_distance: f32,
+    pub tolerance: f32,
     pub debug: LightDebugSettings,
 }
 
@@ -58,6 +59,7 @@ impl LightEmitter {
             max_length: 10000.0,
             frame_rays: 32,
             merge_distance: 1.0,
+            tolerance: 0.0001,
             debug: LightDebugSettings {
                 edge_color: Vec4::new(1.0, 1.0, 0.0, 1.0),
                 ray_color: Vec4::new(1.0, 1.0, 0.0, 1.0),
@@ -131,7 +133,7 @@ impl LightEmitter {
                 let mut angle_a = angle_a.normalize_angle();
                 let mut angle_b = angle_b.normalize_angle();
 
-                // Normalize order if desired angle is between PI and -PI (sign changes)
+                // Normalize order if desired angle is between PI and -PI (sign changes backwards)
                 if self.arc < consts::TAU {
                     if angle_a < angle_from {
                         angle_a += consts::TAU;
@@ -176,7 +178,7 @@ impl LightEmitter {
                 let ta = (db.x * (pa.y - pb.y) - db.y * (pa.x - pb.x)) / (db.y * da.x - db.x * da.y);
                 let tb = (da.x * (pb.y - pa.y) - da.y * (pb.x - pa.x)) / (da.y * db.x - da.x * db.y);
 
-                if ta > 0.0 && tb > 0.0 && tb < 1.0 && ta < smallest_ta {
+                if ta > 0.0 && tb > -self.tolerance && tb < 1.0 + self.tolerance && ta < smallest_ta {
                     smallest_ta = ta;
                 }
             }

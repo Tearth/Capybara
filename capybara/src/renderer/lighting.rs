@@ -41,6 +41,13 @@ pub struct LightResponse {
     pub hits: Vec<LightRayTarget>,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct EdgeWithDistance {
+    pub a: Vec2,
+    pub b: Vec2,
+    pub distance: f32,
+}
+
 pub struct LightRayTarget {
     pub position: Vec2,
     pub angle: f32,
@@ -85,6 +92,7 @@ impl LightEmitter {
         // Step 1: iterate through all edges and collect points toward which rays will be cast
         // -----------------------------------------------------------------------------------
 
+        let mut edges = Vec::new();
         let mut points = Vec::new();
         let mut hits = Vec::new();
 
@@ -122,6 +130,21 @@ impl LightEmitter {
         }
 
         for edge in &self.edges {
+            let ab = edge.b - edge.a;
+            let ap = self.position - edge.a;
+            let proj = ap.dot(ab);
+            let d = proj / ab.length_squared();
+
+            let p = if d <= 0.0 {
+                edge.a
+            } else if d >= 1.0 {
+                edge.b
+            } else {
+                edge.a + d * ab
+            };
+
+            edges.push(EdgeWithDistance { a: (*edge).a, b: (*edge).b, distance: self.position.distance(p) });
+
             for offset in [-self.offset, 0.0, self.offset] {
                 let angle_a = Vec2::new(0.0, 1.0).angle_between(self.position - edge.a) - consts::FRAC_PI_2 + offset;
                 let angle_b = Vec2::new(0.0, 1.0).angle_between(self.position - edge.b) - consts::FRAC_PI_2 + offset;
@@ -152,6 +175,8 @@ impl LightEmitter {
             }
         }
 
+        edges.sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
+
         // ----------------------------------------------------------------------------------------
         // Step 2: sort and deduplicate points, so the mesh can be later generated in correct order
         // ----------------------------------------------------------------------------------------
@@ -171,7 +196,12 @@ impl LightEmitter {
             let da = Vec2::from_angle(point.angle);
             let mut smallest_ta = f32::MAX;
 
-            for edge in &self.edges {
+            for edge in &edges {
+                // Edges are sorted, so do not search these with larger distance than the found hit
+                if smallest_ta != f32::MAX && edge.distance > smallest_ta + self.tolerance {
+                    break;
+                }
+
                 let pb = edge.a;
                 let db = edge.b - edge.a;
 

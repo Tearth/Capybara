@@ -6,6 +6,7 @@ use glam::Vec3;
 use glam::Vec4;
 use std::f32::consts;
 
+#[derive(Debug)]
 pub struct Shape {
     pub position: Vec2,
     pub rotation: f32,
@@ -182,15 +183,16 @@ impl Shape {
         }
     }
 
-    pub fn new_disc(center: Vec2, radius: f32, sides: Option<u32>, color: Vec4) -> Self {
+    pub fn new_disc(center: Vec2, radius: f32, sides: Option<u32>, inner_color: Vec4, outer_color: Vec4) -> Self {
         let sides = sides.unwrap_or((radius * 4.0) as u32);
-        let color = color.to_rgb_packed();
+        let inner_color = inner_color.to_rgb_packed();
+        let outer_color = outer_color.to_rgb_packed();
         let angle_step = consts::TAU / sides as f32;
         let mut vertices = vec![
             // Center
             center.x.to_bits(),
             center.y.to_bits(),
-            color,
+            inner_color,
             0.5f32.to_bits(),
             0.5f32.to_bits(),
         ];
@@ -204,7 +206,7 @@ impl Shape {
             vertices.extend_from_slice(&[
                 (sin * radius + center.x).to_bits(),
                 (cos * radius + center.y).to_bits(),
-                color,
+                outer_color,
                 (sin / 2.0 + 0.5).to_bits(),
                 (1.0 - (cos / 2.0 + 0.5)).to_bits(),
             ]);

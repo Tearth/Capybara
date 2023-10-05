@@ -1,4 +1,4 @@
-use super::*;
+use crate::renderer::lighting::Edge;
 use glam::Vec2;
 use glam::Vec4;
 use instant::Instant;

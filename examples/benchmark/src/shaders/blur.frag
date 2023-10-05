@@ -13,7 +13,7 @@ uniform sampler2D textureSampler;
 
 void main()
 {
-    const float Pi2 = 6.28318530718;
+    const float TAU = 6.28318530718;
     const float Directions = 16.0;
     const float Quality = 4.0;
     const float Size = 4.0;
@@ -21,7 +21,7 @@ void main()
     vec2 radius = Size/resolution.xy;
     vec4 color = texture(textureSampler, vertexUv);
     
-    for (float d = 0.0; d < Pi2; d += Pi2 / Directions)
+    for (float d = 0.0; d < TAU; d += TAU / Directions)
     {
 		for (float q = 1.0 / Quality; q <= 1.0; q += 1.0 / Quality)
         {

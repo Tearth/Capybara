@@ -2,7 +2,7 @@ use super::context::RendererContext;
 use super::shape::Shape;
 use super::*;
 use crate::utils::color::Vec4Color;
-use crate::utils::math::NormalizeAngle;
+use crate::utils::math::{F32MathUtils, Vec2MathUtils};
 use glam::Vec4;
 use std::f32::consts;
 
@@ -35,10 +35,17 @@ pub struct LightDebugSettings {
     pub hit_radius: f32,
 }
 
+#[derive(Debug)]
 pub struct LightResponse {
     pub shape: Shape,
-    pub points: Vec<LightRayTarget>,
-    pub hits: Vec<LightRayTarget>,
+    pub points: Vec<RayTarget>,
+    pub hits: Vec<RayTarget>,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct Edge {
+    pub a: Vec2,
+    pub b: Vec2,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -48,7 +55,8 @@ pub struct EdgeWithDistance {
     pub distance: f32,
 }
 
-pub struct LightRayTarget {
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct RayTarget {
     pub position: Vec2,
     pub angle: f32,
 }
@@ -88,13 +96,13 @@ impl LightEmitter {
         // - https://ncase.me/sight-and-light/
         // - https://rootllama.wordpress.com/2014/06/20/ray-line-segment-intersection-test-in-2d/
 
-        // -----------------------------------------------------------------------------------
-        // Step 1: iterate through all edges and collect points toward which rays will be cast
-        // -----------------------------------------------------------------------------------
-
         let mut edges = Vec::new();
         let mut points = Vec::new();
         let mut hits = Vec::new();
+
+        // -------------------------------------------------------
+        // Step 1: collect points based on angle boundaries if set
+        // -------------------------------------------------------
 
         // Do not calculate angles if arc is TAU, or else angle_from will be PI in some cases due to calculation errors
         let (angle_from, mut angle_to) = if self.arc < consts::TAU {
@@ -113,9 +121,13 @@ impl LightEmitter {
             let d1 = Vec2::from_angle(angle_from);
             let d2 = Vec2::from_angle(angle_to);
 
-            points.push(LightRayTarget::new(p + d1 * self.max_length, angle_from));
-            points.push(LightRayTarget::new(p + d2 * self.max_length, angle_to));
+            points.push(RayTarget::new(p + d1 * self.max_length, angle_from));
+            points.push(RayTarget::new(p + d2 * self.max_length, angle_to));
         }
+
+        // ----------------------------------------------------------------------------------
+        // Step 2: collect points based on frame rays to maintain overall shape of light mesh
+        // ----------------------------------------------------------------------------------
 
         if self.frame_rays > 0 {
             let p = self.position;
@@ -125,26 +137,25 @@ impl LightEmitter {
                 let a = angle_from + (i as f32 * step);
                 let d = Vec2::from_angle(a);
 
-                points.push(LightRayTarget::new(p + d * self.max_length, a));
+                points.push(RayTarget::new(p + d * self.max_length, a));
             }
         }
 
+        // -------------------------------------------------------------------------------------
+        // Step 3: sort edges by distance from the position so the search can be optimized later
+        // -------------------------------------------------------------------------------------
+
         for edge in &self.edges {
-            let ab = edge.b - edge.a;
-            let ap = self.position - edge.a;
-            let proj = ap.dot(ab);
-            let d = proj / ab.length_squared();
+            edges.push(EdgeWithDistance { a: (*edge).a, b: (*edge).b, distance: self.position.distance_to_segment(edge.a, edge.b) });
+        }
 
-            let p = if d <= 0.0 {
-                edge.a
-            } else if d >= 1.0 {
-                edge.b
-            } else {
-                edge.a + d * ab
-            };
+        edges.sort_unstable_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
 
-            edges.push(EdgeWithDistance { a: (*edge).a, b: (*edge).b, distance: self.position.distance(p) });
+        // ----------------------------------------------------
+        // Step 4: iterate through all edges and collect points
+        // ----------------------------------------------------
 
+        for edge in &edges {
             for offset in [-self.offset, 0.0, self.offset] {
                 let angle_a = Vec2::new(0.0, 1.0).angle_between(self.position - edge.a) - consts::FRAC_PI_2 + offset;
                 let angle_b = Vec2::new(0.0, 1.0).angle_between(self.position - edge.b) - consts::FRAC_PI_2 + offset;
@@ -167,25 +178,23 @@ impl LightEmitter {
                 }
 
                 if self.arc == consts::TAU || (angle_a >= angle_from && angle_a <= angle_to) {
-                    points.push(LightRayTarget::new(edge.a, angle_a));
+                    points.push(RayTarget::new(edge.a, angle_a));
                 }
                 if self.arc == consts::TAU || (angle_b >= angle_from && angle_b <= angle_to) {
-                    points.push(LightRayTarget::new(edge.b, angle_b));
+                    points.push(RayTarget::new(edge.b, angle_b));
                 }
             }
         }
 
-        edges.sort_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
-
         // ----------------------------------------------------------------------------------------
-        // Step 2: sort and deduplicate points, so the mesh can be later generated in correct order
+        // Step 5: sort and deduplicate points, so the mesh can be later generated in correct order
         // ----------------------------------------------------------------------------------------
 
         points.sort_by(|a, b| a.angle.partial_cmp(&b.angle).unwrap());
         points.dedup_by(|a, b| a.angle == b.angle);
 
         // ----------------------------------------------------------------------------------------------
-        // Step 3: calculate points of hits between rays and edges, select nearest ones and put into list
+        // Step 6: calculate points of hits between rays and edges, select nearest ones and put into list
         // ----------------------------------------------------------------------------------------------
 
         for point in &points {
@@ -194,11 +203,11 @@ impl LightEmitter {
 
             let pa = self.position;
             let da = Vec2::from_angle(point.angle);
-            let mut smallest_ta = f32::MAX;
+            let mut ta_min = f32::MAX;
 
             for edge in &edges {
                 // Edges are sorted, so do not search these with larger distance than the found hit
-                if smallest_ta != f32::MAX && edge.distance > smallest_ta + self.tolerance {
+                if ta_min != f32::MAX && edge.distance > ta_min + self.tolerance {
                     break;
                 }
 
@@ -208,18 +217,18 @@ impl LightEmitter {
                 let ta = (db.x * (pa.y - pb.y) - db.y * (pa.x - pb.x)) / (db.y * da.x - db.x * da.y);
                 let tb = (da.x * (pb.y - pa.y) - da.y * (pb.x - pa.x)) / (da.y * db.x - da.x * db.y);
 
-                if ta > 0.0 && tb > -self.tolerance && tb < 1.0 + self.tolerance && ta < smallest_ta {
-                    smallest_ta = ta;
+                if ta > 0.0 && tb > -self.tolerance && tb < 1.0 + self.tolerance && ta < ta_min {
+                    ta_min = ta;
                 }
             }
 
-            if smallest_ta != f32::MAX {
-                hits.push(LightRayTarget::new(pa + da * smallest_ta.min(self.max_length), point.angle));
+            if ta_min != f32::MAX {
+                hits.push(RayTarget::new(pa + da * ta_min.min(self.max_length), point.angle));
             }
         }
 
         // -----------------------------------------------------------------------------------
-        // Step 4: generate mesh with first vertice centered and all others placed circle-like
+        // Step 7: generate mesh with first vertice centered and all others placed circle-like
         // -----------------------------------------------------------------------------------
 
         let mut shape = Shape::new();
@@ -289,7 +298,13 @@ impl Default for LightEmitter {
     }
 }
 
-impl LightRayTarget {
+impl Edge {
+    pub fn new(a: Vec2, b: Vec2) -> Self {
+        Self { a, b }
+    }
+}
+
+impl RayTarget {
     pub fn new(point: Vec2, angle: f32) -> Self {
         Self { position: point, angle }
     }

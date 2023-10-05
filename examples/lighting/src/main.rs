@@ -20,13 +20,13 @@ use capybara::fastrand;
 use capybara::glam::Vec2;
 use capybara::glam::Vec4;
 use capybara::renderer::context::RendererContext;
+use capybara::renderer::lighting::Edge;
 use capybara::renderer::lighting::LightEmitter;
 use capybara::renderer::lighting::LightResponse;
 use capybara::renderer::shader::Shader;
 use capybara::renderer::sprite::Sprite;
 use capybara::renderer::sprite::TextureId;
 use capybara::renderer::texture::Texture;
-use capybara::renderer::Edge;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
 use capybara::window::Coordinates;
@@ -78,7 +78,7 @@ impl Scene<GlobalData> for MainScene {
     fn input(&mut self, mut state: ApplicationState<GlobalData>, event: InputEvent) -> Result<()> {
         if let InputEvent::KeyPress { key: Key::Escape, repeat: _, modifiers: _ } = event {
             state.window.close();
-        } else if let InputEvent::WindowSizeChange { size } = event {
+        } else if let InputEvent::WindowSizeChange { size: _ } = event {
             self.update_shader_uniforms(&mut state.renderer)?;
         }
 
@@ -108,12 +108,7 @@ impl Scene<GlobalData> for MainScene {
                 );
 
                 self.objects.push(Object {
-                    sprite: Sprite {
-                        position,
-                        //position: Vec2::new(500.0, 500.0),
-                        texture_id: TextureId::Some(state.renderer.textures.get_id("Takodachi")?),
-                        ..Default::default()
-                    },
+                    sprite: Sprite { position, texture_id: TextureId::Some(state.renderer.textures.get_id("Takodachi")?), ..Default::default() },
                     direction: Vec2::new(fastrand::f32() * 2.0 - 1.0, fastrand::f32() * 2.0 - 1.0),
                 });
             }
@@ -131,9 +126,9 @@ impl Scene<GlobalData> for MainScene {
             self.mult_shader_id = state.renderer.shaders.store(mult_shader);
 
             self.emitter.max_length = 200.0;
-            self.blur_directions = 32.0;
+            self.blur_directions = 12.0;
             self.blur_quality = 4.0;
-            self.blur_size = 16.0;
+            self.blur_size = 4.0;
 
             self.update_shader_uniforms(&mut state.renderer)?;
             self.initialized = true;
@@ -182,6 +177,12 @@ impl Scene<GlobalData> for MainScene {
             let response = self.emitter.generate();
             state.renderer.set_target_texture(Some(self.light_texture_id), true);
             state.renderer.clear();
+            state.renderer.draw_sprite(&Sprite {
+                anchor: Vec2::new(0.0, 0.0),
+                size: Some(state.renderer.viewport_size),
+                color: Vec4::new(1.0, 1.0, 1.0, 0.15),
+                ..Default::default()
+            });
             state.renderer.draw_shape(&response.shape);
             state.renderer.set_target_texture(None, true);
 

@@ -61,12 +61,19 @@ impl Sprite {
 
     pub fn get_edges(&self, texture_size: Vec2) -> Vec<Edge> {
         let size = self.size.unwrap_or(texture_size) * self.scale;
-        let a = Vec2::new(self.position.x, self.position.y) - size * self.anchor;
-        let b = Vec2::new(self.position.x + size.x, self.position.y) - size * self.anchor;
-        let c = Vec2::new(self.position.x + size.x, self.position.y + size.y) - size * self.anchor;
-        let d = Vec2::new(self.position.x, self.position.y + size.y) - size * self.anchor;
+        let a = Vec2::new(0.0, 0.0) - size * self.anchor;
+        let b = Vec2::new(size.x, 0.0) - size * self.anchor;
+        let c = Vec2::new(size.x, size.y) - size * self.anchor;
+        let d = Vec2::new(0.0, size.y) - size * self.anchor;
 
-        // TODO: support for rotations
+        let sin = self.rotation.sin();
+        let cos = self.rotation.cos();
+
+        let a = Vec2::new(a.x * cos - a.y * sin, a.y * cos + a.x * sin) + self.position;
+        let b = Vec2::new(b.x * cos - b.y * sin, b.y * cos + b.x * sin) + self.position;
+        let c = Vec2::new(c.x * cos - c.y * sin, c.y * cos + c.x * sin) + self.position;
+        let d = Vec2::new(d.x * cos - d.y * sin, d.y * cos + d.x * sin) + self.position;
+
         vec![Edge::new(a, b), Edge::new(b, c), Edge::new(c, d), Edge::new(d, a)]
     }
 

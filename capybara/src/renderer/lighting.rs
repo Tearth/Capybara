@@ -1,5 +1,5 @@
 use super::context::RendererContext;
-use super::shape::Shape;
+use super::shape::{Shape, ShapeVertex};
 use super::*;
 use crate::utils::color::Vec4Color;
 use crate::utils::math::{F32MathUtils, Vec2MathUtils};
@@ -228,24 +228,24 @@ impl LightEmitter {
         }
 
         // -----------------------------------------------------------------------------------
-        // Step 7: generate mesh with first vertice centered and all others placed circle-like
+        // Step 7: generate mesh with first vertex centered and all others placed circle-like
         // -----------------------------------------------------------------------------------
 
         let mut shape = Shape::new();
         let mut last_position = Vec2::new(0.0, 0.0);
 
-        shape.add_vertice(self.position, self.color_begin.to_rgb_packed(), Vec2::new(0.0, 0.0));
+        shape.vertices.push(ShapeVertex::new(self.position, self.color_begin, Vec2::new(0.0, 0.0)));
         for hit in &hits {
             if (*hit).position.distance(last_position) <= self.merge_distance {
                 continue;
             }
 
-            let index = (shape.vertices.len() / 5) - 1;
+            let index = shape.vertices.len() - 1;
             let distance = (*hit).position.distance(self.position);
             let ratio = distance / self.max_length;
             let color = self.color_begin.lerp(self.color_end, ratio);
 
-            shape.add_vertice((*hit).position, color.to_rgb_packed(), Vec2::new(1.0, 1.0));
+            shape.vertices.push(ShapeVertex::new((*hit).position, color, Vec2::new(1.0, 1.0)));
             if index > 0 {
                 shape.indices.push(0);
                 shape.indices.push(index as u32);
@@ -257,7 +257,7 @@ impl LightEmitter {
 
         if self.arc == consts::TAU {
             shape.indices.push(0);
-            shape.indices.push((shape.vertices.len() / 5 - 1) as u32);
+            shape.indices.push((shape.vertices.len() - 1) as u32);
             shape.indices.push(1);
         }
 

@@ -24,6 +24,7 @@ use capybara::renderer::lighting::Edge;
 use capybara::renderer::lighting::LightEmitter;
 use capybara::renderer::lighting::LightResponse;
 use capybara::renderer::shader::Shader;
+use capybara::renderer::shape::Shape;
 use capybara::renderer::sprite::Sprite;
 use capybara::renderer::sprite::TextureId;
 use capybara::renderer::texture::Texture;
@@ -101,14 +102,20 @@ impl Scene<GlobalData> for MainScene {
             state.ui.instantiate_assets(&state.global.assets, None);
             state.window.set_swap_interval(0);
 
-            for _ in 0..1000 {
+            for _ in 0..100 {
                 let position = Vec2::new(
                     fastrand::u32(0..state.renderer.viewport_size.x as u32) as f32,
                     fastrand::u32(0..state.renderer.viewport_size.y as u32) as f32,
                 );
 
                 self.objects.push(Object {
-                    sprite: Sprite { position, texture_id: TextureId::Some(state.renderer.textures.get_id("Takodachi")?), ..Default::default() },
+                    sprite: Sprite {
+                        position,
+                        rotation: fastrand::f32() * 6.28,
+                        anchor: Vec2::new(0.0, 0.0),
+                        texture_id: TextureId::Some(state.renderer.textures.get_id("Takodachi")?),
+                        ..Default::default()
+                    },
                     direction: Vec2::new(fastrand::f32() * 2.0 - 1.0, fastrand::f32() * 2.0 - 1.0),
                 });
             }
@@ -159,6 +166,29 @@ impl Scene<GlobalData> for MainScene {
                 state.renderer.draw_sprite(&object.sprite);
                 edges.append(&mut object.sprite.get_edges(texture_size));
             }
+
+            // let c = state.renderer.viewport_size / 2.0;
+
+            // let circle = Shape::new_circle(c, 100.0, Some(24), 10.0, Vec4::new(1.0, 1.0, 1.0, 1.0));
+            // state.renderer.draw_shape(&circle);
+            // edges.append(&mut circle.get_edges());
+
+            // let disc = Shape::new_disc(c, 100.0, Some(24), Vec4::new(1.0, 1.0, 1.0, 1.0), Vec4::new(1.0, 1.0, 1.0, 1.0));
+            // state.renderer.draw_shape(&disc);
+            // edges.append(&mut disc.get_edges());
+
+            // let frame = Shape::new_frame(c - Vec2::new(50.0, 50.0), c + Vec2::new(50.0, 50.0), 10.0, Vec4::new(1.0, 1.0, 1.0, 1.0));
+            // state.renderer.draw_shape(&frame);
+            // edges.append(&mut frame.get_edges());
+
+            // let rectangle = Shape::new_rectangle(c - Vec2::new(50.0, 50.0), c + Vec2::new(50.0, 50.0), Vec4::new(1.0, 1.0, 1.0, 1.0));
+            // state.renderer.draw_shape(&rectangle);
+            // edges.append(&mut rectangle.get_edges());
+
+            // let line = Shape::new_line(c - Vec2::new(50.0, 50.0), c + Vec2::new(50.0, 50.0), 1.0, Vec4::new(1.0, 1.0, 1.0, 1.0));
+            // state.renderer.draw_shape(&line);
+            // edges.append(&mut line.get_edges());
+
             state.renderer.set_target_texture(None, true);
 
             let min = Vec2::new(0.0, 0.0);

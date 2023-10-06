@@ -19,6 +19,18 @@ pub struct Sprite {
     pub animation_timestamp: Instant,
 }
 
+#[repr(C)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+pub struct SpriteVertex {
+    pub position: Vec2,
+    pub anchor: Vec2,
+    pub rotation: f32,
+    pub size: Vec2,
+    pub color: u32,
+    pub uv_position: Vec2,
+    pub uv_size: Vec2,
+}
+
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub enum TextureId {
     #[default]

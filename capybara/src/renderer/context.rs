@@ -3,7 +3,9 @@ use super::camera::CameraOrigin;
 use super::shader::Shader;
 use super::shader::*;
 use super::shape::Shape;
+use super::shape::ShapeVertex;
 use super::sprite::Sprite;
+use super::sprite::SpriteVertex;
 use super::sprite::TextureId;
 use super::sprite::TextureType;
 use super::texture::AtlasEntity;
@@ -33,6 +35,7 @@ use log::error;
 use log::info;
 use rustc_hash::FxHashMap;
 use std::cmp;
+use std::mem;
 use std::path::Path;
 use std::ptr;
 use std::rc::Rc;
@@ -69,14 +72,14 @@ pub struct RendererContext {
     sprite_buffer_ebo: Buffer,
     sprite_buffer_resized: bool,
     sprite_buffer_count: usize,
-    sprite_buffer_vertices_queue: Vec<u32>,
+    sprite_buffer_vertices_queue: Vec<SpriteVertex>,
     sprite_buffer_vertices_count: usize,
 
     shape_buffer_vao: VertexArray,
     shape_buffer_vbo: Buffer,
     shape_buffer_ebo: Buffer,
     shape_buffer_resized: bool,
-    shape_buffer_vertices_queue: Vec<u32>,
+    shape_buffer_vertices_queue: Vec<ShapeVertex>,
     shape_buffer_indices_queue: Vec<u32>,
     shape_buffer_vertices_count: usize,
     shape_buffer_indices_count: usize,
@@ -145,14 +148,14 @@ impl RendererContext {
                 sprite_buffer_ebo,
                 sprite_buffer_resized: true,
                 sprite_buffer_count: 0,
-                sprite_buffer_vertices_queue: vec![0; 256],
+                sprite_buffer_vertices_queue: vec![Default::default(); 256],
                 sprite_buffer_vertices_count: 0,
 
                 shape_buffer_vao,
                 shape_buffer_vbo,
                 shape_buffer_ebo,
                 shape_buffer_resized: true,
-                shape_buffer_vertices_queue: vec![0; 256],
+                shape_buffer_vertices_queue: vec![Default::default(); 256],
                 shape_buffer_indices_queue: vec![0; 256],
                 shape_buffer_vertices_count: 0,
                 shape_buffer_indices_count: 0,
@@ -394,8 +397,8 @@ impl RendererContext {
                 Some(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id, self.framebuffer_texture_id, self.selected_shader_id));
         }
 
-        if self.sprite_buffer_vertices_count + 12 >= self.sprite_buffer_vertices_queue.len() {
-            self.sprite_buffer_vertices_queue.resize(self.sprite_buffer_vertices_queue.len() * 2, 0);
+        if self.sprite_buffer_vertices_count >= self.sprite_buffer_vertices_queue.len() {
+            self.sprite_buffer_vertices_queue.resize(self.sprite_buffer_vertices_queue.len() * 2, Default::default());
             self.sprite_buffer_resized = true;
         }
 
@@ -463,23 +466,18 @@ impl RendererContext {
             (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0))
         };
 
-        let color = sprite.color.to_rgb_packed();
-
-        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 0] = sprite.position.x.to_bits();
-        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 1] = sprite.position.y.to_bits();
-        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 2] = sprite.anchor.x.to_bits();
-        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 3] = sprite.anchor.y.to_bits();
-        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 4] = sprite.rotation.to_bits();
-        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 5] = (sprite_size.x * sprite.scale.x).to_bits();
-        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 6] = (sprite_size.y * sprite.scale.y).to_bits();
-        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 7] = color;
-        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 8] = uv_position.x.to_bits();
-        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 9] = uv_position.y.to_bits();
-        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 10] = uv_size.x.to_bits();
-        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count + 11] = uv_size.y.to_bits();
+        self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count] = SpriteVertex {
+            position: sprite.position,
+            anchor: sprite.anchor,
+            rotation: sprite.rotation,
+            size: sprite_size * sprite.scale,
+            color: sprite.color.to_rgb_packed(),
+            uv_position,
+            uv_size,
+        };
 
         self.sprite_buffer_count += 1;
-        self.sprite_buffer_vertices_count += 12;
+        self.sprite_buffer_vertices_count += 1;
     }
 
     pub fn draw_shape(&mut self, shape: &Shape) {
@@ -498,7 +496,7 @@ impl RendererContext {
             let mut sufficient_space = true;
 
             if self.shape_buffer_vertices_count + shape.vertices.len() >= self.shape_buffer_vertices_queue.len() {
-                self.shape_buffer_vertices_queue.resize(self.shape_buffer_vertices_queue.len() * 2, 0);
+                self.shape_buffer_vertices_queue.resize(self.shape_buffer_vertices_queue.len() * 2, Default::default());
                 self.shape_buffer_resized = true;
                 sufficient_space = false;
             }
@@ -522,14 +520,12 @@ impl RendererContext {
         if shape.apply_model {
             let model = shape.get_model();
 
-            for i in (self.shape_buffer_vertices_count..(self.shape_buffer_vertices_count + shape.vertices.len())).step_by(5) {
-                let x = self.shape_buffer_vertices_queue[i + 0];
-                let y = self.shape_buffer_vertices_queue[i + 1];
-                let position = Vec4::new(f32::from_bits(x), f32::from_bits(y), 0.0, 1.0);
+            for i in self.shape_buffer_vertices_count..(self.shape_buffer_vertices_count + shape.vertices.len()) {
+                let position = self.shape_buffer_vertices_queue[i].position;
+                let position = Vec4::new(position.x, position.y, 0.0, 1.0);
                 let position_transformed = model * position;
 
-                self.shape_buffer_vertices_queue[i + 0] = position_transformed.x.to_bits();
-                self.shape_buffer_vertices_queue[i + 1] = position_transformed.y.to_bits();
+                self.shape_buffer_vertices_queue[i].position = Vec2::new(position_transformed.x, position_transformed.y);
             }
         }
 
@@ -547,7 +543,7 @@ impl RendererContext {
         unsafe {
             if let Some(buffer_metadata) = &self.buffer_metadata {
                 if self.sprite_buffer_resized {
-                    let buffer_vertices_size = self.sprite_buffer_vertices_queue.len() as i32 * 4;
+                    let buffer_vertices_size = self.sprite_buffer_vertices_queue.len() as i32 * mem::size_of::<SpriteVertex>() as i32;
 
                     self.gl.bind_vertex_array(Some(self.sprite_buffer_vao));
                     self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.sprite_buffer_vbo));
@@ -557,7 +553,7 @@ impl RendererContext {
                 }
 
                 if self.shape_buffer_resized {
-                    let buffer_vertices_size = self.shape_buffer_vertices_queue.len() as i32 * 4;
+                    let buffer_vertices_size = self.shape_buffer_vertices_queue.len() as i32 * mem::size_of::<ShapeVertex>() as i32;
                     let buffer_indices_size = self.shape_buffer_indices_queue.len() as i32 * 4;
 
                     self.gl.bind_vertex_array(Some(self.shape_buffer_vao));
@@ -598,8 +594,10 @@ impl RendererContext {
                         self.gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.sprite_buffer_vbo));
                         self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.sprite_buffer_ebo));
 
-                        let models_u8 =
-                            slice::from_raw_parts(self.sprite_buffer_vertices_queue.as_ptr() as *const u8, self.sprite_buffer_vertices_count * 4);
+                        let models_u8 = slice::from_raw_parts(
+                            self.sprite_buffer_vertices_queue.as_ptr() as *const u8,
+                            self.sprite_buffer_vertices_count * mem::size_of::<SpriteVertex>(),
+                        );
 
                         self.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, 0, models_u8);
 
@@ -643,7 +641,8 @@ impl RendererContext {
                         self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.shape_buffer_ebo));
 
                         let buffer_ptr = self.shape_buffer_vertices_queue.as_ptr();
-                        let models_u8 = slice::from_raw_parts(buffer_ptr as *const u8, self.shape_buffer_vertices_count * 4);
+                        let models_u8 =
+                            slice::from_raw_parts(buffer_ptr as *const u8, self.shape_buffer_vertices_count * mem::size_of::<ShapeVertex>());
 
                         let buffer_ptr = self.shape_buffer_indices_queue.as_ptr();
                         let indices_u8 = slice::from_raw_parts(buffer_ptr as *const u8, self.shape_buffer_indices_count * 4);

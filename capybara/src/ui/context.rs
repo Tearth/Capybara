@@ -5,6 +5,7 @@ use crate::renderer::camera::Camera;
 use crate::renderer::camera::CameraOrigin;
 use crate::renderer::context::RendererContext;
 use crate::renderer::shape::Shape;
+use crate::renderer::shape::ShapeVertex;
 use crate::renderer::sprite;
 use crate::renderer::texture::Texture;
 use crate::renderer::texture::TextureFilterMag;
@@ -32,6 +33,7 @@ use egui::TextureHandle;
 use egui::TextureId;
 use egui::TextureOptions;
 use glam::Vec2;
+use glam::Vec4;
 use glow::HasContext;
 use instant::Instant;
 use log::error;
@@ -233,18 +235,17 @@ impl UiContext {
         for mesh in self.inner.read().unwrap().tessellate(output.shapes) {
             if let Primitive::Mesh(data) = mesh.primitive {
                 let mut vertices = Vec::new();
-                for vertice in data.vertices {
-                    let r = vertice.color.r() as u32;
-                    let g = vertice.color.g() as u32;
-                    let b = vertice.color.b() as u32;
-                    let a = vertice.color.a() as u32;
-                    let color = r | (g << 8) | (b << 16) | (a << 24);
+                for vertex in data.vertices {
+                    let r = vertex.color.r() as f32 / 255.0;
+                    let g = vertex.color.g() as f32 / 255.0;
+                    let b = vertex.color.b() as f32 / 255.0;
+                    let a = vertex.color.a() as f32 / 255.0;
 
-                    vertices.push(vertice.pos.x.to_bits());
-                    vertices.push(vertice.pos.y.to_bits());
-                    vertices.push(color);
-                    vertices.push(vertice.uv.x.to_bits());
-                    vertices.push(vertice.uv.y.to_bits());
+                    vertices.push(ShapeVertex::new(
+                        Vec2::new(vertex.pos.x, vertex.pos.y),
+                        Vec4::new(r, g, b, a),
+                        Vec2::new(vertex.uv.x, vertex.uv.y),
+                    ));
                 }
 
                 let mut shape = Shape::new();

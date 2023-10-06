@@ -1,4 +1,5 @@
 use super::sprite::TextureId;
+use crate::renderer::lighting::Edge;
 use crate::utils::color::Vec4Color;
 use glam::Mat4;
 use glam::Vec2;
@@ -14,8 +15,16 @@ pub struct Shape {
     pub texture_id: TextureId,
     pub apply_model: bool,
 
-    pub vertices: Vec<u32>,
+    pub vertices: Vec<ShapeVertex>,
     pub indices: Vec<u32>,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+pub struct ShapeVertex {
+    pub position: Vec2,
+    pub color: u32,
+    pub uv: Vec2,
 }
 
 impl Shape {
@@ -36,33 +45,16 @@ impl Shape {
         let width = thickness / 2.0;
         let length = (to - from).length() + 1.0;
         let angle = Vec2::new(0.0, 1.0).angle_between(to - from);
-        let color = color.to_rgb_packed();
 
         let vertices = vec![
             // Left-bottom
-            (-width).to_bits(),
-            (-0.5f32).to_bits(),
-            color,
-            0.0f32.to_bits(),
-            1.0f32.to_bits(),
+            ShapeVertex::new(Vec2::new(-width, -0.5), color, Vec2::new(0.0, 1.0)),
             // Right-bottom
-            (width).to_bits(),
-            (-0.5f32).to_bits(),
-            color,
-            1.0f32.to_bits(),
-            1.0f32.to_bits(),
+            ShapeVertex::new(Vec2::new(width, -0.5), color, Vec2::new(1.0, 1.0)),
             // Right-top
-            (width).to_bits(),
-            (length - 0.5).to_bits(),
-            color,
-            1.0f32.to_bits(),
-            0.0f32.to_bits(),
+            ShapeVertex::new(Vec2::new(width, length - 0.5), color, Vec2::new(1.0, 0.0)),
             // Left-top
-            (-width).to_bits(),
-            (length - 0.5).to_bits(),
-            color,
-            0.0f32.to_bits(),
-            0.0f32.to_bits(),
+            ShapeVertex::new(Vec2::new(-width, length - 0.5), color, Vec2::new(0.0, 0.0)),
         ];
 
         Shape {
@@ -78,32 +70,15 @@ impl Shape {
 
     pub fn new_rectangle(left_bottom: Vec2, right_top: Vec2, color: Vec4) -> Self {
         let size = right_top - left_bottom + Vec2::ONE;
-        let color = color.to_rgb_packed();
         let vertices = vec![
             // Left-bottom
-            (left_bottom.x).to_bits(),
-            (left_bottom.y).to_bits(),
-            color,
-            0.0f32.to_bits(),
-            1.0f32.to_bits(),
+            ShapeVertex::new(left_bottom, color, Vec2::new(0.0, 1.0)),
             // Right-bottom
-            (left_bottom.x + size.x).to_bits(),
-            (left_bottom.y).to_bits(),
-            color,
-            1.0f32.to_bits(),
-            1.0f32.to_bits(),
+            ShapeVertex::new(left_bottom + Vec2::new(size.x, 0.0), color, Vec2::new(1.0, 1.0)),
             // Right-top
-            (left_bottom.x + size.x).to_bits(),
-            (left_bottom.y + size.y).to_bits(),
-            color,
-            1.0f32.to_bits(),
-            0.0f32.to_bits(),
+            ShapeVertex::new(left_bottom + size, color, Vec2::new(1.0, 0.0)),
             // Left-top
-            (left_bottom.x).to_bits(),
-            (left_bottom.y + size.y).to_bits(),
-            color,
-            0.0f32.to_bits(),
-            0.0f32.to_bits(),
+            ShapeVertex::new(left_bottom + Vec2::new(0.0, size.y), color, Vec2::new(0.0, 0.0)),
         ];
 
         Shape {
@@ -119,57 +94,24 @@ impl Shape {
 
     pub fn new_frame(left_bottom: Vec2, right_top: Vec2, thickness: f32, color: Vec4) -> Self {
         let size = right_top - left_bottom + Vec2::ONE;
-        let color = color.to_rgb_packed();
         let uv_thickness = thickness / size;
         let vertices = vec![
             // Left-bottom outer
-            (left_bottom.x).to_bits(),
-            (left_bottom.y).to_bits(),
-            color,
-            0.0f32.to_bits(),
-            1.0f32.to_bits(),
+            ShapeVertex::new(left_bottom, color, Vec2::new(0.0, 1.0)),
             // Left-bottom inner
-            (left_bottom.x + thickness).to_bits(),
-            (left_bottom.y + thickness).to_bits(),
-            color,
-            (0.0 + uv_thickness.x).to_bits(),
-            (1.0 - uv_thickness.y).to_bits(),
+            ShapeVertex::new(left_bottom + thickness, color, Vec2::new(uv_thickness.x, 1.0 - uv_thickness.y)),
             // Right-bottom outer
-            (left_bottom.x + size.x).to_bits(),
-            (left_bottom.y).to_bits(),
-            color,
-            1.0f32.to_bits(),
-            1.0f32.to_bits(),
+            ShapeVertex::new(left_bottom + Vec2::new(size.x, 0.0), color, Vec2::new(1.0, 1.0)),
             // Right-bottom inner
-            (left_bottom.x + size.x - thickness).to_bits(),
-            (left_bottom.y + thickness).to_bits(),
-            color,
-            (1.0 - uv_thickness.x).to_bits(),
-            (1.0 - uv_thickness.y).to_bits(),
+            ShapeVertex::new(left_bottom + Vec2::new(size.x - thickness, thickness), color, Vec2::new(1.0, 1.0) - uv_thickness),
             // Right-top outer
-            (left_bottom.x + size.x).to_bits(),
-            (left_bottom.y + size.y).to_bits(),
-            color,
-            1.0f32.to_bits(),
-            0.0f32.to_bits(),
+            ShapeVertex::new(left_bottom + size, color, Vec2::new(1.0, 0.0)),
             // Right-top inner
-            (left_bottom.x + size.x - thickness).to_bits(),
-            (left_bottom.y + size.y - thickness).to_bits(),
-            color,
-            (1.0 - uv_thickness.x).to_bits(),
-            (0.0 + uv_thickness.y).to_bits(),
+            ShapeVertex::new(left_bottom + size - thickness, color, Vec2::new(1.0 - uv_thickness.x, uv_thickness.y)),
             // Left-top outer
-            (left_bottom.x).to_bits(),
-            (left_bottom.y + size.y).to_bits(),
-            color,
-            0.0f32.to_bits(),
-            0.0f32.to_bits(),
+            ShapeVertex::new(left_bottom + Vec2::new(0.0, size.y), color, Vec2::new(0.0, 0.0)),
             // Left-top inner
-            (left_bottom.x + thickness).to_bits(),
-            (left_bottom.y + size.y - thickness).to_bits(),
-            color,
-            (0.0 + uv_thickness.x).to_bits(),
-            (0.0 + uv_thickness.y).to_bits(),
+            ShapeVertex::new(left_bottom + Vec2::new(thickness, size.y - thickness), color, uv_thickness),
         ];
 
         Shape {
@@ -185,16 +127,10 @@ impl Shape {
 
     pub fn new_disc(center: Vec2, radius: f32, sides: Option<u32>, inner_color: Vec4, outer_color: Vec4) -> Self {
         let sides = sides.unwrap_or((radius * 4.0) as u32);
-        let inner_color = inner_color.to_rgb_packed();
-        let outer_color = outer_color.to_rgb_packed();
         let angle_step = consts::TAU / sides as f32;
         let mut vertices = vec![
             // Center
-            center.x.to_bits(),
-            center.y.to_bits(),
-            inner_color,
-            0.5f32.to_bits(),
-            0.5f32.to_bits(),
+            ShapeVertex::new(center, inner_color, Vec2::new(0.5, 0.5)),
         ];
         let mut indices = Vec::new();
 
@@ -203,13 +139,9 @@ impl Shape {
             let sin = f32::sin(angle);
             let cos = f32::cos(angle);
 
-            vertices.extend_from_slice(&[
-                (sin * radius + center.x).to_bits(),
-                (cos * radius + center.y).to_bits(),
-                outer_color,
-                (sin / 2.0 + 0.5).to_bits(),
-                (1.0 - (cos / 2.0 + 0.5)).to_bits(),
-            ]);
+            let position = Vec2::new(sin * radius + center.x, cos * radius + center.y);
+            let uv = Vec2::new(sin / 2.0 + 0.5, 1.0 - (cos / 2.0 + 0.5));
+            vertices.push(ShapeVertex::new(position, outer_color, uv));
 
             if i > 0 {
                 indices.extend_from_slice(&[0, i, i + 1]);
@@ -223,7 +155,6 @@ impl Shape {
 
     pub fn new_circle(center: Vec2, radius: f32, sides: Option<u32>, thickness: f32, color: Vec4) -> Self {
         let sides = sides.unwrap_or((radius * 4.0) as u32);
-        let color = color.to_rgb_packed();
         let uv_thickness = thickness / radius;
         let angle_step = consts::TAU / sides as f32;
         let mut vertices = Vec::new();
@@ -234,20 +165,13 @@ impl Shape {
             let sin = f32::sin(angle);
             let cos = f32::cos(angle);
 
-            vertices.extend_from_slice(&[
-                // Outer
-                (sin * radius + center.x).to_bits(),
-                (cos * radius + center.y).to_bits(),
-                color,
-                (sin / 2.0 + 0.5).to_bits(),
-                (1.0 - (cos / 2.0 + 0.5)).to_bits(),
-                // Inner
-                (sin * (radius - thickness) + center.x).to_bits(),
-                (cos * (radius - thickness) + center.y).to_bits(),
-                color,
-                (sin * (1.0 - uv_thickness) / 2.0 + 0.5).to_bits(),
-                (1.0 - (cos * (1.0 - uv_thickness) / 2.0 + 0.5)).to_bits(),
-            ]);
+            let position_outer = Vec2::new(sin * radius + center.x, cos * radius + center.y);
+            let position_inner = Vec2::new(sin * (radius - thickness) + center.x, cos * (radius - thickness) + center.y);
+            let uv_outer = Vec2::new(sin / 2.0 + 0.5, 1.0 - (cos / 2.0 + 0.5));
+            let uv_inner = Vec2::new(sin * (1.0 - uv_thickness) / 2.0 + 0.5, 1.0 - (cos * (1.0 - uv_thickness) / 2.0 + 0.5));
+
+            vertices.push(ShapeVertex::new(position_outer, color, uv_outer));
+            vertices.push(ShapeVertex::new(position_inner, color, uv_inner));
 
             if i > 0 {
                 let i = i * 2;
@@ -261,12 +185,27 @@ impl Shape {
         Shape { position: Vec2::ZERO, rotation: 0.0, scale: Vec2::ONE, texture_id: TextureId::Default, apply_model: true, vertices, indices }
     }
 
-    pub fn add_vertice(&mut self, position: Vec2, color: u32, uv: Vec2) {
-        self.vertices.push(position.x.to_bits());
-        self.vertices.push(position.y.to_bits());
-        self.vertices.push(color);
-        self.vertices.push(uv.x.to_bits());
-        self.vertices.push(uv.y.to_bits());
+    pub fn get_edges(&self) -> Vec<Edge> {
+        let mut edges = Vec::new();
+        let model = self.get_model();
+
+        for i in (0..self.indices.len()).step_by(3) {
+            let a = self.vertices[self.indices[i + 0] as usize].position;
+            let b = self.vertices[self.indices[i + 1] as usize].position;
+            let c = self.vertices[self.indices[i + 2] as usize].position;
+
+            let a = model * Vec4::new(a.x, a.y, 0.0, 1.0);
+            let b = model * Vec4::new(b.x, b.y, 0.0, 1.0);
+            let c = model * Vec4::new(c.x, c.y, 0.0, 1.0);
+
+            let a = Vec2::new(a.x, a.y);
+            let b = Vec2::new(b.x, b.y);
+            let c = Vec2::new(c.x, c.y);
+
+            edges.extend_from_slice(&[Edge::new(a, b), Edge::new(b, c), Edge::new(c, a)]);
+        }
+
+        edges
     }
 
     pub fn get_model(&self) -> Mat4 {
@@ -281,5 +220,11 @@ impl Shape {
 impl Default for Shape {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl ShapeVertex {
+    pub fn new(position: Vec2, color: Vec4, uv: Vec2) -> Self {
+        Self { position, color: color.to_rgb_packed(), uv }
     }
 }

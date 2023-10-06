@@ -45,6 +45,7 @@ impl Shape {
         let width = thickness / 2.0;
         let length = (to - from).length() + 1.0;
         let angle = Vec2::new(0.0, 1.0).angle_between(to - from);
+        let color = color.to_rgb_packed();
 
         let vertices = vec![
             // Left-bottom
@@ -70,6 +71,8 @@ impl Shape {
 
     pub fn new_rectangle(left_bottom: Vec2, right_top: Vec2, color: Vec4) -> Self {
         let size = right_top - left_bottom + Vec2::ONE;
+        let color = color.to_rgb_packed();
+
         let vertices = vec![
             // Left-bottom
             ShapeVertex::new(left_bottom, color, Vec2::new(0.0, 1.0)),
@@ -95,6 +98,8 @@ impl Shape {
     pub fn new_frame(left_bottom: Vec2, right_top: Vec2, thickness: f32, color: Vec4) -> Self {
         let size = right_top - left_bottom + Vec2::ONE;
         let uv_thickness = thickness / size;
+        let color = color.to_rgb_packed();
+
         let vertices = vec![
             // Left-bottom outer
             ShapeVertex::new(left_bottom, color, Vec2::new(0.0, 1.0)),
@@ -128,6 +133,9 @@ impl Shape {
     pub fn new_disc(center: Vec2, radius: f32, sides: Option<u32>, inner_color: Vec4, outer_color: Vec4) -> Self {
         let sides = sides.unwrap_or((radius * 4.0) as u32);
         let angle_step = consts::TAU / sides as f32;
+        let inner_color = inner_color.to_rgb_packed();
+        let outer_color = outer_color.to_rgb_packed();
+
         let mut vertices = vec![
             // Center
             ShapeVertex::new(center, inner_color, Vec2::new(0.5, 0.5)),
@@ -157,6 +165,7 @@ impl Shape {
         let sides = sides.unwrap_or((radius * 4.0) as u32);
         let uv_thickness = thickness / radius;
         let angle_step = consts::TAU / sides as f32;
+        let color = color.to_rgb_packed();
         let mut vertices = Vec::new();
         let mut indices = Vec::new();
 
@@ -224,7 +233,7 @@ impl Default for Shape {
 }
 
 impl ShapeVertex {
-    pub fn new(position: Vec2, color: Vec4, uv: Vec2) -> Self {
-        Self { position, color: color.to_rgb_packed(), uv }
+    pub fn new(position: Vec2, color: u32, uv: Vec2) -> Self {
+        Self { position, color: color, uv }
     }
 }

@@ -12,7 +12,7 @@ pub trait ImageAtlas {
         Self: Sized;
 }
 
-impl ImageAtlas for Image {
+impl ImageAtlas for Image<'_> {
     fn atlas(self, texture: &Texture, entity_name: &str) -> Result<Self> {
         if let TextureKind::Atlas(entities) = &texture.kind {
             if let Some(entity) = entities.get(entity_name) {
@@ -27,7 +27,7 @@ impl ImageAtlas for Image {
     }
 }
 
-impl ImageAtlas for ImageButton {
+impl ImageAtlas for ImageButton<'_> {
     fn atlas(self, texture: &Texture, entity_name: &str) -> Result<Self> {
         if let TextureKind::Atlas(entities) = &texture.kind {
             if let Some(entity) = entities.get(entity_name) {

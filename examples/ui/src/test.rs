@@ -9,28 +9,46 @@ use capybara::egui::*;
 use std::collections::HashMap;
 
 const GRADIENT_SIZE: Vec2 = vec2(256.0, 18.0);
+
 const BLACK: Color32 = Color32::BLACK;
 const GREEN: Color32 = Color32::GREEN;
 const RED: Color32 = Color32::RED;
 const TRANSPARENT: Color32 = Color32::TRANSPARENT;
 const WHITE: Color32 = Color32::WHITE;
 
+/// Create a [`Hyperlink`](egui::Hyperlink) to this egui source code file on github.
+#[macro_export]
+macro_rules! egui_github_link_file {
+    () => {
+        $crate::egui_github_link_file!("(source code)")
+    };
+    ($label: expr) => {
+        egui::github_link_file!("https://github.com/emilk/egui/blob/master/", egui::RichText::new($label).small())
+    };
+}
+
+/// A test for sanity-checking and diagnosing egui rendering backends.
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 pub struct ColorTest {
+    #[cfg_attr(feature = "serde", serde(skip))]
     tex_mngr: TextureManager,
     vertex_gradients: bool,
     texture_gradients: bool,
-    textarea_content: String,
 }
 
 impl Default for ColorTest {
     fn default() -> Self {
-        Self { tex_mngr: Default::default(), vertex_gradients: true, texture_gradients: true, textarea_content: Default::default() }
+        Self { tex_mngr: Default::default(), vertex_gradients: true, texture_gradients: true }
     }
 }
 
 impl ColorTest {
     pub fn ui(&mut self, ui: &mut Ui) {
         ui.set_max_width(680.0);
+
+        ui.vertical_centered(|ui| {
+            ui.add(crate::egui_github_link_file!());
+        });
 
         ui.horizontal_wrapped(|ui|{
             ui.label("This is made to test that the egui painter backend is set up correctly.");
@@ -43,13 +61,6 @@ impl ColorTest {
             ui.checkbox(&mut self.vertex_gradients, "Vertex gradients");
             ui.checkbox(&mut self.texture_gradients, "Texture gradients");
         });
-
-        ui.separator();
-
-        ui.label("Text area to test keyboard events:");
-        ui.text_edit_multiline(&mut self.textarea_content);
-
-        ui.separator();
 
         ui.heading("sRGB color test");
         ui.label("Use a color picker to ensure this color is (255, 165, 0) / #ffa500");
@@ -89,7 +100,7 @@ impl ColorTest {
                 let tex = self.tex_mngr.get(ui.ctx(), &g);
                 let texel_offset = 0.5 / (g.0.len() as f32);
                 let uv = Rect::from_min_max(pos2(texel_offset, 0.0), pos2(1.0 - texel_offset, 1.0));
-                ui.add(Image::new(tex, GRADIENT_SIZE).tint(vertex_color).uv(uv))
+                ui.add(Image::from_texture((tex.id(), GRADIENT_SIZE)).tint(vertex_color).uv(uv))
                     .on_hover_text(format!("A texture that is {} texels wide", g.0.len()));
                 ui.label("GPU result");
             });
@@ -200,7 +211,7 @@ impl ColorTest {
             let tex = self.tex_mngr.get(ui.ctx(), gradient);
             let texel_offset = 0.5 / (gradient.0.len() as f32);
             let uv = Rect::from_min_max(pos2(texel_offset, 0.0), pos2(1.0 - texel_offset, 1.0));
-            ui.add(Image::new(tex, GRADIENT_SIZE).bg_fill(bg_fill).uv(uv))
+            ui.add(Image::from_texture((tex.id(), GRADIENT_SIZE)).bg_fill(bg_fill).uv(uv))
                 .on_hover_text(format!("A texture that is {} texels wide", gradient.0.len()));
             ui.label(label);
         });
@@ -245,7 +256,7 @@ fn vertex_gradient(ui: &mut Ui, bg_fill: Color32, gradient: &Gradient) -> Respon
     response
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Clone, Copy)]
 enum Interpolation {
     Linear,
     Gamma,

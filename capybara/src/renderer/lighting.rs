@@ -234,7 +234,7 @@ impl LightEmitter {
         let mut shape = Shape::new();
         let mut last_position = Vec2::new(0.0, 0.0);
 
-        shape.vertices.push(ShapeVertex::new(self.position, self.color_begin, Vec2::new(0.0, 0.0)));
+        shape.vertices.push(ShapeVertex::new(self.position, self.color_begin.to_rgb_packed(), Vec2::new(0.0, 0.0)));
         for hit in &hits {
             if (*hit).position.distance(last_position) <= self.merge_distance {
                 continue;
@@ -245,7 +245,7 @@ impl LightEmitter {
             let ratio = distance / self.max_length;
             let color = self.color_begin.lerp(self.color_end, ratio);
 
-            shape.vertices.push(ShapeVertex::new((*hit).position, color, Vec2::new(1.0, 1.0)));
+            shape.vertices.push(ShapeVertex::new((*hit).position, color.to_rgb_packed(), Vec2::new(1.0, 1.0)));
             if index > 0 {
                 shape.indices.push(0);
                 shape.indices.push(index as u32);

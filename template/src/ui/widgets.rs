@@ -2,6 +2,7 @@ use super::state::WidgetState;
 use super::state::WidgetStateTrait;
 use capybara::egui::Color32;
 use capybara::egui::Frame;
+use capybara::egui::Image;
 use capybara::egui::ImageButton;
 use capybara::egui::Label;
 use capybara::egui::Margin;
@@ -44,7 +45,13 @@ pub fn image_button(
         Color32::from_rgba_premultiplied(255, 255, 255, 255)
     };
 
-    let mut response = ui.add(ImageButton::new(atlas_handle, size).atlas(atlas_texture, texture).unwrap().tint(tint).frame(false));
+    let mut response = ui.add(
+        ImageButton::new(Image::from_texture((atlas_handle.id(), size)))
+            .atlas(atlas_texture, texture)
+            .unwrap()
+            .tint(tint)
+            .frame(false),
+    );
     *state = response.get_state();
 
     response.rect.set_height(response.rect.height() - 6.0);

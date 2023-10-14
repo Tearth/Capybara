@@ -1,0 +1,10 @@
+[package]
+name = "ldtk"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+capybara = { path = "../../capybara" }
+
+[build-dependencies]
+anyhow = { version = "1.0.71" }

@@ -345,6 +345,7 @@ impl RendererContext {
             match &sprite.texture_type {
                 TextureType::Simple => sprite.size.unwrap_or(texture.size),
                 TextureType::SimpleOffset { offset: _ } => sprite.size.unwrap_or(texture.size),
+                TextureType::SimpleCoordinates { position: _, size } => *size,
                 TextureType::Tilemap { size } => sprite.size.unwrap_or(*size),
                 TextureType::TilemapAnimation { size, frames: _ } => sprite.size.unwrap_or(*size),
                 TextureType::AtlasEntity { name } => {
@@ -413,6 +414,12 @@ impl RendererContext {
                 TextureType::SimpleOffset { offset } => {
                     let uv_position = *offset / texture.size;
                     let uv_size = sprite_size / texture.size;
+
+                    (uv_position, uv_size)
+                }
+                TextureType::SimpleCoordinates { position, size } => {
+                    let uv_position = *position / texture.size;
+                    let uv_size = *size / texture.size;
 
                     (uv_position, uv_size)
                 }

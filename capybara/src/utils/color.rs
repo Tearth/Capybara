@@ -1,9 +1,14 @@
+use colors_transform::{Color, Rgb};
 use glam::Vec4;
 
 pub trait Vec4Color {
     fn new_rgb(r: u8, g: u8, b: u8, a: u8) -> Vec4;
     fn to_rgb(&self) -> (u8, u8, u8, u8);
     fn to_rgb_packed(&self) -> u32;
+}
+
+pub trait RgbIntoVec4 {
+    fn into_vec4(&self) -> Vec4;
 }
 
 impl Vec4Color for Vec4 {
@@ -18,5 +23,12 @@ impl Vec4Color for Vec4 {
     fn to_rgb_packed(&self) -> u32 {
         let (r, g, b, a) = self.to_rgb();
         r as u32 | ((g as u32) << 8) | ((b as u32) << 16) | ((a as u32) << 24)
+    }
+}
+
+impl RgbIntoVec4 for Rgb {
+    fn into_vec4(&self) -> Vec4 {
+        let (r, g, b) = self.as_tuple();
+        Vec4::new(r / 255.0, g / 255.0, b / 255.0, 1.0)
     }
 }

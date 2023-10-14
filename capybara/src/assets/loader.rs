@@ -1,3 +1,4 @@
+use super::ldtk::LdtkWorld;
 use super::*;
 use crate::error_continue;
 use crate::filesystem::FileLoadingStatus;
@@ -11,10 +12,12 @@ use png::Transformations;
 use quick_xml::events::Event;
 use quick_xml::Reader;
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::io::Cursor;
 use std::io::Read;
 use std::path::Path;
 use std::str;
+use tinyjson::JsonValue;
 use zip::ZipArchive;
 
 pub struct AssetsLoader {
@@ -26,6 +29,7 @@ pub struct AssetsLoader {
     pub raw_fonts: Vec<RawFont>,
     pub raw_atlases: Vec<RawAtlas>,
     pub raw_sounds: Vec<RawSound>,
+    pub worlds: Vec<LdtkWorld>,
 }
 
 impl AssetsLoader {
@@ -39,6 +43,7 @@ impl AssetsLoader {
             raw_fonts: Default::default(),
             raw_atlases: Default::default(),
             raw_sounds: Default::default(),
+            worlds: Default::default(),
         }
     }
 
@@ -106,6 +111,7 @@ impl AssetsLoader {
                                     "png" => Some(self.load_png(&name, &asset_path, &data)),
                                     "ttf" => Some(self.load_ttf(&name, &asset_path, &data)),
                                     "xml" => Some(self.load_xml(&name, &asset_path, &data)),
+                                    "ldtk" => Some(self.load_ldtk(&name, &asset_path, &data)),
                                     "wav" => Some(self.load_wav(&name, &asset_path, &data)),
                                     "ogg" => Some(self.load_ogg(&name, &asset_path, &data)),
                                     _ => None,
@@ -225,6 +231,14 @@ impl AssetsLoader {
         }
 
         self.raw_atlases.push(RawAtlas::new(name, path, &image, entities));
+
+        Ok(())
+    }
+
+    fn load_ldtk(&mut self, name: &str, path: &str, data: &[u8]) -> Result<()> {
+        let json = str::from_utf8(&data)?.parse::<JsonValue>()?;
+        let data = json.get::<HashMap<_, _>>().unwrap();
+        self.worlds.push(ldtk::load_world(name, path, &data)?);
 
         Ok(())
     }

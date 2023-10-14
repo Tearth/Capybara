@@ -46,6 +46,7 @@ pub enum TextureType {
     #[default]
     Simple,
     SimpleOffset { offset: Vec2 },
+    SimpleCoordinates { position: Vec2, size: Vec2 },
     Tilemap { size: Vec2 },
     TilemapAnimation { size: Vec2, frames: Vec<usize> },
     AtlasEntity { name: String },

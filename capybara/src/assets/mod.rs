@@ -1,5 +1,6 @@
 use glam::Vec2;
 
+pub mod ldtk;
 pub mod loader;
 
 #[derive(Copy, Clone, Debug, PartialEq)]

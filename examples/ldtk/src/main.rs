@@ -89,6 +89,18 @@ impl Scene<GlobalData> for MainScene {
                     ..Default::default()
                 });
             }
+
+            for entity in &level.entities {
+                let tileset = world.tilemaps.iter().find(|p| p.id == entity.tilemap_id).unwrap();
+                state.renderer.draw_sprite(&Sprite {
+                    position: entity.position + Vec2::new(140.0, 0.0),
+                    size: Some(tileset.tile_size),
+                    anchor: Vec2::new(0.0, 0.0),
+                    texture_id: TextureId::Some(state.renderer.textures.get_id(&tileset.name).unwrap()),
+                    texture_type: TextureType::SimpleCoordinates { position: entity.source, size: tileset.tile_size },
+                    ..Default::default()
+                });
+            }
         }
 
         Ok(None)

@@ -33,7 +33,6 @@ use egui::TextureHandle;
 use egui::TextureId;
 use egui::TextureOptions;
 use glam::Vec2;
-use glam::Vec4;
 use glow::HasContext;
 use instant::Instant;
 use log::error;

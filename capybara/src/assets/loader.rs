@@ -3,6 +3,7 @@ use super::*;
 use crate::error_continue;
 use crate::filesystem::FileLoadingStatus;
 use crate::filesystem::FileSystem;
+use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Result;
 use log::error;
@@ -237,7 +238,7 @@ impl AssetsLoader {
 
     fn load_ldtk(&mut self, name: &str, path: &str, data: &[u8]) -> Result<()> {
         let json = str::from_utf8(&data)?.parse::<JsonValue>()?;
-        let data = json.get::<HashMap<_, _>>().unwrap();
+        let data = json.get::<HashMap<_, _>>().ok_or_else(|| anyhow!("Failed to read JSON data"))?;
         self.worlds.push(ldtk::load_world(name, path, &data)?);
 
         Ok(())

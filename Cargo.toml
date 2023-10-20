@@ -5,6 +5,7 @@ members = [
     "template",
 
     "examples/benchmark",
+    "examples/ldtk",
     "examples/lighting",
     "examples/particles",
     "examples/physics",

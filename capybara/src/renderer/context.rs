@@ -62,10 +62,12 @@ pub struct RendererContext {
     active_camera_data: Camera,
     buffer_metadata: Option<BufferMetadata>,
 
-    framebuffer_default: Framebuffer,
+    framebuffer: Framebuffer,
     framebuffer_texture_id: Option<usize>,
-    framebuffer_depth_stencil: Renderbuffer,
+    framebuffer_ms: Framebuffer,
+    framebuffer_ms_renderbuffer: Renderbuffer,
     framebuffer_autofit: bool,
+    framebuffer_msaa: Option<u32>,
 
     sprite_buffer_vao: VertexArray,
     sprite_buffer_vbo: Buffer,
@@ -104,10 +106,11 @@ pub enum BufferContentType {
 }
 
 impl RendererContext {
-    pub fn new(gl: Context) -> Result<Self> {
+    pub fn new(gl: Context, msaa: Option<u32>) -> Result<Self> {
         unsafe {
             let fbo_default = gl.create_framebuffer().unwrap();
-            let fbo_depth_stencil = gl.create_renderbuffer().unwrap();
+            let framebuffer_ms = gl.create_framebuffer().unwrap();
+            let framebuffer_ms_renderbuffer = gl.create_renderbuffer().map_err(Error::msg)?;
 
             let sprite_buffer_vao = gl.create_vertex_array().map_err(Error::msg)?;
             let sprite_buffer_data_vbo = gl.create_buffer().map_err(Error::msg)?;
@@ -138,10 +141,12 @@ impl RendererContext {
                 active_camera_data: Default::default(),
                 buffer_metadata: None,
 
-                framebuffer_default: fbo_default,
+                framebuffer: fbo_default,
                 framebuffer_texture_id: None,
-                framebuffer_depth_stencil: fbo_depth_stencil,
+                framebuffer_ms,
+                framebuffer_ms_renderbuffer,
                 framebuffer_autofit: true,
+                framebuffer_msaa: msaa,
 
                 sprite_buffer_vao,
                 sprite_buffer_vbo: sprite_buffer_data_vbo,
@@ -185,23 +190,22 @@ impl RendererContext {
             let default_texture = Texture::new(&context, &RawTexture::new("blank", "", Vec2::new(1.0, 1.0), &[255, 255, 255, 255]))?;
             context.default_texture_id = context.textures.store(default_texture);
 
-            // Framebuffer
-            context.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(context.framebuffer_default));
-            context.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(context.framebuffer_depth_stencil));
-            context.gl.renderbuffer_storage(glow::RENDERBUFFER, glow::DEPTH24_STENCIL8, 1, 1);
-            context.gl.bind_renderbuffer(glow::RENDERBUFFER, None);
-
+            // Framebuffer multisampled
+            context.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(context.framebuffer_ms));
+            context.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(context.framebuffer_ms_renderbuffer));
+            context.gl.renderbuffer_storage_multisample(glow::RENDERBUFFER, msaa.unwrap_or(0) as i32, glow::SRGB8_ALPHA8, 1, 1);
             context.gl.framebuffer_renderbuffer(
                 glow::FRAMEBUFFER,
-                glow::DEPTH_STENCIL_ATTACHMENT,
+                glow::COLOR_ATTACHMENT0,
                 glow::RENDERBUFFER,
-                Some(context.framebuffer_depth_stencil),
+                Some(context.framebuffer_ms_renderbuffer),
             );
 
             if context.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
                 bail!("Failed to initialize framebuffer (code {})", context.gl.get_error());
             }
 
+            context.gl.bind_renderbuffer(glow::RENDERBUFFER, None);
             context.gl.bind_framebuffer(glow::FRAMEBUFFER, None);
 
             // Sprite buffers
@@ -717,7 +721,7 @@ impl RendererContext {
         }
     }
 
-    pub fn set_target_texture(&mut self, texture_id: Option<usize>, autofit: bool) {
+    pub fn set_target_texture(&mut self, texture_id: Option<usize>, autofit: bool, msaa: bool) {
         if self.framebuffer_texture_id != texture_id {
             self.flush_buffer();
         }
@@ -735,18 +739,8 @@ impl RendererContext {
                     }
 
                     self.framebuffer_texture_id = Some(texture_id);
-                    self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer_default));
-                    self.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(self.framebuffer_depth_stencil));
-                    self.gl.renderbuffer_storage(glow::RENDERBUFFER, glow::DEPTH24_STENCIL8, texture.size.x as i32, texture.size.y as i32);
-                    self.gl.bind_renderbuffer(glow::RENDERBUFFER, None);
-
+                    self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer));
                     self.gl.framebuffer_texture_2d(glow::FRAMEBUFFER, glow::COLOR_ATTACHMENT0, glow::TEXTURE_2D, Some(texture.inner), 0);
-                    self.gl.framebuffer_renderbuffer(
-                        glow::FRAMEBUFFER,
-                        glow::DEPTH_STENCIL_ATTACHMENT,
-                        glow::RENDERBUFFER,
-                        Some(self.framebuffer_depth_stencil),
-                    );
 
                     #[cfg(not(web))]
                     self.gl.enable(glow::FRAMEBUFFER_SRGB);
@@ -760,9 +754,48 @@ impl RendererContext {
                 None => {
                     self.gl.bind_framebuffer(glow::FRAMEBUFFER, None);
 
-                    #[cfg(not(web))]
-                    self.gl.disable(glow::FRAMEBUFFER_SRGB);
+                    if !msaa {
+                        #[cfg(not(web))]
+                        self.gl.disable(glow::FRAMEBUFFER_SRGB);
+                    }
                 }
+            }
+
+            if msaa {
+                if texture_id.is_some() {
+                    self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer_ms));
+                } else {
+                    if let Some(framebuffer_texture_id) = self.framebuffer_texture_id {
+                        let texture = match self.textures.get(framebuffer_texture_id) {
+                            Ok(texture) => texture,
+                            Err(err) => error_return!("Failed to read target texture ({})", err),
+                        };
+
+                        self.gl.bind_framebuffer(glow::READ_FRAMEBUFFER, Some(self.framebuffer_ms));
+                        self.gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, Some(self.framebuffer));
+                        self.gl.blit_framebuffer(
+                            0,
+                            0,
+                            texture.size.x as i32,
+                            texture.size.y as i32,
+                            0,
+                            0,
+                            texture.size.x as i32,
+                            texture.size.y as i32,
+                            glow::COLOR_BUFFER_BIT,
+                            glow::NEAREST,
+                        );
+                        self.gl.bind_framebuffer(glow::READ_FRAMEBUFFER, None);
+                        self.gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, None);
+
+                        #[cfg(not(web))]
+                        self.gl.disable(glow::FRAMEBUFFER_SRGB);
+                    }
+                }
+            }
+
+            if texture_id.is_none() {
+                self.framebuffer_texture_id = None;
             }
         }
     }
@@ -790,24 +823,26 @@ impl RendererContext {
 
                     texture.resize(size);
 
-                    self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer_default));
-                    self.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(self.framebuffer_depth_stencil));
-                    self.gl.renderbuffer_storage(glow::RENDERBUFFER, glow::DEPTH24_STENCIL8, texture.size.x as i32, texture.size.y as i32);
-                    self.gl.bind_renderbuffer(glow::RENDERBUFFER, None);
-
+                    self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer));
                     self.gl.framebuffer_texture_2d(glow::FRAMEBUFFER, glow::COLOR_ATTACHMENT0, glow::TEXTURE_2D, Some(texture.inner), 0);
-                    self.gl.framebuffer_renderbuffer(
-                        glow::FRAMEBUFFER,
-                        glow::DEPTH_STENCIL_ATTACHMENT,
-                        glow::RENDERBUFFER,
-                        Some(self.framebuffer_depth_stencil),
-                    );
 
                     if self.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
                         error_return!("Framebuffer initialization error (code {})", self.gl.get_error());
                     }
                 }
             }
+
+            self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer_ms));
+            self.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(self.framebuffer_ms_renderbuffer));
+            self.gl.renderbuffer_storage_multisample(
+                glow::RENDERBUFFER,
+                self.framebuffer_msaa.unwrap_or(0) as i32,
+                glow::SRGB8_ALPHA8,
+                size.x as i32,
+                size.y as i32,
+            );
+            self.gl.bind_renderbuffer(glow::RENDERBUFFER, None);
+            self.gl.bind_framebuffer(glow::FRAMEBUFFER, None);
         }
     }
 
@@ -827,6 +862,23 @@ impl RendererContext {
     pub fn disable_scissor(&self) {
         unsafe {
             self.gl.disable(glow::SCISSOR_TEST);
+        }
+    }
+
+    pub fn set_framebuffer_msaa(&mut self, msaa: Option<u32>) {
+        unsafe {
+            self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer_ms));
+            self.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(self.framebuffer_ms_renderbuffer));
+            self.gl.renderbuffer_storage_multisample(
+                glow::RENDERBUFFER,
+                msaa.unwrap_or(0) as i32,
+                glow::SRGB8_ALPHA8,
+                self.viewport_size.x as i32,
+                self.viewport_size.y as i32,
+            );
+            self.gl.bind_renderbuffer(glow::RENDERBUFFER, None);
+            self.gl.bind_framebuffer(glow::FRAMEBUFFER, None);
+            self.framebuffer_msaa = msaa;
         }
     }
 }

@@ -125,7 +125,7 @@ impl Scene<GlobalData> for MainScene {
         }
 
         if self.initialized && self.selected_shader != SelectedShader::None {
-            state.renderer.set_target_texture(Some(self.target_texture_id), true);
+            state.renderer.set_target_texture(Some(self.target_texture_id), true, false);
             state.renderer.clear();
         }
 
@@ -152,7 +152,7 @@ impl Scene<GlobalData> for MainScene {
                 _ => panic!("Invalid shader"),
             };
 
-            state.renderer.set_target_texture(None, false);
+            state.renderer.set_target_texture(None, false, false);
             state.renderer.set_sprite_shader(Some(shader_id));
 
             state.renderer.draw_sprite(&Sprite {
@@ -223,7 +223,7 @@ fn main() {
 }
 
 fn main_internal() -> Result<()> {
-    ApplicationContext::<GlobalData>::new("Benchmark", WindowStyle::Window { size: Coordinates::new(1280, 720) })?
+    ApplicationContext::<GlobalData>::new("Benchmark", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(8))?
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene");
 

@@ -51,6 +51,7 @@ struct MainScene {
     delta_history: VecDeque<f32>,
     emitter: LightEmitter,
     emitter_last_response: Option<LightResponse>,
+    msaa: bool,
     debug: bool,
 
     blur_directions: f32,
@@ -145,7 +146,7 @@ impl Scene<GlobalData> for MainScene {
             let mut edges = Vec::new();
             let texture_size = state.renderer.textures.get_by_name("Takodachi")?.size;
 
-            state.renderer.set_target_texture(Some(self.main_texture_id), true);
+            state.renderer.set_target_texture(Some(self.main_texture_id), true, false);
             state.renderer.draw_sprite(&Sprite {
                 anchor: Vec2::new(0.0, 0.0),
                 size: Some(state.renderer.viewport_size),
@@ -189,7 +190,7 @@ impl Scene<GlobalData> for MainScene {
             // state.renderer.draw_shape(&line);
             // edges.append(&mut line.get_edges());
 
-            state.renderer.set_target_texture(None, true);
+            state.renderer.set_target_texture(None, true, false);
 
             let min = Vec2::new(0.0, 0.0);
             let max = state.renderer.viewport_size;
@@ -205,7 +206,7 @@ impl Scene<GlobalData> for MainScene {
             self.emitter.edges = edges;
 
             let response = self.emitter.generate();
-            state.renderer.set_target_texture(Some(self.light_texture_id), true);
+            state.renderer.set_target_texture(Some(self.light_texture_id), true, self.msaa);
             state.renderer.clear();
             state.renderer.draw_sprite(&Sprite {
                 anchor: Vec2::new(0.0, 0.0),
@@ -214,7 +215,7 @@ impl Scene<GlobalData> for MainScene {
                 ..Default::default()
             });
             state.renderer.draw_shape(&response.shape);
-            state.renderer.set_target_texture(None, true);
+            state.renderer.set_target_texture(None, true, self.msaa);
 
             state.renderer.set_sprite_shader(Some(self.mult_shader_id));
             state.renderer.textures.get(self.main_texture_id)?.activate(0);
@@ -311,6 +312,7 @@ impl Scene<GlobalData> for MainScene {
                     }
 
                     ui.add_space(10.0);
+                    ui.checkbox(&mut self.msaa, RichText::new("MSAA").font(font.clone()).heading().color(color));
                     ui.checkbox(&mut self.debug, RichText::new("Debug mode").font(font.clone()).heading().color(color));
                 }
             });
@@ -345,7 +347,7 @@ fn main() {
 }
 
 fn main_internal() -> Result<()> {
-    ApplicationContext::<GlobalData>::new("Lighting", WindowStyle::Window { size: Coordinates::new(1280, 720) })?
+    ApplicationContext::<GlobalData>::new("Lighting", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(8))?
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene");
 

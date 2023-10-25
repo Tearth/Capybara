@@ -5,6 +5,8 @@ use anyhow::anyhow;
 use anyhow::Result;
 use glow::Context;
 use glow::HasContext;
+use js_sys::Object;
+use js_sys::Reflect;
 use log::error;
 use log::info;
 use log::Level;
@@ -50,7 +52,7 @@ pub struct WindowContextWeb {
 }
 
 impl WindowContextWeb {
-    pub fn new(_: &str, _: WindowStyle) -> Result<Box<Self>> {
+    pub fn new(_: &str, _: WindowStyle, msaa: Option<u32>) -> Result<Box<Self>> {
         #[cfg(debug_assertions)]
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
@@ -71,8 +73,16 @@ impl WindowContextWeb {
 
         info!("WebGL context initialization");
 
+        let context_options = Object::new();
+        let antialias = match msaa {
+            Some(_) => JsValue::TRUE,
+            None => JsValue::FALSE,
+        };
+
+        Reflect::set(&context_options, &"antialias".into(), &antialias).map_err(|_| anyhow!("Failed to set antialias value"))?;
+
         let webgl = canvas
-            .get_context("webgl2")
+            .get_context_with_context_options("webgl2", &context_options)
             .map_err(|_| anyhow!("Failed to initialize WebGL context"))?
             .ok_or_else(|| anyhow!("Failed to initialize WebGL context"))?;
         let webgl_context = webgl.dyn_into::<WebGl2RenderingContext>().map_err(|_| anyhow!("Failed to initialize WebGl2RenderingContext"))?;

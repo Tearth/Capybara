@@ -80,9 +80,9 @@ impl<G> ApplicationContext<G>
 where
     G: Default + 'static,
 {
-    pub fn new(title: &str, style: WindowStyle) -> Result<Self> {
-        let window = WindowContext::new(title, style)?;
-        let mut renderer = RendererContext::new(window.load_gl_pointers())?;
+    pub fn new(title: &str, style: WindowStyle, msaa: Option<u32>) -> Result<Self> {
+        let window = WindowContext::new(title, style, msaa)?;
+        let mut renderer = RendererContext::new(window.load_gl_pointers(), msaa)?;
         let ui = UiContext::new(&mut renderer);
 
         #[cfg(feature = "audio")]

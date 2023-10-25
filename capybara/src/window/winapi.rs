@@ -50,7 +50,7 @@ pub struct WglExtensions {
 }
 
 impl WindowContextWinApi {
-    pub fn new(title: &str, style: WindowStyle) -> Result<Box<Self>> {
+    pub fn new(title: &str, style: WindowStyle, msaa: Option<u32>) -> Result<Box<Self>> {
         unsafe {
             #[cfg(debug_assertions)]
             simple_logger::init_with_level(Level::Info)?;
@@ -123,7 +123,7 @@ impl WindowContextWinApi {
             // Wait for WM_CREATE, where the context is initialized
             while context.hdc.is_null() {}
 
-            context.init_gl_context()?;
+            context.init_gl_context(msaa)?;
             context.set_style(style);
 
             if winapi::SetForegroundWindow(context.hwnd) == 0 {
@@ -134,7 +134,7 @@ impl WindowContextWinApi {
         }
     }
 
-    fn init_gl_context(&mut self) -> Result<()> {
+    fn init_gl_context(&mut self, msaa: Option<u32>) -> Result<()> {
         unsafe {
             info!("OpenGL context initialization");
 
@@ -247,6 +247,9 @@ impl WindowContextWinApi {
                 error!("Failed to destroy phantom window, code {}", errhandlingapi::GetLastError());
             }
 
+            let msaa_enabled = if msaa.is_some() { 1 } else { 0 };
+            let msaa_samples = msaa.unwrap_or(0);
+
             let mut wgl_attributes = [
                 8193, /* WGL_DRAW_TO_WINDOW_ARB */
                 1,    /* true */
@@ -263,9 +266,9 @@ impl WindowContextWinApi {
                 8227, /* WGL_STENCIL_BITS_ARB */
                 8,    /* 8 bits */
                 8257, /* WGL_SAMPLE_BUFFERS_ARB */
-                1,    /* true */
+                msaa_enabled,
                 8258, /* WGL_SAMPLES_ARB */
-                16,   /* 16 samples */
+                msaa_samples,
                 0,
             ];
 

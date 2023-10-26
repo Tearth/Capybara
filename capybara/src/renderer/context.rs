@@ -64,10 +64,10 @@ pub struct RendererContext {
 
     framebuffer: Framebuffer,
     framebuffer_texture_id: Option<usize>,
-    framebuffer_ms: Framebuffer,
-    framebuffer_ms_renderbuffer: Renderbuffer,
-    framebuffer_autofit: bool,
-    framebuffer_msaa: Option<u32>,
+    framebuffer_multisample: Framebuffer,
+    framebuffer_multisample_renderbuffer: Renderbuffer,
+    pub framebuffer_autofit: bool,
+    pub framebuffer_msaa: Option<u32>,
 
     sprite_buffer_vao: VertexArray,
     sprite_buffer_vbo: Buffer,
@@ -108,9 +108,9 @@ pub enum BufferContentType {
 impl RendererContext {
     pub fn new(gl: Context, msaa: Option<u32>) -> Result<Self> {
         unsafe {
-            let fbo_default = gl.create_framebuffer().unwrap();
-            let framebuffer_ms = gl.create_framebuffer().unwrap();
-            let framebuffer_ms_renderbuffer = gl.create_renderbuffer().map_err(Error::msg)?;
+            let framebuffer = gl.create_framebuffer().map_err(Error::msg)?;
+            let framebuffer_multisample = gl.create_framebuffer().map_err(Error::msg)?;
+            let framebuffer_multisample_renderbuffer = gl.create_renderbuffer().map_err(Error::msg)?;
 
             let sprite_buffer_vao = gl.create_vertex_array().map_err(Error::msg)?;
             let sprite_buffer_data_vbo = gl.create_buffer().map_err(Error::msg)?;
@@ -141,10 +141,10 @@ impl RendererContext {
                 active_camera_data: Default::default(),
                 buffer_metadata: None,
 
-                framebuffer: fbo_default,
+                framebuffer,
                 framebuffer_texture_id: None,
-                framebuffer_ms,
-                framebuffer_ms_renderbuffer,
+                framebuffer_multisample,
+                framebuffer_multisample_renderbuffer,
                 framebuffer_autofit: true,
                 framebuffer_msaa: msaa,
 
@@ -191,14 +191,14 @@ impl RendererContext {
             context.default_texture_id = context.textures.store(default_texture);
 
             // Framebuffer multisampled
-            context.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(context.framebuffer_ms));
-            context.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(context.framebuffer_ms_renderbuffer));
+            context.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(context.framebuffer_multisample));
+            context.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(context.framebuffer_multisample_renderbuffer));
             context.gl.renderbuffer_storage_multisample(glow::RENDERBUFFER, msaa.unwrap_or(0) as i32, glow::SRGB8_ALPHA8, 1, 1);
             context.gl.framebuffer_renderbuffer(
                 glow::FRAMEBUFFER,
                 glow::COLOR_ATTACHMENT0,
                 glow::RENDERBUFFER,
-                Some(context.framebuffer_ms_renderbuffer),
+                Some(context.framebuffer_multisample_renderbuffer),
             );
 
             if context.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
@@ -721,7 +721,7 @@ impl RendererContext {
         }
     }
 
-    pub fn set_target_texture(&mut self, texture_id: Option<usize>, autofit: bool, msaa: bool) {
+    pub fn set_target_texture(&mut self, texture_id: Option<usize>) {
         if self.framebuffer_texture_id != texture_id {
             self.flush_buffer();
         }
@@ -734,7 +734,7 @@ impl RendererContext {
                         Err(err) => error_return!("Failed to set target texture ({})", err),
                     };
 
-                    if autofit && texture.size != self.viewport_size {
+                    if self.framebuffer_autofit && texture.size != self.viewport_size {
                         texture.resize(self.viewport_size);
                     }
 
@@ -748,22 +748,20 @@ impl RendererContext {
                     if self.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
                         error_return!("Framebuffer initialization error (code {})", self.gl.get_error());
                     }
-
-                    self.framebuffer_autofit = autofit;
                 }
                 None => {
                     self.gl.bind_framebuffer(glow::FRAMEBUFFER, None);
 
-                    if !msaa {
+                    if self.framebuffer_msaa.is_none() {
                         #[cfg(not(web))]
                         self.gl.disable(glow::FRAMEBUFFER_SRGB);
                     }
                 }
             }
 
-            if msaa {
+            if self.framebuffer_msaa.is_some() {
                 if texture_id.is_some() {
-                    self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer_ms));
+                    self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer_multisample));
                 } else {
                     if let Some(framebuffer_texture_id) = self.framebuffer_texture_id {
                         let texture = match self.textures.get(framebuffer_texture_id) {
@@ -771,7 +769,7 @@ impl RendererContext {
                             Err(err) => error_return!("Failed to read target texture ({})", err),
                         };
 
-                        self.gl.bind_framebuffer(glow::READ_FRAMEBUFFER, Some(self.framebuffer_ms));
+                        self.gl.bind_framebuffer(glow::READ_FRAMEBUFFER, Some(self.framebuffer_multisample));
                         self.gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, Some(self.framebuffer));
                         self.gl.blit_framebuffer(
                             0,
@@ -832,8 +830,8 @@ impl RendererContext {
                 }
             }
 
-            self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer_ms));
-            self.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(self.framebuffer_ms_renderbuffer));
+            self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer_multisample));
+            self.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(self.framebuffer_multisample_renderbuffer));
             self.gl.renderbuffer_storage_multisample(
                 glow::RENDERBUFFER,
                 self.framebuffer_msaa.unwrap_or(0) as i32,
@@ -867,8 +865,8 @@ impl RendererContext {
 
     pub fn set_framebuffer_msaa(&mut self, msaa: Option<u32>) {
         unsafe {
-            self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer_ms));
-            self.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(self.framebuffer_ms_renderbuffer));
+            self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer_multisample));
+            self.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(self.framebuffer_multisample_renderbuffer));
             self.gl.renderbuffer_storage_multisample(
                 glow::RENDERBUFFER,
                 msaa.unwrap_or(0) as i32,

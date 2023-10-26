@@ -24,7 +24,6 @@ use capybara::renderer::lighting::Edge;
 use capybara::renderer::lighting::LightEmitter;
 use capybara::renderer::lighting::LightResponse;
 use capybara::renderer::shader::Shader;
-use capybara::renderer::shape::Shape;
 use capybara::renderer::sprite::Sprite;
 use capybara::renderer::sprite::TextureId;
 use capybara::renderer::texture::Texture;
@@ -100,6 +99,7 @@ impl Scene<GlobalData> for MainScene {
 
         if !self.initialized && state.global.assets.load("./data/data0.zip") == AssetsLoadingStatus::Finished {
             state.renderer.instantiate_assets(&state.global.assets, None);
+            state.renderer.set_framebuffer_msaa(None);
             state.ui.instantiate_assets(&state.global.assets, None);
             state.window.set_swap_interval(0);
 
@@ -146,7 +146,7 @@ impl Scene<GlobalData> for MainScene {
             let mut edges = Vec::new();
             let texture_size = state.renderer.textures.get_by_name("Takodachi")?.size;
 
-            state.renderer.set_target_texture(Some(self.main_texture_id), true, false);
+            state.renderer.set_target_texture(Some(self.main_texture_id));
             state.renderer.draw_sprite(&Sprite {
                 anchor: Vec2::new(0.0, 0.0),
                 size: Some(state.renderer.viewport_size),
@@ -190,7 +190,7 @@ impl Scene<GlobalData> for MainScene {
             // state.renderer.draw_shape(&line);
             // edges.append(&mut line.get_edges());
 
-            state.renderer.set_target_texture(None, true, false);
+            state.renderer.set_target_texture(None);
 
             let min = Vec2::new(0.0, 0.0);
             let max = state.renderer.viewport_size;
@@ -206,7 +206,7 @@ impl Scene<GlobalData> for MainScene {
             self.emitter.edges = edges;
 
             let response = self.emitter.generate();
-            state.renderer.set_target_texture(Some(self.light_texture_id), true, self.msaa);
+            state.renderer.set_target_texture(Some(self.light_texture_id));
             state.renderer.clear();
             state.renderer.draw_sprite(&Sprite {
                 anchor: Vec2::new(0.0, 0.0),
@@ -215,7 +215,7 @@ impl Scene<GlobalData> for MainScene {
                 ..Default::default()
             });
             state.renderer.draw_shape(&response.shape);
-            state.renderer.set_target_texture(None, true, self.msaa);
+            state.renderer.set_target_texture(None);
 
             state.renderer.set_sprite_shader(Some(self.mult_shader_id));
             state.renderer.textures.get(self.main_texture_id)?.activate(0);
@@ -312,7 +312,13 @@ impl Scene<GlobalData> for MainScene {
                     }
 
                     ui.add_space(10.0);
-                    ui.checkbox(&mut self.msaa, RichText::new("MSAA").font(font.clone()).heading().color(color));
+                    if ui.checkbox(&mut self.msaa, RichText::new("MSAA").font(font.clone()).heading().color(color)).changed() {
+                        if self.msaa {
+                            state.renderer.set_framebuffer_msaa(Some(8));
+                        } else {
+                            state.renderer.set_framebuffer_msaa(None);
+                        }
+                    }
                     ui.checkbox(&mut self.debug, RichText::new("Debug mode").font(font.clone()).heading().color(color));
                 }
             });

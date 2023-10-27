@@ -1,5 +1,5 @@
 use super::sprite::TextureId;
-use crate::renderer::lighting::Edge;
+use super::*;
 use crate::utils::color::Vec4Color;
 use glam::Mat4;
 use glam::Vec2;

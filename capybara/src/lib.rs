@@ -11,6 +11,7 @@
 pub mod app;
 pub mod assets;
 pub mod filesystem;
+pub mod lighting;
 pub mod renderer;
 pub mod scene;
 pub mod ui;

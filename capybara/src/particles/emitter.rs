@@ -1,7 +1,7 @@
-use super::context::RendererContext;
-use super::sprite::Sprite;
-use super::sprite::TextureId;
-use super::sprite::TextureType;
+use crate::renderer::context::RendererContext;
+use crate::renderer::sprite::Sprite;
+use crate::renderer::sprite::TextureId;
+use crate::renderer::sprite::TextureType;
 use crate::utils::rand::NewRand;
 use crate::utils::storage::Storage;
 use arrayvec::ArrayVec;

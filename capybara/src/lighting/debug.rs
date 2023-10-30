@@ -20,6 +20,24 @@ pub struct LightDebugSettings {
     pub hit_radius: f32,
 }
 
+impl Default for LightDebugSettings {
+    fn default() -> Self {
+        Self {
+            edge_color: Vec4::new(1.0, 1.0, 0.0, 1.0),
+            ray_color: Vec4::new(1.0, 1.0, 0.0, 1.0),
+            arc_color: Vec4::new(1.0, 0.0, 1.0, 1.0),
+            point_color: Vec4::new(1.0, 0.0, 0.0, 1.0),
+            hit_color: Vec4::new(1.0, 1.0, 1.0, 1.0),
+
+            edge_thickness: 1.0,
+            ray_thickness: 1.0,
+            arc_thickness: 1.0,
+            point_radius: 5.0,
+            hit_radius: 3.0,
+        }
+    }
+}
+
 impl LightEmitter {
     pub fn draw_debug(&self, renderer: &mut RendererContext, response: &LightResponse) {
         for edge in &self.edges {

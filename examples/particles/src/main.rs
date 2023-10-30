@@ -12,6 +12,8 @@ use capybara::egui::Id;
 use capybara::egui::RawInput;
 use capybara::egui::RichText;
 use capybara::egui::SidePanel;
+use capybara::egui::Slider;
+use capybara::egui::TextStyle;
 use capybara::fast_gpu;
 use capybara::glam::Vec2;
 use capybara::glam::Vec4;
@@ -39,6 +41,8 @@ struct MainScene {
     emitter: ParticleEmitter<5>,
     initialized: bool,
     delta_history: VecDeque<f32>,
+
+    debug: bool,
 }
 
 impl Scene<GlobalData> for MainScene {
@@ -77,7 +81,7 @@ impl Scene<GlobalData> for MainScene {
             self.emitter.size = Vec2::new(32.0, 8.0);
             self.emitter.period = 0.02;
             self.emitter.amount = 20;
-            self.emitter.particle_size = Some(Vec2::new(16.0, 16.0));
+            self.emitter.particle_size = Vec2::new(16.0, 16.0);
             self.emitter.particle_lifetime = 1.0;
             self.emitter.particle_texture_id = Some(state.renderer.textures.get_id("Particle")?);
             self.emitter.interpolation = ParticleInterpolation::Cosine;
@@ -102,6 +106,10 @@ impl Scene<GlobalData> for MainScene {
             self.emitter.position = state.renderer.cameras.get(state.renderer.active_camera_id)?.from_window_to_screen_coordinates(cursor_position);
             self.emitter.update(Instant::now(), delta);
             self.emitter.draw(state.renderer);
+
+            if self.debug {
+                self.emitter.draw_debug(state.renderer);
+            }
         }
 
         Ok(None)
@@ -122,10 +130,31 @@ impl Scene<GlobalData> for MainScene {
 
                     ui.label(RichText::new(label).font(font.clone()).heading().color(color));
 
-                    let particles_count = self.emitter.particles.len();
-                    let label = format!("N: {}", particles_count);
+                    ui.style_mut().drag_value_text_style = TextStyle::Monospace;
+                    ui.style_mut().text_styles.get_mut(&TextStyle::Monospace).unwrap().size = 20.0;
 
-                    ui.label(RichText::new(label).font(font).heading().color(color));
+                    ui.add_space(10.0);
+                    ui.label(RichText::new("Amount:").font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(&mut self.emitter.amount, 0..=1000).text_color(color));
+
+                    ui.add_space(10.0);
+                    ui.label(RichText::new("Period:").font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(&mut self.emitter.period, 0.0..=2.0).text_color(color));
+
+                    ui.add_space(10.0);
+                    ui.label(RichText::new("Lifetime:").font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(&mut self.emitter.period, 0.0..=2.0).text_color(color));
+
+                    ui.add_space(10.0);
+                    ui.label(RichText::new("Emitter width:").font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(&mut self.emitter.size.x, 0.0..=500.0).text_color(color));
+
+                    ui.add_space(10.0);
+                    ui.label(RichText::new("Emitter height:").font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(&mut self.emitter.size.y, 0.0..=500.0).text_color(color));
+
+                    ui.add_space(10.0);
+                    ui.checkbox(&mut self.debug, RichText::new("Debug mode").font(font.clone()).heading().color(color));
                 }
             });
         });

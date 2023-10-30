@@ -251,7 +251,7 @@ impl Scene<GlobalData> for MainScene {
                     ui.label(RichText::new(format!("Delta: {:.2}", delta_average * 1000.0)).font(font.clone()).heading().color(color));
                     ui.label(RichText::new(format!("N: {}", self.objects.len())).font(font.clone()).heading().color(color));
 
-                    ui.add_space(20.0);
+                    ui.add_space(10.0);
 
                     if let Some(response) = &self.emitter_last_response {
                         ui.label(RichText::new(format!("Rays: {}", response.points.len())).font(font.clone()).heading().color(color));
@@ -261,7 +261,7 @@ impl Scene<GlobalData> for MainScene {
                     ui.style_mut().drag_value_text_style = TextStyle::Monospace;
                     ui.style_mut().text_styles.get_mut(&TextStyle::Monospace).unwrap().size = 20.0;
 
-                    ui.add_space(20.0);
+                    ui.add_space(10.0);
                     ui.label(RichText::new("Distance:").font(font.clone()).heading().color(color));
                     ui.add(Slider::new(&mut self.emitter.max_length, 0.0..=1000.0).text_color(color));
 
@@ -312,7 +312,7 @@ impl Scene<GlobalData> for MainScene {
                     }
 
                     ui.add_space(10.0);
-                    if ui.checkbox(&mut self.msaa, RichText::new("MSAA").font(font.clone()).heading().color(color)).changed() {
+                    if ui.checkbox(&mut self.msaa, RichText::new("Buffer MSAA").font(font.clone()).heading().color(color)).changed() {
                         if self.msaa {
                             state.renderer.set_framebuffer_msaa(Some(8));
                         } else {

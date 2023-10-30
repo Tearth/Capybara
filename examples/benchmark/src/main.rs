@@ -13,6 +13,8 @@ use capybara::egui::Id;
 use capybara::egui::RawInput;
 use capybara::egui::RichText;
 use capybara::egui::SidePanel;
+use capybara::egui::Slider;
+use capybara::egui::TextStyle;
 use capybara::fast_gpu;
 use capybara::fastrand;
 use capybara::glam::Vec2;
@@ -39,6 +41,7 @@ struct GlobalData {
 #[derive(Default)]
 struct MainScene {
     objects: Vec<Object>,
+    objects_count: u32,
     initialized: bool,
     delta_history: VecDeque<f32>,
     target_texture_id: usize,
@@ -96,17 +99,7 @@ impl Scene<GlobalData> for MainScene {
             state.ui.instantiate_assets(&state.global.assets, None);
             state.window.set_swap_interval(0);
 
-            for _ in 0..5000 {
-                let position = Vec2::new(
-                    fastrand::u32(0..state.renderer.viewport_size.x as u32) as f32,
-                    fastrand::u32(0..state.renderer.viewport_size.y as u32) as f32,
-                );
-
-                self.objects.push(Object {
-                    sprite: Sprite { position, texture_id: TextureId::Some(state.renderer.textures.get_id("Takodachi")?), ..Default::default() },
-                    direction: Vec2::new(fastrand::f32() * 2.0 - 1.0, fastrand::f32() * 2.0 - 1.0),
-                });
-            }
+            self.regenerate_objects(&mut state, 100000)?;
 
             let target_texture = Texture::new(&state.renderer, &RawTexture::new("target_texture", "", Vec2::new(400.0, 400.0), &Vec::new()))?;
             self.target_texture_id = state.renderer.textures.store(target_texture);
@@ -170,7 +163,7 @@ impl Scene<GlobalData> for MainScene {
 
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let output = state.ui.inner.read().unwrap().run(input, |context| {
-            SidePanel::new(Side::Left, Id::new("side")).exact_width(120.0).resizable(false).show(context, |ui| {
+            SidePanel::new(Side::Left, Id::new("side")).exact_width(160.0).resizable(false).show(context, |ui| {
                 if self.initialized {
                     let font = FontId { size: 24.0, family: FontFamily::Name("Kenney Pixel".into()) };
                     let color = Color32::from_rgb(255, 255, 255);
@@ -180,11 +173,18 @@ impl Scene<GlobalData> for MainScene {
 
                     let delta_average = self.delta_history.iter().sum::<f32>() / self.delta_history.len() as f32;
                     let label = format!("Delta: {:.2}", delta_average * 1000.0);
-
                     ui.label(RichText::new(label).font(font.clone()).heading().color(color));
-                    ui.label(RichText::new(format!("N: {}", self.objects.len())).font(font.clone()).heading().color(color));
 
-                    ui.add_space(20.0);
+                    ui.style_mut().drag_value_text_style = TextStyle::Monospace;
+                    ui.style_mut().text_styles.get_mut(&TextStyle::Monospace).unwrap().size = 20.0;
+
+                    ui.add_space(10.0);
+                    ui.label(RichText::new("Objects count:").font(font.clone()).heading().color(color));
+                    if ui.add(Slider::new(&mut self.objects_count, 0..=1000000).text_color(color).logarithmic(true)).changed() {
+                        self.regenerate_objects(&state, self.objects_count).unwrap();
+                    }
+
+                    ui.add_space(10.0);
                     ui.label(RichText::new("Shaders:").font(font.clone()).heading().color(color));
                     ui.radio_value(&mut self.selected_shader, SelectedShader::None, RichText::new("None").font(font.clone()).heading().color(color));
                     ui.radio_value(&mut self.selected_shader, SelectedShader::Blur, RichText::new("Blur").font(font.clone()).heading().color(color));
@@ -202,6 +202,25 @@ impl Scene<GlobalData> for MainScene {
 }
 
 impl MainScene {
+    fn regenerate_objects(&mut self, state: &ApplicationState<GlobalData>, n: u32) -> Result<()> {
+        self.objects.clear();
+        self.objects_count = n;
+
+        for _ in 0..n {
+            let position = Vec2::new(
+                fastrand::u32(0..state.renderer.viewport_size.x as u32) as f32,
+                fastrand::u32(0..state.renderer.viewport_size.y as u32) as f32,
+            );
+
+            self.objects.push(Object {
+                sprite: Sprite { position, texture_id: TextureId::Some(state.renderer.textures.get_id("Takodachi")?), ..Default::default() },
+                direction: Vec2::new(fastrand::f32() * 2.0 - 1.0, fastrand::f32() * 2.0 - 1.0),
+            });
+        }
+
+        Ok(())
+    }
+
     fn update_shaders_resolution(&mut self, state: &mut ApplicationState<GlobalData>, size: Coordinates) -> Result<()> {
         for shader in state.renderer.shaders.iter_mut() {
             if shader.uniforms.contains_key("resolution") {

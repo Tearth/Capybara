@@ -50,6 +50,8 @@ struct MainScene {
 
     car: Sprite,
     car_rigidbody: RigidBodyHandle,
+
+    debug: bool,
 }
 
 struct Object {
@@ -75,11 +77,6 @@ impl Scene<GlobalData> for MainScene {
     }
 
     fn fixed(&mut self, state: ApplicationState<GlobalData>) -> Result<Option<FrameCommand>> {
-        let collisions = state.physics.events.collisions.read().unwrap();
-        let contacts = state.physics.events.contacts.read().unwrap();
-
-        println!("Collisions: {}, contacts: {}", collisions.len(), contacts.len());
-
         if state.window.keyboard_state[Key::KeyA as usize] {
             state.physics.rigidbodies.get_mut(self.wheel_left_rigidbody).unwrap().apply_torque_impulse(0.02, true);
         }
@@ -137,7 +134,7 @@ impl Scene<GlobalData> for MainScene {
             let joint = RevoluteJointBuilder::new().local_anchor1(point![0.6, -0.5]).local_anchor2(point![0.0, 0.0]).contacts_enabled(false);
             state.physics.impulse_joints.insert(self.car_rigidbody, self.wheel_right_rigidbody, joint, true);
 
-            for _ in 0..20 {
+            for _ in 0..40 {
                 let position = Vec2::new(
                     fastrand::u32(0..state.renderer.viewport_size.x as u32) as f32,
                     fastrand::u32(0..state.renderer.viewport_size.y as u32) as f32,
@@ -184,6 +181,10 @@ impl Scene<GlobalData> for MainScene {
                 self.car.rotation = interpolation_data.get_rotation_interpolated(alpha);
                 state.renderer.draw_sprite(&self.car);
             }
+
+            if self.debug {
+                state.physics.draw_debug(state.renderer, PIXELS_PER_METER);
+            }
         }
 
         Ok(None)
@@ -191,11 +192,14 @@ impl Scene<GlobalData> for MainScene {
 
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let output = state.ui.inner.read().unwrap().run(input, |context| {
-            SidePanel::new(Side::Left, Id::new("side")).resizable(false).show(context, |ui| {
+            SidePanel::new(Side::Left, Id::new("side")).exact_width(120.0).resizable(false).show(context, |ui| {
                 if self.initialized {
                     let font = FontId { size: 24.0, family: FontFamily::Name("Kenney Pixel".into()) };
                     let color = Color32::from_rgb(255, 255, 255);
                     let label = format!("FPS: {}", state.renderer.fps);
+
+                    let collisions = state.physics.events.collisions.read().unwrap();
+                    let contacts = state.physics.events.contacts.read().unwrap();
 
                     ui.label(RichText::new(label).font(font.clone()).heading().color(color));
 
@@ -203,7 +207,14 @@ impl Scene<GlobalData> for MainScene {
                     let label = format!("Delta: {:.2}", delta_average * 1000.0);
 
                     ui.label(RichText::new(label).font(font.clone()).heading().color(color));
-                    ui.label(RichText::new(format!("N: {}", self.objects.len())).font(font).heading().color(color));
+                    ui.label(RichText::new(format!("N: {}", self.objects.len())).font(font.clone()).heading().color(color));
+
+                    ui.add_space(10.0);
+                    ui.label(RichText::new(format!("Collisions: {}", collisions.len())).font(font.clone()).heading().color(color));
+                    ui.label(RichText::new(format!("Contacts: {}", contacts.len())).font(font.clone()).heading().color(color));
+
+                    ui.add_space(10.0);
+                    ui.checkbox(&mut self.debug, RichText::new("Debug mode").font(font.clone()).heading().color(color));
                 }
             });
         });

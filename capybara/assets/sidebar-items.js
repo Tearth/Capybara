@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["AssetsLoadingStatus"],"mod":["loader"],"struct":["RawAtlas","RawAtlasEntity","RawFont","RawSound","RawTexture"]};
+window.SIDEBAR_ITEMS = {"enum":["AssetsLoadingStatus"],"mod":["ldtk","loader"],"struct":["RawAtlas","RawAtlasEntity","RawFont","RawSound","RawTexture"]};

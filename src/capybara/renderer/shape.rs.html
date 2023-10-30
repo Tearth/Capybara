@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `capybara\src\renderer\shape.rs`."><title>shape.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9bb858ba049f1f21.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="capybara" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.1 (d5c2e9c34 2023-09-13)" data-channel="1.72.1" data-search-js="search-f6292fe389d70017.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../capybara/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `capybara\src\renderer\shape.rs`."><title>shape.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="capybara" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../capybara/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -237,51 +237,8 @@
 <a href="#237" id="237">237</a>
 <a href="#238" id="238">238</a>
 <a href="#239" id="239">239</a>
-<a href="#240" id="240">240</a>
-<a href="#241" id="241">241</a>
-<a href="#242" id="242">242</a>
-<a href="#243" id="243">243</a>
-<a href="#244" id="244">244</a>
-<a href="#245" id="245">245</a>
-<a href="#246" id="246">246</a>
-<a href="#247" id="247">247</a>
-<a href="#248" id="248">248</a>
-<a href="#249" id="249">249</a>
-<a href="#250" id="250">250</a>
-<a href="#251" id="251">251</a>
-<a href="#252" id="252">252</a>
-<a href="#253" id="253">253</a>
-<a href="#254" id="254">254</a>
-<a href="#255" id="255">255</a>
-<a href="#256" id="256">256</a>
-<a href="#257" id="257">257</a>
-<a href="#258" id="258">258</a>
-<a href="#259" id="259">259</a>
-<a href="#260" id="260">260</a>
-<a href="#261" id="261">261</a>
-<a href="#262" id="262">262</a>
-<a href="#263" id="263">263</a>
-<a href="#264" id="264">264</a>
-<a href="#265" id="265">265</a>
-<a href="#266" id="266">266</a>
-<a href="#267" id="267">267</a>
-<a href="#268" id="268">268</a>
-<a href="#269" id="269">269</a>
-<a href="#270" id="270">270</a>
-<a href="#271" id="271">271</a>
-<a href="#272" id="272">272</a>
-<a href="#273" id="273">273</a>
-<a href="#274" id="274">274</a>
-<a href="#275" id="275">275</a>
-<a href="#276" id="276">276</a>
-<a href="#277" id="277">277</a>
-<a href="#278" id="278">278</a>
-<a href="#279" id="279">279</a>
-<a href="#280" id="280">280</a>
-<a href="#281" id="281">281</a>
-<a href="#282" id="282">282</a>
-<a href="#283" id="283">283</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::sprite::TextureId;
+<span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::utils::color::Vec4Color;
 <span class="kw">use </span>glam::Mat4;
 <span class="kw">use </span>glam::Vec2;
@@ -289,15 +246,24 @@
 <span class="kw">use </span>glam::Vec4;
 <span class="kw">use </span>std::f32::consts;
 
-<span class="kw">pub struct </span>Shape {
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>Shape {
     <span class="kw">pub </span>position: Vec2,
     <span class="kw">pub </span>rotation: f32,
     <span class="kw">pub </span>scale: Vec2,
     <span class="kw">pub </span>texture_id: TextureId,
     <span class="kw">pub </span>apply_model: bool,
 
-    <span class="kw">pub </span>vertices: Vec&lt;u32&gt;,
+    <span class="kw">pub </span>vertices: Vec&lt;ShapeVertex&gt;,
     <span class="kw">pub </span>indices: Vec&lt;u32&gt;,
+}
+
+<span class="attr">#[repr(C)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+</span><span class="kw">pub struct </span>ShapeVertex {
+    <span class="kw">pub </span>position: Vec2,
+    <span class="kw">pub </span>color: u32,
+    <span class="kw">pub </span>uv: Vec2,
 }
 
 <span class="kw">impl </span>Shape {
@@ -322,29 +288,13 @@
 
         <span class="kw">let </span>vertices = <span class="macro">vec!</span>[
             <span class="comment">// Left-bottom
-            </span>(-width).to_bits(),
-            (-<span class="number">0.5f32</span>).to_bits(),
-            color,
-            <span class="number">0.0f32</span>.to_bits(),
-            <span class="number">1.0f32</span>.to_bits(),
+            </span>ShapeVertex::new(Vec2::new(-width, -<span class="number">0.5</span>), color, Vec2::new(<span class="number">0.0</span>, <span class="number">1.0</span>)),
             <span class="comment">// Right-bottom
-            </span>(width).to_bits(),
-            (-<span class="number">0.5f32</span>).to_bits(),
-            color,
-            <span class="number">1.0f32</span>.to_bits(),
-            <span class="number">1.0f32</span>.to_bits(),
+            </span>ShapeVertex::new(Vec2::new(width, -<span class="number">0.5</span>), color, Vec2::new(<span class="number">1.0</span>, <span class="number">1.0</span>)),
             <span class="comment">// Right-top
-            </span>(width).to_bits(),
-            (length - <span class="number">0.5</span>).to_bits(),
-            color,
-            <span class="number">1.0f32</span>.to_bits(),
-            <span class="number">0.0f32</span>.to_bits(),
+            </span>ShapeVertex::new(Vec2::new(width, length - <span class="number">0.5</span>), color, Vec2::new(<span class="number">1.0</span>, <span class="number">0.0</span>)),
             <span class="comment">// Left-top
-            </span>(-width).to_bits(),
-            (length - <span class="number">0.5</span>).to_bits(),
-            color,
-            <span class="number">0.0f32</span>.to_bits(),
-            <span class="number">0.0f32</span>.to_bits(),
+            </span>ShapeVertex::new(Vec2::new(-width, length - <span class="number">0.5</span>), color, Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>)),
         ];
 
         Shape {
@@ -361,31 +311,16 @@
     <span class="kw">pub fn </span>new_rectangle(left_bottom: Vec2, right_top: Vec2, color: Vec4) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>size = right_top - left_bottom + Vec2::ONE;
         <span class="kw">let </span>color = color.to_rgb_packed();
+
         <span class="kw">let </span>vertices = <span class="macro">vec!</span>[
             <span class="comment">// Left-bottom
-            </span>(left_bottom.x).to_bits(),
-            (left_bottom.y).to_bits(),
-            color,
-            <span class="number">0.0f32</span>.to_bits(),
-            <span class="number">1.0f32</span>.to_bits(),
+            </span>ShapeVertex::new(left_bottom, color, Vec2::new(<span class="number">0.0</span>, <span class="number">1.0</span>)),
             <span class="comment">// Right-bottom
-            </span>(left_bottom.x + size.x).to_bits(),
-            (left_bottom.y).to_bits(),
-            color,
-            <span class="number">1.0f32</span>.to_bits(),
-            <span class="number">1.0f32</span>.to_bits(),
+            </span>ShapeVertex::new(left_bottom + Vec2::new(size.x, <span class="number">0.0</span>), color, Vec2::new(<span class="number">1.0</span>, <span class="number">1.0</span>)),
             <span class="comment">// Right-top
-            </span>(left_bottom.x + size.x).to_bits(),
-            (left_bottom.y + size.y).to_bits(),
-            color,
-            <span class="number">1.0f32</span>.to_bits(),
-            <span class="number">0.0f32</span>.to_bits(),
+            </span>ShapeVertex::new(left_bottom + size, color, Vec2::new(<span class="number">1.0</span>, <span class="number">0.0</span>)),
             <span class="comment">// Left-top
-            </span>(left_bottom.x).to_bits(),
-            (left_bottom.y + size.y).to_bits(),
-            color,
-            <span class="number">0.0f32</span>.to_bits(),
-            <span class="number">0.0f32</span>.to_bits(),
+            </span>ShapeVertex::new(left_bottom + Vec2::new(<span class="number">0.0</span>, size.y), color, Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>)),
         ];
 
         Shape {
@@ -401,57 +336,26 @@
 
     <span class="kw">pub fn </span>new_frame(left_bottom: Vec2, right_top: Vec2, thickness: f32, color: Vec4) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>size = right_top - left_bottom + Vec2::ONE;
-        <span class="kw">let </span>color = color.to_rgb_packed();
         <span class="kw">let </span>uv_thickness = thickness / size;
+        <span class="kw">let </span>color = color.to_rgb_packed();
+
         <span class="kw">let </span>vertices = <span class="macro">vec!</span>[
             <span class="comment">// Left-bottom outer
-            </span>(left_bottom.x).to_bits(),
-            (left_bottom.y).to_bits(),
-            color,
-            <span class="number">0.0f32</span>.to_bits(),
-            <span class="number">1.0f32</span>.to_bits(),
+            </span>ShapeVertex::new(left_bottom, color, Vec2::new(<span class="number">0.0</span>, <span class="number">1.0</span>)),
             <span class="comment">// Left-bottom inner
-            </span>(left_bottom.x + thickness).to_bits(),
-            (left_bottom.y + thickness).to_bits(),
-            color,
-            (<span class="number">0.0 </span>+ uv_thickness.x).to_bits(),
-            (<span class="number">1.0 </span>- uv_thickness.y).to_bits(),
+            </span>ShapeVertex::new(left_bottom + thickness, color, Vec2::new(uv_thickness.x, <span class="number">1.0 </span>- uv_thickness.y)),
             <span class="comment">// Right-bottom outer
-            </span>(left_bottom.x + size.x).to_bits(),
-            (left_bottom.y).to_bits(),
-            color,
-            <span class="number">1.0f32</span>.to_bits(),
-            <span class="number">1.0f32</span>.to_bits(),
+            </span>ShapeVertex::new(left_bottom + Vec2::new(size.x, <span class="number">0.0</span>), color, Vec2::new(<span class="number">1.0</span>, <span class="number">1.0</span>)),
             <span class="comment">// Right-bottom inner
-            </span>(left_bottom.x + size.x - thickness).to_bits(),
-            (left_bottom.y + thickness).to_bits(),
-            color,
-            (<span class="number">1.0 </span>- uv_thickness.x).to_bits(),
-            (<span class="number">1.0 </span>- uv_thickness.y).to_bits(),
+            </span>ShapeVertex::new(left_bottom + Vec2::new(size.x - thickness, thickness), color, Vec2::new(<span class="number">1.0</span>, <span class="number">1.0</span>) - uv_thickness),
             <span class="comment">// Right-top outer
-            </span>(left_bottom.x + size.x).to_bits(),
-            (left_bottom.y + size.y).to_bits(),
-            color,
-            <span class="number">1.0f32</span>.to_bits(),
-            <span class="number">0.0f32</span>.to_bits(),
+            </span>ShapeVertex::new(left_bottom + size, color, Vec2::new(<span class="number">1.0</span>, <span class="number">0.0</span>)),
             <span class="comment">// Right-top inner
-            </span>(left_bottom.x + size.x - thickness).to_bits(),
-            (left_bottom.y + size.y - thickness).to_bits(),
-            color,
-            (<span class="number">1.0 </span>- uv_thickness.x).to_bits(),
-            (<span class="number">0.0 </span>+ uv_thickness.y).to_bits(),
+            </span>ShapeVertex::new(left_bottom + size - thickness, color, Vec2::new(<span class="number">1.0 </span>- uv_thickness.x, uv_thickness.y)),
             <span class="comment">// Left-top outer
-            </span>(left_bottom.x).to_bits(),
-            (left_bottom.y + size.y).to_bits(),
-            color,
-            <span class="number">0.0f32</span>.to_bits(),
-            <span class="number">0.0f32</span>.to_bits(),
+            </span>ShapeVertex::new(left_bottom + Vec2::new(<span class="number">0.0</span>, size.y), color, Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>)),
             <span class="comment">// Left-top inner
-            </span>(left_bottom.x + thickness).to_bits(),
-            (left_bottom.y + size.y - thickness).to_bits(),
-            color,
-            (<span class="number">0.0 </span>+ uv_thickness.x).to_bits(),
-            (<span class="number">0.0 </span>+ uv_thickness.y).to_bits(),
+            </span>ShapeVertex::new(left_bottom + Vec2::new(thickness, size.y - thickness), color, uv_thickness),
         ];
 
         Shape {
@@ -465,17 +369,15 @@
         }
     }
 
-    <span class="kw">pub fn </span>new_disc(center: Vec2, radius: f32, sides: <span class="prelude-ty">Option</span>&lt;u32&gt;, color: Vec4) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub fn </span>new_disc(center: Vec2, radius: f32, sides: <span class="prelude-ty">Option</span>&lt;u32&gt;, inner_color: Vec4, outer_color: Vec4) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>sides = sides.unwrap_or((radius * <span class="number">4.0</span>) <span class="kw">as </span>u32);
-        <span class="kw">let </span>color = color.to_rgb_packed();
         <span class="kw">let </span>angle_step = consts::TAU / sides <span class="kw">as </span>f32;
+        <span class="kw">let </span>inner_color = inner_color.to_rgb_packed();
+        <span class="kw">let </span>outer_color = outer_color.to_rgb_packed();
+
         <span class="kw">let </span><span class="kw-2">mut </span>vertices = <span class="macro">vec!</span>[
             <span class="comment">// Center
-            </span>center.x.to_bits(),
-            center.y.to_bits(),
-            color,
-            <span class="number">0.5f32</span>.to_bits(),
-            <span class="number">0.5f32</span>.to_bits(),
+            </span>ShapeVertex::new(center, inner_color, Vec2::new(<span class="number">0.5</span>, <span class="number">0.5</span>)),
         ];
         <span class="kw">let </span><span class="kw-2">mut </span>indices = Vec::new();
 
@@ -484,13 +386,9 @@
             <span class="kw">let </span>sin = f32::sin(angle);
             <span class="kw">let </span>cos = f32::cos(angle);
 
-            vertices.extend_from_slice(<span class="kw-2">&amp;</span>[
-                (sin * radius + center.x).to_bits(),
-                (cos * radius + center.y).to_bits(),
-                color,
-                (sin / <span class="number">2.0 </span>+ <span class="number">0.5</span>).to_bits(),
-                (<span class="number">1.0 </span>- (cos / <span class="number">2.0 </span>+ <span class="number">0.5</span>)).to_bits(),
-            ]);
+            <span class="kw">let </span>position = Vec2::new(sin * radius + center.x, cos * radius + center.y);
+            <span class="kw">let </span>uv = Vec2::new(sin / <span class="number">2.0 </span>+ <span class="number">0.5</span>, <span class="number">1.0 </span>- (cos / <span class="number">2.0 </span>+ <span class="number">0.5</span>));
+            vertices.push(ShapeVertex::new(position, outer_color, uv));
 
             <span class="kw">if </span>i &gt; <span class="number">0 </span>{
                 indices.extend_from_slice(<span class="kw-2">&amp;</span>[<span class="number">0</span>, i, i + <span class="number">1</span>]);
@@ -504,9 +402,9 @@
 
     <span class="kw">pub fn </span>new_circle(center: Vec2, radius: f32, sides: <span class="prelude-ty">Option</span>&lt;u32&gt;, thickness: f32, color: Vec4) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>sides = sides.unwrap_or((radius * <span class="number">4.0</span>) <span class="kw">as </span>u32);
-        <span class="kw">let </span>color = color.to_rgb_packed();
         <span class="kw">let </span>uv_thickness = thickness / radius;
         <span class="kw">let </span>angle_step = consts::TAU / sides <span class="kw">as </span>f32;
+        <span class="kw">let </span>color = color.to_rgb_packed();
         <span class="kw">let </span><span class="kw-2">mut </span>vertices = Vec::new();
         <span class="kw">let </span><span class="kw-2">mut </span>indices = Vec::new();
 
@@ -515,20 +413,13 @@
             <span class="kw">let </span>sin = f32::sin(angle);
             <span class="kw">let </span>cos = f32::cos(angle);
 
-            vertices.extend_from_slice(<span class="kw-2">&amp;</span>[
-                <span class="comment">// Outer
-                </span>(sin * radius + center.x).to_bits(),
-                (cos * radius + center.y).to_bits(),
-                color,
-                (sin / <span class="number">2.0 </span>+ <span class="number">0.5</span>).to_bits(),
-                (<span class="number">1.0 </span>- (cos / <span class="number">2.0 </span>+ <span class="number">0.5</span>)).to_bits(),
-                <span class="comment">// Inner
-                </span>(sin * (radius - thickness) + center.x).to_bits(),
-                (cos * (radius - thickness) + center.y).to_bits(),
-                color,
-                (sin * (<span class="number">1.0 </span>- uv_thickness) / <span class="number">2.0 </span>+ <span class="number">0.5</span>).to_bits(),
-                (<span class="number">1.0 </span>- (cos * (<span class="number">1.0 </span>- uv_thickness) / <span class="number">2.0 </span>+ <span class="number">0.5</span>)).to_bits(),
-            ]);
+            <span class="kw">let </span>position_outer = Vec2::new(sin * radius + center.x, cos * radius + center.y);
+            <span class="kw">let </span>position_inner = Vec2::new(sin * (radius - thickness) + center.x, cos * (radius - thickness) + center.y);
+            <span class="kw">let </span>uv_outer = Vec2::new(sin / <span class="number">2.0 </span>+ <span class="number">0.5</span>, <span class="number">1.0 </span>- (cos / <span class="number">2.0 </span>+ <span class="number">0.5</span>));
+            <span class="kw">let </span>uv_inner = Vec2::new(sin * (<span class="number">1.0 </span>- uv_thickness) / <span class="number">2.0 </span>+ <span class="number">0.5</span>, <span class="number">1.0 </span>- (cos * (<span class="number">1.0 </span>- uv_thickness) / <span class="number">2.0 </span>+ <span class="number">0.5</span>));
+
+            vertices.push(ShapeVertex::new(position_outer, color, uv_outer));
+            vertices.push(ShapeVertex::new(position_inner, color, uv_inner));
 
             <span class="kw">if </span>i &gt; <span class="number">0 </span>{
                 <span class="kw">let </span>i = i * <span class="number">2</span>;
@@ -542,12 +433,27 @@
         Shape { position: Vec2::ZERO, rotation: <span class="number">0.0</span>, scale: Vec2::ONE, texture_id: TextureId::Default, apply_model: <span class="bool-val">true</span>, vertices, indices }
     }
 
-    <span class="kw">pub fn </span>add_vertice(<span class="kw-2">&amp;mut </span><span class="self">self</span>, position: Vec2, color: u32, uv: Vec2) {
-        <span class="self">self</span>.vertices.push(position.x.to_bits());
-        <span class="self">self</span>.vertices.push(position.y.to_bits());
-        <span class="self">self</span>.vertices.push(color);
-        <span class="self">self</span>.vertices.push(uv.x.to_bits());
-        <span class="self">self</span>.vertices.push(uv.y.to_bits());
+    <span class="kw">pub fn </span>get_edges(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;Edge&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>edges = Vec::new();
+        <span class="kw">let </span>model = <span class="self">self</span>.get_model();
+
+        <span class="kw">for </span>i <span class="kw">in </span>(<span class="number">0</span>..<span class="self">self</span>.indices.len()).step_by(<span class="number">3</span>) {
+            <span class="kw">let </span>a = <span class="self">self</span>.vertices[<span class="self">self</span>.indices[i + <span class="number">0</span>] <span class="kw">as </span>usize].position;
+            <span class="kw">let </span>b = <span class="self">self</span>.vertices[<span class="self">self</span>.indices[i + <span class="number">1</span>] <span class="kw">as </span>usize].position;
+            <span class="kw">let </span>c = <span class="self">self</span>.vertices[<span class="self">self</span>.indices[i + <span class="number">2</span>] <span class="kw">as </span>usize].position;
+
+            <span class="kw">let </span>a = model * Vec4::new(a.x, a.y, <span class="number">0.0</span>, <span class="number">1.0</span>);
+            <span class="kw">let </span>b = model * Vec4::new(b.x, b.y, <span class="number">0.0</span>, <span class="number">1.0</span>);
+            <span class="kw">let </span>c = model * Vec4::new(c.x, c.y, <span class="number">0.0</span>, <span class="number">1.0</span>);
+
+            <span class="kw">let </span>a = Vec2::new(a.x, a.y);
+            <span class="kw">let </span>b = Vec2::new(b.x, b.y);
+            <span class="kw">let </span>c = Vec2::new(c.x, c.y);
+
+            edges.extend_from_slice(<span class="kw-2">&amp;</span>[Edge::new(a, b), Edge::new(b, c), Edge::new(c, a)]);
+        }
+
+        edges
     }
 
     <span class="kw">pub fn </span>get_model(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Mat4 {
@@ -562,6 +468,12 @@
 <span class="kw">impl </span>Default <span class="kw">for </span>Shape {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::new()
+    }
+}
+
+<span class="kw">impl </span>ShapeVertex {
+    <span class="kw">pub fn </span>new(position: Vec2, color: u32, uv: Vec2) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ position, color: color, uv }
     }
 }
 </code></pre></div></section></main></body></html>

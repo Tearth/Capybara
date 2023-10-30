@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Shape"]};
+window.SIDEBAR_ITEMS = {"struct":["Shape","ShapeVertex"]};

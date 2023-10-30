@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":["NormalizeAngle"]};
+window.SIDEBAR_ITEMS = {"trait":["F32MathUtils","Vec2MathUtils"]};

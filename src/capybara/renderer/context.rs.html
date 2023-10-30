@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `capybara\src\renderer\context.rs`."><title>context.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9bb858ba049f1f21.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="capybara" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.1 (d5c2e9c34 2023-09-13)" data-channel="1.72.1" data-search-js="search-f6292fe389d70017.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../capybara/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `capybara\src\renderer\context.rs`."><title>context.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-cb6f1f67f1bcd037.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="capybara" data-themes="" data-resource-suffix="" data-rustdoc-version="1.73.0 (cc66ad468 2023-10-03)" data-channel="1.73.0" data-search-js="search-6dfdfced5eff6596.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-1596385f77d47ef2.css" data-theme-dark-css="dark-0a43001d3fc2282c.css" data-theme-ayu-css="ayu-fd19013d6ce078bf.css" ><script src="../../../static.files/storage-db41da1a38ea3cb8.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-1596385f77d47ef2.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-0a43001d3fc2282c.css"><link rel="stylesheet" href="../../../static.files/noscript-cffde32267a19fd6.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../capybara/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -830,12 +830,70 @@
 <a href="#830" id="830">830</a>
 <a href="#831" id="831">831</a>
 <a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
+<a href="#852" id="852">852</a>
+<a href="#853" id="853">853</a>
+<a href="#854" id="854">854</a>
+<a href="#855" id="855">855</a>
+<a href="#856" id="856">856</a>
+<a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a>
+<a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
+<a href="#867" id="867">867</a>
+<a href="#868" id="868">868</a>
+<a href="#869" id="869">869</a>
+<a href="#870" id="870">870</a>
+<a href="#871" id="871">871</a>
+<a href="#872" id="872">872</a>
+<a href="#873" id="873">873</a>
+<a href="#874" id="874">874</a>
+<a href="#875" id="875">875</a>
+<a href="#876" id="876">876</a>
+<a href="#877" id="877">877</a>
+<a href="#878" id="878">878</a>
+<a href="#879" id="879">879</a>
+<a href="#880" id="880">880</a>
+<a href="#881" id="881">881</a>
+<a href="#882" id="882">882</a>
+<a href="#883" id="883">883</a>
+<a href="#884" id="884">884</a>
+<a href="#885" id="885">885</a>
+<a href="#886" id="886">886</a>
+<a href="#887" id="887">887</a>
+<a href="#888" id="888">888</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::camera::Camera;
 <span class="kw">use </span><span class="kw">super</span>::camera::CameraOrigin;
 <span class="kw">use </span><span class="kw">super</span>::shader::Shader;
 <span class="kw">use </span><span class="kw">super</span>::shader::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">super</span>::shape::Shape;
+<span class="kw">use </span><span class="kw">super</span>::shape::ShapeVertex;
 <span class="kw">use </span><span class="kw">super</span>::sprite::Sprite;
+<span class="kw">use </span><span class="kw">super</span>::sprite::SpriteVertex;
 <span class="kw">use </span><span class="kw">super</span>::sprite::TextureId;
 <span class="kw">use </span><span class="kw">super</span>::sprite::TextureType;
 <span class="kw">use </span><span class="kw">super</span>::texture::AtlasEntity;
@@ -865,6 +923,7 @@
 <span class="kw">use </span>log::info;
 <span class="kw">use </span>rustc_hash::FxHashMap;
 <span class="kw">use </span>std::cmp;
+<span class="kw">use </span>std::mem;
 <span class="kw">use </span>std::path::Path;
 <span class="kw">use </span>std::ptr;
 <span class="kw">use </span>std::rc::Rc;
@@ -891,24 +950,26 @@
     active_camera_data: Camera,
     buffer_metadata: <span class="prelude-ty">Option</span>&lt;BufferMetadata&gt;,
 
-    framebuffer_default: Framebuffer,
+    framebuffer: Framebuffer,
     framebuffer_texture_id: <span class="prelude-ty">Option</span>&lt;usize&gt;,
-    framebuffer_depth_stencil: Renderbuffer,
-    framebuffer_autofit: bool,
+    framebuffer_multisample: Framebuffer,
+    framebuffer_multisample_renderbuffer: Renderbuffer,
+    <span class="kw">pub </span>framebuffer_autofit: bool,
+    <span class="kw">pub </span>framebuffer_msaa: <span class="prelude-ty">Option</span>&lt;u32&gt;,
 
     sprite_buffer_vao: VertexArray,
     sprite_buffer_vbo: Buffer,
     sprite_buffer_ebo: Buffer,
     sprite_buffer_resized: bool,
     sprite_buffer_count: usize,
-    sprite_buffer_vertices_queue: Vec&lt;u32&gt;,
+    sprite_buffer_vertices_queue: Vec&lt;SpriteVertex&gt;,
     sprite_buffer_vertices_count: usize,
 
     shape_buffer_vao: VertexArray,
     shape_buffer_vbo: Buffer,
     shape_buffer_ebo: Buffer,
     shape_buffer_resized: bool,
-    shape_buffer_vertices_queue: Vec&lt;u32&gt;,
+    shape_buffer_vertices_queue: Vec&lt;ShapeVertex&gt;,
     shape_buffer_indices_queue: Vec&lt;u32&gt;,
     shape_buffer_vertices_count: usize,
     shape_buffer_indices_count: usize,
@@ -933,10 +994,11 @@
 }
 
 <span class="kw">impl </span>RendererContext {
-    <span class="kw">pub fn </span>new(gl: Context) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
+    <span class="kw">pub fn </span>new(gl: Context, msaa: <span class="prelude-ty">Option</span>&lt;u32&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">unsafe </span>{
-            <span class="kw">let </span>fbo_default = gl.create_framebuffer().unwrap();
-            <span class="kw">let </span>fbo_depth_stencil = gl.create_renderbuffer().unwrap();
+            <span class="kw">let </span>framebuffer = gl.create_framebuffer().map_err(Error::msg)<span class="question-mark">?</span>;
+            <span class="kw">let </span>framebuffer_multisample = gl.create_framebuffer().map_err(Error::msg)<span class="question-mark">?</span>;
+            <span class="kw">let </span>framebuffer_multisample_renderbuffer = gl.create_renderbuffer().map_err(Error::msg)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>sprite_buffer_vao = gl.create_vertex_array().map_err(Error::msg)<span class="question-mark">?</span>;
             <span class="kw">let </span>sprite_buffer_data_vbo = gl.create_buffer().map_err(Error::msg)<span class="question-mark">?</span>;
@@ -967,24 +1029,26 @@
                 active_camera_data: Default::default(),
                 buffer_metadata: <span class="prelude-val">None</span>,
 
-                framebuffer_default: fbo_default,
+                framebuffer,
                 framebuffer_texture_id: <span class="prelude-val">None</span>,
-                framebuffer_depth_stencil: fbo_depth_stencil,
+                framebuffer_multisample,
+                framebuffer_multisample_renderbuffer,
                 framebuffer_autofit: <span class="bool-val">true</span>,
+                framebuffer_msaa: msaa,
 
                 sprite_buffer_vao,
                 sprite_buffer_vbo: sprite_buffer_data_vbo,
                 sprite_buffer_ebo,
                 sprite_buffer_resized: <span class="bool-val">true</span>,
                 sprite_buffer_count: <span class="number">0</span>,
-                sprite_buffer_vertices_queue: <span class="macro">vec!</span>[<span class="number">0</span>; <span class="number">256</span>],
+                sprite_buffer_vertices_queue: <span class="macro">vec!</span>[Default::default(); <span class="number">256</span>],
                 sprite_buffer_vertices_count: <span class="number">0</span>,
 
                 shape_buffer_vao,
                 shape_buffer_vbo,
                 shape_buffer_ebo,
                 shape_buffer_resized: <span class="bool-val">true</span>,
-                shape_buffer_vertices_queue: <span class="macro">vec!</span>[<span class="number">0</span>; <span class="number">256</span>],
+                shape_buffer_vertices_queue: <span class="macro">vec!</span>[Default::default(); <span class="number">256</span>],
                 shape_buffer_indices_queue: <span class="macro">vec!</span>[<span class="number">0</span>; <span class="number">256</span>],
                 shape_buffer_vertices_count: <span class="number">0</span>,
                 shape_buffer_indices_count: <span class="number">0</span>,
@@ -1014,23 +1078,22 @@
             <span class="kw">let </span>default_texture = Texture::new(<span class="kw-2">&amp;</span>context, <span class="kw-2">&amp;</span>RawTexture::new(<span class="string">&quot;blank&quot;</span>, <span class="string">&quot;&quot;</span>, Vec2::new(<span class="number">1.0</span>, <span class="number">1.0</span>), <span class="kw-2">&amp;</span>[<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>]))<span class="question-mark">?</span>;
             context.default_texture_id = context.textures.store(default_texture);
 
-            <span class="comment">// Framebuffer
-            </span>context.gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">Some</span>(context.framebuffer_default));
-            context.gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">Some</span>(context.framebuffer_depth_stencil));
-            context.gl.renderbuffer_storage(glow::RENDERBUFFER, glow::DEPTH24_STENCIL8, <span class="number">1</span>, <span class="number">1</span>);
-            context.gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">None</span>);
-
+            <span class="comment">// Framebuffer multisampled
+            </span>context.gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">Some</span>(context.framebuffer_multisample));
+            context.gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">Some</span>(context.framebuffer_multisample_renderbuffer));
+            context.gl.renderbuffer_storage_multisample(glow::RENDERBUFFER, msaa.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i32, glow::SRGB8_ALPHA8, <span class="number">1</span>, <span class="number">1</span>);
             context.gl.framebuffer_renderbuffer(
                 glow::FRAMEBUFFER,
-                glow::DEPTH_STENCIL_ATTACHMENT,
+                glow::COLOR_ATTACHMENT0,
                 glow::RENDERBUFFER,
-                <span class="prelude-val">Some</span>(context.framebuffer_depth_stencil),
+                <span class="prelude-val">Some</span>(context.framebuffer_multisample_renderbuffer),
             );
 
             <span class="kw">if </span>context.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
                 <span class="macro">bail!</span>(<span class="string">&quot;Failed to initialize framebuffer (code {})&quot;</span>, context.gl.get_error());
             }
 
+            context.gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">None</span>);
             context.gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">None</span>);
 
             <span class="comment">// Sprite buffers
@@ -1174,6 +1237,7 @@
             <span class="kw">match </span><span class="kw-2">&amp;</span>sprite.texture_type {
                 TextureType::Simple =&gt; sprite.size.unwrap_or(texture.size),
                 TextureType::SimpleOffset { offset: <span class="kw">_ </span>} =&gt; sprite.size.unwrap_or(texture.size),
+                TextureType::SimpleCoordinates { position: <span class="kw">_</span>, size } =&gt; <span class="kw-2">*</span>size,
                 TextureType::Tilemap { size } =&gt; sprite.size.unwrap_or(<span class="kw-2">*</span>size),
                 TextureType::TilemapAnimation { size, frames: <span class="kw">_ </span>} =&gt; sprite.size.unwrap_or(<span class="kw-2">*</span>size),
                 TextureType::AtlasEntity { name } =&gt; {
@@ -1226,8 +1290,8 @@
                 <span class="prelude-val">Some</span>(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id, <span class="self">self</span>.framebuffer_texture_id, <span class="self">self</span>.selected_shader_id));
         }
 
-        <span class="kw">if </span><span class="self">self</span>.sprite_buffer_vertices_count + <span class="number">12 </span>&gt;= <span class="self">self</span>.sprite_buffer_vertices_queue.len() {
-            <span class="self">self</span>.sprite_buffer_vertices_queue.resize(<span class="self">self</span>.sprite_buffer_vertices_queue.len() * <span class="number">2</span>, <span class="number">0</span>);
+        <span class="kw">if </span><span class="self">self</span>.sprite_buffer_vertices_count &gt;= <span class="self">self</span>.sprite_buffer_vertices_queue.len() {
+            <span class="self">self</span>.sprite_buffer_vertices_queue.resize(<span class="self">self</span>.sprite_buffer_vertices_queue.len() * <span class="number">2</span>, Default::default());
             <span class="self">self</span>.sprite_buffer_resized = <span class="bool-val">true</span>;
         }
 
@@ -1242,6 +1306,12 @@
                 TextureType::SimpleOffset { offset } =&gt; {
                     <span class="kw">let </span>uv_position = <span class="kw-2">*</span>offset / texture.size;
                     <span class="kw">let </span>uv_size = sprite_size / texture.size;
+
+                    (uv_position, uv_size)
+                }
+                TextureType::SimpleCoordinates { position, size } =&gt; {
+                    <span class="kw">let </span>uv_position = <span class="kw-2">*</span>position / texture.size;
+                    <span class="kw">let </span>uv_size = <span class="kw-2">*</span>size / texture.size;
 
                     (uv_position, uv_size)
                 }
@@ -1295,23 +1365,18 @@
             (Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>), Vec2::new(<span class="number">1.0</span>, <span class="number">1.0</span>))
         };
 
-        <span class="kw">let </span>color = sprite.color.to_rgb_packed();
-
-        <span class="self">self</span>.sprite_buffer_vertices_queue[<span class="self">self</span>.sprite_buffer_vertices_count + <span class="number">0</span>] = sprite.position.x.to_bits();
-        <span class="self">self</span>.sprite_buffer_vertices_queue[<span class="self">self</span>.sprite_buffer_vertices_count + <span class="number">1</span>] = sprite.position.y.to_bits();
-        <span class="self">self</span>.sprite_buffer_vertices_queue[<span class="self">self</span>.sprite_buffer_vertices_count + <span class="number">2</span>] = sprite.anchor.x.to_bits();
-        <span class="self">self</span>.sprite_buffer_vertices_queue[<span class="self">self</span>.sprite_buffer_vertices_count + <span class="number">3</span>] = sprite.anchor.y.to_bits();
-        <span class="self">self</span>.sprite_buffer_vertices_queue[<span class="self">self</span>.sprite_buffer_vertices_count + <span class="number">4</span>] = sprite.rotation.to_bits();
-        <span class="self">self</span>.sprite_buffer_vertices_queue[<span class="self">self</span>.sprite_buffer_vertices_count + <span class="number">5</span>] = (sprite_size.x * sprite.scale.x).to_bits();
-        <span class="self">self</span>.sprite_buffer_vertices_queue[<span class="self">self</span>.sprite_buffer_vertices_count + <span class="number">6</span>] = (sprite_size.y * sprite.scale.y).to_bits();
-        <span class="self">self</span>.sprite_buffer_vertices_queue[<span class="self">self</span>.sprite_buffer_vertices_count + <span class="number">7</span>] = color;
-        <span class="self">self</span>.sprite_buffer_vertices_queue[<span class="self">self</span>.sprite_buffer_vertices_count + <span class="number">8</span>] = uv_position.x.to_bits();
-        <span class="self">self</span>.sprite_buffer_vertices_queue[<span class="self">self</span>.sprite_buffer_vertices_count + <span class="number">9</span>] = uv_position.y.to_bits();
-        <span class="self">self</span>.sprite_buffer_vertices_queue[<span class="self">self</span>.sprite_buffer_vertices_count + <span class="number">10</span>] = uv_size.x.to_bits();
-        <span class="self">self</span>.sprite_buffer_vertices_queue[<span class="self">self</span>.sprite_buffer_vertices_count + <span class="number">11</span>] = uv_size.y.to_bits();
+        <span class="self">self</span>.sprite_buffer_vertices_queue[<span class="self">self</span>.sprite_buffer_vertices_count] = SpriteVertex {
+            position: sprite.position,
+            anchor: sprite.anchor,
+            rotation: sprite.rotation,
+            size: sprite_size * sprite.scale,
+            color: sprite.color.to_rgb_packed(),
+            uv_position,
+            uv_size,
+        };
 
         <span class="self">self</span>.sprite_buffer_count += <span class="number">1</span>;
-        <span class="self">self</span>.sprite_buffer_vertices_count += <span class="number">12</span>;
+        <span class="self">self</span>.sprite_buffer_vertices_count += <span class="number">1</span>;
     }
 
     <span class="kw">pub fn </span>draw_shape(<span class="kw-2">&amp;mut </span><span class="self">self</span>, shape: <span class="kw-2">&amp;</span>Shape) {
@@ -1330,7 +1395,7 @@
             <span class="kw">let </span><span class="kw-2">mut </span>sufficient_space = <span class="bool-val">true</span>;
 
             <span class="kw">if </span><span class="self">self</span>.shape_buffer_vertices_count + shape.vertices.len() &gt;= <span class="self">self</span>.shape_buffer_vertices_queue.len() {
-                <span class="self">self</span>.shape_buffer_vertices_queue.resize(<span class="self">self</span>.shape_buffer_vertices_queue.len() * <span class="number">2</span>, <span class="number">0</span>);
+                <span class="self">self</span>.shape_buffer_vertices_queue.resize(<span class="self">self</span>.shape_buffer_vertices_queue.len() * <span class="number">2</span>, Default::default());
                 <span class="self">self</span>.shape_buffer_resized = <span class="bool-val">true</span>;
                 sufficient_space = <span class="bool-val">false</span>;
             }
@@ -1354,14 +1419,12 @@
         <span class="kw">if </span>shape.apply_model {
             <span class="kw">let </span>model = shape.get_model();
 
-            <span class="kw">for </span>i <span class="kw">in </span>(<span class="self">self</span>.shape_buffer_vertices_count..(<span class="self">self</span>.shape_buffer_vertices_count + shape.vertices.len())).step_by(<span class="number">5</span>) {
-                <span class="kw">let </span>x = <span class="self">self</span>.shape_buffer_vertices_queue[i + <span class="number">0</span>];
-                <span class="kw">let </span>y = <span class="self">self</span>.shape_buffer_vertices_queue[i + <span class="number">1</span>];
-                <span class="kw">let </span>position = Vec4::new(f32::from_bits(x), f32::from_bits(y), <span class="number">0.0</span>, <span class="number">1.0</span>);
+            <span class="kw">for </span>i <span class="kw">in </span><span class="self">self</span>.shape_buffer_vertices_count..(<span class="self">self</span>.shape_buffer_vertices_count + shape.vertices.len()) {
+                <span class="kw">let </span>position = <span class="self">self</span>.shape_buffer_vertices_queue[i].position;
+                <span class="kw">let </span>position = Vec4::new(position.x, position.y, <span class="number">0.0</span>, <span class="number">1.0</span>);
                 <span class="kw">let </span>position_transformed = model * position;
 
-                <span class="self">self</span>.shape_buffer_vertices_queue[i + <span class="number">0</span>] = position_transformed.x.to_bits();
-                <span class="self">self</span>.shape_buffer_vertices_queue[i + <span class="number">1</span>] = position_transformed.y.to_bits();
+                <span class="self">self</span>.shape_buffer_vertices_queue[i].position = Vec2::new(position_transformed.x, position_transformed.y);
             }
         }
 
@@ -1379,7 +1442,7 @@
         <span class="kw">unsafe </span>{
             <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_metadata) = <span class="kw-2">&amp;</span><span class="self">self</span>.buffer_metadata {
                 <span class="kw">if </span><span class="self">self</span>.sprite_buffer_resized {
-                    <span class="kw">let </span>buffer_vertices_size = <span class="self">self</span>.sprite_buffer_vertices_queue.len() <span class="kw">as </span>i32 * <span class="number">4</span>;
+                    <span class="kw">let </span>buffer_vertices_size = <span class="self">self</span>.sprite_buffer_vertices_queue.len() <span class="kw">as </span>i32 * mem::size_of::&lt;SpriteVertex&gt;() <span class="kw">as </span>i32;
 
                     <span class="self">self</span>.gl.bind_vertex_array(<span class="prelude-val">Some</span>(<span class="self">self</span>.sprite_buffer_vao));
                     <span class="self">self</span>.gl.bind_buffer(glow::ARRAY_BUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.sprite_buffer_vbo));
@@ -1389,7 +1452,7 @@
                 }
 
                 <span class="kw">if </span><span class="self">self</span>.shape_buffer_resized {
-                    <span class="kw">let </span>buffer_vertices_size = <span class="self">self</span>.shape_buffer_vertices_queue.len() <span class="kw">as </span>i32 * <span class="number">4</span>;
+                    <span class="kw">let </span>buffer_vertices_size = <span class="self">self</span>.shape_buffer_vertices_queue.len() <span class="kw">as </span>i32 * mem::size_of::&lt;ShapeVertex&gt;() <span class="kw">as </span>i32;
                     <span class="kw">let </span>buffer_indices_size = <span class="self">self</span>.shape_buffer_indices_queue.len() <span class="kw">as </span>i32 * <span class="number">4</span>;
 
                     <span class="self">self</span>.gl.bind_vertex_array(<span class="prelude-val">Some</span>(<span class="self">self</span>.shape_buffer_vao));
@@ -1430,8 +1493,10 @@
                         <span class="self">self</span>.gl.bind_buffer(glow::ARRAY_BUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.sprite_buffer_vbo));
                         <span class="self">self</span>.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.sprite_buffer_ebo));
 
-                        <span class="kw">let </span>models_u8 =
-                            slice::from_raw_parts(<span class="self">self</span>.sprite_buffer_vertices_queue.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>u8, <span class="self">self</span>.sprite_buffer_vertices_count * <span class="number">4</span>);
+                        <span class="kw">let </span>models_u8 = slice::from_raw_parts(
+                            <span class="self">self</span>.sprite_buffer_vertices_queue.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>u8,
+                            <span class="self">self</span>.sprite_buffer_vertices_count * mem::size_of::&lt;SpriteVertex&gt;(),
+                        );
 
                         <span class="self">self</span>.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, <span class="number">0</span>, models_u8);
 
@@ -1475,7 +1540,8 @@
                         <span class="self">self</span>.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.shape_buffer_ebo));
 
                         <span class="kw">let </span>buffer_ptr = <span class="self">self</span>.shape_buffer_vertices_queue.as_ptr();
-                        <span class="kw">let </span>models_u8 = slice::from_raw_parts(buffer_ptr <span class="kw">as </span><span class="kw-2">*const </span>u8, <span class="self">self</span>.shape_buffer_vertices_count * <span class="number">4</span>);
+                        <span class="kw">let </span>models_u8 =
+                            slice::from_raw_parts(buffer_ptr <span class="kw">as </span><span class="kw-2">*const </span>u8, <span class="self">self</span>.shape_buffer_vertices_count * mem::size_of::&lt;ShapeVertex&gt;());
 
                         <span class="kw">let </span>buffer_ptr = <span class="self">self</span>.shape_buffer_indices_queue.as_ptr();
                         <span class="kw">let </span>indices_u8 = slice::from_raw_parts(buffer_ptr <span class="kw">as </span><span class="kw-2">*const </span>u8, <span class="self">self</span>.shape_buffer_indices_count * <span class="number">4</span>);
@@ -1543,7 +1609,7 @@
         }
     }
 
-    <span class="kw">pub fn </span>set_target_texture(<span class="kw-2">&amp;mut </span><span class="self">self</span>, texture_id: <span class="prelude-ty">Option</span>&lt;usize&gt;, autofit: bool) {
+    <span class="kw">pub fn </span>set_target_texture(<span class="kw-2">&amp;mut </span><span class="self">self</span>, texture_id: <span class="prelude-ty">Option</span>&lt;usize&gt;) {
         <span class="kw">if </span><span class="self">self</span>.framebuffer_texture_id != texture_id {
             <span class="self">self</span>.flush_buffer();
         }
@@ -1556,23 +1622,13 @@
                         <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_return!</span>(<span class="string">&quot;Failed to set target texture ({})&quot;</span>, err),
                     };
 
-                    <span class="kw">if </span>autofit &amp;&amp; texture.size != <span class="self">self</span>.viewport_size {
+                    <span class="kw">if </span><span class="self">self</span>.framebuffer_autofit &amp;&amp; texture.size != <span class="self">self</span>.viewport_size {
                         texture.resize(<span class="self">self</span>.viewport_size);
                     }
 
                     <span class="self">self</span>.framebuffer_texture_id = <span class="prelude-val">Some</span>(texture_id);
-                    <span class="self">self</span>.gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer_default));
-                    <span class="self">self</span>.gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer_depth_stencil));
-                    <span class="self">self</span>.gl.renderbuffer_storage(glow::RENDERBUFFER, glow::DEPTH24_STENCIL8, texture.size.x <span class="kw">as </span>i32, texture.size.y <span class="kw">as </span>i32);
-                    <span class="self">self</span>.gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">None</span>);
-
+                    <span class="self">self</span>.gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer));
                     <span class="self">self</span>.gl.framebuffer_texture_2d(glow::FRAMEBUFFER, glow::COLOR_ATTACHMENT0, glow::TEXTURE_2D, <span class="prelude-val">Some</span>(texture.inner), <span class="number">0</span>);
-                    <span class="self">self</span>.gl.framebuffer_renderbuffer(
-                        glow::FRAMEBUFFER,
-                        glow::DEPTH_STENCIL_ATTACHMENT,
-                        glow::RENDERBUFFER,
-                        <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer_depth_stencil),
-                    );
 
                     <span class="attr">#[cfg(not(web))]
                     </span><span class="self">self</span>.gl.enable(glow::FRAMEBUFFER_SRGB);
@@ -1580,15 +1636,52 @@
                     <span class="kw">if </span><span class="self">self</span>.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
                         <span class="macro">error_return!</span>(<span class="string">&quot;Framebuffer initialization error (code {})&quot;</span>, <span class="self">self</span>.gl.get_error());
                     }
-
-                    <span class="self">self</span>.framebuffer_autofit = autofit;
                 }
                 <span class="prelude-val">None </span>=&gt; {
                     <span class="self">self</span>.gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">None</span>);
 
-                    <span class="attr">#[cfg(not(web))]
-                    </span><span class="self">self</span>.gl.disable(glow::FRAMEBUFFER_SRGB);
+                    <span class="kw">if </span><span class="self">self</span>.framebuffer_msaa.is_none() {
+                        <span class="attr">#[cfg(not(web))]
+                        </span><span class="self">self</span>.gl.disable(glow::FRAMEBUFFER_SRGB);
+                    }
                 }
+            }
+
+            <span class="kw">if </span><span class="self">self</span>.framebuffer_msaa.is_some() {
+                <span class="kw">if </span>texture_id.is_some() {
+                    <span class="self">self</span>.gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer_multisample));
+                } <span class="kw">else </span>{
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(framebuffer_texture_id) = <span class="self">self</span>.framebuffer_texture_id {
+                        <span class="kw">let </span>texture = <span class="kw">match </span><span class="self">self</span>.textures.get(framebuffer_texture_id) {
+                            <span class="prelude-val">Ok</span>(texture) =&gt; texture,
+                            <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_return!</span>(<span class="string">&quot;Failed to read target texture ({})&quot;</span>, err),
+                        };
+
+                        <span class="self">self</span>.gl.bind_framebuffer(glow::READ_FRAMEBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer_multisample));
+                        <span class="self">self</span>.gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer));
+                        <span class="self">self</span>.gl.blit_framebuffer(
+                            <span class="number">0</span>,
+                            <span class="number">0</span>,
+                            texture.size.x <span class="kw">as </span>i32,
+                            texture.size.y <span class="kw">as </span>i32,
+                            <span class="number">0</span>,
+                            <span class="number">0</span>,
+                            texture.size.x <span class="kw">as </span>i32,
+                            texture.size.y <span class="kw">as </span>i32,
+                            glow::COLOR_BUFFER_BIT,
+                            glow::NEAREST,
+                        );
+                        <span class="self">self</span>.gl.bind_framebuffer(glow::READ_FRAMEBUFFER, <span class="prelude-val">None</span>);
+                        <span class="self">self</span>.gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, <span class="prelude-val">None</span>);
+
+                        <span class="attr">#[cfg(not(web))]
+                        </span><span class="self">self</span>.gl.disable(glow::FRAMEBUFFER_SRGB);
+                    }
+                }
+            }
+
+            <span class="kw">if </span>texture_id.is_none() {
+                <span class="self">self</span>.framebuffer_texture_id = <span class="prelude-val">None</span>;
             }
         }
     }
@@ -1616,24 +1709,26 @@
 
                     texture.resize(size);
 
-                    <span class="self">self</span>.gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer_default));
-                    <span class="self">self</span>.gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer_depth_stencil));
-                    <span class="self">self</span>.gl.renderbuffer_storage(glow::RENDERBUFFER, glow::DEPTH24_STENCIL8, texture.size.x <span class="kw">as </span>i32, texture.size.y <span class="kw">as </span>i32);
-                    <span class="self">self</span>.gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">None</span>);
-
+                    <span class="self">self</span>.gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer));
                     <span class="self">self</span>.gl.framebuffer_texture_2d(glow::FRAMEBUFFER, glow::COLOR_ATTACHMENT0, glow::TEXTURE_2D, <span class="prelude-val">Some</span>(texture.inner), <span class="number">0</span>);
-                    <span class="self">self</span>.gl.framebuffer_renderbuffer(
-                        glow::FRAMEBUFFER,
-                        glow::DEPTH_STENCIL_ATTACHMENT,
-                        glow::RENDERBUFFER,
-                        <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer_depth_stencil),
-                    );
 
                     <span class="kw">if </span><span class="self">self</span>.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
                         <span class="macro">error_return!</span>(<span class="string">&quot;Framebuffer initialization error (code {})&quot;</span>, <span class="self">self</span>.gl.get_error());
                     }
                 }
             }
+
+            <span class="self">self</span>.gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer_multisample));
+            <span class="self">self</span>.gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer_multisample_renderbuffer));
+            <span class="self">self</span>.gl.renderbuffer_storage_multisample(
+                glow::RENDERBUFFER,
+                <span class="self">self</span>.framebuffer_msaa.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i32,
+                glow::SRGB8_ALPHA8,
+                size.x <span class="kw">as </span>i32,
+                size.y <span class="kw">as </span>i32,
+            );
+            <span class="self">self</span>.gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">None</span>);
+            <span class="self">self</span>.gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">None</span>);
         }
     }
 
@@ -1653,6 +1748,23 @@
     <span class="kw">pub fn </span>disable_scissor(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.gl.disable(glow::SCISSOR_TEST);
+        }
+    }
+
+    <span class="kw">pub fn </span>set_framebuffer_msaa(<span class="kw-2">&amp;mut </span><span class="self">self</span>, msaa: <span class="prelude-ty">Option</span>&lt;u32&gt;) {
+        <span class="kw">unsafe </span>{
+            <span class="self">self</span>.gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer_multisample));
+            <span class="self">self</span>.gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer_multisample_renderbuffer));
+            <span class="self">self</span>.gl.renderbuffer_storage_multisample(
+                glow::RENDERBUFFER,
+                msaa.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i32,
+                glow::SRGB8_ALPHA8,
+                <span class="self">self</span>.viewport_size.x <span class="kw">as </span>i32,
+                <span class="self">self</span>.viewport_size.y <span class="kw">as </span>i32,
+            );
+            <span class="self">self</span>.gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">None</span>);
+            <span class="self">self</span>.gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">None</span>);
+            <span class="self">self</span>.framebuffer_msaa = msaa;
         }
     }
 }

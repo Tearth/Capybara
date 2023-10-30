@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["debug","emitter"],"struct":["EdgeWithDistance","RayTarget"]};

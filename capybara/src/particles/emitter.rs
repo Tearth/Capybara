@@ -1,3 +1,4 @@
+use super::debug::ParticlesDebugSettings;
 use crate::renderer::context::RendererContext;
 use crate::renderer::sprite::Sprite;
 use crate::renderer::sprite::TextureId;
@@ -24,7 +25,7 @@ pub struct ParticleEmitter<const WAYPOINTS: usize> {
     pub bursts: Option<u32>,
     pub interpolation: ParticleInterpolation,
 
-    pub particle_size: Option<Vec2>,
+    pub particle_size: Vec2,
     pub particle_lifetime: f32,
     pub particle_texture_id: Option<usize>,
     pub particle_texture_type: TextureType,
@@ -36,6 +37,8 @@ pub struct ParticleEmitter<const WAYPOINTS: usize> {
     pub rotation_waypoints: ArrayVec<ParticleParameter<f32>, WAYPOINTS>,
     pub scale_waypoints: ArrayVec<ParticleParameter<Vec2>, WAYPOINTS>,
     pub color_waypoints: ArrayVec<ParticleParameter<Vec4>, WAYPOINTS>,
+
+    pub debug: ParticlesDebugSettings,
 }
 
 pub struct Particle<const WAYPOINTS: usize> {
@@ -96,7 +99,7 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
                     postion: Vec2::new(fastrand::f32(), fastrand::f32()) * self.size + offset,
                     rotation: 0.0,
                     scale: Vec2::new(1.0, 1.0),
-                    size: self.particle_size,
+                    size: Some(self.particle_size),
                     color: Vec4::new(1.0, 1.0, 1.0, 1.0),
                     birthday: now,
                     lifetime: self.particle_lifetime,

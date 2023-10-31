@@ -34,6 +34,13 @@ pub struct LdtkLevel {
     pub name: String,
     pub size: Vec2,
     pub background: Vec4,
+    pub layers: Vec<LdtkLayer>,
+}
+
+#[derive(Default)]
+pub struct LdtkLayer {
+    pub id: usize,
+    pub name: String,
     pub tiles: Vec<LdtkTile>,
     pub entities: Vec<LdtkEntity>,
 }
@@ -130,8 +137,7 @@ fn load_level(
         name: read_value::<String>(data, "identifier")?,
         size: Vec2::new(read_value::<f64>(data, "pxWid")? as f32, read_value::<f64>(data, "pxHei")? as f32),
         background: read_color(data, "bgColor")?,
-        tiles: Vec::new(),
-        entities: Vec::new(),
+        layers: Vec::new(),
     };
 
     let layers = read_array(data, "layerInstances")?;
@@ -143,7 +149,10 @@ fn load_level(
             None => bail!("Failed to find definition for layer {}", id),
         };
         let layer_definition_tilemap = read_value_nullable::<f64>(layer_definition, "tilesetDefUid")?;
+        let layer_name = read_value::<String>(layer_definition, "identifier")?;
         let layer_tilemap = read_value_nullable::<f64>(data, "overrideTilesetUid")?;
+
+        let mut layer = LdtkLayer { id, name: layer_name, tiles: Vec::new(), entities: Vec::new() };
 
         if let Some(tilemap_id) = layer_tilemap.or(layer_definition_tilemap) {
             let tilemap = match tilemaps.iter().find(|p| p.id == tilemap_id as usize) {
@@ -154,7 +163,7 @@ fn load_level(
 
             for data in tiles {
                 let position = read_position(data, "px")?;
-                level.tiles.push(LdtkTile {
+                layer.tiles.push(LdtkTile {
                     id: read_value::<f64>(data, "t")? as usize,
                     position: Vec2::new(position.x, level.size.y - position.y - tilemap.tile_size.y),
                     source: read_position(data, "src")?,
@@ -264,7 +273,7 @@ fn load_level(
                     fields.insert(field_name, value);
                 }
 
-                level.entities.push(LdtkEntity {
+                layer.entities.push(LdtkEntity {
                     name: read_value::<String>(entity_definition, "identifier")?,
                     position: Vec2::new(position.x, level.size.y - position.y - tilemap.tile_size.y),
                     size: Vec2::new(read_value::<f64>(data, "width")? as f32, read_value::<f64>(data, "height")? as f32),
@@ -274,6 +283,8 @@ fn load_level(
                 });
             }
         }
+
+        level.layers.push(layer);
     }
 
     Ok(level)

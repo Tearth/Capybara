@@ -139,6 +139,8 @@
 <a href="#139" id="139">139</a>
 <a href="#140" id="140">140</a>
 <a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>capybara::anyhow::Result;
 <span class="kw">use </span>capybara::app::ApplicationContext;
 <span class="kw">use </span>capybara::app::ApplicationState;
@@ -219,28 +221,30 @@
             <span class="kw">let </span>world = <span class="kw-2">&amp;</span>state.global.assets.worlds[<span class="number">0</span>];
             <span class="kw">let </span>level = <span class="kw-2">&amp;</span>world.levels[<span class="number">0</span>];
 
-            <span class="kw">for </span>tile <span class="kw">in </span><span class="kw-2">&amp;</span>level.tiles {
-                <span class="kw">let </span>tileset = world.tilemaps.iter().find(|p| p.id == tile.tilemap_id).unwrap();
-                state.renderer.draw_sprite(<span class="kw-2">&amp;</span>Sprite {
-                    position: tile.position + Vec2::new(<span class="number">140.0</span>, <span class="number">0.0</span>),
-                    size: <span class="prelude-val">Some</span>(tileset.tile_size),
-                    anchor: Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>),
-                    texture_id: TextureId::Some(state.renderer.textures.get_id(<span class="kw-2">&amp;</span>tileset.name).unwrap()),
-                    texture_type: TextureType::SimpleCoordinates { position: tile.source, size: tileset.tile_size },
-                    ..Default::default()
-                });
-            }
+            <span class="kw">for </span>layer <span class="kw">in </span><span class="kw-2">&amp;</span>level.layers {
+                <span class="kw">for </span>tile <span class="kw">in </span><span class="kw-2">&amp;</span>layer.tiles {
+                    <span class="kw">let </span>tileset = world.tilemaps.iter().find(|p| p.id == tile.tilemap_id).unwrap();
+                    state.renderer.draw_sprite(<span class="kw-2">&amp;</span>Sprite {
+                        position: tile.position + Vec2::new(<span class="number">140.0</span>, <span class="number">0.0</span>),
+                        size: <span class="prelude-val">Some</span>(tileset.tile_size),
+                        anchor: Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>),
+                        texture_id: TextureId::Some(state.renderer.textures.get_id(<span class="kw-2">&amp;</span>tileset.name).unwrap()),
+                        texture_type: TextureType::SimpleCoordinates { position: tile.source, size: tileset.tile_size },
+                        ..Default::default()
+                    });
+                }
 
-            <span class="kw">for </span>entity <span class="kw">in </span><span class="kw-2">&amp;</span>level.entities {
-                <span class="kw">let </span>tileset = world.tilemaps.iter().find(|p| p.id == entity.tilemap_id).unwrap();
-                state.renderer.draw_sprite(<span class="kw-2">&amp;</span>Sprite {
-                    position: entity.position + Vec2::new(<span class="number">140.0</span>, <span class="number">0.0</span>),
-                    size: <span class="prelude-val">Some</span>(tileset.tile_size),
-                    anchor: Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>),
-                    texture_id: TextureId::Some(state.renderer.textures.get_id(<span class="kw-2">&amp;</span>tileset.name).unwrap()),
-                    texture_type: TextureType::SimpleCoordinates { position: entity.source, size: tileset.tile_size },
-                    ..Default::default()
-                });
+                <span class="kw">for </span>entity <span class="kw">in </span><span class="kw-2">&amp;</span>layer.entities {
+                    <span class="kw">let </span>tileset = world.tilemaps.iter().find(|p| p.id == entity.tilemap_id).unwrap();
+                    state.renderer.draw_sprite(<span class="kw-2">&amp;</span>Sprite {
+                        position: entity.position + Vec2::new(<span class="number">140.0</span>, <span class="number">0.0</span>),
+                        size: <span class="prelude-val">Some</span>(tileset.tile_size),
+                        anchor: Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>),
+                        texture_id: TextureId::Some(state.renderer.textures.get_id(<span class="kw-2">&amp;</span>tileset.name).unwrap()),
+                        texture_type: TextureType::SimpleCoordinates { position: entity.source, size: tileset.tile_size },
+                        ..Default::default()
+                    });
+                }
             }
         }
 

@@ -366,6 +366,17 @@
 <a href="#366" id="366">366</a>
 <a href="#367" id="367">367</a>
 <a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils::color::RgbIntoVec4;
 <span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>anyhow::bail;
@@ -402,6 +413,13 @@
     <span class="kw">pub </span>name: String,
     <span class="kw">pub </span>size: Vec2,
     <span class="kw">pub </span>background: Vec4,
+    <span class="kw">pub </span>layers: Vec&lt;LdtkLayer&gt;,
+}
+
+<span class="attr">#[derive(Default)]
+</span><span class="kw">pub struct </span>LdtkLayer {
+    <span class="kw">pub </span>id: usize,
+    <span class="kw">pub </span>name: String,
     <span class="kw">pub </span>tiles: Vec&lt;LdtkTile&gt;,
     <span class="kw">pub </span>entities: Vec&lt;LdtkEntity&gt;,
 }
@@ -498,8 +516,7 @@
         name: read_value::&lt;String&gt;(data, <span class="string">&quot;identifier&quot;</span>)<span class="question-mark">?</span>,
         size: Vec2::new(read_value::&lt;f64&gt;(data, <span class="string">&quot;pxWid&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, read_value::&lt;f64&gt;(data, <span class="string">&quot;pxHei&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>f32),
         background: read_color(data, <span class="string">&quot;bgColor&quot;</span>)<span class="question-mark">?</span>,
-        tiles: Vec::new(),
-        entities: Vec::new(),
+        layers: Vec::new(),
     };
 
     <span class="kw">let </span>layers = read_array(data, <span class="string">&quot;layerInstances&quot;</span>)<span class="question-mark">?</span>;
@@ -511,7 +528,10 @@
             <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to find definition for layer {}&quot;</span>, id),
         };
         <span class="kw">let </span>layer_definition_tilemap = read_value_nullable::&lt;f64&gt;(layer_definition, <span class="string">&quot;tilesetDefUid&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>layer_name = read_value::&lt;String&gt;(layer_definition, <span class="string">&quot;identifier&quot;</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>layer_tilemap = read_value_nullable::&lt;f64&gt;(data, <span class="string">&quot;overrideTilesetUid&quot;</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span><span class="kw-2">mut </span>layer = LdtkLayer { id, name: layer_name, tiles: Vec::new(), entities: Vec::new() };
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(tilemap_id) = layer_tilemap.or(layer_definition_tilemap) {
             <span class="kw">let </span>tilemap = <span class="kw">match </span>tilemaps.iter().find(|p| p.id == tilemap_id <span class="kw">as </span>usize) {
@@ -522,7 +542,7 @@
 
             <span class="kw">for </span>data <span class="kw">in </span>tiles {
                 <span class="kw">let </span>position = read_position(data, <span class="string">&quot;px&quot;</span>)<span class="question-mark">?</span>;
-                level.tiles.push(LdtkTile {
+                layer.tiles.push(LdtkTile {
                     id: read_value::&lt;f64&gt;(data, <span class="string">&quot;t&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>usize,
                     position: Vec2::new(position.x, level.size.y - position.y - tilemap.tile_size.y),
                     source: read_position(data, <span class="string">&quot;src&quot;</span>)<span class="question-mark">?</span>,
@@ -632,7 +652,7 @@
                     fields.insert(field_name, value);
                 }
 
-                level.entities.push(LdtkEntity {
+                layer.entities.push(LdtkEntity {
                     name: read_value::&lt;String&gt;(entity_definition, <span class="string">&quot;identifier&quot;</span>)<span class="question-mark">?</span>,
                     position: Vec2::new(position.x, level.size.y - position.y - tilemap.tile_size.y),
                     size: Vec2::new(read_value::&lt;f64&gt;(data, <span class="string">&quot;width&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, read_value::&lt;f64&gt;(data, <span class="string">&quot;height&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>f32),
@@ -642,6 +662,8 @@
                 });
             }
         }
+
+        level.layers.push(layer);
     }
 
     <span class="prelude-val">Ok</span>(level)

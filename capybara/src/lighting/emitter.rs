@@ -105,7 +105,7 @@ impl LightEmitter {
         // -------------------------------------------------------------------------------------
 
         for edge in &self.edges {
-            edges.push(EdgeWithDistance { a: (*edge).a, b: (*edge).b, distance: self.position.distance_to_segment(edge.a, edge.b) });
+            edges.push(EdgeWithDistance { a: edge.a, b: edge.b, distance: self.position.distance_to_segment(edge.a, edge.b) });
         }
 
         edges.sort_unstable_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
@@ -195,23 +195,23 @@ impl LightEmitter {
 
         shape.vertices.push(ShapeVertex::new(self.position, self.color_begin.to_rgb_packed(), Vec2::new(0.0, 0.0)));
         for hit in &hits {
-            if (*hit).position.distance(last_position) <= self.merge_distance {
+            if hit.position.distance(last_position) <= self.merge_distance {
                 continue;
             }
 
             let index = shape.vertices.len() - 1;
-            let distance = (*hit).position.distance(self.position);
+            let distance = hit.position.distance(self.position);
             let ratio = distance / self.max_length;
             let color = self.color_begin.lerp(self.color_end, ratio);
 
-            shape.vertices.push(ShapeVertex::new((*hit).position, color.to_rgb_packed(), Vec2::new(1.0, 1.0)));
+            shape.vertices.push(ShapeVertex::new(hit.position, color.to_rgb_packed(), Vec2::new(1.0, 1.0)));
             if index > 0 {
                 shape.indices.push(0);
                 shape.indices.push(index as u32);
                 shape.indices.push(index as u32 + 1);
             }
 
-            last_position = (*hit).position;
+            last_position = hit.position;
         }
 
         if self.arc == consts::TAU {

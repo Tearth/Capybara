@@ -1,4 +1,4 @@
-use crate::utils::color::RgbIntoVec4;
+use crate::utils::color::RgbToVec4;
 use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Error;
@@ -128,9 +128,9 @@ fn load_tilemap(data: &HashMap<String, JsonValue>) -> Result<LdtkTilemap> {
 
 fn load_level(
     data: &HashMap<String, JsonValue>,
-    tilemaps: &Vec<LdtkTilemap>,
-    layer_definitions: &Vec<&HashMap<String, JsonValue>>,
-    entity_definitions: &Vec<&HashMap<String, JsonValue>>,
+    tilemaps: &[LdtkTilemap],
+    layer_definitions: &[&HashMap<String, JsonValue>],
+    entity_definitions: &[&HashMap<String, JsonValue>],
 ) -> Result<LdtkLevel> {
     let mut level = LdtkLevel {
         id: read_value::<f64>(data, "uid")? as usize,
@@ -243,7 +243,7 @@ fn load_level(
                             "F_Text" => LdtkEntityField::String(values.get(0).unwrap_or(&"".to_string()).to_string()),
                             "F_Color" => {
                                 let hex = format!("{:x}", values.get(0).unwrap_or(&"0".to_string()).to_string().parse::<u32>()?);
-                                let color = Rgb::from_hex_str(&hex).map_err(|_| anyhow!("Failed to parse color"))?.into_vec4();
+                                let color = Rgb::from_hex_str(&hex).map_err(|_| anyhow!("Failed to parse color"))?.to_vec4();
                                 LdtkEntityField::Color(color)
                             }
                             _ => bail!("Invalid field type"),
@@ -260,7 +260,7 @@ fn load_level(
                                     .iter()
                                     .map(|p| {
                                         let hex = format!("{:x}", p.parse::<u32>()?);
-                                        let color = Rgb::from_hex_str(&hex).map_err(|_| anyhow!("Failed to parse color"))?.into_vec4();
+                                        let color = Rgb::from_hex_str(&hex).map_err(|_| anyhow!("Failed to parse color"))?.to_vec4();
 
                                         Ok(color)
                                     })
@@ -319,7 +319,7 @@ fn read_array_raw<'a>(data: &'a HashMap<String, JsonValue>, name: &str) -> Resul
     }
 }
 
-fn read_array_values<'a>(data: &'a HashMap<String, JsonValue>, name: &str) -> Result<Vec<String>> {
+fn read_array_values(data: &HashMap<String, JsonValue>, name: &str) -> Result<Vec<String>> {
     match data.get(name) {
         Some(JsonValue::Array(array)) => Ok(array.iter().map(|p| p.stringify().unwrap()).collect()),
         _ => bail!("Failed to read array {}", name),
@@ -357,7 +357,7 @@ fn read_color(data: &HashMap<String, JsonValue>, name: &str) -> Result<Vec4> {
     }
     let parsed = value.get::<String>().ok_or_else(|| anyhow!("Failed to parse {}", name))?.clone();
 
-    Ok(Rgb::from_hex_str(&parsed).map_err(|_| anyhow!("Failed to parse {} into RGB", name))?.into_vec4())
+    Ok(Rgb::from_hex_str(&parsed).map_err(|_| anyhow!("Failed to parse {} into RGB", name))?.to_vec4())
 }
 
 fn read_position(data: &HashMap<String, JsonValue>, name: &str) -> Result<Vec2> {

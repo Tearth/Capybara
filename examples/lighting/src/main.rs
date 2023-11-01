@@ -76,11 +76,11 @@ impl Scene<GlobalData> for MainScene {
         Ok(())
     }
 
-    fn input(&mut self, mut state: ApplicationState<GlobalData>, event: InputEvent) -> Result<()> {
+    fn input(&mut self, state: ApplicationState<GlobalData>, event: InputEvent) -> Result<()> {
         if let InputEvent::KeyPress { key: Key::Escape, repeat: _, modifiers: _ } = event {
             state.window.close();
         } else if let InputEvent::WindowSizeChange { size: _ } = event {
-            self.update_shader_uniforms(&mut state.renderer)?;
+            self.update_shader_uniforms(state.renderer)?;
         }
 
         Ok(())
@@ -90,7 +90,7 @@ impl Scene<GlobalData> for MainScene {
         Ok(None)
     }
 
-    fn frame(&mut self, mut state: ApplicationState<GlobalData>, _: f32, delta: f32) -> Result<Option<FrameCommand>> {
+    fn frame(&mut self, state: ApplicationState<GlobalData>, _: f32, delta: f32) -> Result<Option<FrameCommand>> {
         self.delta_history.push_back(delta);
 
         if self.delta_history.len() > 100 {
@@ -112,7 +112,7 @@ impl Scene<GlobalData> for MainScene {
                 self.objects.push(Object {
                     sprite: Sprite {
                         position,
-                        rotation: fastrand::f32() * 6.28,
+                        rotation: fastrand::f32() * consts::TAU,
                         anchor: Vec2::new(0.0, 0.0),
                         texture_id: TextureId::Some(state.renderer.textures.get_id("Takodachi")?),
                         ..Default::default()
@@ -121,13 +121,13 @@ impl Scene<GlobalData> for MainScene {
                 });
             }
 
-            let target_texture = Texture::new(&state.renderer, &RawTexture::new("target_texture", "", Vec2::new(400.0, 400.0), &Vec::new()))?;
+            let target_texture = Texture::new(state.renderer, &RawTexture::new("target_texture", "", Vec2::new(400.0, 400.0), &Vec::new()))?;
             self.light_texture_id = state.renderer.textures.store(target_texture);
 
-            let main_texture = Texture::new(&state.renderer, &RawTexture::new("main_texture", "", Vec2::new(400.0, 400.0), &Vec::new()))?;
+            let main_texture = Texture::new(state.renderer, &RawTexture::new("main_texture", "", Vec2::new(400.0, 400.0), &Vec::new()))?;
             self.main_texture_id = state.renderer.textures.store(main_texture);
 
-            let mult_shader = Shader::new(&state.renderer, "mult", include_str!("./shaders/mult.vert"), include_str!("./shaders/mult.frag"))?;
+            let mult_shader = Shader::new(state.renderer, "mult", include_str!("./shaders/mult.vert"), include_str!("./shaders/mult.frag"))?;
             mult_shader.activate();
             mult_shader.set_uniform("mainSampler", &0.0);
             mult_shader.set_uniform("lightSampler", &1.0);
@@ -138,7 +138,7 @@ impl Scene<GlobalData> for MainScene {
             self.blur_quality = 4.0;
             self.blur_size = 4.0;
 
-            self.update_shader_uniforms(&mut state.renderer)?;
+            self.update_shader_uniforms(state.renderer)?;
             self.initialized = true;
         }
 
@@ -239,7 +239,7 @@ impl Scene<GlobalData> for MainScene {
         Ok(None)
     }
 
-    fn ui(&mut self, mut state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
+    fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let output = state.ui.inner.read().unwrap().run(input, |context| {
             SidePanel::new(Side::Left, Id::new("side")).exact_width(160.0).resizable(false).show(context, |ui| {
                 if self.initialized {
@@ -296,19 +296,19 @@ impl Scene<GlobalData> for MainScene {
                     ui.add_space(10.0);
                     ui.label(RichText::new("Blur directions:").font(font.clone()).heading().color(color));
                     if ui.add(Slider::new(&mut self.blur_directions, 0.0..=64.0).text_color(color)).changed() {
-                        self.update_shader_uniforms(&mut state.renderer).unwrap();
+                        self.update_shader_uniforms(state.renderer).unwrap();
                     }
 
                     ui.add_space(10.0);
                     ui.label(RichText::new("Blur quality:").font(font.clone()).heading().color(color));
                     if ui.add(Slider::new(&mut self.blur_quality, 0.0..=64.0).text_color(color)).changed() {
-                        self.update_shader_uniforms(&mut state.renderer).unwrap();
+                        self.update_shader_uniforms(state.renderer).unwrap();
                     }
 
                     ui.add_space(10.0);
                     ui.label(RichText::new("Blur size:").font(font.clone()).heading().color(color));
                     if ui.add(Slider::new(&mut self.blur_size, 0.0..=64.0).text_color(color)).changed() {
-                        self.update_shader_uniforms(&mut state.renderer).unwrap();
+                        self.update_shader_uniforms(state.renderer).unwrap();
                     }
 
                     ui.add_space(10.0);

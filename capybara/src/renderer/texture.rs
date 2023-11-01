@@ -57,7 +57,7 @@ impl Texture {
 
             let gl = renderer.gl.clone();
             let inner = gl.create_texture().map_err(Error::msg)?;
-            let data = if raw.data.len() != 0 { Some(&raw.data) } else { None };
+            let data = if !raw.data.is_empty() { Some(&raw.data) } else { None };
 
             gl.bind_texture(glow::TEXTURE_2D, Some(inner));
             gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, glow::CLAMP_TO_EDGE as i32);

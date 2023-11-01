@@ -19,7 +19,6 @@ use crate::renderer::texture::TextureFilterMag;
 use crate::renderer::texture::TextureFilterMin;
 use crate::utils::color::Vec4Color;
 use crate::utils::storage::Storage;
-use anyhow::bail;
 use anyhow::Error;
 use anyhow::Result;
 use glam::Vec2;
@@ -758,33 +757,31 @@ impl RendererContext {
             if self.framebuffer_msaa.is_some() {
                 if texture_id.is_some() {
                     self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer_multisample));
-                } else {
-                    if let Some(framebuffer_texture_id) = self.framebuffer_texture_id {
-                        let texture = match self.textures.get(framebuffer_texture_id) {
-                            Ok(texture) => texture,
-                            Err(err) => error_return!("Failed to read target texture ({})", err),
-                        };
+                } else if let Some(framebuffer_texture_id) = self.framebuffer_texture_id {
+                    let texture = match self.textures.get(framebuffer_texture_id) {
+                        Ok(texture) => texture,
+                        Err(err) => error_return!("Failed to read target texture ({})", err),
+                    };
 
-                        self.gl.bind_framebuffer(glow::READ_FRAMEBUFFER, Some(self.framebuffer_multisample));
-                        self.gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, Some(self.framebuffer));
-                        self.gl.blit_framebuffer(
-                            0,
-                            0,
-                            texture.size.x as i32,
-                            texture.size.y as i32,
-                            0,
-                            0,
-                            texture.size.x as i32,
-                            texture.size.y as i32,
-                            glow::COLOR_BUFFER_BIT,
-                            glow::NEAREST,
-                        );
-                        self.gl.bind_framebuffer(glow::READ_FRAMEBUFFER, None);
-                        self.gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, None);
+                    self.gl.bind_framebuffer(glow::READ_FRAMEBUFFER, Some(self.framebuffer_multisample));
+                    self.gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, Some(self.framebuffer));
+                    self.gl.blit_framebuffer(
+                        0,
+                        0,
+                        texture.size.x as i32,
+                        texture.size.y as i32,
+                        0,
+                        0,
+                        texture.size.x as i32,
+                        texture.size.y as i32,
+                        glow::COLOR_BUFFER_BIT,
+                        glow::NEAREST,
+                    );
+                    self.gl.bind_framebuffer(glow::READ_FRAMEBUFFER, None);
+                    self.gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, None);
 
-                        #[cfg(not(web))]
-                        self.gl.disable(glow::FRAMEBUFFER_SRGB);
-                    }
+                    #[cfg(not(web))]
+                    self.gl.disable(glow::FRAMEBUFFER_SRGB);
                 }
             }
 

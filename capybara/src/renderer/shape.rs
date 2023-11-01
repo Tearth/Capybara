@@ -234,6 +234,6 @@ impl Default for Shape {
 
 impl ShapeVertex {
     pub fn new(position: Vec2, color: u32, uv: Vec2) -> Self {
-        Self { position, color: color, uv }
+        Self { position, color, uv }
     }
 }

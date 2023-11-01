@@ -99,16 +99,16 @@ impl Scene<GlobalData> for MainScene {
             state.ui.instantiate_assets(&state.global.assets, None);
             state.window.set_swap_interval(0);
 
-            self.regenerate_objects(&mut state, 100000)?;
+            self.regenerate_objects(&state, 100000)?;
 
-            let target_texture = Texture::new(&state.renderer, &RawTexture::new("target_texture", "", Vec2::new(400.0, 400.0), &Vec::new()))?;
+            let target_texture = Texture::new(state.renderer, &RawTexture::new("target_texture", "", Vec2::new(400.0, 400.0), &Vec::new()))?;
             self.target_texture_id = state.renderer.textures.store(target_texture);
 
-            let blur_shader = Shader::new(&state.renderer, "blur", include_str!("./shaders/blur.vert"), include_str!("./shaders/blur.frag"))?;
+            let blur_shader = Shader::new(state.renderer, "blur", include_str!("./shaders/blur.vert"), include_str!("./shaders/blur.frag"))?;
             self.blur_shader_id = state.renderer.shaders.store(blur_shader);
 
             let grayscale_shader =
-                Shader::new(&state.renderer, "grayscale", include_str!("./shaders/grayscale.vert"), include_str!("./shaders/grayscale.frag"))?;
+                Shader::new(state.renderer, "grayscale", include_str!("./shaders/grayscale.vert"), include_str!("./shaders/grayscale.frag"))?;
             self.grayscale_shader_id = state.renderer.shaders.store(grayscale_shader);
 
             let resolution = state.renderer.viewport_size.into();

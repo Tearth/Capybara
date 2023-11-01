@@ -237,9 +237,9 @@ impl AssetsLoader {
     }
 
     fn load_ldtk(&mut self, name: &str, path: &str, data: &[u8]) -> Result<()> {
-        let json = str::from_utf8(&data)?.parse::<JsonValue>()?;
+        let json = str::from_utf8(data)?.parse::<JsonValue>()?;
         let data = json.get::<HashMap<_, _>>().ok_or_else(|| anyhow!("Failed to read JSON data"))?;
-        self.worlds.push(ldtk::load_world(name, path, &data)?);
+        self.worlds.push(ldtk::load_world(name, path, data)?);
 
         Ok(())
     }

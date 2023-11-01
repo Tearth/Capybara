@@ -53,7 +53,7 @@ impl LightEmitter {
         }
 
         for hit in &response.hits {
-            renderer.draw_shape(&Shape::new_disc((*hit).position, self.debug.hit_radius, None, self.debug.hit_color, self.debug.hit_color));
+            renderer.draw_shape(&Shape::new_disc(hit.position, self.debug.hit_radius, None, self.debug.hit_color, self.debug.hit_color));
         }
 
         if self.arc < consts::TAU {

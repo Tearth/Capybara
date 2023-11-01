@@ -1022,7 +1022,7 @@
             }
 
             <span class="kw">let </span>msaa_enabled = <span class="kw">if </span>msaa.is_some() { <span class="number">1 </span>} <span class="kw">else </span>{ <span class="number">0 </span>};
-            <span class="kw">let </span>msaa_samples = msaa.unwrap_or(<span class="number">0</span>);
+            <span class="kw">let </span>msaa_samples = msaa.unwrap_or(<span class="number">1</span>);
 
             <span class="kw">let </span><span class="kw-2">mut </span>wgl_attributes = [
                 <span class="number">8193</span>, <span class="comment">/* WGL_DRAW_TO_WINDOW_ARB */

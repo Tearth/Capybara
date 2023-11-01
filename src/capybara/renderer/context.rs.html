@@ -882,10 +882,6 @@
 <a href="#882" id="882">882</a>
 <a href="#883" id="883">883</a>
 <a href="#884" id="884">884</a>
-<a href="#885" id="885">885</a>
-<a href="#886" id="886">886</a>
-<a href="#887" id="887">887</a>
-<a href="#888" id="888">888</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::camera::Camera;
 <span class="kw">use </span><span class="kw">super</span>::camera::CameraOrigin;
 <span class="kw">use </span><span class="kw">super</span>::shader::Shader;
@@ -1081,17 +1077,13 @@
             <span class="comment">// Framebuffer multisampled
             </span>context.gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">Some</span>(context.framebuffer_multisample));
             context.gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">Some</span>(context.framebuffer_multisample_renderbuffer));
-            context.gl.renderbuffer_storage_multisample(glow::RENDERBUFFER, msaa.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i32, glow::SRGB8_ALPHA8, <span class="number">1</span>, <span class="number">1</span>);
+            context.gl.renderbuffer_storage_multisample(glow::RENDERBUFFER, msaa.unwrap_or(<span class="number">1</span>) <span class="kw">as </span>i32, glow::SRGB8_ALPHA8, <span class="number">1</span>, <span class="number">1</span>);
             context.gl.framebuffer_renderbuffer(
                 glow::FRAMEBUFFER,
                 glow::COLOR_ATTACHMENT0,
                 glow::RENDERBUFFER,
                 <span class="prelude-val">Some</span>(context.framebuffer_multisample_renderbuffer),
             );
-
-            <span class="kw">if </span>context.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
-                <span class="macro">bail!</span>(<span class="string">&quot;Failed to initialize framebuffer (code {})&quot;</span>, context.gl.get_error());
-            }
 
             context.gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">None</span>);
             context.gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">None</span>);
@@ -1722,7 +1714,7 @@
             <span class="self">self</span>.gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer_multisample_renderbuffer));
             <span class="self">self</span>.gl.renderbuffer_storage_multisample(
                 glow::RENDERBUFFER,
-                <span class="self">self</span>.framebuffer_msaa.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i32,
+                <span class="self">self</span>.framebuffer_msaa.unwrap_or(<span class="number">1</span>) <span class="kw">as </span>i32,
                 glow::SRGB8_ALPHA8,
                 size.x <span class="kw">as </span>i32,
                 size.y <span class="kw">as </span>i32,
@@ -1757,7 +1749,7 @@
             <span class="self">self</span>.gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.framebuffer_multisample_renderbuffer));
             <span class="self">self</span>.gl.renderbuffer_storage_multisample(
                 glow::RENDERBUFFER,
-                msaa.unwrap_or(<span class="number">0</span>) <span class="kw">as </span>i32,
+                msaa.unwrap_or(<span class="number">1</span>) <span class="kw">as </span>i32,
                 glow::SRGB8_ALPHA8,
                 <span class="self">self</span>.viewport_size.x <span class="kw">as </span>i32,
                 <span class="self">self</span>.viewport_size.y <span class="kw">as </span>i32,

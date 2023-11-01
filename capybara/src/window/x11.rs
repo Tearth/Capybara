@@ -19,8 +19,8 @@ use std::mem;
 use std::ptr;
 use std::slice;
 
-pub type GLXCREATECONTEXTATTRIBSARB = unsafe extern "C" fn(_: *mut Display, _: GLXFBConfig, _: GLXContext, _: c_int, _: *const c_int) -> GLXContext;
-pub type GLXSWAPINTERVALEXT = unsafe extern "C" fn(_: *mut Display, _: GLXDrawable);
+pub type glXCreateContextAttribsARB = unsafe extern "C" fn(_: *mut Display, _: GLXFBConfig, _: GLXContext, _: c_int, _: *const c_int) -> GLXContext;
+pub type glXSwapIntervalEXT = unsafe extern "C" fn(_: *mut Display, _: GLXDrawable);
 
 pub struct WindowContextX11 {
     pub window: u64,
@@ -43,8 +43,8 @@ pub struct WindowContextX11 {
 }
 
 pub struct GlxExtensions {
-    pub glx_create_context_attribs_arb: Option<GLXCREATECONTEXTATTRIBSARB>,
-    pub glx_swap_interval_ext: Option<GLXSWAPINTERVALEXT>,
+    pub glXCreateContextAttribsARB: Option<glXCreateContextAttribsARB>,
+    pub glXSwapIntervalEXT: Option<glXSwapIntervalEXT>,
 }
 
 impl WindowContextX11 {
@@ -221,8 +221,8 @@ impl WindowContextX11 {
             ];
             let context_attributes_ptr = context_attributes.as_ptr() as *const i32;
 
-            let glx_context = if let Some(glx_create_context_attribs_arb) = glx_extensions.glx_create_context_attribs_arb {
-                (glx_create_context_attribs_arb)(self.display, self.frame_buffer_config, ptr::null_mut(), 1, context_attributes_ptr)
+            let glx_context = if let Some(glXCreateContextAttribsARB) = glx_extensions.glXCreateContextAttribsARB {
+                (glXCreateContextAttribsARB)(self.display, self.frame_buffer_config, ptr::null_mut(), 1, context_attributes_ptr)
             } else {
                 bail!("Failed to create GLX context (glXCreateContextAttribsARB not available)");
             };
@@ -465,8 +465,8 @@ impl WindowContextX11 {
 
     pub fn set_swap_interval(&self, interval: u32) {
         unsafe {
-            if let Some(glx_swap_interval_ext) = self.glx_extensions.as_ref().unwrap().glx_swap_interval_ext {
-                (glx_swap_interval_ext)(self.display, interval as u64);
+            if let Some(glXSwapIntervalEXT) = self.glx_extensions.as_ref().unwrap().glXSwapIntervalEXT {
+                (glXSwapIntervalEXT)(self.display, interval as u64);
             }
         }
     }
@@ -499,8 +499,8 @@ impl WindowContextX11 {
 impl GlxExtensions {
     pub fn new() -> Self {
         Self {
-            glx_create_context_attribs_arb: load_extension::<_>("glXCreateContextAttribsARB"),
-            glx_swap_interval_ext: load_extension::<_>("glXSwapIntervalEXT"),
+            glXCreateContextAttribsARB: load_extension::<_>("glXCreateContextAttribsARB"),
+            glXSwapIntervalEXT: load_extension::<_>("glXSwapIntervalEXT"),
         }
     }
 }

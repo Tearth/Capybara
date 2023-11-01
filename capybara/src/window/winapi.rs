@@ -44,9 +44,9 @@ pub struct WindowContextWinApi {
 }
 
 pub struct WglExtensions {
-    pub wgl_choose_pixel_format_arb: Option<WGLCHOOSEPIXELFORMATARB>,
-    pub wgl_create_context_attribs_arb: Option<WGLCREATECONTEXTATTRIBSARB>,
-    pub wgl_swap_interval_ext: Option<WGLSWAPINTERVALEXT>,
+    pub wglChoosePixelFormatARB: Option<WGLCHOOSEPIXELFORMATARB>,
+    pub wglCreateContextAttribsARB: Option<WGLCREATECONTEXTATTRIBSARB>,
+    pub wglSwapIntervalEXT: Option<WGLSWAPINTERVALEXT>,
 }
 
 impl WindowContextWinApi {
@@ -248,7 +248,7 @@ impl WindowContextWinApi {
             }
 
             let msaa_enabled = if msaa.is_some() { 1 } else { 0 };
-            let msaa_samples = msaa.unwrap_or(1);
+            let msaa_samples = msaa.unwrap_or(0);
 
             let mut wgl_attributes = [
                 8193, /* WGL_DRAW_TO_WINDOW_ARB */
@@ -272,16 +272,28 @@ impl WindowContextWinApi {
                 0,
             ];
 
-            let mut pixel_format = 0;
             let mut formats_count = 0;
-            let wgl_attributes_ptr = wgl_attributes.as_mut_ptr() as *const i32;
+            let mut pixel_format = 0;
 
-            if let Some(wgl_choose_pixel_format_arb) = phantom_wgl_extensions.wgl_choose_pixel_format_arb {
-                if (wgl_choose_pixel_format_arb)(self.hdc, wgl_attributes_ptr, ptr::null_mut(), 1, &mut pixel_format, &mut formats_count) == 0 {
+            while msaa_enabled == 0 || wgl_attributes[17] > 0 {
+                let wgl_attributes_ptr = wgl_attributes.as_mut_ptr() as *const i32;
+                if let Some(wglChoosePixelFormatARB) = phantom_wgl_extensions.wglChoosePixelFormatARB {
+                    if (wglChoosePixelFormatARB)(self.hdc, wgl_attributes_ptr, ptr::null_mut(), 1, &mut pixel_format, &mut formats_count) == 0 {
+                        bail!("Failed to choose pixel format");
+                    }
+
+                    if formats_count > 0 {
+                        break;
+                    }
+                } else {
                     bail!("Failed to choose pixel format");
                 }
-            } else {
-                bail!("Failed to choose pixel format");
+
+                if msaa_enabled == 1 {
+                    wgl_attributes[17] /= 2;
+                } else {
+                    break;
+                }
             }
 
             if winapi::SetPixelFormat(self.hdc, pixel_format, &phantom_pixel_format_attributes) == 0 {
@@ -297,7 +309,7 @@ impl WindowContextWinApi {
             ];
             let wgl_context_attributes_ptr = wgl_context_attributes.as_mut_ptr() as *const i32;
 
-            let wgl_context = if let Some(wgl_create_context_attribs_arb) = phantom_wgl_extensions.wgl_create_context_attribs_arb {
+            let wgl_context = if let Some(wgl_create_context_attribs_arb) = phantom_wgl_extensions.wglCreateContextAttribsARB {
                 (wgl_create_context_attribs_arb)(self.hdc, ptr::null_mut(), wgl_context_attributes_ptr)
             } else {
                 bail!("Failed to create WGL context");
@@ -567,7 +579,7 @@ impl WindowContextWinApi {
     pub fn set_swap_interval(&self, interval: u32) {
         unsafe {
             if let Some(wgl_extension) = &self.wgl_extensions {
-                if let Some(wgl_swap_interval_ext) = wgl_extension.wgl_swap_interval_ext {
+                if let Some(wgl_swap_interval_ext) = wgl_extension.wglSwapIntervalEXT {
                     if (wgl_swap_interval_ext)(interval as i32) == 0 {
                         error!("Failed to change swap interval, code {}", errhandlingapi::GetLastError());
                     }
@@ -664,9 +676,9 @@ extern "system" fn wnd_proc(hwnd: HWND, message: u32, w_param: usize, l_param: i
 impl WglExtensions {
     pub fn new() -> Self {
         Self {
-            wgl_choose_pixel_format_arb: load_extension::<_>("wglChoosePixelFormatARB"),
-            wgl_create_context_attribs_arb: load_extension::<_>("wglCreateContextAttribsARB"),
-            wgl_swap_interval_ext: load_extension::<_>("wglSwapIntervalEXT"),
+            wglChoosePixelFormatARB: load_extension::<_>("wglChoosePixelFormatARB"),
+            wglCreateContextAttribsARB: load_extension::<_>("wglCreateContextAttribsARB"),
+            wglSwapIntervalEXT: load_extension::<_>("wglSwapIntervalEXT"),
         }
     }
 }

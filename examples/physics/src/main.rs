@@ -228,7 +228,7 @@ fn main() {
 }
 
 fn main_internal() -> Result<()> {
-    ApplicationContext::<GlobalData>::new("Physics", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(8))?
+    ApplicationContext::<GlobalData>::new("Physics", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(4))?
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene");
 

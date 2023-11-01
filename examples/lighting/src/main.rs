@@ -314,7 +314,7 @@ impl Scene<GlobalData> for MainScene {
                     ui.add_space(10.0);
                     if ui.checkbox(&mut self.msaa, RichText::new("Buffer MSAA").font(font.clone()).heading().color(color)).changed() {
                         if self.msaa {
-                            state.renderer.set_framebuffer_msaa(Some(8));
+                            state.renderer.set_framebuffer_msaa(Some(4));
                         } else {
                             state.renderer.set_framebuffer_msaa(None);
                         }
@@ -353,7 +353,7 @@ fn main() {
 }
 
 fn main_internal() -> Result<()> {
-    ApplicationContext::<GlobalData>::new("Lighting", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(8))?
+    ApplicationContext::<GlobalData>::new("Lighting", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(2))?
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene");
 

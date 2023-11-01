@@ -1,4 +1,5 @@
 #![allow(
+    non_snake_case,
     non_upper_case_globals,
     clippy::while_immutable_condition,
     clippy::never_loop,

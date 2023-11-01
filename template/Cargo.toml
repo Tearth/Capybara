@@ -7,7 +7,7 @@ edition = "2021"
 capybara = { path = "../capybara", features = [ "audio" ] }
 
 [build-dependencies]
-anyhow = { version = "1.0.71" }
+anyhow = { version = "1.0.75" }
 cfg_aliases = { version = "0.1.1" }
 
 # [profile.release]

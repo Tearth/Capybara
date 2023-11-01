@@ -8,19 +8,19 @@ audio = [ "dep:kira" ]
 physics = [ "dep:rapier2d", "dep:nalgebra" ]
 
 [dependencies]
-anyhow = { version = "1.0.71" }
-log = { version = "0.4.18" }
-glow = { version = "0.12.2" }
-glam = { version = "0.24.0" }
+anyhow = { version = "1.0.75" }
+log = { version = "0.4.20" }
+glow = { version = "0.13.0" }
+glam = { version = "0.24.2" }
 egui = { version = "0.23.0", default-features = false }
 zip = { version = "0.6.6", default-features = false, features = [ "deflate" ] }
-png = { version = "0.17.8" }
-quick-xml = { version = "0.29.0" }
+png = { version = "0.17.10" }
+quick-xml = { version = "0.31.0" }
 rustc-hash = { version = "1.1.0" }
-kira = { version = "0.8.3", default-features = false, features = [ "cpal", "wav", "ogg" ], optional = true  }
+kira = { version = "0.8.5", default-features = false, features = [ "cpal", "wav", "ogg" ], optional = true  }
 rapier2d = { version = "0.17.2", optional = true }
 nalgebra = { version = "0.32.3", features = [ "convert-glam024" ], optional = true }
-fastrand = { version = "2.0.0" }
+fastrand = { version = "2.0.1" }
 arrayvec = { version = "0.7.4" }
 tinyjson = { version = "2.5.1" }
 colors-transform = { version = "0.2.11" }
@@ -30,16 +30,16 @@ cfg_aliases = { version = "0.1.1" }
 
 [target.'cfg(all(target_os = "windows", target_arch = "x86_64"))'.dependencies]
 winapi = { version = "0.3.9", features = [ "winuser", "libloaderapi", "errhandlingapi" ]}
-simple_logger = { version = "4.1.0", default-features = false, features = [ "timestamps" ]}
+simple_logger = { version = "4.2.0", default-features = false, features = [ "timestamps" ]}
 instant = { version = "0.1.12" }
 
 [target.'cfg(all(target_os = "linux", target_arch = "x86_64"))'.dependencies]
 x11 = { version = "2.21.0", features = [ "xlib", "xfixes", "glx" ]}
-simple_logger = { version = "4.1.0", default-features = false, features = [ "timestamps" ]}
+simple_logger = { version = "4.2.0", default-features = false, features = [ "timestamps" ]}
 instant = { version = "0.1.12" }
 
 [target.'cfg(all(target_os = "unknown", target_arch = "wasm32"))'.dependencies]
-web-sys = { version = "0.3.63", features = [
+web-sys = { version = "0.3.65", features = [
     "Window", 
     "Document", 
     "Element", 
@@ -56,8 +56,8 @@ web-sys = { version = "0.3.63", features = [
     "Response",
     "Storage"
 ]}
-js-sys = { version = "0.3.63" }
-wasm-bindgen = { version = "0.2.86" }
+js-sys = { version = "0.3.65" }
+wasm-bindgen = { version = "0.2.88" }
 console_log = { version = "1.0.0" }
 console_error_panic_hook = { version = "0.1.7" }
 instant = { version = "0.1.12", features = [ "wasm-bindgen" ] }

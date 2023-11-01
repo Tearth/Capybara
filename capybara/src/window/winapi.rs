@@ -248,7 +248,7 @@ impl WindowContextWinApi {
             }
 
             let msaa_enabled = if msaa.is_some() { 1 } else { 0 };
-            let msaa_samples = msaa.unwrap_or(0);
+            let msaa_samples = msaa.unwrap_or(1);
 
             let mut wgl_attributes = [
                 8193, /* WGL_DRAW_TO_WINDOW_ARB */

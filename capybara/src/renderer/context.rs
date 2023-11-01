@@ -193,17 +193,13 @@ impl RendererContext {
             // Framebuffer multisampled
             context.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(context.framebuffer_multisample));
             context.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(context.framebuffer_multisample_renderbuffer));
-            context.gl.renderbuffer_storage_multisample(glow::RENDERBUFFER, msaa.unwrap_or(0) as i32, glow::SRGB8_ALPHA8, 1, 1);
+            context.gl.renderbuffer_storage_multisample(glow::RENDERBUFFER, msaa.unwrap_or(1) as i32, glow::SRGB8_ALPHA8, 1, 1);
             context.gl.framebuffer_renderbuffer(
                 glow::FRAMEBUFFER,
                 glow::COLOR_ATTACHMENT0,
                 glow::RENDERBUFFER,
                 Some(context.framebuffer_multisample_renderbuffer),
             );
-
-            if context.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
-                bail!("Failed to initialize framebuffer (code {})", context.gl.get_error());
-            }
 
             context.gl.bind_renderbuffer(glow::RENDERBUFFER, None);
             context.gl.bind_framebuffer(glow::FRAMEBUFFER, None);
@@ -834,7 +830,7 @@ impl RendererContext {
             self.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(self.framebuffer_multisample_renderbuffer));
             self.gl.renderbuffer_storage_multisample(
                 glow::RENDERBUFFER,
-                self.framebuffer_msaa.unwrap_or(0) as i32,
+                self.framebuffer_msaa.unwrap_or(1) as i32,
                 glow::SRGB8_ALPHA8,
                 size.x as i32,
                 size.y as i32,
@@ -869,7 +865,7 @@ impl RendererContext {
             self.gl.bind_renderbuffer(glow::RENDERBUFFER, Some(self.framebuffer_multisample_renderbuffer));
             self.gl.renderbuffer_storage_multisample(
                 glow::RENDERBUFFER,
-                msaa.unwrap_or(0) as i32,
+                msaa.unwrap_or(1) as i32,
                 glow::SRGB8_ALPHA8,
                 self.viewport_size.x as i32,
                 self.viewport_size.y as i32,

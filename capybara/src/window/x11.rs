@@ -48,7 +48,7 @@ pub struct GlxExtensions {
 }
 
 impl WindowContextX11 {
-    pub fn new(title: &str, style: WindowStyle) -> Result<Box<Self>> {
+    pub fn new(title: &str, style: WindowStyle, msaa: Option<u32>) -> Result<Box<Self>> {
         unsafe {
             #[cfg(debug_assertions)]
             simple_logger::init_with_level(Level::Info)?;
@@ -114,7 +114,7 @@ impl WindowContextX11 {
                     glx::glXGetFBConfigAttrib(display, config, GLX_SAMPLE_BUFFERS, &mut samp_buf);
                     glx::glXGetFBConfigAttrib(display, config, GLX_SAMPLES, &mut samples);
 
-                    if best_frame_buffer_config_index < 0 || (samp_buf != 0 && samples > best_samples) {
+                    if samples <= msaa.unwrap_or(1) as i32 && (best_frame_buffer_config_index < 0 || (samp_buf != 0 && samples > best_samples)) {
                         best_frame_buffer_config_index = i;
                         best_samples = samples;
                     }

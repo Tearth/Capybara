@@ -353,7 +353,7 @@ fn main() {
 }
 
 fn main_internal() -> Result<()> {
-    ApplicationContext::<GlobalData>::new("Lighting", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(2))?
+    ApplicationContext::<GlobalData>::new("Light", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(2))?
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene");
 

@@ -32,6 +32,7 @@ pub use fastrand;
 pub use glam;
 pub use instant;
 pub use log;
+pub use noise;
 pub use rustc_hash;
 
 #[cfg(feature = "audio")]

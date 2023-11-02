@@ -25,6 +25,7 @@ arrayvec = { version = "0.7.4" }
 tinyjson = { version = "2.5.1" }
 colors-transform = { version = "0.2.11" }
 noise = { version = "0.8.2" }
+pathfinding = { version = "4.3.2" }
 
 [build-dependencies]
 cfg_aliases = { version = "0.1.1" }

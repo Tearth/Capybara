@@ -32,8 +32,6 @@ pub use fastrand;
 pub use glam;
 pub use instant;
 pub use log;
-pub use noise;
-pub use pathfinding;
 pub use rustc_hash;
 
 #[cfg(feature = "audio")]
@@ -44,6 +42,12 @@ pub use rapier2d;
 
 #[cfg(feature = "physics")]
 pub use nalgebra;
+
+#[cfg(feature = "utils")]
+pub use noise;
+
+#[cfg(feature = "utils")]
+pub use pathfinding;
 
 #[macro_export]
 macro_rules! fast_gpu {

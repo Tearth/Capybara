@@ -6,6 +6,7 @@ edition = "2021"
 [features]
 audio = [ "dep:kira" ]
 physics = [ "dep:rapier2d", "dep:nalgebra" ]
+utils = [ "dep:noise", "dep:pathfinding" ]
 
 [dependencies]
 anyhow = { version = "1.0.75" }
@@ -24,8 +25,8 @@ fastrand = { version = "2.0.1" }
 arrayvec = { version = "0.7.4" }
 tinyjson = { version = "2.5.1" }
 colors-transform = { version = "0.2.11" }
-noise = { version = "0.8.2" }
-pathfinding = { version = "4.3.2" }
+noise = { version = "0.8.2", optional = true }
+pathfinding = { version = "4.3.2", optional = true }
 
 [build-dependencies]
 cfg_aliases = { version = "0.1.1" }

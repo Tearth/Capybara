@@ -19,3 +19,4 @@ data/
 .VSCodeCounter/
 misc/
 *.cfg
+*.res

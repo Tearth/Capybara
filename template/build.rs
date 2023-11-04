@@ -30,6 +30,9 @@ fn main() -> Result<()> {
         Command::new("7z").args(["a", "-tzip", "./data/main.zip", "./assets/main/*"]).spawn()?;
     }
 
+    Command::new("llvm-rc").arg("./resources.rc").spawn()?.wait()?;
+
+    println!("cargo:rustc-link-arg=./template/resources.res");
     println!("cargo:rerun-if-changed=./assets/boot/");
     println!("cargo:rerun-if-changed=./assets/main/");
 

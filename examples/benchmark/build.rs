@@ -18,7 +18,7 @@ fn main() -> Result<()> {
     }
 
     if Path::new("./assets/").exists() {
-        Command::new("7z").args(["a", "-tzip", "./data/data0.zip", "./assets/*"]).spawn()?;
+        Command::new("7z").args(["a", "-tzip", "./data/data0.zip", "./assets/*"]).spawn()?.wait()?;
     }
 
     println!("cargo:rerun-if-changed=./assets/");

@@ -23,18 +23,17 @@ fn main() -> Result<()> {
     }
 
     if Path::new("./assets/boot/").exists() {
-        Command::new("7z").args(["a", "-tzip", "./data/boot.zip", "./assets/boot/*"]).spawn()?;
+        Command::new("7z").args(["a", "-tzip", "./data/boot.zip", "./assets/boot/*"]).spawn()?.wait()?;
     }
 
     if Path::new("./assets/main/").exists() {
-        Command::new("7z").args(["a", "-tzip", "./data/main.zip", "./assets/main/*"]).spawn()?;
+        Command::new("7z").args(["a", "-tzip", "./data/main.zip", "./assets/main/*"]).spawn()?.wait()?;
     }
 
     Command::new("llvm-rc").arg("./resources.rc").spawn()?.wait()?;
 
     println!("cargo:rustc-link-arg=./template/resources.res");
-    println!("cargo:rerun-if-changed=./assets/boot/");
-    println!("cargo:rerun-if-changed=./assets/main/");
+    println!("cargo:rerun-if-changed=./assets/");
 
     cfg_aliases! {
         windows: { all(target_os = "windows", target_arch = "x86_64") },

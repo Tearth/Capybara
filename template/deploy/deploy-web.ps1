@@ -1,3 +1,5 @@
+$ZIP = "web"
+
 Write-Output "Building Web binary..."
 Start-Process -FilePath "trunk" -ArgumentList "build --release" -Wait -NoNewWindow
 Set-Location .\dist\
@@ -13,11 +15,11 @@ Get-ChildItem -Path .\ -Filter *.wasm -File -Name | ForEach-Object {
 }
 
 Write-Output "Making archive..."
-Start-Process -FilePath "7z" -ArgumentList "a -tzip web.zip *" -Wait -NoNewWindow
+Start-Process -FilePath "7z" -ArgumentList "a -tzip $ZIP.zip *" -Wait -NoNewWindow
 Set-Location ..
 
 Write-Output "Copying files..."
 New-Item -Path "." -Name "target\deploy" -ItemType Directory -Force
-Copy-Item -Path ".\dist\web.zip" -Destination ".\target\deploy\web.zip"
+Copy-Item -Path ".\dist\$ZIP.zip" -Destination ".\target\deploy\$ZIP.zip"
 
 Write-Output "Done"

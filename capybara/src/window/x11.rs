@@ -19,8 +19,8 @@ use std::mem;
 use std::ptr;
 use std::slice;
 
-pub type glXCreateContextAttribsARB = unsafe extern "C" fn(_: *mut Display, _: GLXFBConfig, _: GLXContext, _: c_int, _: *const c_int) -> GLXContext;
-pub type glXSwapIntervalEXT = unsafe extern "C" fn(_: *mut Display, _: GLXDrawable);
+pub type GLXCREATECONTEXTATTRIBSARB = unsafe extern "C" fn(_: *mut Display, _: GLXFBConfig, _: GLXContext, _: c_int, _: *const c_int) -> GLXContext;
+pub type GLXSWAPINTERVALEXT = unsafe extern "C" fn(_: *mut Display, _: GLXDrawable);
 
 pub struct WindowContextX11 {
     pub window: u64,
@@ -43,8 +43,8 @@ pub struct WindowContextX11 {
 }
 
 pub struct GlxExtensions {
-    pub glXCreateContextAttribsARB: Option<glXCreateContextAttribsARB>,
-    pub glXSwapIntervalEXT: Option<glXSwapIntervalEXT>,
+    pub glXCreateContextAttribsARB: Option<GLXCREATECONTEXTATTRIBSARB>,
+    pub glXSwapIntervalEXT: Option<GLXSWAPINTERVALEXT>,
 }
 
 impl WindowContextX11 {

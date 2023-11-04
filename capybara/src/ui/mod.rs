@@ -1,8 +1,12 @@
-use crate::renderer::texture::{Texture, TextureKind};
+use crate::renderer::texture::Texture;
+use crate::renderer::texture::TextureKind;
 use anyhow::bail;
 use anyhow::Result;
+use egui::Image;
 use egui::ImageButton;
-use egui::{Image, Pos2, Rect, Vec2};
+use egui::Pos2;
+use egui::Rect;
+use egui::Vec2;
 
 pub mod context;
 

@@ -1,6 +1,7 @@
 use super::*;
 use anyhow::Result;
-use log::{error, info};
+use log::error;
+use log::info;
 use std::cell::RefCell;
 use std::fs;
 use std::fs::File;

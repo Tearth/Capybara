@@ -1,0 +1,2 @@
+[target.x86_64-unknown-linux-gnu]
+pre-build = ["apt-get update && apt-get install libgl1-mesa-dev libasound2-dev p7zip-full --assume-yes"]

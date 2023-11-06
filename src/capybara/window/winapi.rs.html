@@ -772,6 +772,18 @@
 <a href="#772" id="772">772</a>
 <a href="#773" id="773">773</a>
 <a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>::winapi::shared::basetsd::<span class="kw-2">*</span>;
@@ -818,9 +830,9 @@
 }
 
 <span class="kw">pub struct </span>WglExtensions {
-    <span class="kw">pub </span>wgl_choose_pixel_format_arb: <span class="prelude-ty">Option</span>&lt;WGLCHOOSEPIXELFORMATARB&gt;,
-    <span class="kw">pub </span>wgl_create_context_attribs_arb: <span class="prelude-ty">Option</span>&lt;WGLCREATECONTEXTATTRIBSARB&gt;,
-    <span class="kw">pub </span>wgl_swap_interval_ext: <span class="prelude-ty">Option</span>&lt;WGLSWAPINTERVALEXT&gt;,
+    <span class="kw">pub </span>wglChoosePixelFormatARB: <span class="prelude-ty">Option</span>&lt;WGLCHOOSEPIXELFORMATARB&gt;,
+    <span class="kw">pub </span>wglCreateContextAttribsARB: <span class="prelude-ty">Option</span>&lt;WGLCREATECONTEXTATTRIBSARB&gt;,
+    <span class="kw">pub </span>wglSwapIntervalEXT: <span class="prelude-ty">Option</span>&lt;WGLSWAPINTERVALEXT&gt;,
 }
 
 <span class="kw">impl </span>WindowContextWinApi {
@@ -1022,7 +1034,7 @@
             }
 
             <span class="kw">let </span>msaa_enabled = <span class="kw">if </span>msaa.is_some() { <span class="number">1 </span>} <span class="kw">else </span>{ <span class="number">0 </span>};
-            <span class="kw">let </span>msaa_samples = msaa.unwrap_or(<span class="number">1</span>);
+            <span class="kw">let </span>msaa_samples = msaa.unwrap_or(<span class="number">0</span>);
 
             <span class="kw">let </span><span class="kw-2">mut </span>wgl_attributes = [
                 <span class="number">8193</span>, <span class="comment">/* WGL_DRAW_TO_WINDOW_ARB */
@@ -1046,16 +1058,28 @@
                 <span class="number">0</span>,
             ];
 
-            <span class="kw">let </span><span class="kw-2">mut </span>pixel_format = <span class="number">0</span>;
             <span class="kw">let </span><span class="kw-2">mut </span>formats_count = <span class="number">0</span>;
-            <span class="kw">let </span>wgl_attributes_ptr = wgl_attributes.as_mut_ptr() <span class="kw">as </span><span class="kw-2">*const </span>i32;
+            <span class="kw">let </span><span class="kw-2">mut </span>pixel_format = <span class="number">0</span>;
 
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(wgl_choose_pixel_format_arb) = phantom_wgl_extensions.wgl_choose_pixel_format_arb {
-                <span class="kw">if </span>(wgl_choose_pixel_format_arb)(<span class="self">self</span>.hdc, wgl_attributes_ptr, ptr::null_mut(), <span class="number">1</span>, <span class="kw-2">&amp;mut </span>pixel_format, <span class="kw-2">&amp;mut </span>formats_count) == <span class="number">0 </span>{
+            <span class="kw">while </span>msaa_enabled == <span class="number">0 </span>|| wgl_attributes[<span class="number">17</span>] &gt; <span class="number">0 </span>{
+                <span class="kw">let </span>wgl_attributes_ptr = wgl_attributes.as_mut_ptr() <span class="kw">as </span><span class="kw-2">*const </span>i32;
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(wglChoosePixelFormatARB) = phantom_wgl_extensions.wglChoosePixelFormatARB {
+                    <span class="kw">if </span>(wglChoosePixelFormatARB)(<span class="self">self</span>.hdc, wgl_attributes_ptr, ptr::null_mut(), <span class="number">1</span>, <span class="kw-2">&amp;mut </span>pixel_format, <span class="kw-2">&amp;mut </span>formats_count) == <span class="number">0 </span>{
+                        <span class="macro">bail!</span>(<span class="string">&quot;Failed to choose pixel format&quot;</span>);
+                    }
+
+                    <span class="kw">if </span>formats_count &gt; <span class="number">0 </span>{
+                        <span class="kw">break</span>;
+                    }
+                } <span class="kw">else </span>{
                     <span class="macro">bail!</span>(<span class="string">&quot;Failed to choose pixel format&quot;</span>);
                 }
-            } <span class="kw">else </span>{
-                <span class="macro">bail!</span>(<span class="string">&quot;Failed to choose pixel format&quot;</span>);
+
+                <span class="kw">if </span>msaa_enabled == <span class="number">1 </span>{
+                    wgl_attributes[<span class="number">17</span>] /= <span class="number">2</span>;
+                } <span class="kw">else </span>{
+                    <span class="kw">break</span>;
+                }
             }
 
             <span class="kw">if </span>winapi::SetPixelFormat(<span class="self">self</span>.hdc, pixel_format, <span class="kw-2">&amp;</span>phantom_pixel_format_attributes) == <span class="number">0 </span>{
@@ -1071,7 +1095,7 @@
             ];
             <span class="kw">let </span>wgl_context_attributes_ptr = wgl_context_attributes.as_mut_ptr() <span class="kw">as </span><span class="kw-2">*const </span>i32;
 
-            <span class="kw">let </span>wgl_context = <span class="kw">if let </span><span class="prelude-val">Some</span>(wgl_create_context_attribs_arb) = phantom_wgl_extensions.wgl_create_context_attribs_arb {
+            <span class="kw">let </span>wgl_context = <span class="kw">if let </span><span class="prelude-val">Some</span>(wgl_create_context_attribs_arb) = phantom_wgl_extensions.wglCreateContextAttribsARB {
                 (wgl_create_context_attribs_arb)(<span class="self">self</span>.hdc, ptr::null_mut(), wgl_context_attributes_ptr)
             } <span class="kw">else </span>{
                 <span class="macro">bail!</span>(<span class="string">&quot;Failed to create WGL context&quot;</span>);
@@ -1341,7 +1365,7 @@
     <span class="kw">pub fn </span>set_swap_interval(<span class="kw-2">&amp;</span><span class="self">self</span>, interval: u32) {
         <span class="kw">unsafe </span>{
             <span class="kw">if let </span><span class="prelude-val">Some</span>(wgl_extension) = <span class="kw-2">&amp;</span><span class="self">self</span>.wgl_extensions {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(wgl_swap_interval_ext) = wgl_extension.wgl_swap_interval_ext {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(wgl_swap_interval_ext) = wgl_extension.wglSwapIntervalEXT {
                     <span class="kw">if </span>(wgl_swap_interval_ext)(interval <span class="kw">as </span>i32) == <span class="number">0 </span>{
                         <span class="macro">error!</span>(<span class="string">&quot;Failed to change swap interval, code {}&quot;</span>, errhandlingapi::GetLastError());
                     }
@@ -1438,9 +1462,9 @@
 <span class="kw">impl </span>WglExtensions {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            wgl_choose_pixel_format_arb: load_extension::&lt;<span class="kw">_</span>&gt;(<span class="string">&quot;wglChoosePixelFormatARB&quot;</span>),
-            wgl_create_context_attribs_arb: load_extension::&lt;<span class="kw">_</span>&gt;(<span class="string">&quot;wglCreateContextAttribsARB&quot;</span>),
-            wgl_swap_interval_ext: load_extension::&lt;<span class="kw">_</span>&gt;(<span class="string">&quot;wglSwapIntervalEXT&quot;</span>),
+            wglChoosePixelFormatARB: load_extension::&lt;<span class="kw">_</span>&gt;(<span class="string">&quot;wglChoosePixelFormatARB&quot;</span>),
+            wglCreateContextAttribsARB: load_extension::&lt;<span class="kw">_</span>&gt;(<span class="string">&quot;wglCreateContextAttribsARB&quot;</span>),
+            wglSwapIntervalEXT: load_extension::&lt;<span class="kw">_</span>&gt;(<span class="string">&quot;wglSwapIntervalEXT&quot;</span>),
         }
     }
 }

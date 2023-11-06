@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":["RgbIntoVec4","Vec4Color"]};
+window.SIDEBAR_ITEMS = {"trait":["RgbToVec4","Vec4Color"]};

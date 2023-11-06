@@ -377,7 +377,7 @@
 <a href="#377" id="377">377</a>
 <a href="#378" id="378">378</a>
 <a href="#379" id="379">379</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils::color::RgbIntoVec4;
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils::color::RgbToVec4;
 <span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>anyhow::bail;
 <span class="kw">use </span>anyhow::Error;
@@ -507,9 +507,9 @@
 
 <span class="kw">fn </span>load_level(
     data: <span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;,
-    tilemaps: <span class="kw-2">&amp;</span>Vec&lt;LdtkTilemap&gt;,
-    layer_definitions: <span class="kw-2">&amp;</span>Vec&lt;<span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;&gt;,
-    entity_definitions: <span class="kw-2">&amp;</span>Vec&lt;<span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;&gt;,
+    tilemaps: <span class="kw-2">&amp;</span>[LdtkTilemap],
+    layer_definitions: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;],
+    entity_definitions: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;LdtkLevel&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>level = LdtkLevel {
         id: read_value::&lt;f64&gt;(data, <span class="string">&quot;uid&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>usize,
@@ -622,7 +622,7 @@
                             <span class="string">&quot;F_Text&quot; </span>=&gt; LdtkEntityField::String(values.get(<span class="number">0</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="string">&quot;&quot;</span>.to_string()).to_string()),
                             <span class="string">&quot;F_Color&quot; </span>=&gt; {
                                 <span class="kw">let </span>hex = <span class="macro">format!</span>(<span class="string">&quot;{:x}&quot;</span>, values.get(<span class="number">0</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="string">&quot;0&quot;</span>.to_string()).to_string().parse::&lt;u32&gt;()<span class="question-mark">?</span>);
-                                <span class="kw">let </span>color = Rgb::from_hex_str(<span class="kw-2">&amp;</span>hex).map_err(|<span class="kw">_</span>| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to parse color&quot;</span>))<span class="question-mark">?</span>.into_vec4();
+                                <span class="kw">let </span>color = Rgb::from_hex_str(<span class="kw-2">&amp;</span>hex).map_err(|<span class="kw">_</span>| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to parse color&quot;</span>))<span class="question-mark">?</span>.to_vec4();
                                 LdtkEntityField::Color(color)
                             }
                             <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Invalid field type&quot;</span>),
@@ -639,7 +639,7 @@
                                     .iter()
                                     .map(|p| {
                                         <span class="kw">let </span>hex = <span class="macro">format!</span>(<span class="string">&quot;{:x}&quot;</span>, p.parse::&lt;u32&gt;()<span class="question-mark">?</span>);
-                                        <span class="kw">let </span>color = Rgb::from_hex_str(<span class="kw-2">&amp;</span>hex).map_err(|<span class="kw">_</span>| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to parse color&quot;</span>))<span class="question-mark">?</span>.into_vec4();
+                                        <span class="kw">let </span>color = Rgb::from_hex_str(<span class="kw-2">&amp;</span>hex).map_err(|<span class="kw">_</span>| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to parse color&quot;</span>))<span class="question-mark">?</span>.to_vec4();
 
                                         <span class="prelude-val">Ok</span>(color)
                                     })
@@ -698,7 +698,7 @@
     }
 }
 
-<span class="kw">fn </span>read_array_values&lt;<span class="lifetime">&#39;a</span>&gt;(data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HashMap&lt;String, JsonValue&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;String&gt;&gt; {
+<span class="kw">fn </span>read_array_values(data: <span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;String&gt;&gt; {
     <span class="kw">match </span>data.get(name) {
         <span class="prelude-val">Some</span>(JsonValue::Array(array)) =&gt; <span class="prelude-val">Ok</span>(array.iter().map(|p| p.stringify().unwrap()).collect()),
         <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to read array {}&quot;</span>, name),
@@ -736,7 +736,7 @@
     }
     <span class="kw">let </span>parsed = value.get::&lt;String&gt;().ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to parse {}&quot;</span>, name))<span class="question-mark">?</span>.clone();
 
-    <span class="prelude-val">Ok</span>(Rgb::from_hex_str(<span class="kw-2">&amp;</span>parsed).map_err(|<span class="kw">_</span>| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to parse {} into RGB&quot;</span>, name))<span class="question-mark">?</span>.into_vec4())
+    <span class="prelude-val">Ok</span>(Rgb::from_hex_str(<span class="kw-2">&amp;</span>parsed).map_err(|<span class="kw">_</span>| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to parse {} into RGB&quot;</span>, name))<span class="question-mark">?</span>.to_vec4())
 }
 
 <span class="kw">fn </span>read_position(data: <span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec2&gt; {

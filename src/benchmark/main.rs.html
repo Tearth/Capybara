@@ -349,16 +349,16 @@
             state.ui.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>);
             state.window.set_swap_interval(<span class="number">0</span>);
 
-            <span class="self">self</span>.regenerate_objects(<span class="kw-2">&amp;mut </span>state, <span class="number">100000</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.regenerate_objects(<span class="kw-2">&amp;</span>state, <span class="number">100000</span>)<span class="question-mark">?</span>;
 
-            <span class="kw">let </span>target_texture = Texture::new(<span class="kw-2">&amp;</span>state.renderer, <span class="kw-2">&amp;</span>RawTexture::new(<span class="string">&quot;target_texture&quot;</span>, <span class="string">&quot;&quot;</span>, Vec2::new(<span class="number">400.0</span>, <span class="number">400.0</span>), <span class="kw-2">&amp;</span>Vec::new()))<span class="question-mark">?</span>;
+            <span class="kw">let </span>target_texture = Texture::new(state.renderer, <span class="kw-2">&amp;</span>RawTexture::new(<span class="string">&quot;target_texture&quot;</span>, <span class="string">&quot;&quot;</span>, Vec2::new(<span class="number">400.0</span>, <span class="number">400.0</span>), <span class="kw-2">&amp;</span>Vec::new()))<span class="question-mark">?</span>;
             <span class="self">self</span>.target_texture_id = state.renderer.textures.store(target_texture);
 
-            <span class="kw">let </span>blur_shader = Shader::new(<span class="kw-2">&amp;</span>state.renderer, <span class="string">&quot;blur&quot;</span>, <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/blur.vert&quot;</span>), <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/blur.frag&quot;</span>))<span class="question-mark">?</span>;
+            <span class="kw">let </span>blur_shader = Shader::new(state.renderer, <span class="string">&quot;blur&quot;</span>, <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/blur.vert&quot;</span>), <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/blur.frag&quot;</span>))<span class="question-mark">?</span>;
             <span class="self">self</span>.blur_shader_id = state.renderer.shaders.store(blur_shader);
 
             <span class="kw">let </span>grayscale_shader =
-                Shader::new(<span class="kw-2">&amp;</span>state.renderer, <span class="string">&quot;grayscale&quot;</span>, <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/grayscale.vert&quot;</span>), <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/grayscale.frag&quot;</span>))<span class="question-mark">?</span>;
+                Shader::new(state.renderer, <span class="string">&quot;grayscale&quot;</span>, <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/grayscale.vert&quot;</span>), <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/grayscale.frag&quot;</span>))<span class="question-mark">?</span>;
             <span class="self">self</span>.grayscale_shader_id = state.renderer.shaders.store(grayscale_shader);
 
             <span class="kw">let </span>resolution = state.renderer.viewport_size.into();
@@ -492,7 +492,7 @@
 }
 
 <span class="kw">fn </span>main_internal() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    ApplicationContext::&lt;GlobalData&gt;::new(<span class="string">&quot;Benchmark&quot;</span>, WindowStyle::Window { size: Coordinates::new(<span class="number">1280</span>, <span class="number">720</span>) }, <span class="prelude-val">Some</span>(<span class="number">8</span>))<span class="question-mark">?
+    ApplicationContext::&lt;GlobalData&gt;::new(<span class="string">&quot;Benchmark&quot;</span>, WindowStyle::Window { size: Coordinates::new(<span class="number">1280</span>, <span class="number">720</span>) }, <span class="prelude-val">Some</span>(<span class="number">4</span>))<span class="question-mark">?
         </span>.with_scene(<span class="string">&quot;MainScene&quot;</span>, Box::&lt;MainScene&gt;::default())
         .run(<span class="string">&quot;MainScene&quot;</span>);
 

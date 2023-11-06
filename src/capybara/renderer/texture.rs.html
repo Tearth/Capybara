@@ -264,7 +264,7 @@
 
             <span class="kw">let </span>gl = renderer.gl.clone();
             <span class="kw">let </span>inner = gl.create_texture().map_err(Error::msg)<span class="question-mark">?</span>;
-            <span class="kw">let </span>data = <span class="kw">if </span>raw.data.len() != <span class="number">0 </span>{ <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>raw.data) } <span class="kw">else </span>{ <span class="prelude-val">None </span>};
+            <span class="kw">let </span>data = <span class="kw">if </span>!raw.data.is_empty() { <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>raw.data) } <span class="kw">else </span>{ <span class="prelude-val">None </span>};
 
             gl.bind_texture(glow::TEXTURE_2D, <span class="prelude-val">Some</span>(inner));
             gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, glow::CLAMP_TO_EDGE <span class="kw">as </span>i32);

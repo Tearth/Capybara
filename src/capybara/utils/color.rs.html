@@ -32,17 +32,19 @@
 <a href="#32" id="32">32</a>
 <a href="#33" id="33">33</a>
 <a href="#34" id="34">34</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>colors_transform::{Color, Rgb};
+<a href="#35" id="35">35</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>colors_transform::Color;
+<span class="kw">use </span>colors_transform::Rgb;
 <span class="kw">use </span>glam::Vec4;
 
 <span class="kw">pub trait </span>Vec4Color {
     <span class="kw">fn </span>new_rgb(r: u8, g: u8, b: u8, a: u8) -&gt; Vec4;
-    <span class="kw">fn </span>to_rgb(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (u8, u8, u8, u8);
-    <span class="kw">fn </span>to_rgb_packed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32;
+    <span class="kw">fn </span>to_rgb(<span class="self">self</span>) -&gt; (u8, u8, u8, u8);
+    <span class="kw">fn </span>to_rgb_packed(<span class="self">self</span>) -&gt; u32;
 }
 
-<span class="kw">pub trait </span>RgbIntoVec4 {
-    <span class="kw">fn </span>into_vec4(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec4;
+<span class="kw">pub trait </span>RgbToVec4 {
+    <span class="kw">fn </span>to_vec4(<span class="self">self</span>) -&gt; Vec4;
 }
 
 <span class="kw">impl </span>Vec4Color <span class="kw">for </span>Vec4 {
@@ -50,18 +52,18 @@
         Vec4::new(r <span class="kw">as </span>f32 / <span class="number">255.0</span>, g <span class="kw">as </span>f32 / <span class="number">255.0</span>, b <span class="kw">as </span>f32 / <span class="number">255.0</span>, a <span class="kw">as </span>f32 / <span class="number">255.0</span>)
     }
 
-    <span class="kw">fn </span>to_rgb(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (u8, u8, u8, u8) {
+    <span class="kw">fn </span>to_rgb(<span class="self">self</span>) -&gt; (u8, u8, u8, u8) {
         ((<span class="self">self</span>.x * <span class="self">self</span>.w * <span class="number">255.0</span>) <span class="kw">as </span>u8, (<span class="self">self</span>.y * <span class="self">self</span>.w * <span class="number">255.0</span>) <span class="kw">as </span>u8, (<span class="self">self</span>.z * <span class="self">self</span>.w * <span class="number">255.0</span>) <span class="kw">as </span>u8, (<span class="self">self</span>.w * <span class="number">255.0</span>) <span class="kw">as </span>u8)
     }
 
-    <span class="kw">fn </span>to_rgb_packed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+    <span class="kw">fn </span>to_rgb_packed(<span class="self">self</span>) -&gt; u32 {
         <span class="kw">let </span>(r, g, b, a) = <span class="self">self</span>.to_rgb();
         r <span class="kw">as </span>u32 | ((g <span class="kw">as </span>u32) &lt;&lt; <span class="number">8</span>) | ((b <span class="kw">as </span>u32) &lt;&lt; <span class="number">16</span>) | ((a <span class="kw">as </span>u32) &lt;&lt; <span class="number">24</span>)
     }
 }
 
-<span class="kw">impl </span>RgbIntoVec4 <span class="kw">for </span>Rgb {
-    <span class="kw">fn </span>into_vec4(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec4 {
+<span class="kw">impl </span>RgbToVec4 <span class="kw">for </span>Rgb {
+    <span class="kw">fn </span>to_vec4(<span class="self">self</span>) -&gt; Vec4 {
         <span class="kw">let </span>(r, g, b) = <span class="self">self</span>.as_tuple();
         Vec4::new(r / <span class="number">255.0</span>, g / <span class="number">255.0</span>, b / <span class="number">255.0</span>, <span class="number">1.0</span>)
     }

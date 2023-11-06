@@ -499,9 +499,9 @@
     }
 
     <span class="kw">fn </span>load_ldtk(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>str, data: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">let </span>json = str::from_utf8(<span class="kw-2">&amp;</span>data)<span class="question-mark">?</span>.parse::&lt;JsonValue&gt;()<span class="question-mark">?</span>;
+        <span class="kw">let </span>json = str::from_utf8(data)<span class="question-mark">?</span>.parse::&lt;JsonValue&gt;()<span class="question-mark">?</span>;
         <span class="kw">let </span>data = json.get::&lt;HashMap&lt;<span class="kw">_</span>, <span class="kw">_</span>&gt;&gt;().ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to read JSON data&quot;</span>))<span class="question-mark">?</span>;
-        <span class="self">self</span>.worlds.push(ldtk::load_world(name, path, <span class="kw-2">&amp;</span>data)<span class="question-mark">?</span>);
+        <span class="self">self</span>.worlds.push(ldtk::load_world(name, path, data)<span class="question-mark">?</span>);
 
         <span class="prelude-val">Ok</span>(())
     }

@@ -1,0 +1,8 @@
+[package]
+name = "network-server"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+network-base = { path = "../base" }
+capybara = { path = "../../../capybara" }

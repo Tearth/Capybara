@@ -243,7 +243,7 @@ impl Scene<GlobalData> for MainScene {
         let output = state.ui.inner.read().unwrap().run(input, |context| {
             SidePanel::new(Side::Left, Id::new("side")).exact_width(160.0).resizable(false).show(context, |ui| {
                 if self.initialized {
-                    let font = FontId { size: 24.0, family: FontFamily::Name("Kenney Pixel".into()) };
+                    let font = FontId { size: 24.0, family: FontFamily::Monospace };
                     let color = Color32::from_rgb(255, 255, 255);
                     let delta_average = self.delta_history.iter().sum::<f32>() / self.delta_history.len() as f32;
 

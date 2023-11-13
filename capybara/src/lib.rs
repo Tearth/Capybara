@@ -13,6 +13,7 @@ pub mod app;
 pub mod assets;
 pub mod filesystem;
 pub mod light;
+pub mod network;
 pub mod particles;
 pub mod renderer;
 pub mod scene;

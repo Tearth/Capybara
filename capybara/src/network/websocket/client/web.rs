@@ -161,6 +161,11 @@ impl Default for WebSocketClient {
 
 impl Drop for WebSocketClient {
     fn drop(&mut self) {
-        todo!()
+        if let Some(websocket) = &self.websocket {
+            websocket.set_onopen(None);
+            websocket.set_onclose(None);
+            websocket.set_onmessage(None);
+            websocket.set_onerror(None);
+        }
     }
 }

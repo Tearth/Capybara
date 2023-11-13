@@ -423,6 +423,25 @@ impl WindowContextWeb {
     }
 }
 
+impl Drop for WindowContextWeb {
+    fn drop(&mut self) {
+        self.window.remove_event_listener_with_callback("resize", self.resize_callback.as_ref().unchecked_ref()).unwrap();
+        self.window.remove_event_listener_with_callback("mousemove", self.mousemove_callback.as_ref().unchecked_ref()).unwrap();
+        self.window
+            .remove_event_listener_with_callback("mouseenter", self.mouseenter_callback.as_ref().unchecked_ref())
+            .unwrap();
+        self.window
+            .remove_event_listener_with_callback("mouseleave", self.mouseleave_callback.as_ref().unchecked_ref())
+            .unwrap();
+        self.window.remove_event_listener_with_callback("mousedown", self.mousedown_callback.as_ref().unchecked_ref()).unwrap();
+        self.window.remove_event_listener_with_callback("mouseup", self.mouseup_callback.as_ref().unchecked_ref()).unwrap();
+        self.window.remove_event_listener_with_callback("wheel", self.wheel_callback.as_ref().unchecked_ref()).unwrap();
+        self.window.remove_event_listener_with_callback("keydown", self.keydown_callback.as_ref().unchecked_ref()).unwrap();
+        self.window.remove_event_listener_with_callback("keyup", self.keyup_callback.as_ref().unchecked_ref()).unwrap();
+        self.window.remove_event_listener_with_callback("keypress", self.keypress_callback.as_ref().unchecked_ref()).unwrap();
+    }
+}
+
 fn map_key(key: String) -> Key {
     match key.as_str() {
         "Enter" | "NumpadEnter" => Key::Enter,

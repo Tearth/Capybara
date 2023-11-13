@@ -13,7 +13,6 @@ pub mod app;
 pub mod assets;
 pub mod filesystem;
 pub mod light;
-pub mod network;
 pub mod particles;
 pub mod renderer;
 pub mod scene;
@@ -26,6 +25,9 @@ pub mod audio;
 
 #[cfg(feature = "physics")]
 pub mod physics;
+
+#[cfg(feature = "network")]
+pub mod network;
 
 pub use anyhow;
 pub use egui;

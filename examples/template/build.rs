@@ -32,7 +32,7 @@ fn main() -> Result<()> {
 
     if target == "x86_64-pc-windows-msvc" {
         Command::new("llvm-rc").arg("./resources.rc").spawn()?.wait()?;
-        println!("cargo:rustc-link-arg=./template/resources.res");
+        println!("cargo:rustc-link-arg=./examples/template/resources.res");
     }
 
     println!("cargo:rerun-if-changed=./assets/");

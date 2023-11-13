@@ -2,13 +2,13 @@
 resolver = "2"
 members = [
     "capybara",
-    "template",
 
     "examples/benchmark",
     "examples/ldtk",
     "examples/light",
     "examples/particles",
     "examples/physics",
+    "examples/template",
     "examples/ui",
 ]
 

@@ -3,17 +3,17 @@ use glam::Vec2;
 #[cfg(windows)]
 pub mod winapi;
 #[cfg(windows)]
-pub type WindowContext = winapi::WindowContextWinApi;
+pub type WindowContext = winapi::WindowContext;
 
 #[cfg(unix)]
 pub mod x11;
 #[cfg(unix)]
-pub type WindowContext = x11::WindowContextX11;
+pub type WindowContext = x11::WindowContext;
 
 #[cfg(web)]
 pub mod web;
 #[cfg(web)]
-pub type WindowContext = web::WindowContextWeb;
+pub type WindowContext = web::WindowContext;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum WindowStyle {

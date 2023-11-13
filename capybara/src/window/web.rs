@@ -22,7 +22,7 @@ use web_sys::WebGl2RenderingContext;
 use web_sys::WheelEvent;
 use web_sys::Window;
 
-pub struct WindowContextWeb {
+pub struct WindowContext {
     pub window: Window,
     pub document: Document,
     pub canvas: HtmlCanvasElement,
@@ -51,7 +51,7 @@ pub struct WindowContextWeb {
     event_queue: VecDeque<InputEvent>,
 }
 
-impl WindowContextWeb {
+impl WindowContext {
     pub fn new(_: &str, _: WindowStyle, msaa: Option<u32>) -> Result<Box<Self>> {
         #[cfg(debug_assertions)]
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
@@ -423,7 +423,7 @@ impl WindowContextWeb {
     }
 }
 
-impl Drop for WindowContextWeb {
+impl Drop for WindowContext {
     fn drop(&mut self) {
         self.window.remove_event_listener_with_callback("resize", self.resize_callback.as_ref().unchecked_ref()).unwrap();
         self.window.remove_event_listener_with_callback("mousemove", self.mousemove_callback.as_ref().unchecked_ref()).unwrap();

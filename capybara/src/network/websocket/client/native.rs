@@ -17,7 +17,7 @@ use url::Url;
 pub struct WebSocketClient {
     pub connected: Arc<RwLock<bool>>,
     received_packets: Arc<RwLock<VecDeque<Packet>>>,
-    queue_tx: Option<UnboundedSender<Packet>>,
+    outgoing_packets_tx: Option<UnboundedSender<Packet>>,
     disconnection_tx: Option<UnboundedSender<()>>,
 }
 
@@ -29,11 +29,11 @@ impl WebSocketClient {
         let connected = self.connected.clone();
 
         let received_packets = self.received_packets.clone();
+        let (outgoing_packets_tx, outgoing_packets_rx) = mpsc::unbounded();
         let (disconnection_tx, mut disconnection_rx) = mpsc::unbounded();
-        let (queue_tx, queue_rx) = mpsc::unbounded();
 
+        self.outgoing_packets_tx = Some(outgoing_packets_tx);
         self.disconnection_tx = Some(disconnection_tx);
-        self.queue_tx = Some(queue_tx);
 
         thread::spawn(move || {
             info!("Creating network runtime");
@@ -52,7 +52,7 @@ impl WebSocketClient {
                 };
 
                 let websocket = match tokio_tungstenite::connect_async(url).await {
-                    Ok((ws_stream, _)) => ws_stream,
+                    Ok((websocket, _)) => websocket,
                     Err(err) => error_return!("Failed to establish connection with the server ({})", err),
                 };
 
@@ -63,17 +63,7 @@ impl WebSocketClient {
                 let (websocket_tx, websocket_rx) = mpsc::unbounded();
                 let websocket_rx_to_sink = websocket_rx.forward(websocket_sink);
 
-                let process_queue_messages = queue_rx.for_each(|packet| async {
-                    let message = match packet {
-                        Packet::Text { text } => Message::Text(text),
-                        Packet::Binary { data } => Message::Binary(data),
-                    };
-
-                    if let Err(err) = websocket_tx.unbounded_send(Ok(message)) {
-                        error!("Failed to send packet ({})", err);
-                    }
-                });
-                let process_websocket_messages = websocket_stream.for_each(|message| async {
+                let process_incoming_messages = websocket_stream.for_each(|message| async {
                     match message {
                         Ok(message) => {
                             let packet = match message {
@@ -89,12 +79,22 @@ impl WebSocketClient {
                         Err(err) => error!("Failed to process received message ({})", err),
                     };
                 });
+                let process_outgoing_messages = outgoing_packets_rx.for_each(|packet| async {
+                    let message = match packet {
+                        Packet::Text { text } => Message::Text(text),
+                        Packet::Binary { data } => Message::Binary(data),
+                    };
+
+                    if let Err(err) = websocket_tx.unbounded_send(Ok(message)) {
+                        error!("Failed to send packet ({})", err);
+                    }
+                });
                 let process_disconnection = disconnection_rx.next();
 
                 tokio::select! {
                     _ = websocket_rx_to_sink => (),
-                    _ = process_queue_messages => (),
-                    _ = process_websocket_messages => (),
+                    _ = process_incoming_messages => (),
+                    _ = process_outgoing_messages => (),
                     _ = process_disconnection => ()
                 };
 
@@ -117,7 +117,7 @@ impl WebSocketClient {
     }
 
     pub fn send_packet(&self, packet: Packet) {
-        match &self.queue_tx {
+        match &self.outgoing_packets_tx {
             Some(queue_tx) => {
                 if let Err(err) = queue_tx.unbounded_send(packet) {
                     error_return!("Failed to send packet ({})", err);

@@ -1,16 +1,16 @@
 #[derive(Debug, Clone)]
-pub enum Packet {
+pub enum Frame {
     Text { text: String },
     Binary { data: Vec<u8> },
 }
 
-impl Packet {
+impl Frame {
     pub fn new_text(text: String) -> Self {
-        Packet::Text { text }
+        Frame::Text { text }
     }
 
     pub fn new_binary(data: Vec<u8>) -> Self {
-        Packet::Binary { data }
+        Frame::Binary { data }
     }
 
     pub fn into_data(self) -> Vec<u8> {

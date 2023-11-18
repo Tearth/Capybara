@@ -1,5 +1,5 @@
 use crate::error_return;
-use crate::network::packet::Packet;
+use crate::network::frame::Frame;
 use js_sys::JsString;
 use js_sys::Uint8Array;
 use log::error;
@@ -15,7 +15,7 @@ use web_sys::WebSocket;
 pub struct WebSocketClient {
     pub connected: Arc<RwLock<bool>>,
     websocket: Option<WebSocket>,
-    received_packets: Arc<RwLock<VecDeque<Packet>>>,
+    received_frames: Arc<RwLock<VecDeque<Frame>>>,
 
     onopen_callback: Closure<dyn FnMut()>,
     onclose_callback: Closure<dyn FnMut()>,
@@ -32,7 +32,7 @@ impl WebSocketClient {
             onclose_callback: Closure::<dyn FnMut()>::new(|| {}),
             onmessage_callback: Closure::<dyn FnMut(_)>::new(|_| {}),
             onerror_callback: Closure::<dyn FnMut(_)>::new(|_| {}),
-            received_packets: Default::default(),
+            received_frames: Default::default(),
         }
     }
 
@@ -83,7 +83,7 @@ impl WebSocketClient {
     }
 
     fn init_onmessage_callback(&mut self) {
-        let received_packets = self.received_packets.clone();
+        let received_frames = self.received_frames.clone();
         self.onmessage_callback = Closure::<dyn FnMut(_)>::new(move |event: MessageEvent| {
             if let Ok(buffer) = event.data().dyn_into::<js_sys::ArrayBuffer>() {
                 let array = Uint8Array::new(&buffer);
@@ -92,9 +92,9 @@ impl WebSocketClient {
                 let mut data = vec![0; length];
                 array.copy_to(&mut data);
 
-                received_packets.write().unwrap().push_back(Packet::Binary { data })
+                received_frames.write().unwrap().push_back(Frame::Binary { data })
             } else if let Ok(text) = event.data().dyn_into::<JsString>() {
-                received_packets.write().unwrap().push_back(Packet::Text { text: text.into() })
+                received_frames.write().unwrap().push_back(Frame::Text { text: text.into() })
             }
         });
 
@@ -133,23 +133,23 @@ impl WebSocketClient {
         }
     }
 
-    pub fn send_packet(&self, packet: Packet) {
+    pub fn send_frame(&self, frame: Frame) {
         if let Some(websocket) = &self.websocket {
-            let result = match packet {
-                Packet::Text { text } => websocket.send_with_str(&text),
-                Packet::Binary { data } => websocket.send_with_u8_array(&data),
+            let result = match frame {
+                Frame::Text { text } => websocket.send_with_str(&text),
+                Frame::Binary { data } => websocket.send_with_u8_array(&data),
             };
 
             if result.is_err() {
-                error_return!("Failed to send packet");
+                error_return!("Failed to send frame");
             }
         } else {
-            error_return!("Failed to send packet (socket is not connected)");
+            error_return!("Failed to send frame (socket is not connected)");
         }
     }
 
-    pub fn poll_packet(&mut self) -> Option<Packet> {
-        self.received_packets.write().unwrap().pop_front()
+    pub fn poll_frame(&mut self) -> Option<Frame> {
+        self.received_frames.write().unwrap().pop_front()
     }
 }
 

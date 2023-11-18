@@ -1,5 +1,5 @@
 use crate::error_return;
-use crate::network::packet::Packet;
+use crate::network::frame::Frame;
 use futures_channel::mpsc;
 use futures_channel::mpsc::UnboundedSender;
 use futures_util::StreamExt;
@@ -11,49 +11,49 @@ use tokio_tungstenite::WebSocketStream;
 
 pub struct WebSocketConnectedClient {
     websocket: Option<WebSocketStream<TcpStream>>,
-    outgoing_packets_tx: Option<UnboundedSender<Packet>>,
+    outgoing_frames_tx: Option<UnboundedSender<Frame>>,
     disconnection_tx: Option<UnboundedSender<()>>,
 }
 
 impl WebSocketConnectedClient {
     pub fn new(websocket: WebSocketStream<TcpStream>) -> Self {
-        Self { websocket: Some(websocket), outgoing_packets_tx: None, disconnection_tx: None }
+        Self { websocket: Some(websocket), outgoing_frames_tx: None, disconnection_tx: None }
     }
 
-    pub fn run(&mut self, incoming_packets_tx: UnboundedSender<Packet>) {
+    pub fn run(&mut self, incoming_frames_tx: UnboundedSender<Frame>) {
         let websocket = self.websocket.take().unwrap();
 
         let (websocket_sink, websocket_stream) = websocket.split();
         let (websocket_tx, websocket_rx) = mpsc::unbounded();
-        let (outgoing_packets_tx, outgoing_packets_rx) = mpsc::unbounded();
+        let (outgoing_frames_tx, outgoing_frames_rx) = mpsc::unbounded();
         let (disconnection_tx, mut disconnection_rx) = mpsc::unbounded();
         let websocket_rx_to_sink = websocket_rx.forward(websocket_sink);
 
-        self.outgoing_packets_tx = Some(outgoing_packets_tx);
+        self.outgoing_frames_tx = Some(outgoing_frames_tx);
         self.disconnection_tx = Some(disconnection_tx);
 
         tokio::spawn(async move {
             let process_incoming_messages = websocket_stream.for_each(|message| async {
-                let packet = match message.unwrap() {
-                    Message::Text(text) => Some(Packet::new_text(text)),
-                    Message::Binary(data) => Some(Packet::new_binary(data)),
+                let frame = match message.unwrap() {
+                    Message::Text(text) => Some(Frame::new_text(text)),
+                    Message::Binary(data) => Some(Frame::new_binary(data)),
                     _ => None,
                 };
 
-                if let Some(packet) = packet {
-                    if let Err(err) = incoming_packets_tx.unbounded_send(packet) {
-                        error!("Failed to process packet ({})", err);
+                if let Some(frame) = frame {
+                    if let Err(err) = incoming_frames_tx.unbounded_send(frame) {
+                        error!("Failed to process frame ({})", err);
                     }
                 }
             });
-            let process_outgoing_messages = outgoing_packets_rx.for_each(|packet| async {
-                let message = match packet {
-                    Packet::Text { text } => Message::Text(text),
-                    Packet::Binary { data } => Message::Binary(data),
+            let process_outgoing_messages = outgoing_frames_rx.for_each(|frame| async {
+                let message = match frame {
+                    Frame::Text { text } => Message::Text(text),
+                    Frame::Binary { data } => Message::Binary(data),
                 };
 
                 if let Err(err) = websocket_tx.unbounded_send(Ok(message)) {
-                    error!("Failed to send packet ({})", err);
+                    error!("Failed to send frame ({})", err);
                 }
             });
             let process_disconnection = disconnection_rx.next();
@@ -78,14 +78,14 @@ impl WebSocketConnectedClient {
         };
     }
 
-    pub fn send_packet(&self, packet: Packet) {
-        match &self.outgoing_packets_tx {
+    pub fn send_frame(&self, frame: Frame) {
+        match &self.outgoing_frames_tx {
             Some(queue_tx) => {
-                if let Err(err) = queue_tx.unbounded_send(packet) {
-                    error_return!("Failed to send packet ({})", err);
+                if let Err(err) = queue_tx.unbounded_send(frame) {
+                    error_return!("Failed to send frame ({})", err);
                 }
             }
-            None => error_return!("Failed to send packet (socket is not connected)"),
+            None => error_return!("Failed to send frame (socket is not connected)"),
         };
     }
 }

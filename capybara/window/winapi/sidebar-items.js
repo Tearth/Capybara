@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["load_extension","map_key","wnd_proc"],"struct":["WglExtensions","WindowContextWinApi"],"type":["WGLCHOOSEPIXELFORMATARB","WGLCREATECONTEXTATTRIBSARB","WGLSWAPINTERVALEXT"]};
+window.SIDEBAR_ITEMS = {"fn":["load_extension","map_key","wnd_proc"],"struct":["WglExtensions","WindowContext"],"type":["WGLCHOOSEPIXELFORMATARB","WGLCREATECONTEXTATTRIBSARB","WGLSWAPINTERVALEXT"]};

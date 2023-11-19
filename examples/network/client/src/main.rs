@@ -17,6 +17,7 @@ use capybara::egui::TextStyle;
 use capybara::fast_gpu;
 use capybara::fastrand;
 use capybara::glam::Vec2;
+use capybara::network::client::WebSocketClient;
 use capybara::renderer::sprite::Sprite;
 use capybara::renderer::sprite::TextureId;
 use capybara::scene::FrameCommand;
@@ -40,6 +41,8 @@ struct MainScene {
     objects_count: u32,
     initialized: bool,
     delta_history: VecDeque<f32>,
+
+    client: WebSocketClient,
 }
 
 struct Object {

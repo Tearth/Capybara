@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 network-base = { path = "../base" }
-capybara = { path = "../../../capybara" }
+capybara = { path = "../../../capybara", features = [ "network" ] }
 
 [build-dependencies]
 anyhow = { version = "1.0.75" }

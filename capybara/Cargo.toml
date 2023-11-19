@@ -70,7 +70,8 @@ web-sys = { version = "0.3.65", features = [
     "Response",
     "Storage",
     "WebSocket",
-    "MessageEvent"
+    "MessageEvent",
+    "Blob"
 ]}
 js-sys = { version = "0.3.65" }
 wasm-bindgen = { version = "0.2.88" }

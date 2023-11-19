@@ -11,7 +11,7 @@ use std::sync::Arc;
 use std::sync::RwLock;
 use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsCast;
-use web_sys::Blob;
+use web_sys::BinaryType;
 use web_sys::MessageEvent;
 use web_sys::WebSocket;
 
@@ -45,10 +45,13 @@ impl WebSocketClient {
     pub fn connect(&mut self, url: &str) {
         info!("Connecting to {}", url);
 
-        self.websocket = match WebSocket::new(url) {
-            Ok(websocket) => Some(Arc::new(RwLock::new(websocket))),
+        let websocket = match WebSocket::new(url) {
+            Ok(websocket) => websocket,
             Err(_) => error_return!("Failed to establish connection with the server"),
         };
+        websocket.set_binary_type(BinaryType::Arraybuffer);
+
+        self.websocket = Some(Arc::new(RwLock::new(websocket)));
 
         self.init_onopen_callback();
         self.init_onclose_callback();
@@ -94,7 +97,6 @@ impl WebSocketClient {
         let received_frames = self.received_frames.clone();
 
         self.onmessage_callback = Closure::<dyn FnMut(_)>::new(move |event: MessageEvent| {
-            error!("TEST");
             if let Ok(buffer) = event.data().dyn_into::<js_sys::ArrayBuffer>() {
                 let array = Uint8Array::new(&buffer);
                 let length = array.byte_length() as usize;
@@ -123,8 +125,6 @@ impl WebSocketClient {
                         received_frames.write().unwrap().push_back(packet.into());
                     }
                 }
-            } else if let Ok(blob) = event.data().dyn_into::<Blob>() {
-                error!("TEST");
             } else if let Ok(text) = event.data().dyn_into::<JsString>() {
                 let packet = Frame::Text { text: text.into() };
                 received_frames.write().unwrap().push_back(packet.into())

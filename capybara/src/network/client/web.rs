@@ -1,12 +1,11 @@
 use crate::error_return;
-use crate::network::frame::Frame;
 use crate::network::packet::Packet;
 use instant::SystemTime;
-use js_sys::JsString;
 use js_sys::Uint8Array;
 use log::error;
 use log::info;
 use std::collections::VecDeque;
+use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::RwLock;
 use wasm_bindgen::prelude::Closure;
@@ -19,8 +18,8 @@ pub struct WebSocketClient {
     pub connected: Arc<RwLock<bool>>,
     pub ping: Arc<RwLock<u32>>,
 
-    websocket: Option<Arc<RwLock<WebSocket>>>,
-    received_frames: Arc<RwLock<VecDeque<Packet>>>,
+    websocket: Option<Rc<WebSocket>>,
+    received_packets: Arc<RwLock<VecDeque<Packet>>>,
 
     onopen_callback: Closure<dyn FnMut()>,
     onclose_callback: Closure<dyn FnMut()>,
@@ -38,7 +37,7 @@ impl WebSocketClient {
             onclose_callback: Closure::<dyn FnMut()>::new(|| {}),
             onmessage_callback: Closure::<dyn FnMut(_)>::new(|_| {}),
             onerror_callback: Closure::<dyn FnMut(_)>::new(|_| {}),
-            received_frames: Default::default(),
+            received_packets: Default::default(),
         }
     }
 
@@ -51,7 +50,7 @@ impl WebSocketClient {
         };
         websocket.set_binary_type(BinaryType::Arraybuffer);
 
-        self.websocket = Some(Arc::new(RwLock::new(websocket)));
+        self.websocket = Some(Rc::new(websocket));
 
         self.init_onopen_callback();
         self.init_onclose_callback();
@@ -69,7 +68,7 @@ impl WebSocketClient {
         match &self.websocket {
             Some(websocket) => {
                 let onopen_callback = self.onopen_callback.as_ref().unchecked_ref();
-                websocket.read().unwrap().set_onopen(Some(onopen_callback));
+                websocket.set_onopen(Some(onopen_callback));
             }
             None => error_return!("Failed to initialize onopen callback (socket is not connected)"),
         }
@@ -85,7 +84,7 @@ impl WebSocketClient {
         match &self.websocket {
             Some(websocket) => {
                 let onclose_callback = self.onclose_callback.as_ref().unchecked_ref();
-                websocket.read().unwrap().set_onclose(Some(onclose_callback));
+                websocket.set_onclose(Some(onclose_callback));
             }
             None => error_return!("Failed to initialize onclose callback (socket is not connected)"),
         }
@@ -94,7 +93,7 @@ impl WebSocketClient {
     fn init_onmessage_callback(&mut self) {
         let ping = self.ping.clone();
         let websocket = self.websocket.clone();
-        let received_frames = self.received_frames.clone();
+        let received_packets = self.received_packets.clone();
 
         self.onmessage_callback = Closure::<dyn FnMut(_)>::new(move |event: MessageEvent| {
             if let Ok(buffer) = event.data().dyn_into::<js_sys::ArrayBuffer>() {
@@ -104,37 +103,36 @@ impl WebSocketClient {
                 let mut data = vec![0; length];
                 array.copy_to(&mut data);
 
-                let packet = Frame::Binary { data }.into();
-
+                let packet = data.into();
                 match packet {
                     Packet::Ping { timestamp } => match &websocket {
                         Some(websocket) => {
                             let packet = Packet::Pong { timestamp };
-                            let frame: Frame = packet.into();
+                            let data: Vec<u8> = packet.into();
 
-                            if let Frame::Binary { data } = frame {
-                                websocket.read().unwrap().send_with_u8_array(&data).unwrap();
-                            }
+                            websocket.send_with_u8_array(&data).unwrap();
                         }
-                        None => error_return!("Failed to send frame (socket is not connected)"),
+                        None => error_return!("Failed to send packet (socket is not connected)"),
                     },
                     Packet::Pong { timestamp } => {
-                        *ping.write().unwrap() = (SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis() - timestamp) as u32;
+                        let now = match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+                            Ok(now) => now.as_millis(),
+                            Err(_) => error_return!("Failed to obtain current time"),
+                        };
+
+                        *ping.write().unwrap() = (now - timestamp) as u32;
                     }
                     _ => {
-                        received_frames.write().unwrap().push_back(packet.into());
+                        received_packets.write().unwrap().push_back(packet);
                     }
                 }
-            } else if let Ok(text) = event.data().dyn_into::<JsString>() {
-                let packet = Frame::Text { text: text.into() };
-                received_frames.write().unwrap().push_back(packet.into())
             }
         });
 
         match &self.websocket {
             Some(websocket) => {
                 let onmessage_callback = self.onmessage_callback.as_ref().unchecked_ref();
-                websocket.read().unwrap().set_onmessage(Some(onmessage_callback));
+                websocket.set_onmessage(Some(onmessage_callback));
             }
             None => error_return!("Failed to initialize onmessage callback (socket is not connected)"),
         }
@@ -148,7 +146,7 @@ impl WebSocketClient {
         match &self.websocket {
             Some(websocket) => {
                 let onerror_callback = self.onerror_callback.as_ref().unchecked_ref();
-                websocket.read().unwrap().set_onerror(Some(onerror_callback));
+                websocket.set_onerror(Some(onerror_callback));
             }
             None => error_return!("Failed to initialize onerror callback (socket is not connected)"),
         }
@@ -157,33 +155,27 @@ impl WebSocketClient {
     pub fn disconnect(&self) {
         match &self.websocket {
             Some(websocket) => {
-                if websocket.read().unwrap().close().is_err() {
+                if websocket.close().is_err() {
                     error_return!("Failed to disconnect");
                 }
             }
-
             None => error_return!("Failed to disconnect (socket is not connected)"),
         }
     }
 
-    pub fn send_frame(&self, packet: Packet) {
+    pub fn send_packet(&self, packet: Packet) {
         if let Some(websocket) = &self.websocket {
-            let result = match packet.into() {
-                Frame::Text { text } => websocket.read().unwrap().send_with_str(&text),
-                Frame::Binary { data } => websocket.read().unwrap().send_with_u8_array(&data),
-                Frame::Unknown => error_return!("Failed to parse message"),
-            };
-
-            if result.is_err() {
-                error_return!("Failed to send frame");
+            let data: Vec<u8> = packet.into();
+            if websocket.send_with_u8_array(&data).is_err() {
+                error_return!("Failed to send packet");
             }
         } else {
-            error_return!("Failed to send frame (socket is not connected)");
+            error_return!("Failed to send packet (socket is not connected)");
         }
     }
 
-    pub fn poll_frame(&mut self) -> Option<Packet> {
-        self.received_frames.write().unwrap().pop_front()
+    pub fn poll_packet(&mut self) -> Option<Packet> {
+        self.received_packets.write().unwrap().pop_front()
     }
 }
 
@@ -196,10 +188,10 @@ impl Default for WebSocketClient {
 impl Drop for WebSocketClient {
     fn drop(&mut self) {
         if let Some(websocket) = &self.websocket {
-            websocket.read().unwrap().set_onopen(None);
-            websocket.read().unwrap().set_onclose(None);
-            websocket.read().unwrap().set_onmessage(None);
-            websocket.read().unwrap().set_onerror(None);
+            websocket.set_onopen(None);
+            websocket.set_onclose(None);
+            websocket.set_onmessage(None);
+            websocket.set_onerror(None);
         }
     }
 }

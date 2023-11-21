@@ -1,11 +1,10 @@
+use crate::error_continue;
 use crate::error_return;
-use crate::network::frame::Frame;
 use crate::network::packet::Packet;
 use futures_channel::mpsc;
 use futures_channel::mpsc::UnboundedSender;
 use futures_util::StreamExt;
 use instant::SystemTime;
-use log::error;
 use log::info;
 use std::collections::VecDeque;
 use std::sync::Arc;
@@ -20,8 +19,8 @@ pub struct WebSocketClient {
     pub connected: Arc<RwLock<bool>>,
     pub ping: Arc<RwLock<u32>>,
 
-    received_frames: Arc<RwLock<VecDeque<Packet>>>,
-    outgoing_frames_tx: Option<UnboundedSender<Packet>>,
+    received_packets: Arc<RwLock<VecDeque<Packet>>>,
+    outgoing_packets_tx: Option<UnboundedSender<Packet>>,
     disconnection_tx: Option<UnboundedSender<()>>,
 }
 
@@ -31,16 +30,16 @@ impl WebSocketClient {
 
         let url = url.to_string();
         let connected = self.connected.clone();
+        let ping = self.ping.clone();
 
-        let received_frames = self.received_frames.clone();
-        let (outgoing_frames_tx, outgoing_frames_rx) = mpsc::unbounded();
+        let received_packets = self.received_packets.clone();
+        let (outgoing_packets_tx, mut outgoing_packets_rx) = mpsc::unbounded();
         let (disconnection_tx, mut disconnection_rx) = mpsc::unbounded();
 
-        let ping = self.ping.clone();
-        let outgoing_frames_tx_clone = outgoing_frames_tx.clone();
-
-        self.outgoing_frames_tx = Some(outgoing_frames_tx);
+        self.outgoing_packets_tx = Some(outgoing_packets_tx);
         self.disconnection_tx = Some(disconnection_tx);
+
+        let outgoing_packets_tx = self.outgoing_packets_tx.clone().unwrap();
 
         thread::spawn(move || {
             info!("Creating network runtime");
@@ -64,60 +63,48 @@ impl WebSocketClient {
                 };
 
                 info!("Connection established");
-                *connected.write().unwrap() = true;
 
-                let (websocket_sink, websocket_stream) = websocket.split();
+                let (websocket_sink, mut websocket_stream) = websocket.split();
                 let (websocket_tx, websocket_rx) = mpsc::unbounded();
                 let websocket_rx_to_sink = websocket_rx.forward(websocket_sink);
 
-                let process_incoming_messages = websocket_stream.for_each(|message| async {
-                    match message {
-                        Ok(message) => {
-                            let frame = match message {
-                                Message::Text(text) => Some(Frame::new_text(text)),
-                                Message::Binary(data) => Some(Frame::new_binary(data)),
-                                _ => None,
-                            };
+                let process_incoming_messages = async {
+                    while let Some(message) = websocket_stream.next().await {
+                        if let Ok(Message::Binary(data)) = message {
+                            let packet = data.into();
 
-                            if let Some(frame) = frame {
-                                let packet = frame.into();
+                            match packet {
+                                Packet::Ping { timestamp } => {
+                                    if let Err(err) = outgoing_packets_tx.unbounded_send(Packet::Pong { timestamp }) {
+                                        error_continue!("Failed to send packet ({})", err)
+                                    }
+                                }
+                                Packet::Pong { timestamp } => {
+                                    let now = match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+                                        Ok(now) => now.as_millis(),
+                                        Err(err) => error_continue!("Failed to obtain current time ({})", err),
+                                    };
 
-                                match packet {
-                                    Packet::Ping { timestamp } => {
-                                        if let Err(err) = outgoing_frames_tx_clone.unbounded_send(Packet::Pong { timestamp }) {
-                                            error_return!("Failed to send frame ({})", err)
-                                        }
-                                    }
-                                    Packet::Pong { timestamp } => {
-                                        *ping.write().unwrap() =
-                                            (SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis() - timestamp) as u32;
-                                    }
-                                    _ => {
-                                        received_frames.write().unwrap().push_back(packet);
-                                    }
+                                    *ping.write().unwrap() = (now - timestamp) as u32;
+                                }
+                                _ => {
+                                    received_packets.write().unwrap().push_back(packet);
                                 }
                             }
                         }
-                        Err(err) => error!("Failed to process received message ({})", err),
-                    };
-                });
-                let process_outgoing_messages = outgoing_frames_rx.for_each(|frame| async {
-                    let message = match frame.into() {
-                        Frame::Text { text } => Some(Message::Text(text)),
-                        Frame::Binary { data } => Some(Message::Binary(data)),
-                        Frame::Unknown => None,
-                    };
-
-                    match message {
-                        Some(message) => {
-                            if let Err(err) = websocket_tx.unbounded_send(Ok(message)) {
-                                error!("Failed to send frame ({})", err);
-                            }
+                    }
+                };
+                let process_outgoing_messages = async {
+                    while let Some(packet) = outgoing_packets_rx.next().await {
+                        let message = Message::Binary(packet.into());
+                        if let Err(err) = websocket_tx.unbounded_send(Ok(message)) {
+                            error_continue!("Failed to send packet ({})", err);
                         }
-                        None => error!("Failed to parse message"),
-                    };
-                });
+                    }
+                };
                 let process_disconnection = disconnection_rx.next();
+
+                *connected.write().unwrap() = true;
 
                 tokio::select! {
                     _ = websocket_rx_to_sink => (),
@@ -126,7 +113,7 @@ impl WebSocketClient {
                     _ = process_disconnection => ()
                 };
 
-                *connected.write().unwrap() = true;
+                *connected.write().unwrap() = false;
             });
 
             info!("Connection closed, network runtime completed");
@@ -144,18 +131,18 @@ impl WebSocketClient {
         };
     }
 
-    pub fn send_frame(&self, packet: Packet) {
-        match &self.outgoing_frames_tx {
-            Some(queue_tx) => {
-                if let Err(err) = queue_tx.unbounded_send(packet) {
-                    error_return!("Failed to send frame ({})", err);
+    pub fn send_packet(&self, packet: Packet) {
+        match &self.outgoing_packets_tx {
+            Some(outgoing_packets_tx) => {
+                if let Err(err) = outgoing_packets_tx.unbounded_send(packet) {
+                    error_return!("Failed to send packet ({})", err);
                 }
             }
-            None => error_return!("Failed to send frame (socket is not connected)"),
+            None => error_return!("Failed to send packet (socket is not connected)"),
         };
     }
 
-    pub fn poll_frame(&mut self) -> Option<Packet> {
-        self.received_frames.write().unwrap().pop_front()
+    pub fn poll_packet(&mut self) -> Option<Packet> {
+        self.received_packets.write().unwrap().pop_front()
     }
 }

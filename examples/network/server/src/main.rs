@@ -1,4 +1,3 @@
-use capybara::network::frame::Frame;
 use capybara::network::packet::Packet;
 use capybara::network::server::client::WebSocketConnectedClient;
 use capybara::network::server::listener::WebSocketListener;
@@ -26,15 +25,9 @@ async fn main() {
         connected_clients.write().unwrap().last_mut().unwrap().run(client_tx.clone());
     });
 
-    //let read_frames = client_rx.for_each(|(id, frame)| async move {
-    //let message_queue_clone = message_queue_clone.clone();
-    //message_queue_clone.write().unwrap().push((id, frame));
-    //});
     let read_frames = async {
-        loop {
-            while let Some((id, frame)) = client_rx.next().await {
-                message_queue.write().unwrap().push((id, frame));
-            }
+        while let Some((id, frame)) = client_rx.next().await {
+            message_queue.write().unwrap().push((id, frame));
         }
     };
 

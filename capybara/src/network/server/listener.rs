@@ -17,7 +17,7 @@ impl WebSocketListener {
         Self { disconnection_tx: None }
     }
 
-    pub async fn listen(&mut self, address: &str, client_connected_tx: UnboundedSender<WebSocketConnectedClient>) {
+    pub async fn listen(&mut self, address: &str, client_event: UnboundedSender<WebSocketConnectedClient>) {
         let tcp_listener = match TcpListener::bind(&address).await {
             Ok(tcp_listener) => tcp_listener,
             Err(err) => error_return!("Failed to create TCP listener ({})", err),
@@ -32,8 +32,8 @@ impl WebSocketListener {
                     Err(err) => error_continue!("Failed to accept WebSocket connection ({})", err),
                 };
 
-                if let Err(err) = client_connected_tx.unbounded_send(WebSocketConnectedClient::new(websocket)) {
-                    error!("Failed to pass forward WebSocket connection ({})", err);
+                if let Err(err) = client_event.unbounded_send(WebSocketConnectedClient::new(websocket)) {
+                    error!("Failed to send client event ({})", err);
                 }
             }
         });

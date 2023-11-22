@@ -27,7 +27,7 @@ impl WebSocketConnectedClient {
         Self { id: fastrand::u64(..), ping: Default::default(), websocket: Some(websocket), outgoing_packets_tx: None, disconnection_tx: None }
     }
 
-    pub fn run(&mut self, incoming_packets_tx: UnboundedSender<(u64, Packet)>) {
+    pub fn run(&mut self, packet_event: UnboundedSender<(u64, Packet)>, disconnection_event: UnboundedSender<u64>) {
         let id = self.id;
         let websocket = self.websocket.take().unwrap();
 
@@ -46,29 +46,35 @@ impl WebSocketConnectedClient {
         tokio::spawn(async move {
             let process_incoming_messages = async {
                 while let Some(message) = websocket_stream.next().await {
-                    if let Ok(Message::Binary(data)) = message {
-                        let packet = data.into();
+                    match message {
+                        Ok(Message::Binary(data)) => {
+                            let packet = data.into();
 
-                        match packet {
-                            Packet::Ping { timestamp } => {
-                                if let Err(err) = outgoing_packets_tx_clone.unbounded_send(Packet::Pong { timestamp }) {
-                                    error_return!("Failed to send packet ({})", err)
+                            match packet {
+                                Packet::Ping { timestamp } => {
+                                    if let Err(err) = outgoing_packets_tx_clone.unbounded_send(Packet::Pong { timestamp }) {
+                                        error_return!("Failed to send packet ({})", err)
+                                    }
                                 }
-                            }
-                            Packet::Pong { timestamp } => {
-                                let now = match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
-                                    Ok(now) => now.as_millis(),
-                                    Err(err) => error_continue!("Failed to obtain current time ({})", err),
-                                };
+                                Packet::Pong { timestamp } => {
+                                    let now = match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+                                        Ok(now) => now.as_millis(),
+                                        Err(err) => error_continue!("Failed to obtain current time ({})", err),
+                                    };
 
-                                *ping.write().unwrap() = (now - timestamp) as u32;
-                            }
-                            _ => {
-                                if let Err(err) = incoming_packets_tx.unbounded_send((id, packet)) {
-                                    error!("Failed to process packet ({})", err);
+                                    *ping.write().unwrap() = (now - timestamp) as u32;
+                                }
+                                _ => {
+                                    if let Err(err) = packet_event.unbounded_send((id, packet)) {
+                                        error!("Failed to send packet event ({})", err);
+                                    }
                                 }
                             }
                         }
+                        Ok(Message::Close(_)) | Err(_) => {
+                            break;
+                        }
+                        _ => {}
                     }
                 }
             };
@@ -87,6 +93,10 @@ impl WebSocketConnectedClient {
                 _ = process_outgoing_messages => {}
                 _ = websocket_rx_to_sink => {}
                 _ = process_disconnection => {}
+            }
+
+            if let Err(err) = disconnection_event.unbounded_send(id) {
+                error_return!("Failed to send disconnection event ({})", err)
             }
         });
     }

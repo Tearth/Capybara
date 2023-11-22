@@ -6,28 +6,37 @@ use futures_util::StreamExt;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::time::Duration;
+use tokio::select;
 use tokio::time;
 
-pub mod terminal;
+pub mod core;
 
 #[tokio::main]
 async fn main() {
     let mut listener = WebSocketListener::new();
     let connected_clients = Arc::<RwLock<Vec<WebSocketConnectedClient>>>::new(Default::default());
     let (listener_tx, listener_rx) = mpsc::unbounded::<WebSocketConnectedClient>();
-    let (client_tx, mut client_rx) = mpsc::unbounded::<(u64, Packet)>();
+    let (packet_event_tx, mut packet_event_rx) = mpsc::unbounded::<(u64, Packet)>();
+    let (disconnection_event_tx, mut disconnection_event_rx) = mpsc::unbounded::<u64>();
 
     let message_queue = Arc::new(RwLock::new(Vec::<(u64, Packet)>::new()));
 
     let connected_clients = connected_clients.clone();
     let initialize_new_clients = listener_rx.for_each(|client| async {
         connected_clients.write().unwrap().push(client);
-        connected_clients.write().unwrap().last_mut().unwrap().run(client_tx.clone());
+        connected_clients.write().unwrap().last_mut().unwrap().run(packet_event_tx.clone(), disconnection_event_tx.clone());
     });
 
     let read_frames = async {
-        while let Some((id, frame)) = client_rx.next().await {
+        while let Some((id, frame)) = packet_event_rx.next().await {
             message_queue.write().unwrap().push((id, frame));
+        }
+    };
+
+    let process_disconnection = async {
+        while let Some(id) = disconnection_event_rx.next().await {
+            let index = connected_clients.write().unwrap().iter().position(|p| p.id == id).unwrap();
+            connected_clients.write().unwrap().remove(index);
         }
     };
 
@@ -54,10 +63,11 @@ async fn main() {
         }
     };
 
-    tokio::select! {
+    select! {
         _ = listener.listen("localhost:9999", listener_tx) => {}
         _ = initialize_new_clients => {}
         _ = read_frames => {}
+        _ = process_disconnection => {}
         _ = process_message_queue => {}
         _ = send_pings => {}
     }

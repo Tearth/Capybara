@@ -22,6 +22,11 @@ pub struct WebSocketConnectedClient {
     disconnection_tx: Option<UnboundedSender<()>>,
 }
 
+pub struct WebSocketConnectedClientSlim {
+    outgoing_packets_tx: Option<UnboundedSender<Packet>>,
+    disconnection_tx: Option<UnboundedSender<()>>,
+}
+
 impl WebSocketConnectedClient {
     pub fn new(websocket: WebSocketStream<TcpStream>) -> Self {
         Self { id: fastrand::u64(..), ping: Default::default(), websocket: Some(websocket), outgoing_packets_tx: None, disconnection_tx: None }
@@ -101,17 +106,6 @@ impl WebSocketConnectedClient {
         });
     }
 
-    pub fn disconnect(&self) {
-        match &self.disconnection_tx {
-            Some(disconnection_tx) => {
-                if let Err(err) = disconnection_tx.unbounded_send(()) {
-                    error_return!("Failed to disconnect ({})", err);
-                }
-            }
-            None => error_return!("Failed to disconnect (socket is not connected)"),
-        };
-    }
-
     pub fn send_packet(&self, packet: Packet) {
         match &self.outgoing_packets_tx {
             Some(outgoing_packets_tx) => {
@@ -130,5 +124,44 @@ impl WebSocketConnectedClient {
         };
 
         self.send_packet(Packet::Ping { timestamp: now });
+    }
+
+    pub fn disconnect(&self) {
+        match &self.disconnection_tx {
+            Some(disconnection_tx) => {
+                if let Err(err) = disconnection_tx.unbounded_send(()) {
+                    error_return!("Failed to disconnect ({})", err);
+                }
+            }
+            None => error_return!("Failed to disconnect (socket is not connected)"),
+        };
+    }
+
+    pub fn to_slim(&self) -> WebSocketConnectedClientSlim {
+        WebSocketConnectedClientSlim { outgoing_packets_tx: self.outgoing_packets_tx.clone(), disconnection_tx: self.disconnection_tx.clone() }
+    }
+}
+
+impl WebSocketConnectedClientSlim {
+    pub fn send_packet(&self, packet: Packet) {
+        match &self.outgoing_packets_tx {
+            Some(outgoing_packets_tx) => {
+                if let Err(err) = outgoing_packets_tx.unbounded_send(packet) {
+                    error_return!("Failed to send packet ({})", err);
+                }
+            }
+            None => error_return!("Failed to send packet (socket is not connected)"),
+        };
+    }
+
+    pub fn disconnect(&self) {
+        match &self.disconnection_tx {
+            Some(disconnection_tx) => {
+                if let Err(err) = disconnection_tx.unbounded_send(()) {
+                    error_return!("Failed to disconnect ({})", err);
+                }
+            }
+            None => error_return!("Failed to disconnect (socket is not connected)"),
+        };
     }
 }

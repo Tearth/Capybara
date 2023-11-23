@@ -11,3 +11,6 @@ tokio-tungstenite = { version = "0.20.1", features = [ "native-tls" ] }
 url = { version = "2.4.1" }
 futures-util = { version = "0.3" }
 futures-channel = { version = "0.3" }
+
+[build-dependencies]
+cfg_aliases = { version = "0.1.1" }

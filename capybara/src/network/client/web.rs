@@ -116,7 +116,7 @@ impl WebSocketClient {
                     },
                     Packet::Pong { timestamp } => {
                         let now = match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
-                            Ok(now) => now.as_millis(),
+                            Ok(now) => now.as_millis() as u64,
                             Err(_) => error_return!("Failed to obtain current time"),
                         };
 

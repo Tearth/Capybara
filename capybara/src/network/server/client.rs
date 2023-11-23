@@ -63,7 +63,7 @@ impl WebSocketConnectedClient {
                                 }
                                 Packet::Pong { timestamp } => {
                                     let now = match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
-                                        Ok(now) => now.as_millis(),
+                                        Ok(now) => now.as_millis() as u64,
                                         Err(err) => error_continue!("Failed to obtain current time ({})", err),
                                     };
 
@@ -119,7 +119,7 @@ impl WebSocketConnectedClient {
 
     pub fn send_ping(&self) {
         let now = match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
-            Ok(now) => now.as_millis(),
+            Ok(now) => now.as_millis() as u64,
             Err(err) => error_return!("Failed to obtain current time ({})", err),
         };
 

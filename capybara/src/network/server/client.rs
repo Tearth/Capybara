@@ -23,6 +23,7 @@ pub struct WebSocketConnectedClient {
 }
 
 pub struct WebSocketConnectedClientSlim {
+    pub id: u64,
     outgoing_packets_tx: Option<UnboundedSender<Packet>>,
     disconnection_tx: Option<UnboundedSender<()>>,
 }
@@ -138,7 +139,11 @@ impl WebSocketConnectedClient {
     }
 
     pub fn to_slim(&self) -> WebSocketConnectedClientSlim {
-        WebSocketConnectedClientSlim { outgoing_packets_tx: self.outgoing_packets_tx.clone(), disconnection_tx: self.disconnection_tx.clone() }
+        WebSocketConnectedClientSlim {
+            id: self.id,
+            outgoing_packets_tx: self.outgoing_packets_tx.clone(),
+            disconnection_tx: self.disconnection_tx.clone(),
+        }
     }
 }
 

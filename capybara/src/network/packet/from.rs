@@ -5,8 +5,8 @@ impl From<Packet> for Vec<u8> {
         match packet {
             Packet::Ping { timestamp } => ping(timestamp),
             Packet::Pong { timestamp } => pong(timestamp),
-            Packet::Object { oid, data } => object(oid, data),
-            Packet::Array { aid, length, data } => array(aid, length, data),
+            Packet::Object { id, data } => object(id, data),
+            Packet::Array { id, length, data } => array(id, length, data),
             Packet::Unknown => Vec::new(),
         }
     }
@@ -28,17 +28,17 @@ fn pong(timestamp: u64) -> Vec<u8> {
     output
 }
 
-fn object(oid: u16, data: Vec<u8>) -> Vec<u8> {
+fn object(id: u16, data: Vec<u8>) -> Vec<u8> {
     let mut output = vec![OBJECT_CID];
-    output.extend_from_slice(&oid.to_le_bytes());
+    output.extend_from_slice(&id.to_le_bytes());
     output.extend_from_slice(&data);
 
     output
 }
 
-fn array(aid: u16, length: u32, data: Vec<u8>) -> Vec<u8> {
+fn array(id: u16, length: u32, data: Vec<u8>) -> Vec<u8> {
     let mut output = vec![ARRAY_CID];
-    output.extend_from_slice(&aid.to_le_bytes());
+    output.extend_from_slice(&id.to_le_bytes());
     output.extend_from_slice(&length.to_le_bytes());
     output.extend_from_slice(&data);
 

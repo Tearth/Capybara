@@ -40,28 +40,28 @@ fn pong(data: &[u8]) -> Packet {
 }
 
 fn object(data: &[u8]) -> Packet {
-    // 1b CID + 2b OID
+    // 1b CID + 2b ID
     if data.len() < 3 {
         return Packet::Unknown;
     }
 
-    let mut oid_bytes = [0; 2];
-    oid_bytes.copy_from_slice(&data[1..=2]);
+    let mut id_bytes = [0; 2];
+    id_bytes.copy_from_slice(&data[1..=2]);
 
-    Packet::Object { oid: u16::from_le_bytes(oid_bytes), data: data[3..].to_vec() }
+    Packet::Object { id: u16::from_le_bytes(id_bytes), data: data[3..].to_vec() }
 }
 
 fn array(data: &[u8]) -> Packet {
-    // 1b CID + 2b AID + 4b size
+    // 1b CID + 2b ID + 4b size
     if data.len() < 7 {
         return Packet::Unknown;
     }
 
-    let mut aid_bytes = [0; 2];
-    aid_bytes.copy_from_slice(&data[1..=2]);
+    let mut id_bytes = [0; 2];
+    id_bytes.copy_from_slice(&data[1..=2]);
 
     let mut length_bytes = [0; 4];
     length_bytes.copy_from_slice(&data[3..=6]);
 
-    Packet::Array { aid: u16::from_le_bytes(aid_bytes), length: u32::from_le_bytes(length_bytes), data: data[7..].to_vec() }
+    Packet::Array { id: u16::from_le_bytes(id_bytes), length: u32::from_le_bytes(length_bytes), data: data[7..].to_vec() }
 }

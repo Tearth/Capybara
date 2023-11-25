@@ -231,7 +231,7 @@ impl UiContext {
             };
         }
 
-        for mesh in self.inner.read().unwrap().tessellate(output.shapes) {
+        for mesh in self.inner.read().unwrap().tessellate(output.shapes, 1.0) {
             if let Primitive::Mesh(data) = mesh.primitive {
                 let mut vertices = Vec::new();
                 for vertex in data.vertices {

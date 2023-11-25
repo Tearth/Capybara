@@ -7,10 +7,8 @@ edition = "2021"
 network-base = { path = "../base" }
 capybara = { path = "../../../capybara", features = [ "network" ] }
 log = { version = "0.4.20" }
-simple_logger = { version = "4.2.0", default-features = false, features = [ "timestamps" ]}
-tokio = { version = "1.34.0", features = ["io-std", "io-util", "rt", "rt-multi-thread", "sync", "macros", "time" ] }
-tokio-tungstenite = { version = "0.20.1", features = [ "native-tls" ] }
-url = { version = "2.4.1" }
+simple_logger = { version = "4.3.0", default-features = false, features = [ "timestamps" ]}
+tokio = { version = "1.34.0", features = [ "time" ] }
 futures-util = { version = "0.3" }
 futures-channel = { version = "0.3" }
 

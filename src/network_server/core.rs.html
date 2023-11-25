@@ -94,22 +94,16 @@
 <a href="#94" id="94">94</a>
 <a href="#95" id="95">95</a>
 <a href="#96" id="96">96</a>
-<a href="#97" id="97">97</a>
-<a href="#98" id="98">98</a>
-<a href="#99" id="99">99</a>
-<a href="#100" id="100">100</a>
-<a href="#101" id="101">101</a>
-<a href="#102" id="102">102</a>
-<a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::room::Room;
 <span class="kw">use </span>capybara::egui::ahash::HashMap;
+<span class="kw">use </span>capybara::log::Level;
 <span class="kw">use </span>capybara::network::packet::Packet;
 <span class="kw">use </span>capybara::network::server::client::WebSocketConnectedClient;
 <span class="kw">use </span>capybara::network::server::client::WebSocketConnectedClientSlim;
 <span class="kw">use </span>capybara::network::server::listener::WebSocketListener;
 <span class="kw">use </span>futures_channel::mpsc;
 <span class="kw">use </span>futures_util::StreamExt;
+<span class="kw">use </span>network_base::<span class="kw-2">*</span>;
 <span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>std::sync::RwLock;
 <span class="kw">use </span>std::time::Duration;
@@ -124,8 +118,8 @@
 
 <span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>QueuePacket {
-    <span class="kw">pub </span>id: u64,
-    <span class="kw">pub </span>packet: Packet,
+    <span class="kw">pub </span>client_id: u64,
+    <span class="kw">pub </span>inner: Packet,
 }
 
 <span class="kw">impl </span>Core {
@@ -134,6 +128,8 @@
     }
 
     <span class="kw">pub async fn </span>run(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        simple_logger::init_with_level(Level::Info).unwrap();
+
         <span class="kw">let </span><span class="kw-2">mut </span>listener = WebSocketListener::new();
         <span class="kw">let </span>(listener_tx, <span class="kw-2">mut </span>listener_rx) = mpsc::unbounded::&lt;WebSocketConnectedClient&gt;();
         <span class="kw">let </span>(packet_event_tx, <span class="kw-2">mut </span>packet_event_rx) = mpsc::unbounded::&lt;(u64, Packet)&gt;();
@@ -145,10 +141,9 @@
 
         <span class="kw">let </span>listen = listener.listen(<span class="string">&quot;localhost:9999&quot;</span>, listener_tx);
         <span class="kw">let </span>initialize_new_clients = <span class="kw">async </span>{
-            <span class="kw">while let </span><span class="prelude-val">Some</span>(client) = listener_rx.next().<span class="kw">await </span>{
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>client) = clients.write().unwrap().insert(client.id, client) {
-                    client.run(packet_event_tx.clone(), disconnection_event_tx.clone());
-                }
+            <span class="kw">while let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>client) = listener_rx.next().<span class="kw">await </span>{
+                client.run(packet_event_tx.clone(), disconnection_event_tx.clone());
+                clients.write().unwrap().insert(client.id, client);
             }
         };
         <span class="kw">let </span>read_frames = <span class="kw">async </span>{
@@ -161,18 +156,8 @@
                 clients.write().unwrap().remove(<span class="kw-2">&amp;</span>id);
             }
         };
-        <span class="kw">let </span>send_pings = <span class="kw">async </span>{
-            <span class="kw">let </span><span class="kw-2">mut </span>interval = time::interval(Duration::from_millis(<span class="number">1000</span>));
-            <span class="kw">loop </span>{
-                <span class="kw">for </span>client <span class="kw">in </span>clients.read().unwrap().values() {
-                    client.send_ping();
-                }
-
-                interval.tick().<span class="kw">await</span>;
-            }
-        };
         <span class="kw">let </span>tick = <span class="kw">async </span>{
-            <span class="kw">let </span><span class="kw-2">mut </span>interval = time::interval(Duration::from_millis(<span class="number">20</span>));
+            <span class="kw">let </span><span class="kw-2">mut </span>interval = time::interval(Duration::from_millis(TICK));
             <span class="kw">loop </span>{
                 <span class="kw">let </span>clients = clients.read().unwrap().iter().map(|p| (p.<span class="number">1</span>.to_slim())).collect::&lt;Vec&lt;WebSocketConnectedClientSlim&gt;&gt;();
                 <span class="kw">let </span>packets = queue.write().unwrap().clone();
@@ -189,7 +174,6 @@
             <span class="kw">_ </span>= initialize_new_clients =&gt; {}
             <span class="kw">_ </span>= read_frames =&gt; {}
             <span class="kw">_ </span>= process_disconnection =&gt; {}
-            <span class="kw">_ </span>= send_pings =&gt; {}
             <span class="kw">_ </span>= tick =&gt; {}
         }
     }
@@ -203,7 +187,7 @@
 
 <span class="kw">impl </span>QueuePacket {
     <span class="kw">pub fn </span>new(id: u64, packet: Packet) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ id, packet }
+        <span class="self">Self </span>{ client_id: id, inner: packet }
     }
 }
 </code></pre></div></section></main></body></html>

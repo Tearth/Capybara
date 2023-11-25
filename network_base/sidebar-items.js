@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {};
+window.SIDEBAR_ITEMS = {"constant":["PACKET_OBJECTS_ARRAY","PACKET_SET_COUNT","PACKET_SET_VIEWPORT","TICK"],"struct":["PacketSetCount","PacketSetViewport"]};

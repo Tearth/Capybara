@@ -107,29 +107,29 @@
 }
 
 <span class="kw">fn </span>object(data: <span class="kw-2">&amp;</span>[u8]) -&gt; Packet {
-    <span class="comment">// 1b CID + 2b OID
+    <span class="comment">// 1b CID + 2b ID
     </span><span class="kw">if </span>data.len() &lt; <span class="number">3 </span>{
         <span class="kw">return </span>Packet::Unknown;
     }
 
-    <span class="kw">let </span><span class="kw-2">mut </span>oid_bytes = [<span class="number">0</span>; <span class="number">2</span>];
-    oid_bytes.copy_from_slice(<span class="kw-2">&amp;</span>data[<span class="number">1</span>..=<span class="number">2</span>]);
+    <span class="kw">let </span><span class="kw-2">mut </span>id_bytes = [<span class="number">0</span>; <span class="number">2</span>];
+    id_bytes.copy_from_slice(<span class="kw-2">&amp;</span>data[<span class="number">1</span>..=<span class="number">2</span>]);
 
-    Packet::Object { oid: u16::from_le_bytes(oid_bytes), data: data[<span class="number">3</span>..].to_vec() }
+    Packet::Object { id: u16::from_le_bytes(id_bytes), data: data[<span class="number">3</span>..].to_vec() }
 }
 
 <span class="kw">fn </span>array(data: <span class="kw-2">&amp;</span>[u8]) -&gt; Packet {
-    <span class="comment">// 1b CID + 2b AID + 4b size
+    <span class="comment">// 1b CID + 2b ID + 4b size
     </span><span class="kw">if </span>data.len() &lt; <span class="number">7 </span>{
         <span class="kw">return </span>Packet::Unknown;
     }
 
-    <span class="kw">let </span><span class="kw-2">mut </span>aid_bytes = [<span class="number">0</span>; <span class="number">2</span>];
-    aid_bytes.copy_from_slice(<span class="kw-2">&amp;</span>data[<span class="number">1</span>..=<span class="number">2</span>]);
+    <span class="kw">let </span><span class="kw-2">mut </span>id_bytes = [<span class="number">0</span>; <span class="number">2</span>];
+    id_bytes.copy_from_slice(<span class="kw-2">&amp;</span>data[<span class="number">1</span>..=<span class="number">2</span>]);
 
     <span class="kw">let </span><span class="kw-2">mut </span>length_bytes = [<span class="number">0</span>; <span class="number">4</span>];
     length_bytes.copy_from_slice(<span class="kw-2">&amp;</span>data[<span class="number">3</span>..=<span class="number">6</span>]);
 
-    Packet::Array { aid: u16::from_le_bytes(aid_bytes), length: u32::from_le_bytes(length_bytes), data: data[<span class="number">7</span>..].to_vec() }
+    Packet::Array { id: u16::from_le_bytes(id_bytes), length: u32::from_le_bytes(length_bytes), data: data[<span class="number">7</span>..].to_vec() }
 }
 </code></pre></div></section></main></body></html>

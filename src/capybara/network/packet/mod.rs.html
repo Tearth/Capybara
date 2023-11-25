@@ -89,6 +89,12 @@
 <a href="#89" id="89">89</a>
 <a href="#90" id="90">90</a>
 <a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::{bail, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>std::{
     mem::{<span class="self">self</span>, MaybeUninit},
@@ -107,31 +113,37 @@
 </span><span class="kw">pub enum </span>Packet {
     Ping { timestamp: u64 },
     Pong { timestamp: u64 },
-    Object { oid: u16, data: Vec&lt;u8&gt; },
-    Array { aid: u16, length: u32, data: Vec&lt;u8&gt; },
+    Object { id: u16, data: Vec&lt;u8&gt; },
+    Array { id: u16, length: u32, data: Vec&lt;u8&gt; },
     Unknown,
 }
 
 <span class="kw">impl </span>Packet {
-    <span class="kw">pub fn </span>from_object&lt;T&gt;(oid: u16, object: <span class="kw-2">&amp;</span>T) -&gt; <span class="self">Self
+    <span class="kw">pub fn </span>get_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u16&gt; {
+        <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self </span>{
+            Packet::Object { id, data: <span class="kw">_ </span>} =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">*</span>id),
+            Packet::Array { id, length: <span class="kw">_</span>, data: <span class="kw">_ </span>} =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">*</span>id),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+        }
+    }
+
+    <span class="kw">pub fn </span>from_object&lt;T&gt;(id: u16, object: <span class="kw-2">&amp;</span>T) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>T: Clone,
     {
         <span class="kw">unsafe </span>{
-            <span class="kw">let </span>size = mem::size_of::&lt;T&gt;();
-            <span class="kw">let </span>data = slice::from_raw_parts((object <span class="kw">as </span><span class="kw-2">*const </span>T) <span class="kw">as </span><span class="kw-2">*const </span>u8, size);
-
-            Packet::Object { oid, data: data.to_vec() }
+            <span class="kw">let </span>data = slice::from_raw_parts((object <span class="kw">as </span><span class="kw-2">*const </span>T) <span class="kw">as </span><span class="kw-2">*const </span>u8, mem::size_of::&lt;T&gt;());
+            Packet::Object { id, data: data.to_vec() }
         }
     }
 
-    <span class="kw">pub fn </span>from_array&lt;T&gt;(aid: u16, array: <span class="kw-2">&amp;</span>[T]) -&gt; <span class="self">Self
+    <span class="kw">pub fn </span>from_array&lt;T&gt;(id: u16, array: <span class="kw-2">&amp;</span>[T]) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>T: Clone,
     {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>data = slice::from_raw_parts(array.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>u8, mem::size_of_val(array));
-            Packet::Array { aid, length: array.len() <span class="kw">as </span>u32, data: data.to_vec() }
+            Packet::Array { id, length: array.len() <span class="kw">as </span>u32, data: data.to_vec() }
         }
     }
 
@@ -141,7 +153,7 @@
     {
         <span class="kw">unsafe </span>{
             <span class="kw">match </span><span class="self">self </span>{
-                Packet::Object { oid: <span class="kw">_</span>, data } =&gt; {
+                Packet::Object { id: <span class="kw">_</span>, data } =&gt; {
                     <span class="kw">let </span>size = mem::size_of::&lt;T&gt;();
                     <span class="kw">if </span>size != data.len() {
                         <span class="macro">bail!</span>(<span class="string">&quot;Size of object is incorrect&quot;</span>);
@@ -164,7 +176,7 @@
     {
         <span class="kw">unsafe </span>{
             <span class="kw">match </span><span class="self">self </span>{
-                Packet::Array { aid: <span class="kw">_</span>, length, data } =&gt; {
+                Packet::Array { id: <span class="kw">_</span>, length, data } =&gt; {
                     <span class="kw">let </span>size = mem::size_of::&lt;T&gt;();
                     <span class="kw">let </span>length = <span class="kw-2">*</span>length <span class="kw">as </span>usize;
 

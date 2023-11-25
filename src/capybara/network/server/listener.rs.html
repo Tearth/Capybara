@@ -62,6 +62,13 @@
 <a href="#62" id="62">62</a>
 <a href="#63" id="63">63</a>
 <a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::client::WebSocketConnectedClient;
 <span class="kw">use </span><span class="kw">crate</span>::error_continue;
 <span class="kw">use </span><span class="kw">crate</span>::error_return;
@@ -69,6 +76,7 @@
 <span class="kw">use </span>futures_channel::mpsc::UnboundedSender;
 <span class="kw">use </span>futures_util::StreamExt;
 <span class="kw">use </span>log::error;
+<span class="kw">use </span>log::info;
 <span class="kw">use </span>tokio::net::TcpListener;
 <span class="kw">use </span>tokio::select;
 
@@ -82,19 +90,25 @@
     }
 
     <span class="kw">pub async fn </span>listen(<span class="kw-2">&amp;mut </span><span class="self">self</span>, address: <span class="kw-2">&amp;</span>str, client_event: UnboundedSender&lt;WebSocketConnectedClient&gt;) {
+        <span class="macro">info!</span>(<span class="string">&quot;Creating a TCP listener on {}&quot;</span>, address);
         <span class="kw">let </span>tcp_listener = <span class="kw">match </span>TcpListener::bind(<span class="kw-2">&amp;</span>address).<span class="kw">await </span>{
             <span class="prelude-val">Ok</span>(tcp_listener) =&gt; tcp_listener,
             <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_return!</span>(<span class="string">&quot;Failed to create TCP listener ({})&quot;</span>, err),
         };
+        <span class="macro">info!</span>(<span class="string">&quot;Listener established&quot;</span>);
+
         <span class="kw">let </span>(disconnection_tx, <span class="kw-2">mut </span>disconnection_rx) = mpsc::unbounded();
         <span class="self">self</span>.disconnection_tx = <span class="prelude-val">Some</span>(disconnection_tx);
 
         <span class="kw">let </span>listen = tokio::spawn(<span class="kw">async move </span>{
-            <span class="kw">while let </span><span class="prelude-val">Ok</span>((stream, <span class="kw">_</span>)) = tcp_listener.accept().<span class="kw">await </span>{
+            <span class="kw">while let </span><span class="prelude-val">Ok</span>((stream, addr)) = tcp_listener.accept().<span class="kw">await </span>{
+                <span class="macro">info!</span>(<span class="string">&quot;New TCP connection with address {}, proceeding WebSocket handshake&quot;</span>, addr);
+
                 <span class="kw">let </span>websocket = <span class="kw">match </span>tokio_tungstenite::accept_async(stream).<span class="kw">await </span>{
                     <span class="prelude-val">Ok</span>(websocket) =&gt; websocket,
                     <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to accept WebSocket connection ({})&quot;</span>, err),
                 };
+                <span class="macro">info!</span>(<span class="string">&quot;WebSocket connection established&quot;</span>);
 
                 <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = client_event.unbounded_send(WebSocketConnectedClient::new(websocket)) {
                     <span class="macro">error!</span>(<span class="string">&quot;Failed to send client event ({})&quot;</span>, err);

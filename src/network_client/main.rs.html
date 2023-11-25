@@ -185,7 +185,36 @@
 <a href="#185" id="185">185</a>
 <a href="#186" id="186">186</a>
 <a href="#187" id="187">187</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>capybara::anyhow::Result;
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+</pre></div><pre class="rust"><code><span class="attr">#![allow(clippy::needless_range_loop)]
+#![allow(clippy::collapsible_if)]
+
+</span><span class="kw">use </span>capybara::anyhow::Result;
 <span class="kw">use </span>capybara::app::ApplicationContext;
 <span class="kw">use </span>capybara::app::ApplicationState;
 <span class="kw">use </span>capybara::assets::loader::AssetsLoader;
@@ -202,9 +231,10 @@
 <span class="kw">use </span>capybara::egui::Slider;
 <span class="kw">use </span>capybara::egui::TextStyle;
 <span class="kw">use </span>capybara::fast_gpu;
-<span class="kw">use </span>capybara::fastrand;
 <span class="kw">use </span>capybara::glam::Vec2;
+<span class="kw">use </span>capybara::instant::Instant;
 <span class="kw">use </span>capybara::network::client::WebSocketClient;
+<span class="kw">use </span>capybara::network::packet::Packet;
 <span class="kw">use </span>capybara::renderer::sprite::Sprite;
 <span class="kw">use </span>capybara::renderer::sprite::TextureId;
 <span class="kw">use </span>capybara::scene::FrameCommand;
@@ -213,6 +243,8 @@
 <span class="kw">use </span>capybara::window::InputEvent;
 <span class="kw">use </span>capybara::window::Key;
 <span class="kw">use </span>capybara::window::WindowStyle;
+<span class="kw">use </span>network_base::PacketSetViewport;
+<span class="kw">use </span>network_base::<span class="kw-2">*</span>;
 <span class="kw">use </span>std::collections::VecDeque;
 
 <span class="macro">fast_gpu!</span>();
@@ -226,15 +258,18 @@
 </span><span class="kw">struct </span>MainScene {
     objects: Vec&lt;Object&gt;,
     objects_count: u32,
-    initialized: bool,
+    objects_last_update: <span class="prelude-ty">Option</span>&lt;Instant&gt;,
+    ping_last_update: <span class="prelude-ty">Option</span>&lt;Instant&gt;,
     delta_history: VecDeque&lt;f32&gt;,
+    tick_history: VecDeque&lt;f32&gt;,
+    initialized: bool,
 
     client: WebSocketClient,
 }
 
 <span class="kw">struct </span>Object {
-    sprite: Sprite,
-    direction: Vec2,
+    previous_position: Vec2,
+    current_position: Vec2,
 }
 
 <span class="kw">impl </span>Scene&lt;GlobalData&gt; <span class="kw">for </span>MainScene {
@@ -246,11 +281,13 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>input(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>state: ApplicationState&lt;GlobalData&gt;, event: InputEvent) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">if let </span>InputEvent::KeyPress { key: Key::Escape, repeat: <span class="kw">_</span>, modifiers: <span class="kw">_ </span>} = event {
+    <span class="kw">fn </span>input(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;, event: InputEvent) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">if let </span>InputEvent::WindowSizeChange { size } = event {
+            <span class="kw">if </span><span class="kw-2">*</span><span class="self">self</span>.client.connected.read().unwrap() {
+                <span class="self">self</span>.client.send_packet(Packet::from_object(PACKET_SET_VIEWPORT, <span class="kw-2">&amp;</span>PacketSetViewport { size: size.into() }));
+            }
+        } <span class="kw">else if let </span>InputEvent::KeyPress { key: Key::Escape, repeat: <span class="kw">_</span>, modifiers: <span class="kw">_ </span>} = event {
             state.window.close();
-        } <span class="kw">else if let </span>InputEvent::WindowSizeChange { size } = event {
-            <span class="self">self</span>.update_shaders_resolution(<span class="kw-2">&amp;mut </span>state, size)<span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -272,24 +309,66 @@
             state.ui.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>);
             state.window.set_swap_interval(<span class="number">0</span>);
 
-            <span class="self">self</span>.regenerate_objects(<span class="kw-2">&amp;</span>state, <span class="number">100000</span>)<span class="question-mark">?</span>;
+            <span class="comment">//self.client.connect(&quot;wss://d8fd-195-136-14-43.ngrok-free.app&quot;);
+            </span><span class="self">self</span>.client.connect(<span class="string">&quot;ws://localhost:9999&quot;</span>);
             <span class="self">self</span>.initialized = <span class="bool-val">true</span>;
         }
 
-        <span class="kw">for </span>object <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.objects {
-            object.sprite.position += object.direction * <span class="number">100.0 </span>* delta;
+        <span class="kw">let </span>now = Instant::now();
 
-            <span class="kw">if </span>object.sprite.position.x &lt; <span class="number">0.0 </span>{
-                object.direction = Vec2::new(object.direction.x.abs(), object.direction.y);
-            } <span class="kw">else if </span>object.sprite.position.x &gt; state.renderer.viewport_size.x {
-                object.direction = Vec2::new(-object.direction.x.abs(), object.direction.y);
-            } <span class="kw">else if </span>object.sprite.position.y &lt; <span class="number">0.0 </span>{
-                object.direction = Vec2::new(object.direction.x, object.direction.y.abs());
-            } <span class="kw">else if </span>object.sprite.position.y &gt; state.renderer.viewport_size.y {
-                object.direction = Vec2::new(object.direction.x, -object.direction.y.abs());
+        <span class="kw">if </span><span class="kw-2">*</span><span class="self">self</span>.client.connected.read().unwrap() {
+            <span class="kw">while let </span><span class="prelude-val">Some</span>(packet) = <span class="self">self</span>.client.poll_packet() {
+                <span class="kw">match </span>packet.get_id() {
+                    <span class="prelude-val">Some</span>(PACKET_OBJECTS_ARRAY) =&gt; {
+                        <span class="kw">let </span>positions = packet.to_array::&lt;Vec2&gt;().unwrap();
+
+                        <span class="comment">// Same size, so we can properly update current and previous positions
+                        </span><span class="kw">if </span>positions.len() == <span class="self">self</span>.objects.len() {
+                            <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="self">self</span>.objects.len() {
+                                <span class="self">self</span>.objects[i].previous_position = <span class="self">self</span>.objects[i].current_position;
+                                <span class="self">self</span>.objects[i].current_position = positions[i];
+                            }
+                        <span class="comment">// Different size, reset all objects
+                        </span>} <span class="kw">else </span>{
+                            <span class="self">self</span>.objects = positions.iter().map(|p| Object { previous_position: <span class="kw-2">*</span>p, current_position: <span class="kw-2">*</span>p }).collect();
+                        }
+
+                        <span class="self">self</span>.tick_history.push_back((now - <span class="self">self</span>.objects_last_update.unwrap_or(now)).as_millis() <span class="kw">as </span>f32);
+
+                        <span class="kw">if </span><span class="self">self</span>.tick_history.len() &gt; <span class="number">20 </span>{
+                            <span class="self">self</span>.tick_history.pop_front();
+                        }
+
+                        <span class="self">self</span>.objects_last_update = <span class="prelude-val">Some</span>(now);
+                    }
+                    <span class="prelude-val">Some</span>(PACKET_SET_COUNT) =&gt; {
+                        <span class="self">self</span>.objects_count = packet.to_object::&lt;PacketSetCount&gt;().unwrap().count;
+                    }
+                    <span class="kw">_ </span>=&gt; {}
+                }
             }
 
-            state.renderer.draw_sprite(<span class="kw-2">&amp;</span>object.sprite);
+            <span class="kw">if </span><span class="self">self</span>.ping_last_update.is_none() {
+                <span class="self">self</span>.ping_last_update = <span class="prelude-val">Some</span>(now);
+            }
+
+            <span class="kw">if </span>(now - <span class="self">self</span>.ping_last_update.unwrap_or(now)).as_millis() &gt; <span class="number">250 </span>{
+                <span class="self">self</span>.client.send_ping();
+                <span class="self">self</span>.ping_last_update = <span class="prelude-val">Some</span>(now);
+            }
+        }
+
+        <span class="kw">if </span><span class="self">self</span>.initialized {
+            <span class="kw">let </span>texture_id = state.renderer.textures.get_id(<span class="string">&quot;Takodachi&quot;</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>alpha = (now - <span class="self">self</span>.objects_last_update.unwrap_or(now)).as_millis() <span class="kw">as </span>f32 / TICK <span class="kw">as </span>f32;
+
+            <span class="kw">for </span>object <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.objects {
+                state.renderer.draw_sprite(<span class="kw-2">&amp;</span>Sprite {
+                    position: object.current_position * alpha + object.previous_position * (<span class="number">1.0 </span>- alpha),
+                    texture_id: TextureId::Some(texture_id),
+                    ..Default::default()
+                });
+            }
         }
 
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
@@ -309,55 +388,28 @@
                     <span class="kw">let </span>label = <span class="macro">format!</span>(<span class="string">&quot;Delta: {:.2}&quot;</span>, delta_average * <span class="number">1000.0</span>);
                     ui.label(RichText::new(label).font(font.clone()).heading().color(color));
 
+                    <span class="kw">let </span>label = <span class="macro">format!</span>(<span class="string">&quot;Ping: {} ms&quot;</span>, <span class="kw-2">*</span><span class="self">self</span>.client.ping.read().unwrap());
+                    ui.label(RichText::new(label).font(font.clone()).heading().color(color));
+
+                    <span class="kw">let </span>tick_average = <span class="self">self</span>.tick_history.iter().sum::&lt;f32&gt;() / <span class="self">self</span>.tick_history.len() <span class="kw">as </span>f32;
+                    <span class="kw">let </span>label = <span class="macro">format!</span>(<span class="string">&quot;Tick: {:.2} ms&quot;</span>, tick_average);
+                    ui.label(RichText::new(label).font(font.clone()).heading().color(color));
+
                     ui.style_mut().drag_value_text_style = TextStyle::Monospace;
                     ui.style_mut().text_styles.get_mut(<span class="kw-2">&amp;</span>TextStyle::Monospace).unwrap().size = <span class="number">20.0</span>;
 
                     ui.add_space(<span class="number">10.0</span>);
                     ui.label(RichText::new(<span class="string">&quot;Objects count:&quot;</span>).font(font.clone()).heading().color(color));
-                    <span class="kw">if </span>ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.objects_count, <span class="number">0</span>..=<span class="number">1000000</span>).text_color(color).logarithmic(<span class="bool-val">true</span>)).changed() {
-                        <span class="self">self</span>.regenerate_objects(<span class="kw-2">&amp;</span>state, <span class="self">self</span>.objects_count).unwrap();
+                    <span class="kw">if </span>ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.objects_count, <span class="number">0</span>..=<span class="number">10000</span>).text_color(color).logarithmic(<span class="bool-val">true</span>)).changed() {
+                        <span class="kw">if </span><span class="kw-2">*</span><span class="self">self</span>.client.connected.read().unwrap() {
+                            <span class="self">self</span>.client.send_packet(Packet::from_object(PACKET_SET_COUNT, <span class="kw-2">&amp;</span>PacketSetCount { count: <span class="self">self</span>.objects_count }));
+                        }
                     }
                 }
             });
         });
 
         <span class="prelude-val">Ok</span>((output, <span class="prelude-val">None</span>))
-    }
-}
-
-<span class="kw">impl </span>MainScene {
-    <span class="kw">fn </span>regenerate_objects(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: <span class="kw-2">&amp;</span>ApplicationState&lt;GlobalData&gt;, n: u32) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.objects.clear();
-        <span class="self">self</span>.objects_count = n;
-
-        <span class="kw">for _ in </span><span class="number">0</span>..n {
-            <span class="kw">let </span>position = Vec2::new(
-                fastrand::u32(<span class="number">0</span>..state.renderer.viewport_size.x <span class="kw">as </span>u32) <span class="kw">as </span>f32,
-                fastrand::u32(<span class="number">0</span>..state.renderer.viewport_size.y <span class="kw">as </span>u32) <span class="kw">as </span>f32,
-            );
-
-            <span class="self">self</span>.objects.push(Object {
-                sprite: Sprite { position, texture_id: TextureId::Some(state.renderer.textures.get_id(<span class="string">&quot;Takodachi&quot;</span>)<span class="question-mark">?</span>), ..Default::default() },
-                direction: Vec2::new(fastrand::f32() * <span class="number">2.0 </span>- <span class="number">1.0</span>, fastrand::f32() * <span class="number">2.0 </span>- <span class="number">1.0</span>),
-            });
-        }
-
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">fn </span>update_shaders_resolution(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>ApplicationState&lt;GlobalData&gt;, size: Coordinates) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="kw">for </span>shader <span class="kw">in </span>state.renderer.shaders.iter_mut() {
-            <span class="kw">if </span>shader.uniforms.contains_key(<span class="string">&quot;resolution&quot;</span>) {
-                shader.activate();
-                shader.set_uniform(<span class="string">&quot;resolution&quot;</span>, [size.x <span class="kw">as </span>f32, size.y <span class="kw">as </span>f32].as_ptr());
-            }
-        }
-
-        <span class="kw">if </span>state.renderer.selected_shader_id != usize::MAX {
-            state.renderer.shaders.get_mut(state.renderer.selected_shader_id)<span class="question-mark">?</span>.activate();
-        }
-
-        <span class="prelude-val">Ok</span>(())
     }
 }
 

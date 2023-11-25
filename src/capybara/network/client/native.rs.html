@@ -146,6 +146,15 @@
 <a href="#146" id="146">146</a>
 <a href="#147" id="147">147</a>
 <a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::error_continue;
 <span class="kw">use </span><span class="kw">crate</span>::error_return;
 <span class="kw">use </span><span class="kw">crate</span>::network::packet::Packet;
@@ -288,6 +297,15 @@
             }
             <span class="prelude-val">None </span>=&gt; <span class="macro">error_return!</span>(<span class="string">&quot;Failed to send packet (socket is not connected)&quot;</span>),
         };
+    }
+
+    <span class="kw">pub fn </span>send_ping(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let </span>now = <span class="kw">match </span>SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+            <span class="prelude-val">Ok</span>(now) =&gt; now.as_millis() <span class="kw">as </span>u64,
+            <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_return!</span>(<span class="string">&quot;Failed to obtain current time ({})&quot;</span>, err),
+        };
+
+        <span class="self">self</span>.send_packet(Packet::Ping { timestamp: now });
     }
 
     <span class="kw">pub fn </span>poll_packet(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Packet&gt; {

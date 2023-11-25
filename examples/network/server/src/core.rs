@@ -1,11 +1,13 @@
 use crate::room::Room;
 use capybara::egui::ahash::HashMap;
+use capybara::log::Level;
 use capybara::network::packet::Packet;
 use capybara::network::server::client::WebSocketConnectedClient;
 use capybara::network::server::client::WebSocketConnectedClientSlim;
 use capybara::network::server::listener::WebSocketListener;
 use futures_channel::mpsc;
 use futures_util::StreamExt;
+use network_base::*;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::time::Duration;
@@ -20,8 +22,8 @@ pub struct Core {
 
 #[derive(Clone)]
 pub struct QueuePacket {
-    pub id: u64,
-    pub packet: Packet,
+    pub client_id: u64,
+    pub inner: Packet,
 }
 
 impl Core {
@@ -30,6 +32,8 @@ impl Core {
     }
 
     pub async fn run(&mut self) {
+        simple_logger::init_with_level(Level::Info).unwrap();
+
         let mut listener = WebSocketListener::new();
         let (listener_tx, mut listener_rx) = mpsc::unbounded::<WebSocketConnectedClient>();
         let (packet_event_tx, mut packet_event_rx) = mpsc::unbounded::<(u64, Packet)>();
@@ -41,10 +45,9 @@ impl Core {
 
         let listen = listener.listen("localhost:9999", listener_tx);
         let initialize_new_clients = async {
-            while let Some(client) = listener_rx.next().await {
-                if let Some(mut client) = clients.write().unwrap().insert(client.id, client) {
-                    client.run(packet_event_tx.clone(), disconnection_event_tx.clone());
-                }
+            while let Some(mut client) = listener_rx.next().await {
+                client.run(packet_event_tx.clone(), disconnection_event_tx.clone());
+                clients.write().unwrap().insert(client.id, client);
             }
         };
         let read_frames = async {
@@ -57,18 +60,8 @@ impl Core {
                 clients.write().unwrap().remove(&id);
             }
         };
-        let send_pings = async {
-            let mut interval = time::interval(Duration::from_millis(1000));
-            loop {
-                for client in clients.read().unwrap().values() {
-                    client.send_ping();
-                }
-
-                interval.tick().await;
-            }
-        };
         let tick = async {
-            let mut interval = time::interval(Duration::from_millis(20));
+            let mut interval = time::interval(Duration::from_millis(TICK));
             loop {
                 let clients = clients.read().unwrap().iter().map(|p| (p.1.to_slim())).collect::<Vec<WebSocketConnectedClientSlim>>();
                 let packets = queue.write().unwrap().clone();
@@ -85,7 +78,6 @@ impl Core {
             _ = initialize_new_clients => {}
             _ = read_frames => {}
             _ = process_disconnection => {}
-            _ = send_pings => {}
             _ = tick => {}
         }
     }
@@ -99,6 +91,6 @@ impl Default for Core {
 
 impl QueuePacket {
     pub fn new(id: u64, packet: Packet) -> Self {
-        Self { id, packet }
+        Self { client_id: id, inner: packet }
     }
 }

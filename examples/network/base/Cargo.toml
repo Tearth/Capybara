@@ -2,3 +2,6 @@
 name = "network-base"
 version = "1.0.0"
 edition = "2021"
+
+[dependencies]
+capybara = { path = "../../../capybara" }

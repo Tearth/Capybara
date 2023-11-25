@@ -6,6 +6,7 @@ use futures_channel::mpsc::UnboundedSender;
 use futures_util::StreamExt;
 use instant::SystemTime;
 use log::error;
+use log::info;
 use std::sync::Arc;
 use std::sync::RwLock;
 use tokio::net::TcpStream;
@@ -36,6 +37,8 @@ impl WebSocketConnectedClient {
     pub fn run(&mut self, packet_event: UnboundedSender<(u64, Packet)>, disconnection_event: UnboundedSender<u64>) {
         let id = self.id;
         let websocket = self.websocket.take().unwrap();
+
+        info!("Client {} initialized", id);
 
         let (websocket_sink, mut websocket_stream) = websocket.split();
         let (websocket_tx, websocket_rx) = mpsc::unbounded();
@@ -77,8 +80,11 @@ impl WebSocketConnectedClient {
                                 }
                             }
                         }
-                        Ok(Message::Close(_)) | Err(_) => {
+                        Ok(Message::Close(_)) => {
                             break;
+                        }
+                        Err(err) => {
+                            error!("Failed to process WebSocket message ({})", err);
                         }
                         _ => {}
                     }
@@ -100,6 +106,8 @@ impl WebSocketConnectedClient {
                 _ = websocket_rx_to_sink => {}
                 _ = process_disconnection => {}
             }
+
+            info!("Client {} disconnected", id);
 
             if let Err(err) = disconnection_event.unbounded_send(id) {
                 error_return!("Failed to send disconnection event ({})", err)

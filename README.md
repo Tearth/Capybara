@@ -19,12 +19,13 @@ A simple, cross-platform 2D game engine written in Rust, using OpenGL/WebGL as g
  - built-in support for the physics engine and audio system
  - easy web development via [trunk](https://github.com/thedodd/trunk)
 
-## Dependencies
+## Main dependencies
  - graphics: [glow](https://github.com/grovesNL/glow)
  - interface: [egui](https://github.com/emilk/egui)
  - math: [glam](https://github.com/bitshifter/glam-rs)
  - physics: [rapier](https://github.com/dimforge/rapier)
  - sound: [kira](https://github.com/tesselode/kira)
+ - network: [tungstenite](https://github.com/snapview/tokio-tungstenite)
 
 ## Supported platforms
  - Windows/WinAPI ([winapi.rs](./capybara/src/window/winapi.rs))

@@ -25,6 +25,10 @@ impl Room {
         Self { last_update: None, objects: Vec::new(), objects_count: 100, viewport: Vec2::new(512.0, 512.0) }
     }
 
+    pub fn initialize_client(&mut self, client: WebSocketConnectedClientSlim) {
+        client.send_packet(Packet::from_object(PACKET_SET_COUNT, &PacketSetCount { count: self.objects_count }));
+    }
+
     pub fn tick(&mut self, clients: Vec<WebSocketConnectedClientSlim>, packets: Vec<QueuePacket>) {
         let now = Instant::now();
         let delta = (now - self.last_update.unwrap_or(Instant::now())).as_secs_f32();
@@ -56,7 +60,8 @@ impl Room {
             self.objects.clear();
 
             for _ in 0..self.objects_count {
-                self.objects.push(ServerObject { position: Vec2::new_rand(0.0..512.0), direction: Vec2::new_rand(-1.0..1.0) });
+                let position = Vec2::new_rand(0.0..1.0) * self.viewport;
+                self.objects.push(ServerObject { position, direction: Vec2::new_rand(-1.0..1.0) });
             }
         }
 

@@ -25,6 +25,7 @@ pub struct WebSocketConnectedClient {
 
 pub struct WebSocketConnectedClientSlim {
     pub id: u64,
+
     outgoing_packets_tx: Option<UnboundedSender<Packet>>,
     disconnection_tx: Option<UnboundedSender<()>>,
 }

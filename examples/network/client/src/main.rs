@@ -104,6 +104,11 @@ impl Scene<GlobalData> for MainScene {
         let now = Instant::now();
 
         if *self.client.connected.read().unwrap() {
+            if self.client.has_connected() {
+                let size = state.renderer.viewport_size;
+                self.client.send_packet(Packet::from_object(PACKET_SET_VIEWPORT, &PacketSetViewport { size }));
+            }
+
             while let Some(packet) = self.client.poll_packet() {
                 match packet.get_id() {
                     Some(PACKET_OBJECTS_ARRAY) => {

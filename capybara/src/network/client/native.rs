@@ -19,6 +19,7 @@ pub struct WebSocketClient {
     pub connected: Arc<RwLock<bool>>,
     pub ping: Arc<RwLock<u32>>,
 
+    connected_last_state: bool,
     received_packets: Arc<RwLock<VecDeque<Packet>>>,
     outgoing_packets_tx: Option<UnboundedSender<Packet>>,
     disconnection_tx: Option<UnboundedSender<()>>,
@@ -153,5 +154,21 @@ impl WebSocketClient {
 
     pub fn poll_packet(&mut self) -> Option<Packet> {
         self.received_packets.write().unwrap().pop_front()
+    }
+
+    pub fn has_connected(&mut self) -> bool {
+        let connected = *self.connected.read().unwrap();
+        let has_connected = self.connected_last_state != connected && connected;
+        self.connected_last_state = connected;
+
+        has_connected
+    }
+
+    pub fn has_disconnected(&mut self) -> bool {
+        let connected = *self.connected.read().unwrap();
+        let has_disconnected = self.connected_last_state != connected && !connected;
+        self.connected_last_state = connected;
+
+        has_disconnected
     }
 }

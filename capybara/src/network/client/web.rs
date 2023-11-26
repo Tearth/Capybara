@@ -20,6 +20,7 @@ pub struct WebSocketClient {
 
     websocket: Option<Rc<WebSocket>>,
     received_packets: Arc<RwLock<VecDeque<Packet>>>,
+    connected_last_state: bool,
 
     onopen_callback: Closure<dyn FnMut()>,
     onclose_callback: Closure<dyn FnMut()>,
@@ -185,6 +186,22 @@ impl WebSocketClient {
 
     pub fn poll_packet(&mut self) -> Option<Packet> {
         self.received_packets.write().unwrap().pop_front()
+    }
+
+    pub fn has_connected(&mut self) -> bool {
+        let connected = *self.connected.read().unwrap();
+        let has_connected = self.connected_last_state != connected && connected;
+        self.connected_last_state = connected;
+
+        has_connected
+    }
+
+    pub fn has_disconnected(&mut self) -> bool {
+        let connected = *self.connected.read().unwrap();
+        let has_disconnected = self.connected_last_state != connected && !connected;
+        self.connected_last_state = connected;
+
+        has_disconnected
     }
 }
 

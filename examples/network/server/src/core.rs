@@ -47,6 +47,8 @@ impl Core {
         let initialize_new_clients = async {
             while let Some(mut client) = listener_rx.next().await {
                 client.run(packet_event_tx.clone(), disconnection_event_tx.clone());
+
+                room.write().unwrap().initialize_client(client.to_slim());
                 clients.write().unwrap().insert(client.id, client);
             }
         };

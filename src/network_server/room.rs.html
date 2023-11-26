@@ -86,6 +86,11 @@
 <a href="#86" id="86">86</a>
 <a href="#87" id="87">87</a>
 <a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::core::QueuePacket;
 <span class="kw">use </span>capybara::error_continue;
 <span class="kw">use </span>capybara::glam::Vec2;
@@ -111,6 +116,10 @@
 <span class="kw">impl </span>Room {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ last_update: <span class="prelude-val">None</span>, objects: Vec::new(), objects_count: <span class="number">100</span>, viewport: Vec2::new(<span class="number">512.0</span>, <span class="number">512.0</span>) }
+    }
+
+    <span class="kw">pub fn </span>initialize_client(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client: WebSocketConnectedClientSlim) {
+        client.send_packet(Packet::from_object(PACKET_SET_COUNT, <span class="kw-2">&amp;</span>PacketSetCount { count: <span class="self">self</span>.objects_count }));
     }
 
     <span class="kw">pub fn </span>tick(<span class="kw-2">&amp;mut </span><span class="self">self</span>, clients: Vec&lt;WebSocketConnectedClientSlim&gt;, packets: Vec&lt;QueuePacket&gt;) {
@@ -144,7 +153,8 @@
             <span class="self">self</span>.objects.clear();
 
             <span class="kw">for _ in </span><span class="number">0</span>..<span class="self">self</span>.objects_count {
-                <span class="self">self</span>.objects.push(ServerObject { position: Vec2::new_rand(<span class="number">0.0</span>..<span class="number">512.0</span>), direction: Vec2::new_rand(-<span class="number">1.0</span>..<span class="number">1.0</span>) });
+                <span class="kw">let </span>position = Vec2::new_rand(<span class="number">0.0</span>..<span class="number">1.0</span>) * <span class="self">self</span>.viewport;
+                <span class="self">self</span>.objects.push(ServerObject { position, direction: Vec2::new_rand(-<span class="number">1.0</span>..<span class="number">1.0</span>) });
             }
         }
 

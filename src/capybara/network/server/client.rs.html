@@ -178,6 +178,7 @@
 <a href="#178" id="178">178</a>
 <a href="#179" id="179">179</a>
 <a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::error_continue;
 <span class="kw">use </span><span class="kw">crate</span>::error_return;
 <span class="kw">use </span><span class="kw">crate</span>::network::packet::Packet;
@@ -205,6 +206,7 @@
 
 <span class="kw">pub struct </span>WebSocketConnectedClientSlim {
     <span class="kw">pub </span>id: u64,
+
     outgoing_packets_tx: <span class="prelude-ty">Option</span>&lt;UnboundedSender&lt;Packet&gt;&gt;,
     disconnection_tx: <span class="prelude-ty">Option</span>&lt;UnboundedSender&lt;()&gt;&gt;,
 }

@@ -94,6 +94,8 @@
 <a href="#94" id="94">94</a>
 <a href="#95" id="95">95</a>
 <a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::room::Room;
 <span class="kw">use </span>capybara::egui::ahash::HashMap;
 <span class="kw">use </span>capybara::log::Level;
@@ -143,6 +145,8 @@
         <span class="kw">let </span>initialize_new_clients = <span class="kw">async </span>{
             <span class="kw">while let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>client) = listener_rx.next().<span class="kw">await </span>{
                 client.run(packet_event_tx.clone(), disconnection_event_tx.clone());
+
+                room.write().unwrap().initialize_client(client.to_slim());
                 clients.write().unwrap().insert(client.id, client);
             }
         };

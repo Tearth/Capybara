@@ -1,8 +1,9 @@
-use anyhow::{bail, Result};
-use std::{
-    mem::{self, MaybeUninit},
-    ptr, slice,
-};
+use anyhow::bail;
+use anyhow::Result;
+use std::mem;
+use std::mem::MaybeUninit;
+use std::ptr;
+use std::slice;
 
 pub mod from;
 pub mod into;

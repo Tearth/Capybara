@@ -265,7 +265,7 @@ impl Scene<GlobalData> for MainScene {
                     ui.label(RichText::new("Distance:").font(font.clone()).heading().color(color));
                     ui.add(Slider::new(&mut self.emitter.max_length, 0.0..=1000.0).text_color(color));
 
-                    ui.add_space(10.0);
+                    ui.add_space(6.0);
                     ui.label(RichText::new("Angle:").font(font.clone()).heading().color(color));
                     ui.add(
                         Slider::new(&mut self.emitter.angle, -consts::PI..=consts::PI)
@@ -273,39 +273,43 @@ impl Scene<GlobalData> for MainScene {
                             .text_color(color),
                     );
 
-                    ui.add_space(10.0);
+                    ui.add_space(6.0);
                     ui.label(RichText::new("Arc:").font(font.clone()).heading().color(color));
                     ui.add(Slider::new(&mut self.emitter.arc, 0.0..=consts::TAU).custom_formatter(|v, _| format!("{:.2}", v)).text_color(color));
 
-                    ui.add_space(10.0);
+                    ui.add_space(6.0);
                     ui.label(RichText::new("Frame rays:").font(font.clone()).heading().color(color));
                     ui.add(Slider::new(&mut self.emitter.frame_rays, 0..=256).text_color(color));
 
-                    ui.add_space(10.0);
+                    ui.add_space(6.0);
                     ui.label(RichText::new("Offset:").font(font.clone()).heading().color(color));
                     ui.add(Slider::new(&mut self.emitter.offset, 0.0..=0.02).custom_formatter(|v, _| format!("{:.3}", v)).text_color(color));
 
-                    ui.add_space(10.0);
+                    ui.add_space(6.0);
                     ui.label(RichText::new("Merge distance:").font(font.clone()).heading().color(color));
                     ui.add(Slider::new(&mut self.emitter.merge_distance, 0.0..=10.0).custom_formatter(|v, _| format!("{:.1}", v)).text_color(color));
 
-                    ui.add_space(10.0);
+                    ui.add_space(6.0);
                     ui.label(RichText::new("Tolerance:").font(font.clone()).heading().color(color));
                     ui.add(Slider::new(&mut self.emitter.tolerance, 0.0..=0.003).custom_formatter(|v, _| format!("{:.4}", v)).text_color(color));
 
-                    ui.add_space(10.0);
+                    ui.add_space(6.0);
+                    ui.label(RichText::new("Extension:").font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(&mut self.emitter.extension, 0.0..=256.0).custom_formatter(|v, _| format!("{:.1}", v)).text_color(color));
+
+                    ui.add_space(6.0);
                     ui.label(RichText::new("Blur directions:").font(font.clone()).heading().color(color));
                     if ui.add(Slider::new(&mut self.blur_directions, 0.0..=64.0).text_color(color)).changed() {
                         self.update_shader_uniforms(state.renderer).unwrap();
                     }
 
-                    ui.add_space(10.0);
+                    ui.add_space(6.0);
                     ui.label(RichText::new("Blur quality:").font(font.clone()).heading().color(color));
                     if ui.add(Slider::new(&mut self.blur_quality, 0.0..=64.0).text_color(color)).changed() {
                         self.update_shader_uniforms(state.renderer).unwrap();
                     }
 
-                    ui.add_space(10.0);
+                    ui.add_space(6.0);
                     ui.label(RichText::new("Blur size:").font(font.clone()).heading().color(color));
                     if ui.add(Slider::new(&mut self.blur_size, 0.0..=64.0).text_color(color)).changed() {
                         self.update_shader_uniforms(state.renderer).unwrap();

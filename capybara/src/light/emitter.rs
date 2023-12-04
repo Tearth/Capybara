@@ -22,6 +22,7 @@ pub struct LightEmitter {
     pub frame_rays: u32,
     pub merge_distance: f32,
     pub tolerance: f32,
+    pub extension: f32,
     pub debug: LightDebugSettings,
 }
 
@@ -46,6 +47,7 @@ impl LightEmitter {
             frame_rays: 32,
             merge_distance: 1.0,
             tolerance: 0.0001,
+            extension: 0.0,
             debug: LightDebugSettings::default(),
         }
     }
@@ -182,7 +184,7 @@ impl LightEmitter {
             }
 
             if ta_min != f32::MAX {
-                hits.push(RayTarget::new(pa + da * ta_min.min(self.max_length), point.angle));
+                hits.push(RayTarget::new(pa + da * (ta_min + self.extension).min(self.max_length), point.angle));
             }
         }
 

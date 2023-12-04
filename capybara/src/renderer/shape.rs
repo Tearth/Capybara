@@ -7,7 +7,7 @@ use glam::Vec3;
 use glam::Vec4;
 use std::f32::consts;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Shape {
     pub position: Vec2,
     pub rotation: f32,

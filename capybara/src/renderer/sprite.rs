@@ -3,6 +3,7 @@ use glam::Vec2;
 use glam::Vec4;
 use instant::Instant;
 
+#[derive(Clone, Debug)]
 pub struct Sprite {
     pub position: Vec2,
     pub rotation: f32,

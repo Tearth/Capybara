@@ -284,10 +284,15 @@ impl UiContext {
         options: TextureOptions,
     ) {
         let texture_id = if let Some(texture_id) = self.textures.get(&id) {
-            let texture = match renderer.textures.get(*texture_id) {
+            let texture = match renderer.textures.get_mut(*texture_id) {
                 Ok(texture) => texture,
                 Err(err) => error_return!("Failed to update texture ({})", err),
             };
+
+            if position.is_none() {
+                texture.resize(size);
+            }
+
             let position = position.unwrap_or(Vec2::ZERO);
 
             texture.update(Vec2::new(position[0], position[1]), size, data);

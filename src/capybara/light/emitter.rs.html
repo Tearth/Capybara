@@ -229,6 +229,8 @@
 <a href="#229" id="229">229</a>
 <a href="#230" id="230">230</a>
 <a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::debug::LightDebugSettings;
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::shape::Shape;
@@ -253,6 +255,7 @@
     <span class="kw">pub </span>frame_rays: u32,
     <span class="kw">pub </span>merge_distance: f32,
     <span class="kw">pub </span>tolerance: f32,
+    <span class="kw">pub </span>extension: f32,
     <span class="kw">pub </span>debug: LightDebugSettings,
 }
 
@@ -277,6 +280,7 @@
             frame_rays: <span class="number">32</span>,
             merge_distance: <span class="number">1.0</span>,
             tolerance: <span class="number">0.0001</span>,
+            extension: <span class="number">0.0</span>,
             debug: LightDebugSettings::default(),
         }
     }
@@ -413,7 +417,7 @@
             }
 
             <span class="kw">if </span>ta_min != f32::MAX {
-                hits.push(RayTarget::new(pa + da * ta_min.min(<span class="self">self</span>.max_length), point.angle));
+                hits.push(RayTarget::new(pa + da * (ta_min + <span class="self">self</span>.extension).min(<span class="self">self</span>.max_length), point.angle));
             }
         }
 

@@ -117,12 +117,14 @@
 <a href="#117" id="117">117</a>
 <a href="#118" id="118">118</a>
 <a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>glam::Vec2;
 <span class="kw">use </span>glam::Vec4;
 <span class="kw">use </span>instant::Instant;
 
-<span class="kw">pub struct </span>Sprite {
+<span class="attr">#[derive(Clone, Debug)]
+</span><span class="kw">pub struct </span>Sprite {
     <span class="kw">pub </span>position: Vec2,
     <span class="kw">pub </span>rotation: f32,
     <span class="kw">pub </span>scale: Vec2,

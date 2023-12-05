@@ -359,6 +359,10 @@
 <a href="#359" id="359">359</a>
 <a href="#360" id="360">360</a>
 <a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>capybara::anyhow::Result;
 <span class="kw">use </span>capybara::app::ApplicationContext;
 <span class="kw">use </span>capybara::app::ApplicationState;
@@ -626,7 +630,7 @@
                     ui.label(RichText::new(<span class="string">&quot;Distance:&quot;</span>).font(font.clone()).heading().color(color));
                     ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.max_length, <span class="number">0.0</span>..=<span class="number">1000.0</span>).text_color(color));
 
-                    ui.add_space(<span class="number">10.0</span>);
+                    ui.add_space(<span class="number">6.0</span>);
                     ui.label(RichText::new(<span class="string">&quot;Angle:&quot;</span>).font(font.clone()).heading().color(color));
                     ui.add(
                         Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.angle, -consts::PI..=consts::PI)
@@ -634,39 +638,43 @@
                             .text_color(color),
                     );
 
-                    ui.add_space(<span class="number">10.0</span>);
+                    ui.add_space(<span class="number">6.0</span>);
                     ui.label(RichText::new(<span class="string">&quot;Arc:&quot;</span>).font(font.clone()).heading().color(color));
                     ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.arc, <span class="number">0.0</span>..=consts::TAU).custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, v)).text_color(color));
 
-                    ui.add_space(<span class="number">10.0</span>);
+                    ui.add_space(<span class="number">6.0</span>);
                     ui.label(RichText::new(<span class="string">&quot;Frame rays:&quot;</span>).font(font.clone()).heading().color(color));
                     ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.frame_rays, <span class="number">0</span>..=<span class="number">256</span>).text_color(color));
 
-                    ui.add_space(<span class="number">10.0</span>);
+                    ui.add_space(<span class="number">6.0</span>);
                     ui.label(RichText::new(<span class="string">&quot;Offset:&quot;</span>).font(font.clone()).heading().color(color));
                     ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.offset, <span class="number">0.0</span>..=<span class="number">0.02</span>).custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">&quot;{:.3}&quot;</span>, v)).text_color(color));
 
-                    ui.add_space(<span class="number">10.0</span>);
+                    ui.add_space(<span class="number">6.0</span>);
                     ui.label(RichText::new(<span class="string">&quot;Merge distance:&quot;</span>).font(font.clone()).heading().color(color));
                     ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.merge_distance, <span class="number">0.0</span>..=<span class="number">10.0</span>).custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">&quot;{:.1}&quot;</span>, v)).text_color(color));
 
-                    ui.add_space(<span class="number">10.0</span>);
+                    ui.add_space(<span class="number">6.0</span>);
                     ui.label(RichText::new(<span class="string">&quot;Tolerance:&quot;</span>).font(font.clone()).heading().color(color));
                     ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.tolerance, <span class="number">0.0</span>..=<span class="number">0.003</span>).custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">&quot;{:.4}&quot;</span>, v)).text_color(color));
 
-                    ui.add_space(<span class="number">10.0</span>);
+                    ui.add_space(<span class="number">6.0</span>);
+                    ui.label(RichText::new(<span class="string">&quot;Extension:&quot;</span>).font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.extension, <span class="number">0.0</span>..=<span class="number">256.0</span>).custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">&quot;{:.1}&quot;</span>, v)).text_color(color));
+
+                    ui.add_space(<span class="number">6.0</span>);
                     ui.label(RichText::new(<span class="string">&quot;Blur directions:&quot;</span>).font(font.clone()).heading().color(color));
                     <span class="kw">if </span>ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.blur_directions, <span class="number">0.0</span>..=<span class="number">64.0</span>).text_color(color)).changed() {
                         <span class="self">self</span>.update_shader_uniforms(state.renderer).unwrap();
                     }
 
-                    ui.add_space(<span class="number">10.0</span>);
+                    ui.add_space(<span class="number">6.0</span>);
                     ui.label(RichText::new(<span class="string">&quot;Blur quality:&quot;</span>).font(font.clone()).heading().color(color));
                     <span class="kw">if </span>ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.blur_quality, <span class="number">0.0</span>..=<span class="number">64.0</span>).text_color(color)).changed() {
                         <span class="self">self</span>.update_shader_uniforms(state.renderer).unwrap();
                     }
 
-                    ui.add_space(<span class="number">10.0</span>);
+                    ui.add_space(<span class="number">6.0</span>);
                     ui.label(RichText::new(<span class="string">&quot;Blur size:&quot;</span>).font(font.clone()).heading().color(color));
                     <span class="kw">if </span>ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.blur_size, <span class="number">0.0</span>..=<span class="number">64.0</span>).text_color(color)).changed() {
                         <span class="self">self</span>.update_shader_uniforms(state.renderer).unwrap();

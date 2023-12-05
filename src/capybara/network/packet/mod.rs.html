@@ -95,11 +95,13 @@
 <a href="#95" id="95">95</a>
 <a href="#96" id="96">96</a>
 <a href="#97" id="97">97</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::{bail, <span class="prelude-ty">Result</span>};
-<span class="kw">use </span>std::{
-    mem::{<span class="self">self</span>, MaybeUninit},
-    ptr, slice,
-};
+<a href="#98" id="98">98</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::bail;
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>std::mem;
+<span class="kw">use </span>std::mem::MaybeUninit;
+<span class="kw">use </span>std::ptr;
+<span class="kw">use </span>std::slice;
 
 <span class="kw">pub mod </span>from;
 <span class="kw">pub mod </span>into;

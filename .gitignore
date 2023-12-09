@@ -18,5 +18,6 @@ dist/
 data/
 .VSCodeCounter/
 misc/
+tmp/
 *.cfg
 *.res

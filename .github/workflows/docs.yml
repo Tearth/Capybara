@@ -13,6 +13,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+      - run: npm install -g free-tex-packer-cli
       - uses: actions-rs/cargo@v1
         with:
           command: doc

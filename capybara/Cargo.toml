@@ -67,6 +67,7 @@ web-sys = { version = "0.3.66", features = [
     "Request",
     "RequestInit",
     "RequestMode",
+    "RequestCache",
     "Response",
     "Storage",
     "WebSocket",

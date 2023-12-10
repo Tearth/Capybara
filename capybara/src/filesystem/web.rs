@@ -12,6 +12,7 @@ use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::JsValue;
 use web_sys::Request;
+use web_sys::RequestCache;
 use web_sys::RequestInit;
 use web_sys::Response;
 use web_sys::Storage;
@@ -97,7 +98,15 @@ impl FileSystem {
         }
 
         if let FileLoadingStatus::Idle = status {
-            let request = Request::new_with_str_and_init(path, &RequestInit::new()).unwrap();
+            let mut init = RequestInit::new();
+
+            #[cfg(debug_assertions)]
+            init.cache(RequestCache::NoStore);
+
+            #[cfg(not(debug_assertions))]
+            init.cache(RequestCache::NoCache);
+
+            let request = Request::new_with_str_and_init(path, &init).unwrap();
             let fetch_closure_clone = self.fetch_closure.clone();
             let _ = self.window.fetch_with_request(&request).then(&fetch_closure_clone.borrow());
 

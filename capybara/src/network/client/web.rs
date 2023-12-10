@@ -34,6 +34,7 @@ impl WebSocketClient {
             connected: Default::default(),
             ping: Default::default(),
             websocket: None,
+            connected_last_state: false,
             onopen_callback: Closure::<dyn FnMut()>::new(|| {}),
             onclose_callback: Closure::<dyn FnMut()>::new(|| {}),
             onmessage_callback: Closure::<dyn FnMut(_)>::new(|_| {}),

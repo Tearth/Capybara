@@ -1,7 +1,7 @@
 use super::GlobalData;
 use super::*;
+use crate::ui::components;
 use crate::ui::state::WidgetState;
-use crate::ui::widgets;
 use capybara::anyhow::Result;
 use capybara::app::ApplicationState;
 use capybara::egui::panel::TopBottomSide;
@@ -60,7 +60,7 @@ impl MenuScene {
         let center = context.screen_rect().center();
 
         Window::new("Main menu")
-            .frame(widgets::frame())
+            .frame(components::frame())
             .movable(false)
             .resizable(false)
             .collapsible(false)
@@ -70,19 +70,19 @@ impl MenuScene {
             .default_width(200.0)
             .show(context, |ui| {
                 ui.vertical_centered(|ui| {
-                    if widgets::button_green(ui, state.ui, state.renderer, "Play", &mut self.play_button_state).clicked() {
+                    if components::button_primary(ui, state.ui, state.renderer, "Play", &mut self.play_button_state).clicked() {
                         command = Some(FrameCommand::ChangeScene { name: "GameScene".to_string() });
                     }
 
                     ui.add_space(32.0);
 
-                    if widgets::button_green(ui, state.ui, state.renderer, "Settings", &mut self.settings_button_state).clicked() {
+                    if components::button_primary(ui, state.ui, state.renderer, "Settings", &mut self.settings_button_state).clicked() {
                         self.sub_scene = MenuSubScene::Settings;
                     }
 
                     ui.add_space(32.0);
 
-                    if widgets::button_green(ui, state.ui, state.renderer, "About", &mut self.about_button_state).clicked() {
+                    if components::button_primary(ui, state.ui, state.renderer, "About", &mut self.about_button_state).clicked() {
                         self.sub_scene = MenuSubScene::About;
                     }
 
@@ -90,7 +90,7 @@ impl MenuScene {
                     {
                         ui.add_space(32.0);
 
-                        if widgets::button_green(ui, state.ui, state.renderer, "Exit", &mut self.exit_button_state).clicked() {
+                        if components::button_primary(ui, state.ui, state.renderer, "Exit", &mut self.exit_button_state).clicked() {
                             state.window.close();
                         }
                     }
@@ -112,7 +112,7 @@ impl MenuScene {
         }
 
         Window::new("Settings")
-            .frame(widgets::frame())
+            .frame(components::frame())
             .movable(false)
             .resizable(false)
             .collapsible(false)
@@ -148,7 +148,7 @@ impl MenuScene {
                     ui.add_space(16.0);
 
                     ui.horizontal(|ui| {
-                        if widgets::button_orange(ui, state.ui, state.renderer, "Save", &mut self.play_button_state).clicked() {
+                        if components::button_secondary(ui, state.ui, state.renderer, "Save", &mut self.play_button_state).clicked() {
                             state.global.settings.set(SETTINGS_MUSIC_LEVEL, self.settings.unwrap().music_level, true);
                             state.global.settings.set(SETTINGS_SOUND_LEVEL, self.settings.unwrap().sound_level, true);
 
@@ -158,7 +158,7 @@ impl MenuScene {
 
                         ui.add_space(32.0);
 
-                        if widgets::button_green(ui, state.ui, state.renderer, "Back", &mut self.back_button_state).clicked() {
+                        if components::button_primary(ui, state.ui, state.renderer, "Back", &mut self.back_button_state).clicked() {
                             let music_track = state.global.music_track.as_ref().unwrap();
                             let sound_track = state.global.sound_track.as_ref().unwrap();
 
@@ -180,7 +180,7 @@ impl MenuScene {
         let center = context.screen_rect().center();
 
         Window::new("About")
-            .frame(widgets::frame())
+            .frame(components::frame())
             .movable(false)
             .resizable(false)
             .collapsible(false)
@@ -202,7 +202,7 @@ impl MenuScene {
                     );
                     ui.add_space(20.0);
 
-                    if widgets::button_green(ui, state.ui, state.renderer, "Back", &mut self.back_button_state).clicked() {
+                    if components::button_primary(ui, state.ui, state.renderer, "Back", &mut self.back_button_state).clicked() {
                         self.sub_scene = MenuSubScene::Main;
                     }
                 });

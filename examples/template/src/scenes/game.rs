@@ -1,6 +1,6 @@
 use super::GlobalData;
+use crate::ui::components;
 use crate::ui::state::WidgetState;
-use crate::ui::widgets;
 use capybara::anyhow::Result;
 use capybara::app::ApplicationState;
 use capybara::egui::Align2;
@@ -58,7 +58,7 @@ impl Scene<GlobalData> for GameScene {
 
             if self.exit_menu_visible {
                 Window::new("Back to the menu? The game will be lost")
-                    .frame(widgets::frame())
+                    .frame(components::frame())
                     .movable(false)
                     .resizable(false)
                     .collapsible(false)
@@ -67,13 +67,13 @@ impl Scene<GlobalData> for GameScene {
                     .show(context, |ui| {
                         ui.add_space(15.0);
                         ui.horizontal(|ui| {
-                            if widgets::button_orange(ui, state.ui, state.renderer, "Yes", &mut self.play_button_state).clicked() {
+                            if components::button_secondary(ui, state.ui, state.renderer, "Yes", &mut self.play_button_state).clicked() {
                                 command = Some(FrameCommand::ChangeScene { name: "MenuScene".to_string() });
                             }
 
                             ui.add_space(32.0);
 
-                            if widgets::button_green(ui, state.ui, state.renderer, "No", &mut self.exit_button_state).clicked() {
+                            if components::button_primary(ui, state.ui, state.renderer, "No", &mut self.exit_button_state).clicked() {
                                 self.exit_menu_visible = false;
                             }
                         });

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["state","widgets"]};
+window.SIDEBAR_ITEMS = {"mod":["components","state"]};

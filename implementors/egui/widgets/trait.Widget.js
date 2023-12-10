@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"capybara":[["impl&lt;'a&gt; Widget for <a class=\"struct\" href=\"capybara/ui/widgets/progressbar/struct.ImageProgressBar.html\" title=\"struct capybara::ui::widgets::progressbar::ImageProgressBar\">ImageProgressBar</a>&lt;'a&gt;"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

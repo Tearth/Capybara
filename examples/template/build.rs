@@ -1,3 +1,4 @@
+use anyhow::bail;
 use anyhow::Result;
 use cfg_aliases::cfg_aliases;
 use std::env;
@@ -6,6 +7,7 @@ use std::path::Path;
 use std::process::Command;
 
 fn main() -> Result<()> {
+    let host = env::var("HOST")?;
     let profile = env::var("PROFILE")?;
     let target = env::var("TARGET")?;
 
@@ -23,8 +25,14 @@ fn main() -> Result<()> {
     }
 
     if Path::new("./dev/").exists() {
-        Command::new("free-tex-packer-cli.cmd").args(["--project", "./textures.ftpp"]).current_dir("./dev").spawn()?.wait()?;
-        Command::new("free-tex-packer-cli.cmd").args(["--project", "./ui.ftpp"]).current_dir("./dev").spawn()?.wait()?;
+        let name = match host.as_str() {
+            "x86_64-pc-windows-msvc" => "free-tex-packer-cli.cmd",
+            "x86_64-unknown-linux-gnu" => "free-tex-packer-cli",
+            _ => bail!("Invalid target"),
+        };
+
+        Command::new(name).args(["--project", "./textures.ftpp"]).current_dir("./dev").spawn()?.wait()?;
+        Command::new(name).args(["--project", "./ui.ftpp"]).current_dir("./dev").spawn()?.wait()?;
     }
 
     if Path::new("./assets/boot/").exists() {

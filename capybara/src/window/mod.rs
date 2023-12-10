@@ -44,6 +44,7 @@ pub enum Key {
     Escape,
     Backspace,
     Space,
+    Tab,
     Control,
     Shift,
     Alt,

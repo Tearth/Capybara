@@ -337,6 +337,7 @@ fn map_key(key: Key) -> Option<egui::Key> {
         Key::Escape => Some(egui::Key::Escape),
         Key::Backspace => Some(egui::Key::Backspace),
         Key::Space => Some(egui::Key::Space),
+        Key::Tab => Some(egui::Key::Tab),
         Key::Control => None,
         Key::Shift => None,
         Key::Alt => None,

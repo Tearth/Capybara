@@ -301,6 +301,8 @@ impl WindowContext {
             let modifiers = app.window.get_modifiers();
 
             app.window.event_queue.push_back(InputEvent::MouseWheelRotated { direction, modifiers });
+
+            event.prevent_default();
         });
 
         let wheel_callback = self.wheel_callback.as_ref().unchecked_ref();
@@ -323,6 +325,10 @@ impl WindowContext {
 
                 app.window.event_queue.push_back(InputEvent::KeyPress { key, repeat, modifiers });
                 app.window.keyboard_state[key as usize] = true;
+
+                if key == Key::ArrowLeft || key == Key::ArrowUp || key == Key::ArrowRight || key == Key::ArrowDown || key == Key::Tab {
+                    event.prevent_default();
+                }
             }
         });
 
@@ -346,6 +352,10 @@ impl WindowContext {
                 app.window.event_queue.push_back(InputEvent::KeyRelease { key, modifiers });
                 app.window.keyboard_state[key as usize] = false;
                 app.window.last_character = None;
+
+                if key == Key::ArrowLeft || key == Key::ArrowUp || key == Key::ArrowRight || key == Key::ArrowDown || key == Key::Tab {
+                    event.prevent_default();
+                }
             }
         });
 
@@ -379,6 +389,8 @@ impl WindowContext {
                     app.window.last_character = Some(character);
                 }
             }
+
+            event.prevent_default();
         });
 
         let keypress_callback = self.keypress_callback.as_ref().unchecked_ref();
@@ -448,6 +460,7 @@ fn map_key(key: String) -> Key {
         "Escape" => Key::Escape,
         "Backspace" => Key::Backspace,
         "Space" => Key::Space,
+        "Tab" => Key::Tab,
         "ControlLeft" | "ControlRight" => Key::Control,
         "ShiftLeft" | "ShiftRight" => Key::Shift,
         "AltLeft" | "AltRight" => Key::Alt,

@@ -710,6 +710,7 @@ fn map_key(key: usize) -> Key {
         0x1b => Key::Escape,
         0x08 => Key::Backspace,
         0x20 => Key::Space,
+        0x09 => Key::Tab,
         0x11 => Key::Control,
         0x10 => Key::Shift,
         0x12 => Key::Alt,

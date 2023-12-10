@@ -1,9 +1,14 @@
 <html>
   <head>
     <link data-trunk rel="copy-dir" href="./data/"/>
+    <style>
+        *:focus {
+            outline: none;
+        }
+    </style>
   </head>
   <body style="margin: 0;">
-    <canvas id="canvas" tabindex='1' style="display: block; width: 100%; height: 100%; background: black;"></canvas>
+    <canvas id="canvas" tabindex="1" oncontextmenu="return false" style="display: block; width: 100%; height: 100%; background: black;"></canvas>
     <script>
       // https://github.com/NiklasEi/bevy_game_template/blob/main/build/web/sound.js
       (function () {

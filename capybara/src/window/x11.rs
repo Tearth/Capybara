@@ -530,6 +530,7 @@ fn map_key(key: u32) -> Key {
         XK_Escape => Key::Escape,
         XK_BackSpace => Key::Backspace,
         XK_space => Key::Space,
+        XK_Tab => Key::Tab,
         XK_Control_L | XK_Control_R => Key::Control,
         XK_Shift_L | XK_Shift_R | XK_ISO_Level3_Shift => Key::Shift,
         XK_Alt_L | XK_Alt_R => Key::Alt,

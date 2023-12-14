@@ -5,7 +5,9 @@
         "physics"
     ],
     "files.exclude": {
-        "**/target": true
+        "**/data": true,
+        "**/target": true,
+        "**/tmp": true
     },
     // -----------------------------------------------------------------------------
     // Uncomment to work with Web target (disable procMacro to increase performance)

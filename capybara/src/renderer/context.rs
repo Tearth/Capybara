@@ -473,7 +473,7 @@ impl RendererContext {
         };
 
         self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count] = SpriteVertex {
-            position: sprite.position,
+            position: if sprite.rounded_coordinates { sprite.position.round() } else { sprite.position },
             anchor: sprite.anchor,
             rotation: sprite.rotation,
             size: sprite_size * sprite.scale,
@@ -532,6 +532,10 @@ impl RendererContext {
                 let position_transformed = model * position;
 
                 self.shape_buffer_vertices_queue[i].position = Vec2::new(position_transformed.x, position_transformed.y);
+
+                if shape.rounded_coordinates {
+                    self.shape_buffer_vertices_queue[i].position = self.shape_buffer_vertices_queue[i].position.round();
+                }
             }
         }
 

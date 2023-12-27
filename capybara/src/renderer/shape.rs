@@ -14,6 +14,7 @@ pub struct Shape {
     pub scale: Vec2,
     pub texture_id: TextureId,
     pub apply_model: bool,
+    pub rounded_coordinates: bool,
 
     pub vertices: Vec<ShapeVertex>,
     pub indices: Vec<u32>,
@@ -35,6 +36,7 @@ impl Shape {
             scale: Vec2::ONE,
             texture_id: TextureId::Default,
             apply_model: true,
+            rounded_coordinates: false,
 
             vertices: Default::default(),
             indices: Default::default(),
@@ -64,6 +66,8 @@ impl Shape {
             scale: Vec2::ONE,
             texture_id: TextureId::Default,
             apply_model: true,
+            rounded_coordinates: false,
+
             vertices,
             indices: vec![0, 1, 2, 0, 2, 3],
         }
@@ -90,6 +94,8 @@ impl Shape {
             scale: Vec2::ONE,
             texture_id: TextureId::Default,
             apply_model: true,
+            rounded_coordinates: false,
+
             vertices,
             indices: vec![0, 1, 2, 0, 2, 3],
         }
@@ -125,6 +131,8 @@ impl Shape {
             scale: Vec2::ONE,
             texture_id: TextureId::Default,
             apply_model: true,
+            rounded_coordinates: false,
+
             vertices,
             indices: vec![0, 2, 1, 2, 3, 1, 2, 4, 5, 2, 5, 3, 4, 6, 5, 6, 7, 5, 6, 0, 1, 6, 1, 7],
         }
@@ -158,7 +166,17 @@ impl Shape {
 
         indices.extend_from_slice(&[0, sides, 1]);
 
-        Shape { position: Vec2::ZERO, rotation: 0.0, scale: Vec2::ONE, texture_id: TextureId::Default, apply_model: true, vertices, indices }
+        Shape {
+            position: Vec2::ZERO,
+            rotation: 0.0,
+            scale: Vec2::ONE,
+            texture_id: TextureId::Default,
+            apply_model: true,
+            rounded_coordinates: false,
+
+            vertices,
+            indices,
+        }
     }
 
     pub fn new_circle(center: Vec2, radius: f32, sides: Option<u32>, thickness: f32, color: Vec4) -> Self {
@@ -191,7 +209,17 @@ impl Shape {
         let i = sides * 2;
         indices.extend_from_slice(&[i - 2, i - 1, 1, i - 2, 0, 1]);
 
-        Shape { position: Vec2::ZERO, rotation: 0.0, scale: Vec2::ONE, texture_id: TextureId::Default, apply_model: true, vertices, indices }
+        Shape {
+            position: Vec2::ZERO,
+            rotation: 0.0,
+            scale: Vec2::ONE,
+            texture_id: TextureId::Default,
+            apply_model: true,
+            rounded_coordinates: false,
+
+            vertices,
+            indices,
+        }
     }
 
     pub fn get_edges(&self) -> Vec<Edge> {

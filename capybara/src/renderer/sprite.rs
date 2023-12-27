@@ -13,6 +13,7 @@ pub struct Sprite {
     pub color: Vec4,
     pub texture_id: TextureId,
     pub texture_type: TextureType,
+    pub rounded_coordinates: bool,
 
     pub animation_frame: usize,
     pub animation_speed: f32,
@@ -65,6 +66,7 @@ impl Sprite {
             color: Vec4::new(1.0, 1.0, 1.0, 1.0),
             texture_id: TextureId::Default,
             texture_type: TextureType::Simple,
+            rounded_coordinates: false,
 
             animation_frame: 0,
             animation_speed: 1.0,

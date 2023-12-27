@@ -360,7 +360,7 @@ impl RendererContext {
                 }
                 TextureType::AtlasAnimation { entities } => {
                     if let TextureKind::Atlas(atlas_entities) = &texture.kind {
-                        let name = &entities[sprite.animation_frame];
+                        let name = &entities[sprite.animation_frame as usize];
                         let entity = match atlas_entities.get(name) {
                             Some(entity) => entity,
                             None => error_return!("Entity {} not found", name),
@@ -424,8 +424,8 @@ impl RendererContext {
                 }
                 TextureType::Tilemap { size } => {
                     let tiles_count = texture.size / *size;
-                    let tile_x = sprite.animation_frame % tiles_count.x as usize;
-                    let tile_y = sprite.animation_frame / tiles_count.x as usize;
+                    let tile_x = sprite.animation_frame % tiles_count.x as i32;
+                    let tile_y = sprite.animation_frame / tiles_count.x as i32;
                     let position = Vec2::new(tile_x as f32, tile_y as f32);
                     let uv_position = position / tiles_count;
                     let uv_size = *size / texture.size;
@@ -434,7 +434,7 @@ impl RendererContext {
                 }
                 TextureType::TilemapAnimation { size, frames } => {
                     let tiles_count = texture.size / *size;
-                    let frame = frames[sprite.animation_frame];
+                    let frame = frames[sprite.animation_frame as usize];
                     let frame_x = frame % tiles_count.x as usize;
                     let frame_y = frame / tiles_count.x as usize;
                     let position = Vec2::new(frame_x as f32, frame_y as f32);
@@ -456,7 +456,7 @@ impl RendererContext {
                 }
                 TextureType::AtlasAnimation { entities } => {
                     if let TextureKind::Atlas(atlas_entities) = &texture.kind {
-                        let name = &entities[sprite.animation_frame];
+                        let name = &entities[sprite.animation_frame as usize];
                         let entity = match atlas_entities.get(name) {
                             Some(entity) => entity,
                             None => error_return!("Entity {} not found", name),

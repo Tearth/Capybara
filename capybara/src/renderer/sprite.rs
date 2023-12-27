@@ -15,9 +15,10 @@ pub struct Sprite {
     pub texture_type: TextureType,
     pub rounded_coordinates: bool,
 
-    pub animation_frame: usize,
+    pub animation_frame: i32,
     pub animation_speed: f32,
     pub animation_loop: bool,
+    pub animation_backward: bool,
     pub animation_timestamp: Instant,
 }
 
@@ -71,6 +72,7 @@ impl Sprite {
             animation_frame: 0,
             animation_speed: 1.0,
             animation_loop: true,
+            animation_backward: false,
             animation_timestamp: Instant::now(),
         }
     }
@@ -102,14 +104,22 @@ impl Sprite {
             TextureType::TilemapAnimation { size: _, frames } => frames.len(),
             TextureType::AtlasAnimation { entities } => entities.len(),
             _ => return,
-        };
+        } as i32;
 
         if self.animation_frame == frames_count - 1 && !self.animation_loop {
             return;
         }
 
-        if (now - self.animation_timestamp).as_millis() >= (1000.0 / self.animation_speed) as u128 {
-            self.animation_frame = (self.animation_frame + 1) % frames_count;
+        if (now - self.animation_timestamp).as_secs_f32() >= self.animation_speed / 1000.0 {
+            if !self.animation_backward {
+                self.animation_frame = (self.animation_frame + 1) % frames_count;
+            } else {
+                self.animation_frame -= 1;
+                if self.animation_frame < 0 {
+                    self.animation_frame += frames_count;
+                }
+            }
+
             self.animation_timestamp = now;
         }
     }

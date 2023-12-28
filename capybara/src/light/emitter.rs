@@ -119,15 +119,16 @@ impl LightEmitter {
         // Step 4: add the most outer edges, so every ray will eventually hit something
         // ----------------------------------------------------------------------------
 
-        let left_bottom = self.position + self.max_length * Vec2::new(-1.0, -1.0) * 2.0;
-        let right_bottom = self.position + self.max_length * Vec2::new(1.0, -1.0) * 2.0;
-        let right_top = self.position + self.max_length * Vec2::new(1.0, 1.0) * 2.0;
-        let left_top = self.position + self.max_length * Vec2::new(-1.0, 1.0) * 2.0;
+        let outer_edge_distance = self.max_length * 2.0;
+        let left_bottom = self.position + outer_edge_distance * Vec2::new(-1.0, -1.0);
+        let right_bottom = self.position + outer_edge_distance * Vec2::new(1.0, -1.0);
+        let right_top = self.position + outer_edge_distance * Vec2::new(1.0, 1.0);
+        let left_top = self.position + outer_edge_distance * Vec2::new(-1.0, 1.0);
 
-        edges.push(EdgeWithDistance { a: left_bottom, b: right_bottom, distance: self.max_length });
-        edges.push(EdgeWithDistance { a: right_bottom, b: right_top, distance: self.max_length });
-        edges.push(EdgeWithDistance { a: right_top, b: left_top, distance: self.max_length });
-        edges.push(EdgeWithDistance { a: left_top, b: left_bottom, distance: self.max_length });
+        edges.push(EdgeWithDistance { a: left_bottom, b: right_bottom, distance: outer_edge_distance });
+        edges.push(EdgeWithDistance { a: right_bottom, b: right_top, distance: outer_edge_distance });
+        edges.push(EdgeWithDistance { a: right_top, b: left_top, distance: outer_edge_distance });
+        edges.push(EdgeWithDistance { a: left_top, b: left_bottom, distance: outer_edge_distance });
 
         // ----------------------------------------------------
         // Step 5: iterate through all edges and collect points

@@ -60,11 +60,11 @@ struct Object {
 }
 
 impl Scene<GlobalData> for MainScene {
-    fn activation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
+    fn activation(&mut self, _state: ApplicationState<GlobalData>) -> Result<()> {
         Ok(())
     }
 
-    fn deactivation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
+    fn deactivation(&mut self, _state: ApplicationState<GlobalData>) -> Result<()> {
         Ok(())
     }
 
@@ -80,11 +80,11 @@ impl Scene<GlobalData> for MainScene {
         Ok(())
     }
 
-    fn fixed(&mut self, _: ApplicationState<GlobalData>) -> Result<Option<FrameCommand>> {
+    fn fixed(&mut self, _state: ApplicationState<GlobalData>) -> Result<Option<FrameCommand>> {
         Ok(None)
     }
 
-    fn frame(&mut self, state: ApplicationState<GlobalData>, _: f32, delta: f32) -> Result<Option<FrameCommand>> {
+    fn frame(&mut self, state: ApplicationState<GlobalData>, _accumulator: f32, delta: f32) -> Result<Option<FrameCommand>> {
         self.delta_history.push_back(delta);
 
         if self.delta_history.len() > 100 {

@@ -218,19 +218,19 @@ impl Scene<GlobalData> for MenuScene {
         Ok(())
     }
 
-    fn deactivation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
+    fn deactivation(&mut self, _state: ApplicationState<GlobalData>) -> Result<()> {
         Ok(())
     }
 
-    fn input(&mut self, _: ApplicationState<GlobalData>, _: InputEvent) -> Result<()> {
+    fn input(&mut self, _state: ApplicationState<GlobalData>, _event: InputEvent) -> Result<()> {
         Ok(())
     }
 
-    fn fixed(&mut self, _: ApplicationState<GlobalData>) -> Result<Option<FrameCommand>> {
+    fn fixed(&mut self, _state: ApplicationState<GlobalData>) -> Result<Option<FrameCommand>> {
         Ok(None)
     }
 
-    fn frame(&mut self, _: ApplicationState<GlobalData>, _: f32, _: f32) -> Result<Option<FrameCommand>> {
+    fn frame(&mut self, _state: ApplicationState<GlobalData>, _accumulator: f32, _delta: f32) -> Result<Option<FrameCommand>> {
         Ok(None)
     }
 

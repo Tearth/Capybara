@@ -119,7 +119,7 @@ impl FileSystem {
         *self.status.borrow()
     }
 
-    pub fn write(&self, _: &str, _: &str) {
+    pub fn write(&self, _path: &str, _content: &str) {
         error!("Writing files not supported on Web")
     }
 

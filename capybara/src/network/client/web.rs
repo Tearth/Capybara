@@ -141,7 +141,7 @@ impl WebSocketClient {
     }
 
     fn init_onerror_callback(&mut self) {
-        self.onerror_callback = Closure::<dyn FnMut(_)>::new(move |_| {
+        self.onerror_callback = Closure::<dyn FnMut(_)>::new(move |_event: MessageEvent| {
             error!("Connection error");
         });
 

@@ -60,11 +60,11 @@ struct Object {
 }
 
 impl Scene<GlobalData> for MainScene {
-    fn activation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
+    fn activation(&mut self, _state: ApplicationState<GlobalData>) -> Result<()> {
         Ok(())
     }
 
-    fn deactivation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
+    fn deactivation(&mut self, _state: ApplicationState<GlobalData>) -> Result<()> {
         Ok(())
     }
 

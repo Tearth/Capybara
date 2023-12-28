@@ -52,7 +52,7 @@ pub struct WindowContext {
 }
 
 impl WindowContext {
-    pub fn new(_: &str, _: WindowStyle, msaa: Option<u32>) -> Result<Box<Self>> {
+    pub fn new(_title: &str, _style: WindowStyle, msaa: Option<u32>) -> Result<Box<Self>> {
         #[cfg(debug_assertions)]
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
@@ -126,7 +126,7 @@ impl WindowContext {
         gl
     }
 
-    pub fn set_style(&mut self, _: WindowStyle) {
+    pub fn set_style(&mut self, _style: WindowStyle) {
         // Styles are not supported by browsers
     }
 
@@ -222,7 +222,7 @@ impl WindowContext {
     where
         G: Default + 'static,
     {
-        self.mouseleave_callback = Closure::<dyn FnMut(_)>::new(move |_: MouseEvent| {
+        self.mouseleave_callback = Closure::<dyn FnMut(_)>::new(move |_event: MouseEvent| {
             let mut app = app.borrow_mut();
 
             app.window.event_queue.push_back(InputEvent::MouseLeave);
@@ -420,7 +420,7 @@ impl WindowContext {
         self.cursor_visible = visible;
     }
 
-    pub fn set_swap_interval(&self, _: u32) {
+    pub fn set_swap_interval(&self, _interval: u32) {
         // Swap interval is not supported by browsers
     }
 

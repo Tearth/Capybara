@@ -31,23 +31,23 @@ struct MainScene {
 }
 
 impl Scene<GlobalData> for MainScene {
-    fn activation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
+    fn activation(&mut self, _state: ApplicationState<GlobalData>) -> Result<()> {
         Ok(())
     }
 
-    fn deactivation(&mut self, _: ApplicationState<GlobalData>) -> Result<()> {
+    fn deactivation(&mut self, _state: ApplicationState<GlobalData>) -> Result<()> {
         Ok(())
     }
 
-    fn input(&mut self, _: ApplicationState<GlobalData>, _: InputEvent) -> Result<()> {
+    fn input(&mut self, _state: ApplicationState<GlobalData>, _event: InputEvent) -> Result<()> {
         Ok(())
     }
 
-    fn fixed(&mut self, _: ApplicationState<GlobalData>) -> Result<Option<FrameCommand>> {
+    fn fixed(&mut self, _state: ApplicationState<GlobalData>) -> Result<Option<FrameCommand>> {
         Ok(None)
     }
 
-    fn frame(&mut self, state: ApplicationState<GlobalData>, _: f32, _: f32) -> Result<Option<FrameCommand>> {
+    fn frame(&mut self, state: ApplicationState<GlobalData>, _accumulator: f32, _delta: f32) -> Result<Option<FrameCommand>> {
         if !self.initialized && state.global.assets.load("./data/data0.zip") == AssetsLoadingStatus::Finished {
             state.ui.instantiate_assets(&state.global.assets, None);
             self.initialized = true;

@@ -41,6 +41,8 @@ pub struct LdtkLevel {
 pub struct LdtkLayer {
     pub id: usize,
     pub name: String,
+    pub grid_size: Vec2,
+    pub tilemap_id: Option<usize>,
     pub tiles: Vec<LdtkTile>,
     pub entities: Vec<LdtkEntity>,
 }
@@ -50,7 +52,6 @@ pub struct LdtkTile {
     pub id: usize,
     pub position: Vec2,
     pub source: Vec2,
-    pub tilemap_id: usize,
 }
 
 #[derive(Default)]
@@ -58,6 +59,7 @@ pub struct LdtkEntity {
     pub name: String,
     pub position: Vec2,
     pub size: Vec2,
+    pub pivot: Vec2,
     pub source: Vec2,
     pub tilemap_id: usize,
     pub fields: HashMap<String, LdtkEntityField>,
@@ -150,11 +152,20 @@ fn load_level(
         };
         let layer_definition_tilemap = read_value_nullable::<f64>(layer_definition, "tilesetDefUid")?;
         let layer_name = read_value::<String>(layer_definition, "identifier")?;
+        let layer_grid_size = read_value::<f64>(layer_definition, "gridSize")? as f32;
         let layer_tilemap = read_value_nullable::<f64>(data, "overrideTilesetUid")?;
+        let tilemap_id = layer_tilemap.or(layer_definition_tilemap);
 
-        let mut layer = LdtkLayer { id, name: layer_name, tiles: Vec::new(), entities: Vec::new() };
+        let mut layer = LdtkLayer {
+            id,
+            name: layer_name,
+            grid_size: Vec2::new(layer_grid_size, layer_grid_size),
+            tilemap_id: tilemap_id.map(|p| p as usize),
+            tiles: Vec::new(),
+            entities: Vec::new(),
+        };
 
-        if let Some(tilemap_id) = layer_tilemap.or(layer_definition_tilemap) {
+        if let Some(tilemap_id) = tilemap_id {
             let tilemap = match tilemaps.iter().find(|p| p.id == tilemap_id as usize) {
                 Some(tilemap) => tilemap,
                 None => bail!("Failed to find tilemap {}", tilemap_id),
@@ -167,7 +178,6 @@ fn load_level(
                     id: read_value::<f64>(data, "t")? as usize,
                     position: Vec2::new(position.x, level.size.y - position.y - tilemap.tile_size.y),
                     source: read_position(data, "src")?,
-                    tilemap_id: tilemap_id as usize,
                 });
             }
         }
@@ -182,6 +192,7 @@ fn load_level(
                 };
             let field_definitions = read_array(entity_definition, "fieldDefs")?;
             let tile_data = read_object(entity_definition, "tileRect")?;
+            let pivot = Vec2::new(read_value::<f64>(entity_definition, "pivotX")? as f32, read_value::<f64>(entity_definition, "pivotY")? as f32);
 
             let entity_definition_tilemap = read_value_nullable::<f64>(entity_definition, "tilesetId")?;
             if let Some(tilemap_id) = layer_tilemap.or(entity_definition_tilemap) {
@@ -275,8 +286,9 @@ fn load_level(
 
                 layer.entities.push(LdtkEntity {
                     name: read_value::<String>(entity_definition, "identifier")?,
-                    position: Vec2::new(position.x, level.size.y - position.y - tilemap.tile_size.y),
+                    position: Vec2::new(position.x, level.size.y - position.y - tilemap.tile_size.y + pivot.y * tilemap.tile_size.y),
                     size: Vec2::new(read_value::<f64>(data, "width")? as f32, read_value::<f64>(data, "height")? as f32),
+                    pivot,
                     source: Vec2::new(read_value::<f64>(tile_data, "x")? as f32, read_value::<f64>(tile_data, "y")? as f32),
                     tilemap_id: tilemap_id as usize,
                     fields,

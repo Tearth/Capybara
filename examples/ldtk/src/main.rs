@@ -79,26 +79,28 @@ impl Scene<GlobalData> for MainScene {
             let level = &world.levels[0];
 
             for layer in &level.layers {
-                for tile in &layer.tiles {
-                    let tileset = world.tilemaps.iter().find(|p| p.id == tile.tilemap_id).unwrap();
-                    state.renderer.draw_sprite(&Sprite {
-                        position: tile.position + Vec2::new(140.0, 0.0),
-                        size: Some(tileset.tile_size),
-                        anchor: Vec2::new(0.0, 0.0),
-                        texture_id: TextureId::Some(state.renderer.textures.get_id(&tileset.name).unwrap()),
-                        texture_type: TextureType::SimpleCoordinates { position: tile.source, size: tileset.tile_size },
-                        ..Default::default()
-                    });
+                if let Some(tilemap_id) = layer.tilemap_id {
+                    let tilemap = world.tilemaps.iter().find(|p| p.id == tilemap_id).unwrap();
+                    for tile in &layer.tiles {
+                        state.renderer.draw_sprite(&Sprite {
+                            position: tile.position + Vec2::new(140.0, 0.0),
+                            size: Some(tilemap.tile_size),
+                            anchor: Vec2::new(0.0, 0.0),
+                            texture_id: TextureId::Some(state.renderer.textures.get_id(&tilemap.name).unwrap()),
+                            texture_type: TextureType::SimpleCoordinates { position: tile.source, size: tilemap.tile_size },
+                            ..Default::default()
+                        });
+                    }
                 }
 
                 for entity in &layer.entities {
-                    let tileset = world.tilemaps.iter().find(|p| p.id == entity.tilemap_id).unwrap();
+                    let tilemap = world.tilemaps.iter().find(|p| p.id == entity.tilemap_id).unwrap();
                     state.renderer.draw_sprite(&Sprite {
                         position: entity.position + Vec2::new(140.0, 0.0),
-                        size: Some(tileset.tile_size),
+                        size: Some(tilemap.tile_size),
                         anchor: Vec2::new(0.0, 0.0),
-                        texture_id: TextureId::Some(state.renderer.textures.get_id(&tileset.name).unwrap()),
-                        texture_type: TextureType::SimpleCoordinates { position: entity.source, size: tileset.tile_size },
+                        texture_id: TextureId::Some(state.renderer.textures.get_id(&tilemap.name).unwrap()),
+                        texture_type: TextureType::SimpleCoordinates { position: entity.source, size: tilemap.tile_size },
                         ..Default::default()
                     });
                 }

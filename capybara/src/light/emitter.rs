@@ -39,8 +39,8 @@ impl LightEmitter {
             position: Vec2::ZERO,
             edges: Vec::new(),
             offset: 0.002,
-            color_begin: Vec4::new(1.0, 0.0, 1.0, 1.0),
-            color_end: Vec4::new(1.0, 0.0, 0.0, 1.0),
+            color_begin: Vec4::new(1.0, 1.0, 1.0, 1.0),
+            color_end: Vec4::new(1.0, 1.0, 1.0, 1.0),
             angle: 0.0,
             arc: consts::TAU,
             max_length: 10000.0,
@@ -107,13 +107,30 @@ impl LightEmitter {
         // -------------------------------------------------------------------------------------
 
         for edge in &self.edges {
-            edges.push(EdgeWithDistance { a: edge.a, b: edge.b, distance: self.position.distance_to_segment(edge.a, edge.b) });
+            let distance = self.position.distance_to_segment(edge.a, edge.b);
+            if distance <= self.max_length {
+                edges.push(EdgeWithDistance { a: edge.a, b: edge.b, distance });
+            }
         }
 
         edges.sort_unstable_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
 
+        // ----------------------------------------------------------------------------
+        // Step 4: add the most outer edges, so every ray will eventually hit something
+        // ----------------------------------------------------------------------------
+
+        let left_bottom = self.position + self.max_length * Vec2::new(-1.0, -1.0) * 2.0;
+        let right_bottom = self.position + self.max_length * Vec2::new(1.0, -1.0) * 2.0;
+        let right_top = self.position + self.max_length * Vec2::new(1.0, 1.0) * 2.0;
+        let left_top = self.position + self.max_length * Vec2::new(-1.0, 1.0) * 2.0;
+
+        edges.push(EdgeWithDistance { a: left_bottom, b: right_bottom, distance: self.max_length });
+        edges.push(EdgeWithDistance { a: right_bottom, b: right_top, distance: self.max_length });
+        edges.push(EdgeWithDistance { a: right_top, b: left_top, distance: self.max_length });
+        edges.push(EdgeWithDistance { a: left_top, b: left_bottom, distance: self.max_length });
+
         // ----------------------------------------------------
-        // Step 4: iterate through all edges and collect points
+        // Step 5: iterate through all edges and collect points
         // ----------------------------------------------------
 
         for edge in &edges {
@@ -148,14 +165,14 @@ impl LightEmitter {
         }
 
         // ----------------------------------------------------------------------------------------
-        // Step 5: sort and deduplicate points, so the mesh can be later generated in correct order
+        // Step 6: sort and deduplicate points, so the mesh can be later generated in correct order
         // ----------------------------------------------------------------------------------------
 
         points.sort_by(|a, b| a.angle.partial_cmp(&b.angle).unwrap());
         points.dedup_by(|a, b| a.angle == b.angle);
 
         // ----------------------------------------------------------------------------------------------
-        // Step 6: calculate points of hits between rays and edges, select nearest ones and put into list
+        // Step 7: calculate points of hits between rays and edges, select nearest ones and put into list
         // ----------------------------------------------------------------------------------------------
 
         for point in &points {
@@ -189,7 +206,7 @@ impl LightEmitter {
         }
 
         // -----------------------------------------------------------------------------------
-        // Step 7: generate mesh with first vertex centered and all others placed circle-like
+        // Step 8: generate mesh with first vertex centered and all others placed circle-like
         // -----------------------------------------------------------------------------------
 
         let mut shape = Shape::new();

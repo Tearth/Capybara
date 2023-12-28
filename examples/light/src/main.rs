@@ -26,7 +26,6 @@ use capybara::renderer::shader::Shader;
 use capybara::renderer::sprite::Sprite;
 use capybara::renderer::sprite::TextureId;
 use capybara::renderer::texture::Texture;
-use capybara::renderer::Edge;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
 use capybara::window::Coordinates;
@@ -191,16 +190,6 @@ impl Scene<GlobalData> for MainScene {
             // edges.append(&mut line.get_edges());
 
             state.renderer.set_target_texture(None);
-
-            let min = Vec2::new(0.0, 0.0);
-            let max = state.renderer.viewport_size;
-
-            edges.append(&mut vec![
-                Edge::new(min, Vec2::new(max.x, min.y)),
-                Edge::new(Vec2::new(max.x, min.y), Vec2::new(max.x, max.y)),
-                Edge::new(Vec2::new(max.x, max.y), Vec2::new(min.x, max.y)),
-                Edge::new(Vec2::new(min.x, max.y), Vec2::new(min.x, min.y)),
-            ]);
 
             self.emitter.position = state.renderer.cameras.get(0)?.from_window_to_screen_coordinates(state.window.cursor_position.into());
             self.emitter.edges = edges;

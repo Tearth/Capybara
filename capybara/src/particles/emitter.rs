@@ -30,7 +30,7 @@ pub struct ParticleEmitter<const WAYPOINTS: usize> {
     pub particle_texture_id: Option<usize>,
     pub particle_texture_type: TextureType,
 
-    last_burst_time: Option<Instant>,
+    pub last_burst_time: Option<Instant>,
 
     pub particles: Storage<Particle<WAYPOINTS>>,
     pub velocity_waypoints: ArrayVec<ParticleParameter<Vec2>, WAYPOINTS>,

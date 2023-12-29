@@ -1,6 +1,7 @@
 use super::GlobalData;
 use crate::ui::components;
 use crate::ui::state::WidgetState;
+use crate::utils::debug::DebugCollector;
 use capybara::anyhow::Result;
 use capybara::app::ApplicationState;
 use capybara::egui::Align2;
@@ -20,6 +21,8 @@ pub struct GameScene {
     play_button_state: WidgetState,
     exit_button_state: WidgetState,
     exit_menu_visible: bool,
+
+    debug_collector: DebugCollector,
 }
 
 impl Scene<GlobalData> for GameScene {
@@ -47,7 +50,8 @@ impl Scene<GlobalData> for GameScene {
         Ok(None)
     }
 
-    fn frame(&mut self, _state: ApplicationState<GlobalData>, _accumulator: f32, _delta: f32) -> Result<Option<FrameCommand>> {
+    fn frame(&mut self, state: ApplicationState<GlobalData>, _accumulator: f32, delta: f32) -> Result<Option<FrameCommand>> {
+        self.debug_collector.collect(&state, delta);
         Ok(None)
     }
 
@@ -79,6 +83,8 @@ impl Scene<GlobalData> for GameScene {
                         });
                     });
             }
+
+            components::debug_window(context, &self.debug_collector.get_data());
         });
 
         Ok((output, command))

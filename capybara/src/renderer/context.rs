@@ -876,6 +876,17 @@ impl RendererContext {
             self.framebuffer_msaa = msaa;
         }
     }
+
+    pub fn get_hardware_info(&self) -> String {
+        unsafe {
+            if self.gl.supported_extensions().contains("WEBGL_debug_renderer_info") {
+                const UNMASKED_RENDERER_WEBGL: u32 = 0x9246;
+                self.gl.get_parameter_string(UNMASKED_RENDERER_WEBGL)
+            } else {
+                self.gl.get_parameter_string(glow::RENDERER)
+            }
+        }
+    }
 }
 
 impl BufferMetadata {

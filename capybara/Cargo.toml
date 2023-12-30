@@ -15,6 +15,7 @@ log = { version = "0.4.20" }
 glow = { version = "0.13.0" }
 glam = { version = "0.24.2" }
 egui = { version = "0.24.1", default-features = false }
+egui_plot = { version = "0.24.1" }
 zip = { version = "0.6.6", default-features = false, features = [ "deflate" ] }
 png = { version = "0.17.10" }
 quick-xml = { version = "0.31.0" }

@@ -84,7 +84,7 @@ impl Scene<GlobalData> for GameScene {
                     });
             }
 
-            components::debug_window(context, &self.debug_collector.get_data());
+            components::debug_window(context, &mut self.debug_collector);
         });
 
         Ok((output, command))

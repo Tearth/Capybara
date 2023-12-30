@@ -29,7 +29,7 @@ impl DebugCollector {
         Self {
             fps_average: 0,
             delta_history: VecDeque::new(),
-            delta_history_capacity: 100,
+            delta_history_capacity: 400,
             hardware_info: None,
 
             cache: None,

@@ -31,6 +31,7 @@ pub mod network;
 
 pub use anyhow;
 pub use egui;
+pub use egui_plot;
 pub use fastrand;
 pub use glam;
 pub use instant;

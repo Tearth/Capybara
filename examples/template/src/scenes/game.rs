@@ -13,6 +13,7 @@ use capybara::glam::Vec4;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
 use capybara::utils::color::Vec4Color;
+use capybara::utils::profiler::Profiler;
 use capybara::window::InputEvent;
 use capybara::window::Key;
 
@@ -22,6 +23,7 @@ pub struct GameScene {
     exit_button_state: WidgetState,
     exit_menu_visible: bool,
 
+    profiler: Profiler,
     debug_collector: DebugCollector,
 }
 
@@ -38,24 +40,37 @@ impl Scene<GlobalData> for GameScene {
     }
 
     fn input(&mut self, _state: ApplicationState<GlobalData>, event: InputEvent) -> Result<()> {
+        self.profiler.resume("input");
+
         if let InputEvent::KeyPress { key, repeat: _, modifiers: _ } = event {
             if key == Key::Escape {
                 self.exit_menu_visible = !self.exit_menu_visible;
             }
         }
+
+        self.profiler.pause("input");
         Ok(())
     }
 
     fn fixed(&mut self, _state: ApplicationState<GlobalData>) -> Result<Option<FrameCommand>> {
+        self.profiler.start("fixed");
+        self.profiler.stop("fixed");
+
         Ok(None)
     }
 
     fn frame(&mut self, state: ApplicationState<GlobalData>, _accumulator: f32, delta: f32) -> Result<Option<FrameCommand>> {
+        self.profiler.start("frame");
         self.debug_collector.collect(&state, delta);
+        self.profiler.stop("frame");
+
         Ok(None)
     }
 
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
+        self.profiler.start("ui");
+        self.profiler.stop("input");
+
         let mut command = None;
         let output = state.ui.inner.read().unwrap().run(input, |context| {
             let center = context.screen_rect().center();
@@ -84,9 +99,10 @@ impl Scene<GlobalData> for GameScene {
                     });
             }
 
-            components::debug_window(context, &mut self.debug_collector);
+            components::debug_window(context, &mut self.debug_collector, &self.profiler);
         });
 
+        self.profiler.stop("ui");
         Ok((output, command))
     }
 }

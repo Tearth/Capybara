@@ -1,11 +1,15 @@
+use crate::utils::console::Console;
 use crate::utils::debug::DebugCollector;
+use capybara::egui::Align;
 use capybara::egui::Color32;
 use capybara::egui::Context;
 use capybara::egui::Frame;
 use capybara::egui::Margin;
 use capybara::egui::RichText;
 use capybara::egui::Rounding;
+use capybara::egui::ScrollArea;
 use capybara::egui::Stroke;
+use capybara::egui::TextEdit;
 use capybara::egui::Vec2b;
 use capybara::egui::Window;
 use capybara::egui_plot::Line;
@@ -21,7 +25,7 @@ pub struct ProfilerPlotDefinition<'a> {
     pub color: Color32,
 }
 
-pub fn debug_window(context: &Context, collector: &mut DebugCollector, profiler: &Profiler) {
+pub fn debug_window(context: &Context, console: &mut Console, profiler: &Profiler, collector: &mut DebugCollector) {
     let data = collector.get_data();
     let mut plot_data = Vec::new();
 
@@ -130,13 +134,29 @@ pub fn debug_window(context: &Context, collector: &mut DebugCollector, profiler:
                     });
                 });
             });
+
+            ui.vertical_centered_justified(|ui| {
+                ScrollArea::vertical().max_height(95.0).show(ui, |ui| {
+                    ui.add(TextEdit::multiline(&mut console.output_content).desired_rows(6).interactive(false));
+
+                    if console.is_changed() {
+                        ui.scroll_to_cursor(Some(Align::BOTTOM));
+                    }
+                });
+
+                if ui.add(TextEdit::multiline(&mut console.input_content).desired_rows(1)).changed() {
+                    if console.input_content.chars().last().unwrap_or('\0') == '\n' {
+                        console.test();
+                    }
+                }
+            });
         });
 }
 
 fn debug_frame() -> Frame {
     Frame::none()
         .inner_margin(Margin::symmetric(10.0, 10.0))
-        .stroke(Stroke::new(1.0, Color32::from_rgba_unmultiplied(0, 0, 0, 220)))
-        .fill(Color32::from_rgba_unmultiplied(40, 40, 40, 220))
+        .stroke(Stroke::new(1.0, Color32::from_rgba_unmultiplied(0, 0, 0, 240)))
+        .fill(Color32::from_rgba_unmultiplied(40, 40, 40, 240))
         .rounding(Rounding::same(5.0))
 }

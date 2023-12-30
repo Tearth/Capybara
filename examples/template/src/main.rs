@@ -1,4 +1,4 @@
-#![allow(clippy::too_many_arguments)]
+#![allow(clippy::too_many_arguments, clippy::collapsible_if)]
 
 use capybara::anyhow::Result;
 use capybara::app::ApplicationContext;

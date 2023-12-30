@@ -1,6 +1,7 @@
 use super::GlobalData;
 use crate::ui::components;
 use crate::ui::state::WidgetState;
+use crate::utils::console::Console;
 use crate::utils::debug::DebugCollector;
 use capybara::anyhow::Result;
 use capybara::app::ApplicationState;
@@ -23,6 +24,7 @@ pub struct GameScene {
     exit_button_state: WidgetState,
     exit_menu_visible: bool,
 
+    console: Console,
     profiler: Profiler,
     debug_collector: DebugCollector,
 }
@@ -99,7 +101,7 @@ impl Scene<GlobalData> for GameScene {
                     });
             }
 
-            components::debug_window(context, &mut self.debug_collector, &self.profiler);
+            components::debug_window(context, &mut self.console, &self.profiler, &mut self.debug_collector);
         });
 
         self.profiler.stop("ui");

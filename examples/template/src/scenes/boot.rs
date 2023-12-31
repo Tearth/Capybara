@@ -42,6 +42,7 @@ impl Scene<GlobalData> for BootScene {
                 (TextStyle::Heading, (FontId { size: 32.0, family: FontFamily::Name("Kenney Pixel".into()) })),
                 (TextStyle::Body, (FontId { size: 20.0, family: FontFamily::Name("Kenney Pixel".into()) })),
                 (TextStyle::Button, (FontId { size: 32.0, family: FontFamily::Name("Kenney Pixel".into()) })),
+                (TextStyle::Name("Debug".into()), (FontId { size: 20.0, family: FontFamily::Name("Kenney Pixel".into()) })),
             ]
             .into();
             style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(1.0, Color32::from_rgb(30, 50, 20));

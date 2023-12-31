@@ -10,6 +10,7 @@ use capybara::egui::Rounding;
 use capybara::egui::ScrollArea;
 use capybara::egui::Stroke;
 use capybara::egui::TextEdit;
+use capybara::egui::TextStyle;
 use capybara::egui::Vec2;
 use capybara::egui::Vec2b;
 use capybara::egui::Window;
@@ -38,20 +39,26 @@ pub fn debug_window(context: &Context, console: &mut Console, profiler: &Profile
         .default_width(700.0)
         .show(context, |ui| {
             ui.style_mut().visuals.widgets.noninteractive.fg_stroke = Stroke::new(1.0, Color32::from_rgb(255, 255, 255));
+            ui.style_mut().override_text_style = Some(TextStyle::Name("Debug".into()));
 
             ui.label(&data.hardware_info);
             ui.add_space(15.0);
             ui.columns(4, |ui| {
                 ui[0].vertical(|ui| {
-                    ui.label(format!("FPS current: {:.1}", data.fps_current));
-                    ui.label(format!("FPS average: {}", data.fps_average));
+                    ui.horizontal(|ui| {
+                        ui.label(format!("FPS average: {}", data.fps_average));
+                    });
                     ui.horizontal(|ui| {
                         ui.style_mut().spacing.item_spacing = capybara::egui::Vec2::new(4.0, 0.0);
                         ui.label("Delta current:");
                         ui.label(RichText::new(format!("{:.1} ms", data.delta_current * 1000.0)).color(Color32::GREEN));
                     });
-                    ui.label(format!("Delta average: {:.1} ms", data.delta_average * 1000.0));
-                    ui.label(format!("Delta deviation: {:.1} ms", data.delta_deviation * 1000.0));
+                    ui.horizontal(|ui| {
+                        ui.label(format!("Delta average: {:.1} ms", data.delta_average * 1000.0));
+                    });
+                    ui.horizontal(|ui| {
+                        ui.label(format!("Delta deviation: {:.1} ms", data.delta_deviation * 1000.0));
+                    });
                 });
 
                 ui[1].horizontal(|ui| {
@@ -87,7 +94,7 @@ pub fn debug_window(context: &Context, console: &mut Console, profiler: &Profile
                         let plot_definitions = vec![
                             ProfilerPlotDefinition { name: "input", label: "Input average", color: Color32::RED },
                             ProfilerPlotDefinition { name: "fixed", label: "Fixed average", color: Color32::GREEN },
-                            ProfilerPlotDefinition { name: "frame", label: "Frame average", color: Color32::BLUE },
+                            ProfilerPlotDefinition { name: "frame", label: "Frame average", color: Color32::LIGHT_BLUE },
                             ProfilerPlotDefinition { name: "ui", label: "UI average", color: Color32::YELLOW },
                         ];
 
@@ -138,7 +145,27 @@ pub fn debug_window(context: &Context, console: &mut Console, profiler: &Profile
                 });
             });
 
+            //ui.add_space(10.0);
             ui.horizontal(|ui| {
+                ui.vertical(|ui| {
+                    ui.horizontal(|ui| {
+                        ui.label(format!("Draw calls: {} ({} tris)", data.renderer.draw_calls, data.renderer.triangles));
+                    });
+                    ui.horizontal(|ui| {
+                        ui.label(format!("Sprite buffer size: {:.1} MB", data.renderer.sprite_buffer_size as f32 / 1024.0 / 1024.0));
+                    });
+                    ui.horizontal(|ui| {
+                        ui.label(format!("Shape buffer size: {:.1} MB", data.renderer.shape_buffer_size as f32 / 1024.0 / 1024.0));
+                    });
+                    ui.horizontal(|ui| {
+                        ui.label(format!(
+                            "Loaded textures: {} ({:.1} MB)",
+                            data.renderer.loaded_textures_count,
+                            data.renderer.loaded_textures_size as f32 / 1024.0 / 1024.0
+                        ));
+                    });
+                });
+                ui.add_space(10.0);
                 ui.vertical(|ui| {
                     ui.horizontal(|ui| {
                         ui.style_mut().spacing.item_spacing = capybara::egui::Vec2::new(4.0, 0.0);
@@ -147,18 +174,18 @@ pub fn debug_window(context: &Context, console: &mut Console, profiler: &Profile
                     });
                     ui.horizontal(|ui| {
                         ui.style_mut().spacing.item_spacing = capybara::egui::Vec2::new(4.0, 0.0);
+                        ui.label(format!("Private memory (peak): {:.1} MB", data.private_memory_peak as f32 / 1024.0 / 1024.0));
+                    });
+                    ui.horizontal(|ui| {
+                        ui.style_mut().spacing.item_spacing = capybara::egui::Vec2::new(4.0, 0.0);
                         ui.label("Reserved memory:");
-                        ui.label(RichText::new(format!("{:.1} MB", data.reserved_memory_current as f32 / 1024.0 / 1024.0)).color(Color32::BLUE));
+                        ui.label(
+                            RichText::new(format!("{:.1} MB", data.reserved_memory_current as f32 / 1024.0 / 1024.0)).color(Color32::LIGHT_BLUE),
+                        );
                     });
                     ui.horizontal(|ui| {
                         ui.style_mut().spacing.item_spacing = capybara::egui::Vec2::new(4.0, 0.0);
-                        ui.label("Private memory (peak):");
-                        ui.label(RichText::new(format!("{:.1} MB", data.private_memory_peak as f32 / 1024.0 / 1024.0)).color(Color32::GREEN));
-                    });
-                    ui.horizontal(|ui| {
-                        ui.style_mut().spacing.item_spacing = capybara::egui::Vec2::new(4.0, 0.0);
-                        ui.label("Reserved memory (peak):");
-                        ui.label(RichText::new(format!("{:.1} MB", data.reserved_memory_peak as f32 / 1024.0 / 1024.0)).color(Color32::BLUE));
+                        ui.label(format!("Reserved memory (peak): {:.1} MB", data.reserved_memory_peak as f32 / 1024.0 / 1024.0));
                     });
                 });
 
@@ -188,7 +215,7 @@ pub fn debug_window(context: &Context, console: &mut Console, profiler: &Profile
 
                 plot.show(ui, |plot_ui| {
                     plot_ui.line(Line::new(PlotPoints::Owned(plot_data_private_memory)).color(Color32::GREEN).style(LineStyle::Solid));
-                    plot_ui.line(Line::new(PlotPoints::Owned(plot_data_reserved_memory)).color(Color32::BLUE).style(LineStyle::Solid));
+                    plot_ui.line(Line::new(PlotPoints::Owned(plot_data_reserved_memory)).color(Color32::LIGHT_BLUE).style(LineStyle::Solid));
                 });
             });
 

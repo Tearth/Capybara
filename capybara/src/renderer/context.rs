@@ -89,6 +89,9 @@ pub struct RendererContext {
     pub fps: u32,
     fps_timestamp: Instant,
     fps_count: u32,
+
+    pub statistics: RendererStatistics,
+    statistics_current: RendererStatistics,
 }
 
 pub struct BufferMetadata {
@@ -96,6 +99,16 @@ pub struct BufferMetadata {
     pub texture_id: TextureId,
     pub framebuffer_texture_id: Option<usize>,
     pub selected_shader_id: usize,
+}
+
+#[derive(Copy, Clone, Default)]
+pub struct RendererStatistics {
+    pub draw_calls: usize,
+    pub triangles: usize,
+    pub sprite_buffer_size: usize,
+    pub shape_buffer_size: usize,
+    pub loaded_textures_count: usize,
+    pub loaded_textures_size: usize,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -168,6 +181,9 @@ impl RendererContext {
                 fps: 0,
                 fps_timestamp: Instant::now(),
                 fps_count: 0,
+
+                statistics: Default::default(),
+                statistics_current: Default::default(),
             };
 
             context.gl.enable(glow::BLEND);
@@ -318,6 +334,14 @@ impl RendererContext {
         unsafe {
             self.gl.flush();
         }
+
+        self.statistics_current.sprite_buffer_size = self.sprite_buffer_vertices_queue.len() * mem::size_of::<SpriteVertex>();
+        self.statistics_current.shape_buffer_size = self.shape_buffer_vertices_queue.len() * mem::size_of::<ShapeVertex>();
+        self.statistics_current.loaded_textures_count = self.textures.len();
+        self.statistics_current.loaded_textures_size = self.textures.iter().fold(0, |acc, p| acc + (p.size.x * p.size.y) as usize);
+
+        self.statistics = self.statistics_current;
+        self.statistics_current = Default::default();
 
         let now = Instant::now();
         if (now - self.fps_timestamp).as_secs() >= 1 {
@@ -625,6 +649,7 @@ impl RendererContext {
 
                         self.gl.draw_elements_instanced(glow::TRIANGLES, 6, glow::UNSIGNED_INT, 0, self.sprite_buffer_count as i32);
 
+                        self.statistics_current.triangles += self.sprite_buffer_count * 2;
                         self.sprite_buffer_count = 0;
                         self.sprite_buffer_vertices_count = 0;
                     }
@@ -674,12 +699,14 @@ impl RendererContext {
 
                         self.gl.draw_elements(glow::TRIANGLES, self.shape_buffer_indices_count as i32, glow::UNSIGNED_INT, 0);
 
+                        self.statistics_current.triangles += self.shape_buffer_indices_count / 3;
                         self.shape_buffer_vertices_count = 0;
                         self.shape_buffer_indices_count = 0;
                         self.shape_buffer_indices_max = 0;
                     }
                 }
 
+                self.statistics_current.draw_calls += 1;
                 self.buffer_metadata = None;
             }
         }

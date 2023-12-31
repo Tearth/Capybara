@@ -3,6 +3,7 @@ use rustc_hash::FxHashMap;
 use std::collections::VecDeque;
 
 pub struct Profiler {
+    pub enabled: bool,
     pub data: FxHashMap<String, ProfilerData>,
     pub history_capacity: usize,
 }
@@ -16,10 +17,14 @@ pub struct ProfilerData {
 
 impl Profiler {
     pub fn new() -> Self {
-        Self { data: Default::default(), history_capacity: 400 }
+        Self { enabled: false, data: Default::default(), history_capacity: 400 }
     }
 
     pub fn start(&mut self, name: &str) {
+        if !self.enabled {
+            return;
+        }
+
         if let Some(data) = self.data.get_mut(name) {
             data.timestamp = Some(Instant::now());
             data.accumulator = 0.0;
@@ -35,7 +40,9 @@ impl Profiler {
                 data.history.push_back(data.accumulator + (Instant::now() - timestamp).as_secs_f32());
                 data.timestamp = None;
             } else {
-                data.history.push_back(data.accumulator);
+                if self.enabled {
+                    data.history.push_back(data.accumulator);
+                }
             }
 
             if data.history.len() > self.history_capacity {
@@ -55,6 +62,10 @@ impl Profiler {
         }
     }
     pub fn resume(&mut self, name: &str) {
+        if !self.enabled {
+            return;
+        }
+
         if let Some(data) = self.data.get_mut(name) {
             data.timestamp = Some(Instant::now());
         } else {

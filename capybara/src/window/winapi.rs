@@ -7,7 +7,6 @@ use ::winapi::um::errhandlingapi;
 use ::winapi::um::libloaderapi;
 use ::winapi::um::processthreadsapi;
 use ::winapi::um::psapi;
-use ::winapi::um::psapi::PROCESS_MEMORY_COUNTERS;
 use ::winapi::um::psapi::PROCESS_MEMORY_COUNTERS_EX;
 use ::winapi::um::wingdi;
 use ::winapi::um::wingdi::*;

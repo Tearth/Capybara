@@ -24,8 +24,9 @@ pub struct GameScene {
     exit_button_state: WidgetState,
     exit_menu_visible: bool,
 
-    console: Console,
-    profiler: Profiler,
+    debug_enabled: bool,
+    debug_console: Console,
+    debug_profiler: Profiler,
     debug_collector: DebugCollector,
 }
 
@@ -42,36 +43,44 @@ impl Scene<GlobalData> for GameScene {
     }
 
     fn input(&mut self, _state: ApplicationState<GlobalData>, event: InputEvent) -> Result<()> {
-        self.profiler.resume("input");
+        self.debug_profiler.resume("input");
 
-        if let InputEvent::KeyPress { key, repeat: _, modifiers: _ } = event {
+        if let InputEvent::KeyPress { key, repeat: _, modifiers } = event {
             if key == Key::Escape {
                 self.exit_menu_visible = !self.exit_menu_visible;
+            } else if key == Key::KeyD && modifiers.control {
+                self.debug_enabled = !self.debug_enabled;
+                self.debug_profiler.enabled = !self.debug_profiler.enabled;
+                self.debug_collector.enabled = !self.debug_collector.enabled;
             }
         }
 
-        self.profiler.pause("input");
+        self.debug_profiler.pause("input");
         Ok(())
     }
 
     fn fixed(&mut self, _state: ApplicationState<GlobalData>) -> Result<Option<FrameCommand>> {
-        self.profiler.start("fixed");
-        self.profiler.stop("fixed");
+        self.debug_profiler.start("fixed");
+        self.debug_profiler.stop("fixed");
 
         Ok(None)
     }
 
     fn frame(&mut self, state: ApplicationState<GlobalData>, _accumulator: f32, delta: f32) -> Result<Option<FrameCommand>> {
-        self.profiler.start("frame");
-        self.debug_collector.collect(&state, delta);
-        self.profiler.stop("frame");
+        self.debug_profiler.start("frame");
+
+        if self.debug_enabled {
+            self.debug_collector.collect(&state, delta);
+            self.process_console();
+        }
+        self.debug_profiler.stop("frame");
 
         Ok(None)
     }
 
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
-        self.profiler.start("ui");
-        self.profiler.stop("input");
+        self.debug_profiler.start("ui");
+        self.debug_profiler.stop("input");
 
         let mut command = None;
         let output = state.ui.inner.read().unwrap().run(input, |context| {
@@ -101,10 +110,23 @@ impl Scene<GlobalData> for GameScene {
                     });
             }
 
-            components::debug_window(context, &mut self.console, &self.profiler, &mut self.debug_collector);
+            if self.debug_enabled {
+                components::debug_window(context, &mut self.debug_console, &self.debug_profiler, &mut self.debug_collector);
+            }
         });
 
-        self.profiler.stop("ui");
+        self.debug_profiler.stop("ui");
         Ok((output, command))
+    }
+}
+
+impl GameScene {
+    pub fn process_console(&mut self) {
+        while let Some(command) = self.debug_console.poll_command() {
+            match command.to_lowercase().as_str() {
+                "test" => self.debug_console.apply_output("Test"),
+                _ => self.debug_console.apply_output("Invalid command"),
+            }
+        }
     }
 }

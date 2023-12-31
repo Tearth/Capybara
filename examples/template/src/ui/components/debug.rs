@@ -41,7 +41,7 @@ pub fn debug_window(context: &Context, console: &mut Console, profiler: &Profile
             ui.style_mut().visuals.widgets.noninteractive.fg_stroke = Stroke::new(1.0, Color32::from_rgb(255, 255, 255));
             ui.style_mut().override_text_style = Some(TextStyle::Name("Debug".into()));
 
-            ui.label(&data.hardware_info);
+            ui.label(format!("{}, {}x{}", data.hardware_info, data.resolution.x, data.resolution.y));
             ui.add_space(15.0);
             ui.columns(4, |ui| {
                 ui[0].vertical(|ui| {
@@ -230,7 +230,7 @@ pub fn debug_window(context: &Context, console: &mut Console, profiler: &Profile
 
                 if ui.add(TextEdit::multiline(&mut console.input_content).desired_rows(1)).changed() {
                     if console.input_content.chars().last().unwrap_or('\0') == '\n' {
-                        console.test();
+                        console.apply_input();
                     }
                 }
             });

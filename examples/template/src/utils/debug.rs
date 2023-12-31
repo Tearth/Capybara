@@ -1,11 +1,14 @@
 use crate::scenes::GlobalData;
 use capybara::app::ApplicationState;
+use capybara::glam::Vec2;
 use capybara::instant::Instant;
 use capybara::renderer::context::RendererStatistics;
 use std::cmp;
 use std::collections::VecDeque;
 
 pub struct DebugCollector {
+    pub enabled: bool,
+
     pub fps_average: u32,
     pub delta_history: VecDeque<f32>,
     pub delta_history_capacity: usize,
@@ -15,6 +18,7 @@ pub struct DebugCollector {
     pub reserved_memory_peak: usize,
     pub memory_history_capacity: usize,
     pub hardware_info: Option<String>,
+    pub resolution: Vec2,
     pub renderer: RendererStatistics,
 
     pub cache: Option<DebugCollectorData>,
@@ -33,12 +37,15 @@ pub struct DebugCollectorData {
     pub reserved_memory_current: usize,
     pub reserved_memory_peak: usize,
     pub hardware_info: String,
+    pub resolution: Vec2,
     pub renderer: RendererStatistics,
 }
 
 impl DebugCollector {
     pub fn new() -> Self {
         Self {
+            enabled: false,
+
             fps_average: 0,
             delta_history: VecDeque::new(),
             delta_history_capacity: 400,
@@ -48,6 +55,7 @@ impl DebugCollector {
             reserved_memory_peak: 0,
             memory_history_capacity: 400,
             hardware_info: None,
+            resolution: Vec2::ZERO,
             renderer: Default::default(),
 
             cache: None,
@@ -57,6 +65,10 @@ impl DebugCollector {
     }
 
     pub fn collect(&mut self, state: &ApplicationState<GlobalData>, delta: f32) {
+        if !self.enabled {
+            return;
+        }
+
         self.fps_average = state.renderer.fps;
         self.delta_history.push_back(delta);
 
@@ -83,6 +95,7 @@ impl DebugCollector {
             self.hardware_info = Some(state.renderer.get_hardware_info());
         }
 
+        self.resolution = state.renderer.viewport_size;
         self.renderer = state.renderer.statistics;
     }
 
@@ -108,6 +121,7 @@ impl DebugCollector {
         let reserved_memory_current = *self.reserved_memory_history.back().unwrap_or(&0);
         let reserved_memory_peak = self.reserved_memory_peak;
         let hardware_info = self.hardware_info.as_ref().cloned().unwrap_or("".to_string());
+        let resolution = self.resolution;
         let renderer = self.renderer;
 
         self.cache = Some(DebugCollectorData {
@@ -120,6 +134,7 @@ impl DebugCollector {
             reserved_memory_current,
             reserved_memory_peak,
             hardware_info,
+            resolution,
             renderer,
         });
         self.cache_timestamp = Some(now);

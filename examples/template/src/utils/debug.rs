@@ -1,12 +1,18 @@
 use crate::scenes::GlobalData;
 use capybara::app::ApplicationState;
 use capybara::instant::Instant;
+use std::cmp;
 use std::collections::VecDeque;
 
 pub struct DebugCollector {
     pub fps_average: u32,
     pub delta_history: VecDeque<f32>,
     pub delta_history_capacity: usize,
+    pub private_memory_history: VecDeque<usize>,
+    pub private_memory_peak: usize,
+    pub reserved_memory_history: VecDeque<usize>,
+    pub reserved_memory_peak: usize,
+    pub memory_history_capacity: usize,
     pub hardware_info: Option<String>,
 
     pub cache: Option<DebugCollectorData>,
@@ -21,6 +27,10 @@ pub struct DebugCollectorData {
     pub delta_current: f32,
     pub delta_average: f32,
     pub delta_deviation: f32,
+    pub private_memory_current: usize,
+    pub private_memory_peak: usize,
+    pub reserved_memory_current: usize,
+    pub reserved_memory_peak: usize,
     pub hardware_info: String,
 }
 
@@ -30,6 +40,11 @@ impl DebugCollector {
             fps_average: 0,
             delta_history: VecDeque::new(),
             delta_history_capacity: 400,
+            private_memory_history: VecDeque::new(),
+            reserved_memory_history: VecDeque::new(),
+            private_memory_peak: 0,
+            reserved_memory_peak: 0,
+            memory_history_capacity: 400,
             hardware_info: None,
 
             cache: None,
@@ -45,6 +60,21 @@ impl DebugCollector {
         if self.delta_history.len() > self.delta_history_capacity {
             self.delta_history.pop_front();
         }
+
+        let memory_usage = state.window.get_memory_usage();
+        self.private_memory_history.push_back(memory_usage.private);
+        self.reserved_memory_history.push_back(memory_usage.reserved);
+
+        if self.private_memory_history.len() > self.memory_history_capacity {
+            self.private_memory_history.pop_front();
+        }
+
+        if self.reserved_memory_history.len() > self.memory_history_capacity {
+            self.reserved_memory_history.pop_front();
+        }
+
+        self.private_memory_peak = cmp::max(self.private_memory_peak, memory_usage.private);
+        self.reserved_memory_peak = cmp::max(self.reserved_memory_peak, memory_usage.reserved);
 
         if self.hardware_info.is_none() {
             self.hardware_info = Some(state.renderer.get_hardware_info());
@@ -69,9 +99,24 @@ impl DebugCollector {
         let delta_current = delta;
         let delta_average = self.delta_history.iter().sum::<f32>() / self.delta_history.len() as f32;
         let delta_deviation = (self.delta_history.iter().fold(0.0, |acc, p| acc + (p - delta).powi(2)) / self.delta_history.len() as f32).sqrt();
+        let private_memory_current = *self.private_memory_history.back().unwrap_or(&0);
+        let private_memory_peak = self.private_memory_peak;
+        let reserved_memory_current = *self.reserved_memory_history.back().unwrap_or(&0);
+        let reserved_memory_peak = self.reserved_memory_peak;
         let hardware_info = self.hardware_info.as_ref().cloned().unwrap_or("".to_string());
 
-        self.cache = Some(DebugCollectorData { fps_current, fps_average, delta_current, delta_average, delta_deviation, hardware_info });
+        self.cache = Some(DebugCollectorData {
+            fps_current,
+            fps_average,
+            delta_current,
+            delta_average,
+            delta_deviation,
+            private_memory_current,
+            private_memory_peak,
+            reserved_memory_current,
+            reserved_memory_peak,
+            hardware_info,
+        });
         self.cache_timestamp = Some(now);
 
         return self.cache.as_ref().cloned().unwrap();

@@ -51,6 +51,12 @@ pub struct WindowContext {
     event_queue: VecDeque<InputEvent>,
 }
 
+#[wasm_bindgen]
+extern "C" {
+    fn get_private_memory_usage() -> usize;
+    fn get_reserved_memory_usage() -> usize;
+}
+
 impl WindowContext {
     pub fn new(_title: &str, _style: WindowStyle, msaa: Option<u32>) -> Result<Box<Self>> {
         #[cfg(debug_assertions)]
@@ -432,6 +438,10 @@ impl WindowContext {
 
     pub fn close(&self) {
         // Window closing is not supported by browsers
+    }
+
+    pub fn get_memory_usage(&self) -> MemoryInfo {
+        unsafe { MemoryInfo { private: get_private_memory_usage(), reserved: get_reserved_memory_usage() } }
     }
 }
 

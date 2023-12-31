@@ -152,6 +152,11 @@ pub struct Coordinates {
     pub y: i32,
 }
 
+pub struct MemoryInfo {
+    pub private: usize,
+    pub reserved: usize,
+}
+
 impl Modifiers {
     pub fn new(control: bool, alt: bool, shift: bool) -> Self {
         Self { control, alt, shift }

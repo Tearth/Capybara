@@ -5,6 +5,10 @@ use ::winapi::shared::minwindef::*;
 use ::winapi::shared::windef::*;
 use ::winapi::um::errhandlingapi;
 use ::winapi::um::libloaderapi;
+use ::winapi::um::processthreadsapi;
+use ::winapi::um::psapi;
+use ::winapi::um::psapi::PROCESS_MEMORY_COUNTERS;
+use ::winapi::um::psapi::PROCESS_MEMORY_COUNTERS_EX;
 use ::winapi::um::wingdi;
 use ::winapi::um::wingdi::*;
 use ::winapi::um::winuser;
@@ -605,6 +609,19 @@ impl WindowContext {
             if winapi::DestroyWindow(self.hwnd) == 0 {
                 error!("Failed to close window, code {}", errhandlingapi::GetLastError());
             }
+        }
+    }
+
+    pub fn get_memory_usage(&self) -> MemoryInfo {
+        unsafe {
+            let mut info: PROCESS_MEMORY_COUNTERS_EX = mem::zeroed();
+            psapi::GetProcessMemoryInfo(
+                processthreadsapi::GetCurrentProcess(),
+                &mut info as *mut psapi::PROCESS_MEMORY_COUNTERS_EX as *mut psapi::PROCESS_MEMORY_COUNTERS,
+                mem::size_of::<PROCESS_MEMORY_COUNTERS_EX>() as u32,
+            );
+
+            MemoryInfo { private: info.PrivateUsage, reserved: info.WorkingSetSize }
         }
     }
 }

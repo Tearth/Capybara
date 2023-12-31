@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["BufferContentType"],"struct":["BufferMetadata","RendererContext"]};
+window.SIDEBAR_ITEMS = {"enum":["BufferContentType"],"struct":["BufferMetadata","RendererContext","RendererStatistics"]};

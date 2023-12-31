@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main","main_internal"],"mod":["scenes","ui"],"static":["AmdPowerXpressRequestHighPerformance","NvOptimusEnablement"]};
+window.SIDEBAR_ITEMS = {"fn":["main","main_internal"],"mod":["scenes","ui","utils"],"static":["AmdPowerXpressRequestHighPerformance","NvOptimusEnablement"]};

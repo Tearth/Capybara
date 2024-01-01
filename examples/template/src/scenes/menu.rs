@@ -37,7 +37,7 @@ pub enum MenuSubScene {
 
 pub struct MenuScene {
     sub_scene: MenuSubScene,
-    settings: Option<SettingsData>,
+    settings: SettingsData,
 
     play_button_state: WidgetState,
     settings_button_state: WidgetState,
@@ -50,170 +50,21 @@ pub struct MenuScene {
 
 #[derive(Copy, Clone, Default)]
 pub struct SettingsData {
-    music_level: f32,
-    sound_level: f32,
-}
-
-impl MenuScene {
-    pub fn subscene_main(&mut self, state: &mut ApplicationState<GlobalData>, context: &Context) -> Option<FrameCommand> {
-        let mut command = None;
-        let center = context.screen_rect().center();
-
-        Window::new("Main menu")
-            .frame(components::frame())
-            .movable(false)
-            .resizable(false)
-            .collapsible(false)
-            .title_bar(false)
-            .anchor(Align2::CENTER_CENTER, Vec2::new(0.0, -50.0))
-            .current_pos(center)
-            .default_width(200.0)
-            .show(context, |ui| {
-                ui.vertical_centered(|ui| {
-                    if components::button_primary(ui, state.ui, state.renderer, "Play", &mut self.play_button_state).clicked() {
-                        command = Some(FrameCommand::ChangeScene { name: "GameScene".to_string() });
-                    }
-
-                    ui.add_space(32.0);
-
-                    if components::button_primary(ui, state.ui, state.renderer, "Settings", &mut self.settings_button_state).clicked() {
-                        self.sub_scene = MenuSubScene::Settings;
-                    }
-
-                    ui.add_space(32.0);
-
-                    if components::button_primary(ui, state.ui, state.renderer, "About", &mut self.about_button_state).clicked() {
-                        self.sub_scene = MenuSubScene::About;
-                    }
-
-                    #[cfg(not(web))]
-                    {
-                        ui.add_space(32.0);
-
-                        if components::button_primary(ui, state.ui, state.renderer, "Exit", &mut self.exit_button_state).clicked() {
-                            state.window.close();
-                        }
-                    }
-                });
-            });
-
-        command
-    }
-
-    pub fn subscene_settings(&mut self, state: &mut ApplicationState<GlobalData>, context: &Context) -> Option<FrameCommand> {
-        let command = None;
-        let center = context.screen_rect().center();
-
-        if self.settings.is_none() {
-            self.settings = Some(SettingsData {
-                music_level: state.global.settings.get(SETTINGS_MUSIC_LEVEL).unwrap(),
-                sound_level: state.global.settings.get(SETTINGS_SOUND_LEVEL).unwrap(),
-            });
-        }
-
-        Window::new("Settings")
-            .frame(components::frame())
-            .movable(false)
-            .resizable(false)
-            .collapsible(false)
-            .anchor(Align2::CENTER_CENTER, Vec2::new(0.0, -50.0))
-            .current_pos(center)
-            .default_width(200.0)
-            .show(context, |ui| {
-                ui.add_space(15.0);
-                ui.vertical_centered(|ui| {
-                    ui.spacing_mut().slider_width = 330.0;
-                    ui.visuals_mut().widgets.inactive.rounding = Rounding::same(5.0);
-                    ui.visuals_mut().widgets.inactive.bg_fill = Color32::from_rgba_unmultiplied(50, 50, 50, 255);
-                    ui.visuals_mut().selection.bg_fill = Color32::from_rgba_unmultiplied(100, 100, 100, 255);
-                    ui.visuals_mut().slider_trailing_fill = true;
-
-                    Grid::new("SettingsGrid").min_row_height(24.0).show(ui, |ui| {
-                        let music_track = state.global.music_track.as_ref().unwrap();
-                        let sound_track = state.global.sound_track.as_ref().unwrap();
-
-                        ui.label("Music level:");
-                        if ui.add(Slider::new(&mut self.settings.as_mut().unwrap().music_level, 0.0..=1.0).show_value(false)).changed() {
-                            music_track.set_volume(self.settings.unwrap().music_level as f64, Tween::default()).unwrap();
-                        }
-                        ui.end_row();
-
-                        ui.label("Sound level:");
-                        if ui.add(Slider::new(&mut self.settings.as_mut().unwrap().sound_level, 0.0..=1.0).show_value(false)).changed() {
-                            sound_track.set_volume(self.settings.unwrap().sound_level as f64, Tween::default()).unwrap();
-                        }
-                        ui.end_row();
-                    });
-
-                    ui.add_space(16.0);
-
-                    ui.horizontal(|ui| {
-                        if components::button_secondary(ui, state.ui, state.renderer, "Save", &mut self.play_button_state).clicked() {
-                            state.global.settings.set(SETTINGS_MUSIC_LEVEL, self.settings.unwrap().music_level, true);
-                            state.global.settings.set(SETTINGS_SOUND_LEVEL, self.settings.unwrap().sound_level, true);
-
-                            self.settings = None;
-                            self.sub_scene = MenuSubScene::Main;
-                        }
-
-                        ui.add_space(32.0);
-
-                        if components::button_primary(ui, state.ui, state.renderer, "Back", &mut self.back_button_state).clicked() {
-                            let music_track = state.global.music_track.as_ref().unwrap();
-                            let sound_track = state.global.sound_track.as_ref().unwrap();
-
-                            music_track.set_volume(state.global.settings.get::<f64>(SETTINGS_MUSIC_LEVEL).unwrap(), Tween::default()).unwrap();
-                            sound_track.set_volume(state.global.settings.get::<f64>(SETTINGS_SOUND_LEVEL).unwrap(), Tween::default()).unwrap();
-
-                            self.settings = None;
-                            self.sub_scene = MenuSubScene::Main;
-                        }
-                    });
-                });
-            });
-
-        command
-    }
-
-    fn subscene_about(&mut self, state: &mut ApplicationState<GlobalData>, context: &Context) -> Option<FrameCommand> {
-        let command = None;
-        let center = context.screen_rect().center();
-
-        Window::new("About")
-            .frame(components::frame())
-            .movable(false)
-            .resizable(false)
-            .collapsible(false)
-            .anchor(Align2::CENTER_CENTER, Vec2::new(0.0, -50.0))
-            .current_pos(center)
-            .default_width(400.0)
-            .show(context, |ui| {
-                ui.add_space(15.0);
-                ui.vertical_centered(|ui| {
-                    ui.label(
-                        RichText::new(
-                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras eleifend et mi sit amet convallis. \
-                            Fusce posuere eget ligula non facilisis. Cras vulputate suscipit ipsum faucibus convallis. \
-                            Sed maximus ultricies libero, non varius erat cursus vulputate. Curabitur consequat, dui at semper \
-                            accumsan, mi dui blandit libero, a viverra leo urna nec ligula.",
-                        )
-                        .color(Color32::from_rgb(40, 70, 30)),
-                    );
-                    ui.add_space(20.0);
-
-                    if components::button_primary(ui, state.ui, state.renderer, "Back", &mut self.back_button_state).clicked() {
-                        self.sub_scene = MenuSubScene::Main;
-                    }
-                });
-            });
-
-        command
-    }
+    master_volume: f32,
+    music_volume: f32,
+    effects_volume: f32,
 }
 
 impl Scene<GlobalData> for MenuScene {
     fn activation(&mut self, state: ApplicationState<GlobalData>) -> Result<()> {
         state.renderer.set_clear_color(Vec4::new_rgb(40, 80, 30, 255));
+
+        self.settings = SettingsData {
+            master_volume: state.global.settings.get(SETTINGS_MASTER_VOLUME).unwrap(),
+            music_volume: state.global.settings.get(SETTINGS_MUSIC_VOLUME).unwrap(),
+            effects_volume: state.global.settings.get(SETTINGS_EFFECTS_VOLUME).unwrap(),
+        };
+
         Ok(())
     }
 
@@ -268,11 +119,175 @@ impl Scene<GlobalData> for MenuScene {
     }
 }
 
+impl MenuScene {
+    pub fn subscene_main(&mut self, state: &mut ApplicationState<GlobalData>, context: &Context) -> Option<FrameCommand> {
+        let mut command = None;
+        let center = context.screen_rect().center();
+
+        Window::new("Main menu")
+            .frame(components::frame())
+            .movable(false)
+            .resizable(false)
+            .collapsible(false)
+            .title_bar(false)
+            .anchor(Align2::CENTER_CENTER, Vec2::new(0.0, -50.0))
+            .current_pos(center)
+            .default_width(200.0)
+            .show(context, |ui| {
+                ui.vertical_centered(|ui| {
+                    if components::button_primary(ui, state.ui, state.renderer, "Play", &mut self.play_button_state).clicked() {
+                        command = Some(FrameCommand::ChangeScene { name: "GameScene".to_string() });
+                    }
+
+                    ui.add_space(32.0);
+
+                    if components::button_primary(ui, state.ui, state.renderer, "Settings", &mut self.settings_button_state).clicked() {
+                        self.sub_scene = MenuSubScene::Settings;
+                    }
+
+                    ui.add_space(32.0);
+
+                    if components::button_primary(ui, state.ui, state.renderer, "About", &mut self.about_button_state).clicked() {
+                        self.sub_scene = MenuSubScene::About;
+                    }
+
+                    #[cfg(not(web))]
+                    {
+                        ui.add_space(32.0);
+
+                        if components::button_primary(ui, state.ui, state.renderer, "Exit", &mut self.exit_button_state).clicked() {
+                            state.window.close();
+                        }
+                    }
+                });
+            });
+
+        command
+    }
+
+    pub fn subscene_settings(&mut self, state: &mut ApplicationState<GlobalData>, context: &Context) -> Option<FrameCommand> {
+        let command = None;
+        let center = context.screen_rect().center();
+
+        Window::new("Settings")
+            .frame(components::frame())
+            .movable(false)
+            .resizable(false)
+            .collapsible(false)
+            .anchor(Align2::CENTER_CENTER, Vec2::new(0.0, -50.0))
+            .current_pos(center)
+            .default_width(200.0)
+            .show(context, |ui| {
+                ui.add_space(15.0);
+                ui.vertical_centered(|ui| {
+                    ui.spacing_mut().slider_width = 305.0;
+                    ui.visuals_mut().widgets.inactive.rounding = Rounding::same(5.0);
+                    ui.visuals_mut().widgets.inactive.bg_fill = Color32::from_rgba_unmultiplied(50, 50, 50, 255);
+                    ui.visuals_mut().selection.bg_fill = Color32::from_rgba_unmultiplied(100, 100, 100, 255);
+                    ui.visuals_mut().slider_trailing_fill = true;
+
+                    Grid::new("SettingsGrid").min_row_height(24.0).show(ui, |ui| {
+                        let music_track = state.global.music_track.as_ref().unwrap();
+                        let effects_track = state.global.effects_track.as_ref().unwrap();
+
+                        let master_volume = &mut self.settings.master_volume;
+                        let music_volume = &mut self.settings.music_volume;
+                        let effects_volume = &mut self.settings.effects_volume;
+
+                        ui.label("Master Volume:");
+                        if ui.add(Slider::new(master_volume, 0.0..=1.0).show_value(false)).changed() {
+                            music_track.set_volume((*master_volume * *music_volume) as f64, Tween::default()).unwrap();
+                            effects_track.set_volume((*master_volume * *effects_volume) as f64, Tween::default()).unwrap();
+                        }
+                        ui.end_row();
+
+                        ui.label("Music Volume:");
+                        if ui.add(Slider::new(music_volume, 0.0..=1.0).show_value(false)).changed() {
+                            music_track.set_volume((*master_volume * *music_volume) as f64, Tween::default()).unwrap();
+                        }
+                        ui.end_row();
+
+                        ui.label("Effects Volume:");
+                        if ui.add(Slider::new(effects_volume, 0.0..=1.0).show_value(false)).changed() {
+                            effects_track.set_volume((*master_volume * *effects_volume) as f64, Tween::default()).unwrap();
+                        }
+                        ui.end_row();
+                    });
+
+                    ui.add_space(16.0);
+
+                    ui.horizontal(|ui| {
+                        if components::button_secondary(ui, state.ui, state.renderer, "Save", &mut self.play_button_state).clicked() {
+                            state.global.settings.set(SETTINGS_MASTER_VOLUME, self.settings.master_volume, true);
+                            state.global.settings.set(SETTINGS_MUSIC_VOLUME, self.settings.music_volume, true);
+                            state.global.settings.set(SETTINGS_EFFECTS_VOLUME, self.settings.effects_volume, true);
+
+                            self.sub_scene = MenuSubScene::Main;
+                        }
+
+                        ui.add_space(32.0);
+
+                        if components::button_primary(ui, state.ui, state.renderer, "Back", &mut self.back_button_state).clicked() {
+                            let music_track = state.global.music_track.as_ref().unwrap();
+                            let effect_track = state.global.effects_track.as_ref().unwrap();
+
+                            let master_volume = state.global.settings.get::<f64>(SETTINGS_MASTER_VOLUME).unwrap();
+                            let music_volume = state.global.settings.get::<f64>(SETTINGS_MUSIC_VOLUME).unwrap();
+                            let effects_volume = state.global.settings.get::<f64>(SETTINGS_EFFECTS_VOLUME).unwrap();
+
+                            music_track.set_volume(music_volume * master_volume, Tween::default()).unwrap();
+                            effect_track.set_volume(effects_volume * master_volume, Tween::default()).unwrap();
+
+                            self.sub_scene = MenuSubScene::Main;
+                        }
+                    });
+                });
+            });
+
+        command
+    }
+
+    fn subscene_about(&mut self, state: &mut ApplicationState<GlobalData>, context: &Context) -> Option<FrameCommand> {
+        let command = None;
+        let center = context.screen_rect().center();
+
+        Window::new("About")
+            .frame(components::frame())
+            .movable(false)
+            .resizable(false)
+            .collapsible(false)
+            .anchor(Align2::CENTER_CENTER, Vec2::new(0.0, -50.0))
+            .current_pos(center)
+            .default_width(400.0)
+            .show(context, |ui| {
+                ui.add_space(15.0);
+                ui.vertical_centered(|ui| {
+                    ui.label(
+                        RichText::new(
+                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras eleifend et mi sit amet convallis. \
+                            Fusce posuere eget ligula non facilisis. Cras vulputate suscipit ipsum faucibus convallis. \
+                            Sed maximus ultricies libero, non varius erat cursus vulputate. Curabitur consequat, dui at semper \
+                            accumsan, mi dui blandit libero, a viverra leo urna nec ligula.",
+                        )
+                        .color(Color32::from_rgb(40, 70, 30)),
+                    );
+                    ui.add_space(20.0);
+
+                    if components::button_primary(ui, state.ui, state.renderer, "Back", &mut self.back_button_state).clicked() {
+                        self.sub_scene = MenuSubScene::Main;
+                    }
+                });
+            });
+
+        command
+    }
+}
+
 impl Default for MenuScene {
     fn default() -> Self {
         Self {
             sub_scene: MenuSubScene::Main,
-            settings: None,
+            settings: Default::default(),
 
             play_button_state: Default::default(),
             settings_button_state: Default::default(),

@@ -22,16 +22,21 @@ pub struct LoadingScene {}
 impl Scene<GlobalData> for LoadingScene {
     fn activation(&mut self, state: ApplicationState<GlobalData>) -> Result<()> {
         let music_track = state.audio.inner.add_sub_track(TrackBuilder::new())?;
-        let sound_track = state.audio.inner.add_sub_track(TrackBuilder::new())?;
+        let effects_track = state.audio.inner.add_sub_track(TrackBuilder::new())?;
 
-        state.global.settings.set(SETTINGS_MUSIC_LEVEL, 1.0, false);
-        state.global.settings.set(SETTINGS_SOUND_LEVEL, 1.0, false);
+        state.global.settings.set(SETTINGS_MASTER_VOLUME, 1.0, false);
+        state.global.settings.set(SETTINGS_MUSIC_VOLUME, 1.0, false);
+        state.global.settings.set(SETTINGS_EFFECTS_VOLUME, 1.0, false);
 
-        music_track.set_volume(state.global.settings.get::<f64>(SETTINGS_MUSIC_LEVEL)?, Tween::default())?;
-        sound_track.set_volume(state.global.settings.get::<f64>(SETTINGS_SOUND_LEVEL)?, Tween::default())?;
+        let master_volume = state.global.settings.get::<f64>(SETTINGS_MASTER_VOLUME)?;
+        let music_volume = state.global.settings.get::<f64>(SETTINGS_MUSIC_VOLUME)?;
+        let effects_volume = state.global.settings.get::<f64>(SETTINGS_EFFECTS_VOLUME)?;
+
+        music_track.set_volume(music_volume * master_volume, Tween::default())?;
+        effects_track.set_volume(effects_volume * master_volume, Tween::default())?;
 
         state.global.music_track = Some(music_track);
-        state.global.sound_track = Some(sound_track);
+        state.global.effects_track = Some(effects_track);
 
         Ok(())
     }
@@ -54,10 +59,10 @@ impl Scene<GlobalData> for LoadingScene {
             state.ui.instantiate_assets(&state.global.assets, None);
 
             let music_track_id = state.global.music_track.as_ref().unwrap().id();
-            let sound_track_id = state.global.sound_track.as_ref().unwrap().id();
+            let effects_track_id = state.global.effects_track.as_ref().unwrap().id();
 
             state.audio.instantiate_assets(&state.global.assets, Some("/music/"), Some(music_track_id));
-            state.audio.instantiate_assets(&state.global.assets, Some("/sounds/"), Some(sound_track_id));
+            state.audio.instantiate_assets(&state.global.assets, Some("/sounds/"), Some(effects_track_id));
 
             return Ok(Some(FrameCommand::ChangeScene { name: "MenuScene".to_string() }));
         }

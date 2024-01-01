@@ -748,35 +748,39 @@ impl RendererContext {
     }
 
     pub fn set_target_texture(&mut self, texture_id: Option<usize>) {
-        if self.framebuffer_texture_id != texture_id {
-            self.flush_buffer();
-        }
-
         unsafe {
-            match texture_id {
-                Some(texture_id) => {
-                    let texture = match self.textures.get_mut(texture_id) {
-                        Ok(texture) => texture,
-                        Err(err) => error_return!("Failed to set target texture ({})", err),
-                    };
+            if self.framebuffer_texture_id != texture_id {
+                self.flush_buffer();
 
-                    if self.framebuffer_autofit && texture.size != self.viewport_size {
-                        texture.resize(self.viewport_size);
-                    }
+                if self.framebuffer_msaa.is_some() {
+                    if let Some(framebuffer_texture_id) = self.framebuffer_texture_id {
+                        let texture = match self.textures.get_mut(framebuffer_texture_id) {
+                            Ok(texture) => texture,
+                            Err(err) => error_return!("Failed to read target texture ({})", err),
+                        };
 
-                    self.framebuffer_texture_id = Some(texture_id);
-                    self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer));
-                    self.gl.framebuffer_texture_2d(glow::FRAMEBUFFER, glow::COLOR_ATTACHMENT0, glow::TEXTURE_2D, Some(texture.inner), 0);
+                        if self.framebuffer_autofit && texture.size != self.viewport_size {
+                            texture.resize(self.viewport_size);
+                        }
 
-                    #[cfg(not(web))]
-                    self.gl.enable(glow::FRAMEBUFFER_SRGB);
-                }
-                None => {
-                    self.gl.bind_framebuffer(glow::FRAMEBUFFER, None);
-
-                    if self.framebuffer_msaa.is_none() {
-                        #[cfg(not(web))]
-                        self.gl.disable(glow::FRAMEBUFFER_SRGB);
+                        self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer));
+                        self.gl.framebuffer_texture_2d(glow::FRAMEBUFFER, glow::COLOR_ATTACHMENT0, glow::TEXTURE_2D, Some(texture.inner), 0);
+                        self.gl.bind_framebuffer(glow::READ_FRAMEBUFFER, Some(self.framebuffer_multisample));
+                        self.gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, Some(self.framebuffer));
+                        self.gl.blit_framebuffer(
+                            0,
+                            0,
+                            texture.size.x as i32,
+                            texture.size.y as i32,
+                            0,
+                            0,
+                            texture.size.x as i32,
+                            texture.size.y as i32,
+                            glow::COLOR_BUFFER_BIT,
+                            glow::NEAREST,
+                        );
+                        self.gl.bind_framebuffer(glow::READ_FRAMEBUFFER, None);
+                        self.gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, None);
                     }
                 }
             }
@@ -784,38 +788,44 @@ impl RendererContext {
             if self.framebuffer_msaa.is_some() {
                 if texture_id.is_some() {
                     self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer_multisample));
-                } else if let Some(framebuffer_texture_id) = self.framebuffer_texture_id {
-                    let texture = match self.textures.get(framebuffer_texture_id) {
-                        Ok(texture) => texture,
-                        Err(err) => error_return!("Failed to read target texture ({})", err),
-                    };
 
-                    self.gl.bind_framebuffer(glow::READ_FRAMEBUFFER, Some(self.framebuffer_multisample));
-                    self.gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, Some(self.framebuffer));
-                    self.gl.blit_framebuffer(
-                        0,
-                        0,
-                        texture.size.x as i32,
-                        texture.size.y as i32,
-                        0,
-                        0,
-                        texture.size.x as i32,
-                        texture.size.y as i32,
-                        glow::COLOR_BUFFER_BIT,
-                        glow::NEAREST,
-                    );
-                    self.gl.bind_framebuffer(glow::READ_FRAMEBUFFER, None);
-                    self.gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, None);
+                    #[cfg(not(web))]
+                    self.gl.enable(glow::FRAMEBUFFER_SRGB);
+                } else {
+                    self.gl.bind_framebuffer(glow::FRAMEBUFFER, None);
 
                     #[cfg(not(web))]
                     self.gl.disable(glow::FRAMEBUFFER_SRGB);
                 }
-            }
+            } else {
+                match texture_id {
+                    Some(texture_id) => {
+                        let texture = match self.textures.get_mut(texture_id) {
+                            Ok(texture) => texture,
+                            Err(err) => error_return!("Failed to set target texture ({})", err),
+                        };
 
-            if texture_id.is_none() {
-                self.framebuffer_texture_id = None;
+                        if self.framebuffer_autofit && texture.size != self.viewport_size {
+                            texture.resize(self.viewport_size);
+                        }
+
+                        self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer));
+                        self.gl.framebuffer_texture_2d(glow::FRAMEBUFFER, glow::COLOR_ATTACHMENT0, glow::TEXTURE_2D, Some(texture.inner), 0);
+
+                        #[cfg(not(web))]
+                        self.gl.enable(glow::FRAMEBUFFER_SRGB);
+                    }
+                    None => {
+                        self.gl.bind_framebuffer(glow::FRAMEBUFFER, None);
+
+                        #[cfg(not(web))]
+                        self.gl.disable(glow::FRAMEBUFFER_SRGB);
+                    }
+                }
             }
         }
+
+        self.framebuffer_texture_id = texture_id;
     }
 
     pub fn set_viewport(&mut self, size: Vec2) {

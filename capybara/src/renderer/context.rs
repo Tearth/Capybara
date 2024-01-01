@@ -770,10 +770,6 @@ impl RendererContext {
 
                     #[cfg(not(web))]
                     self.gl.enable(glow::FRAMEBUFFER_SRGB);
-
-                    if self.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
-                        error_return!("Framebuffer initialization error (code {})", self.gl.get_error());
-                    }
                 }
                 None => {
                     self.gl.bind_framebuffer(glow::FRAMEBUFFER, None);
@@ -847,10 +843,6 @@ impl RendererContext {
 
                     self.gl.bind_framebuffer(glow::FRAMEBUFFER, Some(self.framebuffer));
                     self.gl.framebuffer_texture_2d(glow::FRAMEBUFFER, glow::COLOR_ATTACHMENT0, glow::TEXTURE_2D, Some(texture.inner), 0);
-
-                    if self.gl.check_framebuffer_status(glow::FRAMEBUFFER) != glow::FRAMEBUFFER_COMPLETE {
-                        error_return!("Framebuffer initialization error (code {})", self.gl.get_error());
-                    }
                 }
             }
 

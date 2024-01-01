@@ -116,11 +116,11 @@ impl MenuScene {
             .movable(false)
             .resizable(false)
             .collapsible(false)
-            .title_bar(false)
             .anchor(Align2::CENTER_CENTER, Vec2::new(0.0, -50.0))
             .current_pos(center)
             .default_width(200.0)
             .show(context, |ui| {
+                ui.add_space(15.0);
                 ui.vertical_centered(|ui| {
                     ui.spacing_mut().slider_width = 330.0;
                     ui.visuals_mut().widgets.inactive.rounding = Rounding::same(5.0);
@@ -188,9 +188,8 @@ impl MenuScene {
             .current_pos(center)
             .default_width(400.0)
             .show(context, |ui| {
+                ui.add_space(15.0);
                 ui.vertical_centered(|ui| {
-                    ui.add_space(15.0);
-
                     ui.label(
                         RichText::new(
                             "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras eleifend et mi sit amet convallis. \

@@ -1,4 +1,5 @@
 #![allow(clippy::too_many_arguments, clippy::collapsible_if)]
+#![cfg_attr(all(target_os = "windows", not(debug_assertions)), windows_subsystem = "windows")]
 
 use capybara::anyhow::Result;
 use capybara::app::ApplicationContext;

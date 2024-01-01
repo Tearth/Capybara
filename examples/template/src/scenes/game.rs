@@ -48,7 +48,7 @@ impl Scene<GlobalData> for GameScene {
         if let InputEvent::KeyPress { key, repeat: _, modifiers } = event {
             if key == Key::Escape {
                 self.exit_menu_visible = !self.exit_menu_visible;
-            } else if key == Key::KeyD && modifiers.control {
+            } else if key == Key::KeyD && modifiers.shift {
                 self.debug_enabled = !self.debug_enabled;
                 self.debug_profiler.enabled = !self.debug_profiler.enabled;
                 self.debug_collector.enabled = !self.debug_collector.enabled;

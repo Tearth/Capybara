@@ -31,7 +31,7 @@ pub fn debug_window(context: &Context, console: &mut Console, profiler: &Profile
     let data = collector.get_data();
     let mut plot_data = Vec::new();
 
-    Window::new("Debug window")
+    Window::new("Debug")
         .frame(debug_frame())
         .resizable(false)
         .collapsible(false)

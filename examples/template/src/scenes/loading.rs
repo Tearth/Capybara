@@ -3,17 +3,24 @@ use super::*;
 use capybara::anyhow::Result;
 use capybara::app::ApplicationState;
 use capybara::assets::AssetsLoadingStatus;
+use capybara::egui::Align2;
 use capybara::egui::CentralPanel;
 use capybara::egui::Color32;
 use capybara::egui::Direction;
+use capybara::egui::Frame;
 use capybara::egui::FullOutput;
 use capybara::egui::Layout;
+use capybara::egui::ProgressBar;
 use capybara::egui::RawInput;
 use capybara::egui::RichText;
+use capybara::egui::Vec2;
+use capybara::egui::Window;
+use capybara::glam::Vec4;
 use capybara::kira::track::TrackBuilder;
 use capybara::kira::tween::Tween;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
+use capybara::utils::color::Vec4Color;
 use capybara::window::InputEvent;
 
 #[derive(Default)]
@@ -37,6 +44,8 @@ impl Scene<GlobalData> for LoadingScene {
 
         state.global.music_track = Some(music_track);
         state.global.effects_track = Some(effects_track);
+
+        state.renderer.set_clear_color(Vec4::new_rgb(27, 27, 27, 255));
 
         Ok(())
     }
@@ -72,11 +81,26 @@ impl Scene<GlobalData> for LoadingScene {
 
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let output = state.ui.inner.read().unwrap().run(input, |context| {
-            CentralPanel::default().show(context, |ui| {
-                ui.with_layout(Layout::centered_and_justified(Direction::LeftToRight), |ui| {
-                    ui.label(RichText::new("Loading...".to_string()).heading().color(Color32::from_rgb(255, 255, 255)));
+            let center = context.screen_rect().center();
+            Window::new("Loading")
+                .frame(Frame::none())
+                .movable(false)
+                .resizable(false)
+                .collapsible(false)
+                .title_bar(false)
+                .anchor(Align2::CENTER_CENTER, Vec2::new(0.0, -50.0))
+                .current_pos(center)
+                .default_width(300.0)
+                .show(context, |ui| {
+                    ui.vertical_centered(|ui| {
+                        ui.label(RichText::new("Loading".to_string()).heading().color(Color32::from_rgb(255, 255, 255)));
+                        ui.add_space(15.0);
+                        ui.add(
+                            ProgressBar::new(*state.global.assets.filesystem.progress.borrow())
+                                .fill(Color32::from_rgba_unmultiplied(200, 200, 200, 255)),
+                        );
+                    });
                 });
-            });
         });
 
         Ok((output, None))

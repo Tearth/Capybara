@@ -142,6 +142,8 @@ where
             self.renderer.begin_frame();
 
             if let Some(next_scene) = &self.next_scene {
+                info!("Changing scene from {} to {}", self.current_scene, next_scene);
+
                 if !self.current_scene.is_empty() {
                     if let Err(err) = self.scenes.get_by_name_mut(&self.current_scene).and_then(|p| p.deactivation(state!(self))) {
                         error_break!("Failed to deactivate scene {} ({})", self.current_scene, err);

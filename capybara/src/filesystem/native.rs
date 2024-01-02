@@ -12,6 +12,7 @@ pub struct FileSystem {
     pub input: Rc<RefCell<String>>,
     pub status: Rc<RefCell<FileLoadingStatus>>,
     pub buffer: Rc<RefCell<Vec<u8>>>,
+    pub progress: Rc<RefCell<f32>>,
 }
 
 impl FileSystem {
@@ -19,17 +20,20 @@ impl FileSystem {
         let input = Rc::new(RefCell::new(String::new()));
         let status = Rc::new(RefCell::new(FileLoadingStatus::Idle));
         let buffer = Rc::new(RefCell::new(Vec::new()));
+        let progress = Rc::new(RefCell::new(0.0));
 
-        Self { input, status, buffer }
+        Self { input, status, buffer, progress }
     }
 
     pub fn read(&mut self, path: &str) -> FileLoadingStatus {
         let mut input = self.input.borrow_mut();
         let mut buffer = self.buffer.borrow_mut();
         let mut status = self.status.borrow_mut();
+        let mut progress = self.progress.borrow_mut();
 
         if matches!(*status, FileLoadingStatus::Finished | FileLoadingStatus::Error) && *input != path {
             *status = FileLoadingStatus::Idle;
+            *progress = 0.0;
         }
 
         if *status == FileLoadingStatus::Idle {
@@ -54,6 +58,7 @@ impl FileSystem {
 
             *input = path.to_string();
             *status = FileLoadingStatus::Finished;
+            *progress = 1.0;
         }
 
         *status

@@ -12,11 +12,11 @@ use capybara::ui::context::UiContext;
 use capybara::ui::ImageAtlas;
 
 pub fn button_primary(ui: &mut Ui, context: &UiContext, renderer: &RendererContext, label: &str, state: &mut WidgetState) -> Response {
-    button(ui, context, renderer, "button_green", label, Color32::from_rgb(40, 70, 30), state)
+    button(ui, context, renderer, "button_primary", label, Color32::from_rgb(40, 70, 30), state)
 }
 
 pub fn button_secondary(ui: &mut Ui, context: &UiContext, renderer: &RendererContext, label: &str, state: &mut WidgetState) -> Response {
-    button(ui, context, renderer, "button_orange", label, Color32::from_rgb(120, 50, 0), state)
+    button(ui, context, renderer, "button_secondary", label, Color32::from_rgb(120, 50, 0), state)
 }
 
 pub fn button(

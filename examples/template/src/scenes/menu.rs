@@ -217,7 +217,7 @@ impl MenuScene {
                     ui.add_space(16.0);
 
                     ui.horizontal(|ui| {
-                        if components::button_secondary(ui, state.ui, state.renderer, "Save", &mut self.play_button_state).clicked() {
+                        if components::button_primary(ui, state.ui, state.renderer, "Save", &mut self.play_button_state).clicked() {
                             state.global.settings.set(SETTINGS_MASTER_VOLUME, self.settings.master_volume, true);
                             state.global.settings.set(SETTINGS_MUSIC_VOLUME, self.settings.music_volume, true);
                             state.global.settings.set(SETTINGS_EFFECTS_VOLUME, self.settings.effects_volume, true);
@@ -227,7 +227,7 @@ impl MenuScene {
 
                         ui.add_space(32.0);
 
-                        if components::button_primary(ui, state.ui, state.renderer, "Back", &mut self.back_button_state).clicked() {
+                        if components::button_secondary(ui, state.ui, state.renderer, "Back", &mut self.back_button_state).clicked() {
                             let music_track = state.global.music_track.as_ref().unwrap();
                             let effect_track = state.global.effects_track.as_ref().unwrap();
 

@@ -1,5 +1,6 @@
-$EXEC = "template"
 $ZIP = "windows"
+$EXEC_TARGET = "jam"
+$EXEC_ZIP = "jam"
 
 Write-Output "Building Windows binary..."
 Start-Process -FilePath "cargo" -ArgumentList "build --release --target=x86_64-pc-windows-msvc" -Wait -NoNewWindow
@@ -7,7 +8,7 @@ Start-Process -FilePath "cargo" -ArgumentList "build --release --target=x86_64-p
 Write-Output "Preparing files..."
 New-Item -Path "." -Name "target\tmp" -ItemType Directory -Force
 Copy-Item -Path ".\data\" -Destination ".\target\tmp\data\" -Recurse
-Copy-Item -Path "..\..\.\target\x86_64-pc-windows-msvc\release\$EXEC.exe" -Destination ".\target\tmp\$EXEC.exe"
+Copy-Item -Path ".\target\x86_64-pc-windows-msvc\release\$EXEC_TARGET.exe" -Destination ".\target\tmp\$EXEC_ZIP.exe"
 
 Write-Output "Making archive..."
 Set-Location .\target\tmp\

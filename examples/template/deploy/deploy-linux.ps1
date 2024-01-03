@@ -1,5 +1,6 @@
-$EXEC = "template"
 $ZIP = "linux"
+$EXEC_TARGET = "jam"
+$EXEC_ZIP = "jam"
 
 Write-Output "Building Linux binary..."
 Start-Process -FilePath "cross" -ArgumentList "build --release --target=x86_64-unknown-linux-gnu" -Wait -NoNewWindow
@@ -7,7 +8,7 @@ Start-Process -FilePath "cross" -ArgumentList "build --release --target=x86_64-u
 Write-Output "Preparing files..."
 New-Item -Path "." -Name "target\tmp" -ItemType Directory -Force
 Copy-Item -Path ".\data\" -Destination ".\target\tmp\data\" -Recurse
-Copy-Item -Path "..\..\.\target\x86_64-unknown-linux-gnu\release\$EXEC" -Destination ".\target\tmp\$EXEC"
+Copy-Item -Path ".\target\x86_64-unknown-linux-gnu\release\$EXEC_TARGET" -Destination ".\target\tmp\$EXEC_ZIP"
 
 Write-Output "Making archive..."
 Set-Location .\target\tmp\

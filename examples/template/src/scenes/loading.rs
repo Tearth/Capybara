@@ -95,10 +95,7 @@ impl Scene<GlobalData> for LoadingScene {
                     ui.vertical_centered(|ui| {
                         ui.label(RichText::new("Loading".to_string()).heading().color(Color32::from_rgb(255, 255, 255)));
                         ui.add_space(15.0);
-                        ui.add(
-                            ProgressBar::new(*state.global.assets.filesystem.progress.borrow())
-                                .fill(Color32::from_rgba_unmultiplied(200, 200, 200, 255)),
-                        );
+                        ui.add(ProgressBar::new(state.global.assets.progress).fill(Color32::from_rgba_unmultiplied(200, 200, 200, 255)));
                     });
                 });
         });

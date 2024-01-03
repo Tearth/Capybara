@@ -25,6 +25,8 @@ pub struct AssetsLoader {
     pub input: String,
     pub status: AssetsLoadingStatus,
     pub filesystem: FileSystem,
+    pub current_index: usize,
+    pub progress: f32,
 
     pub raw_textures: Vec<RawTexture>,
     pub raw_fonts: Vec<RawFont>,
@@ -39,6 +41,8 @@ impl AssetsLoader {
             input: Default::default(),
             status: AssetsLoadingStatus::Idle,
             filesystem: Default::default(),
+            current_index: 0,
+            progress: 0.0,
 
             raw_textures: Default::default(),
             raw_fonts: Default::default(),
@@ -51,6 +55,8 @@ impl AssetsLoader {
     pub fn load(&mut self, path: &str) -> AssetsLoadingStatus {
         if (self.status == AssetsLoadingStatus::Finished || self.status == AssetsLoadingStatus::Error) && self.input != path {
             self.status = AssetsLoadingStatus::Idle;
+            self.current_index = 0;
+            self.progress = 0.0;
         }
 
         match self.status {
@@ -64,69 +70,7 @@ impl AssetsLoader {
             AssetsLoadingStatus::Loading => {
                 match self.filesystem.read(path) {
                     FileLoadingStatus::Finished => {
-                        let buffer = self.filesystem.buffer.clone();
-                        let buffer = buffer.borrow();
-
-                        let slice = buffer.as_slice();
-                        let cursor = Cursor::new(slice);
-                        let mut archive = match ZipArchive::new(cursor) {
-                            Ok(archive) => archive,
-                            Err(err) => {
-                                self.status = AssetsLoadingStatus::Error;
-                                error!("Failed to create archive reader ({})", err);
-
-                                return self.status;
-                            }
-                        };
-
-                        for i in 0..archive.len() {
-                            let mut data = Vec::new();
-                            let mut entry = match archive.by_index(i) {
-                                Ok(entry) => entry,
-                                Err(err) => error_continue!("Failed to read archive file ({})", err),
-                            };
-
-                            if entry.is_file() {
-                                let path = Path::new(entry.name());
-                                let path_str = match path.to_str() {
-                                    Some(name) => name.to_string(),
-                                    None => error_continue!("Failed to get string path {:?}", path),
-                                };
-                                let name = match path.file_stem().and_then(|p| p.to_str()) {
-                                    Some(name) => name.to_string(),
-                                    None => error_continue!("Failed to get name from path {:?}", path),
-                                };
-                                let extension = match path.extension().and_then(|p| p.to_str()) {
-                                    Some(extension) => extension.to_string(),
-                                    None => error_continue!("Failed to get extension from path {:?}", path),
-                                };
-                                let asset_path = format!("/{}", path_str);
-
-                                data.clear();
-
-                                if let Err(err) = entry.read_to_end(&mut data) {
-                                    error_continue!("Failed to read data from archive file ({})", err);
-                                }
-
-                                let result = match extension.as_str() {
-                                    "png" => Some(self.load_png(&name, &asset_path, &data)),
-                                    "ttf" => Some(self.load_ttf(&name, &asset_path, &data)),
-                                    "xml" => Some(self.load_xml(&name, &asset_path, &data)),
-                                    "ldtk" => Some(self.load_ldtk(&name, &asset_path, &data)),
-                                    "wav" => Some(self.load_wav(&name, &asset_path, &data)),
-                                    "ogg" => Some(self.load_ogg(&name, &asset_path, &data)),
-                                    _ => None,
-                                };
-
-                                match result {
-                                    Some(Ok(())) => info!("Asset {} loaded ({} bytes)", entry.name(), entry.size()),
-                                    Some(Err(err)) => error!("Failed to load asset {} ({})", entry.name(), err),
-                                    None => info!("Asset {} skipped (extension not supported)", entry.name()),
-                                };
-                            }
-                        }
-
-                        self.status = AssetsLoadingStatus::Finished;
+                        self.status = AssetsLoadingStatus::Parsing;
                     }
                     FileLoadingStatus::Error => {
                         self.status = AssetsLoadingStatus::Error;
@@ -134,6 +78,94 @@ impl AssetsLoader {
                     }
                     _ => {}
                 };
+
+                self.progress = *self.filesystem.progress.borrow() / 2.0;
+            }
+            AssetsLoadingStatus::Parsing => {
+                let buffer = self.filesystem.buffer.clone();
+                let buffer = buffer.borrow();
+
+                let slice = buffer.as_slice();
+                let cursor = Cursor::new(slice);
+                let mut archive = match ZipArchive::new(cursor) {
+                    Ok(archive) => archive,
+                    Err(err) => {
+                        self.status = AssetsLoadingStatus::Error;
+                        error!("Failed to create archive reader ({})", err);
+
+                        return self.status;
+                    }
+                };
+
+                if self.current_index == archive.len() {
+                    self.status = AssetsLoadingStatus::Finished;
+                    return self.status;
+                }
+
+                let mut data = Vec::new();
+                let entries_count = archive.len();
+
+                let mut entry = match archive.by_index(self.current_index) {
+                    Ok(entry) => entry,
+                    Err(err) => {
+                        self.current_index += 1;
+                        error!("Failed to read archive file ({})", err);
+
+                        return self.status;
+                    }
+                };
+
+                self.current_index += 1;
+                self.progress = 0.5 + (self.current_index as f32 / entries_count as f32 / 2.0);
+
+                if entry.is_file() {
+                    let path = Path::new(entry.name());
+                    let path_str = match path.to_str() {
+                        Some(name) => name.to_string(),
+                        None => {
+                            error!("Failed to get string path {:?}", path);
+                            return self.status;
+                        }
+                    };
+                    let name = match path.file_stem().and_then(|p| p.to_str()) {
+                        Some(name) => name.to_string(),
+                        None => {
+                            error!("Failed to get name from path {:?}", path);
+                            return self.status;
+                        }
+                    };
+                    let extension = match path.extension().and_then(|p| p.to_str()) {
+                        Some(extension) => extension.to_string(),
+                        None => {
+                            error!("Failed to get extension from path {:?}", path);
+                            return self.status;
+                        }
+                    };
+                    let asset_path = format!("/{}", path_str);
+
+                    data.clear();
+
+                    if let Err(err) = entry.read_to_end(&mut data) {
+                        error!("Failed to read data from archive file ({})", err);
+                        return self.status;
+                    }
+
+                    let result = match extension.as_str() {
+                        "png" => Some(self.load_png(&name, &asset_path, &data)),
+                        "ttf" => Some(self.load_ttf(&name, &asset_path, &data)),
+                        "xml" => Some(self.load_xml(&name, &asset_path, &data)),
+                        "ldtk" => Some(self.load_ldtk(&name, &asset_path, &data)),
+                        "wav" => Some(self.load_wav(&name, &asset_path, &data)),
+                        "ogg" => Some(self.load_ogg(&name, &asset_path, &data)),
+                        _ => None,
+                    };
+
+                    match result {
+                        Some(Ok(())) => info!("Asset {} loaded ({} bytes)", entry.name(), entry.size()),
+                        Some(Err(err)) => error!("Failed to load asset {} ({})", entry.name(), err),
+                        None => info!("Asset {} skipped (extension not supported)", entry.name()),
+                    };
+                }
             }
             AssetsLoadingStatus::Finished => {
                 self.status = AssetsLoadingStatus::Idle;

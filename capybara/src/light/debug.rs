@@ -7,6 +7,8 @@ use glam::Vec4;
 use std::f32::consts;
 
 pub struct LightDebugSettings {
+    pub enabled: bool,
+
     pub edge_color: Vec4,
     pub ray_color: Vec4,
     pub arc_color: Vec4,
@@ -23,6 +25,8 @@ pub struct LightDebugSettings {
 impl Default for LightDebugSettings {
     fn default() -> Self {
         Self {
+            enabled: false,
+
             edge_color: Vec4::new(1.0, 1.0, 0.0, 1.0),
             ray_color: Vec4::new(1.0, 1.0, 0.0, 1.0),
             arc_color: Vec4::new(1.0, 0.0, 1.0, 1.0),
@@ -40,7 +44,7 @@ impl Default for LightDebugSettings {
 
 impl LightEmitter {
     pub fn draw_debug(&self, renderer: &mut RendererContext, response: &LightResponse) {
-        for edge in &self.edges {
+        for edge in &self.data {
             renderer.draw_shape(&Shape::new_line(edge.a, edge.b, self.debug.edge_thickness, self.debug.edge_color));
         }
 

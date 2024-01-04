@@ -12,7 +12,7 @@ use std::f32::consts;
 
 pub struct LightEmitter {
     pub position: Vec2,
-    pub edges: Vec<Edge>,
+    pub data: Vec<Edge>,
     pub offset: f32,
     pub color_begin: Vec4,
     pub color_end: Vec4,
@@ -24,6 +24,10 @@ pub struct LightEmitter {
     pub tolerance: f32,
     pub extension: f32,
     pub debug: LightDebugSettings,
+
+    edges: Vec<EdgeWithDistance>,
+    points: Vec<RayTarget>,
+    hits: Vec<RayTarget>,
 }
 
 #[derive(Debug)]
@@ -37,7 +41,7 @@ impl LightEmitter {
     pub fn new() -> Self {
         Self {
             position: Vec2::ZERO,
-            edges: Vec::new(),
+            data: Vec::new(),
             offset: 0.002,
             color_begin: Vec4::new(1.0, 1.0, 1.0, 1.0),
             color_end: Vec4::new(1.0, 1.0, 1.0, 1.0),
@@ -49,17 +53,21 @@ impl LightEmitter {
             tolerance: 0.0001,
             extension: 0.0,
             debug: LightDebugSettings::default(),
+
+            edges: Vec::new(),
+            points: Vec::new(),
+            hits: Vec::new(),
         }
     }
 
-    pub fn generate(&self) -> LightResponse {
+    pub fn generate(&mut self) -> LightResponse {
         // Algorithm based on:
         // - https://ncase.me/sight-and-light/
         // - https://rootllama.wordpress.com/2014/06/20/ray-line-segment-intersection-test-in-2d/
 
-        let mut edges = Vec::new();
-        let mut points = Vec::new();
-        let mut hits = Vec::new();
+        self.edges.clear();
+        self.points.clear();
+        self.hits.clear();
 
         // -------------------------------------------------------
         // Step 1: collect points based on angle boundaries if set
@@ -82,8 +90,8 @@ impl LightEmitter {
             let d1 = Vec2::from_angle(angle_from);
             let d2 = Vec2::from_angle(angle_to);
 
-            points.push(RayTarget::new(p + d1 * self.max_length, angle_from));
-            points.push(RayTarget::new(p + d2 * self.max_length, angle_to));
+            self.points.push(RayTarget::new(p + d1 * self.max_length, angle_from));
+            self.points.push(RayTarget::new(p + d2 * self.max_length, angle_to));
         }
 
         // ----------------------------------------------------------------------------------
@@ -98,7 +106,7 @@ impl LightEmitter {
                 let a = angle_from + (i as f32 * step);
                 let d = Vec2::from_angle(a);
 
-                points.push(RayTarget::new(p + d * self.max_length, a));
+                self.points.push(RayTarget::new(p + d * self.max_length, a));
             }
         }
 
@@ -106,14 +114,14 @@ impl LightEmitter {
         // Step 3: sort edges by distance from the position so the search can be optimized later
         // -------------------------------------------------------------------------------------
 
-        for edge in &self.edges {
+        for edge in &self.data {
             let distance = self.position.distance_to_segment(edge.a, edge.b);
             if distance <= self.max_length {
-                edges.push(EdgeWithDistance { a: edge.a, b: edge.b, distance });
+                self.edges.push(EdgeWithDistance { a: edge.a, b: edge.b, distance });
             }
         }
 
-        edges.sort_unstable_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
+        self.edges.sort_unstable_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
 
         // ----------------------------------------------------------------------------
         // Step 4: add the most outer edges, so every ray will eventually hit something
@@ -125,16 +133,16 @@ impl LightEmitter {
         let right_top = self.position + outer_edge_distance * Vec2::new(1.0, 1.0);
         let left_top = self.position + outer_edge_distance * Vec2::new(-1.0, 1.0);
 
-        edges.push(EdgeWithDistance { a: left_bottom, b: right_bottom, distance: outer_edge_distance });
-        edges.push(EdgeWithDistance { a: right_bottom, b: right_top, distance: outer_edge_distance });
-        edges.push(EdgeWithDistance { a: right_top, b: left_top, distance: outer_edge_distance });
-        edges.push(EdgeWithDistance { a: left_top, b: left_bottom, distance: outer_edge_distance });
+        self.edges.push(EdgeWithDistance { a: left_bottom, b: right_bottom, distance: outer_edge_distance });
+        self.edges.push(EdgeWithDistance { a: right_bottom, b: right_top, distance: outer_edge_distance });
+        self.edges.push(EdgeWithDistance { a: right_top, b: left_top, distance: outer_edge_distance });
+        self.edges.push(EdgeWithDistance { a: left_top, b: left_bottom, distance: outer_edge_distance });
 
         // ----------------------------------------------------
         // Step 5: iterate through all edges and collect points
         // ----------------------------------------------------
 
-        for edge in &edges {
+        for edge in &self.edges {
             for offset in [-self.offset, 0.0, self.offset] {
                 let angle_a = Vec2::new(0.0, 1.0).angle_between(self.position - edge.a) - consts::FRAC_PI_2 + offset;
                 let angle_b = Vec2::new(0.0, 1.0).angle_between(self.position - edge.b) - consts::FRAC_PI_2 + offset;
@@ -157,10 +165,10 @@ impl LightEmitter {
                 }
 
                 if self.arc == consts::TAU || (angle_a >= angle_from && angle_a <= angle_to) {
-                    points.push(RayTarget::new(edge.a, angle_a));
+                    self.points.push(RayTarget::new(edge.a, angle_a));
                 }
                 if self.arc == consts::TAU || (angle_b >= angle_from && angle_b <= angle_to) {
-                    points.push(RayTarget::new(edge.b, angle_b));
+                    self.points.push(RayTarget::new(edge.b, angle_b));
                 }
             }
         }
@@ -169,14 +177,14 @@ impl LightEmitter {
         // Step 6: sort and deduplicate points, so the mesh can be later generated in correct order
         // ----------------------------------------------------------------------------------------
 
-        points.sort_by(|a, b| a.angle.partial_cmp(&b.angle).unwrap());
-        points.dedup_by(|a, b| a.angle == b.angle);
+        self.points.sort_by(|a, b| a.angle.partial_cmp(&b.angle).unwrap());
+        self.points.dedup_by(|a, b| a.angle == b.angle);
 
         // ----------------------------------------------------------------------------------------------
         // Step 7: calculate points of hits between rays and edges, select nearest ones and put into list
         // ----------------------------------------------------------------------------------------------
 
-        for point in &points {
+        for point in &self.points {
             // Ray  = pa + da * ta, 0.0 < ta
             // Edge = pb + db * tb, 0.0 < tb < 1.0
 
@@ -184,7 +192,7 @@ impl LightEmitter {
             let da = Vec2::from_angle(point.angle);
             let mut ta_min = f32::MAX;
 
-            for edge in &edges {
+            for edge in &self.edges {
                 // Edges are sorted, so do not search these with larger distance than the found hit
                 if ta_min != f32::MAX && edge.distance > ta_min + self.tolerance {
                     break;
@@ -202,7 +210,7 @@ impl LightEmitter {
             }
 
             if ta_min != f32::MAX {
-                hits.push(RayTarget::new(pa + da * (ta_min + self.extension).min(self.max_length), point.angle));
+                self.hits.push(RayTarget::new(pa + da * (ta_min + self.extension).min(self.max_length), point.angle));
             }
         }
 
@@ -214,7 +222,7 @@ impl LightEmitter {
         let mut last_position = Vec2::new(0.0, 0.0);
 
         shape.vertices.push(ShapeVertex::new(self.position, self.color_begin.to_rgb_packed(), Vec2::new(0.0, 0.0)));
-        for hit in &hits {
+        for hit in &self.hits {
             if hit.position.distance(last_position) <= self.merge_distance {
                 continue;
             }
@@ -240,7 +248,11 @@ impl LightEmitter {
             shape.indices.push(1);
         }
 
-        LightResponse { shape, points, hits }
+        LightResponse {
+            shape,
+            points: if self.debug.enabled { self.points.clone() } else { Vec::new() },
+            hits: if self.debug.enabled { self.hits.clone() } else { Vec::new() },
+        }
     }
 }
 

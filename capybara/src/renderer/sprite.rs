@@ -1,4 +1,5 @@
 use super::*;
+use arrayvec::ArrayVec;
 use glam::Vec2;
 use glam::Vec4;
 use instant::Instant;
@@ -77,7 +78,7 @@ impl Sprite {
         }
     }
 
-    pub fn get_edges(&self, texture_size: Vec2) -> Vec<Edge> {
+    pub fn get_edges(&self, texture_size: Vec2) -> ArrayVec<Edge, 4> {
         let size = self.size.unwrap_or(texture_size) * self.scale;
         let a = Vec2::new(0.0, 0.0) - size * self.anchor;
         let b = Vec2::new(size.x, 0.0) - size * self.anchor;
@@ -92,7 +93,7 @@ impl Sprite {
         let c = Vec2::new(c.x * cos - c.y * sin, c.y * cos + c.x * sin) + self.position;
         let d = Vec2::new(d.x * cos - d.y * sin, d.y * cos + d.x * sin) + self.position;
 
-        vec![Edge::new(a, b), Edge::new(b, c), Edge::new(c, d), Edge::new(d, a)]
+        ArrayVec::from([Edge::new(a, b), Edge::new(b, c), Edge::new(c, d), Edge::new(d, a)])
     }
 
     pub fn is_animation(&self) -> bool {

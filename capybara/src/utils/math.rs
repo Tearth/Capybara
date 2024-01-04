@@ -12,12 +12,10 @@ pub trait Vec2MathUtils {
 
 impl F32MathUtils for f32 {
     fn normalize_angle(&self) -> f32 {
-        let angle = (self + consts::TAU) % consts::TAU;
-
-        if angle > consts::PI {
-            angle - consts::TAU
+        if *self < -consts::PI {
+            *self + consts::TAU
         } else {
-            angle
+            *self
         }
     }
 }

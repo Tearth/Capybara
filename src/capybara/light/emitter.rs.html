@@ -249,6 +249,18 @@
 <a href="#249" id="249">249</a>
 <a href="#250" id="250">250</a>
 <a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::debug::LightDebugSettings;
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::shape::Shape;
@@ -263,7 +275,7 @@
 
 <span class="kw">pub struct </span>LightEmitter {
     <span class="kw">pub </span>position: Vec2,
-    <span class="kw">pub </span>edges: Vec&lt;Edge&gt;,
+    <span class="kw">pub </span>data: Vec&lt;Edge&gt;,
     <span class="kw">pub </span>offset: f32,
     <span class="kw">pub </span>color_begin: Vec4,
     <span class="kw">pub </span>color_end: Vec4,
@@ -275,6 +287,10 @@
     <span class="kw">pub </span>tolerance: f32,
     <span class="kw">pub </span>extension: f32,
     <span class="kw">pub </span>debug: LightDebugSettings,
+
+    edges: Vec&lt;EdgeWithDistance&gt;,
+    points: Vec&lt;RayTarget&gt;,
+    hits: Vec&lt;RayTarget&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
@@ -288,7 +304,7 @@
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             position: Vec2::ZERO,
-            edges: Vec::new(),
+            data: Vec::new(),
             offset: <span class="number">0.002</span>,
             color_begin: Vec4::new(<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>),
             color_end: Vec4::new(<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>),
@@ -300,17 +316,21 @@
             tolerance: <span class="number">0.0001</span>,
             extension: <span class="number">0.0</span>,
             debug: LightDebugSettings::default(),
+
+            edges: Vec::new(),
+            points: Vec::new(),
+            hits: Vec::new(),
         }
     }
 
-    <span class="kw">pub fn </span>generate(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; LightResponse {
+    <span class="kw">pub fn </span>generate(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; LightResponse {
         <span class="comment">// Algorithm based on:
         // - https://ncase.me/sight-and-light/
         // - https://rootllama.wordpress.com/2014/06/20/ray-line-segment-intersection-test-in-2d/
 
-        </span><span class="kw">let </span><span class="kw-2">mut </span>edges = Vec::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>points = Vec::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>hits = Vec::new();
+        </span><span class="self">self</span>.edges.clear();
+        <span class="self">self</span>.points.clear();
+        <span class="self">self</span>.hits.clear();
 
         <span class="comment">// -------------------------------------------------------
         // Step 1: collect points based on angle boundaries if set
@@ -333,8 +353,8 @@
             <span class="kw">let </span>d1 = Vec2::from_angle(angle_from);
             <span class="kw">let </span>d2 = Vec2::from_angle(angle_to);
 
-            points.push(RayTarget::new(p + d1 * <span class="self">self</span>.max_length, angle_from));
-            points.push(RayTarget::new(p + d2 * <span class="self">self</span>.max_length, angle_to));
+            <span class="self">self</span>.points.push(RayTarget::new(p + d1 * <span class="self">self</span>.max_length, angle_from));
+            <span class="self">self</span>.points.push(RayTarget::new(p + d2 * <span class="self">self</span>.max_length, angle_to));
         }
 
         <span class="comment">// ----------------------------------------------------------------------------------
@@ -349,7 +369,7 @@
                 <span class="kw">let </span>a = angle_from + (i <span class="kw">as </span>f32 * step);
                 <span class="kw">let </span>d = Vec2::from_angle(a);
 
-                points.push(RayTarget::new(p + d * <span class="self">self</span>.max_length, a));
+                <span class="self">self</span>.points.push(RayTarget::new(p + d * <span class="self">self</span>.max_length, a));
             }
         }
 
@@ -357,14 +377,14 @@
         // Step 3: sort edges by distance from the position so the search can be optimized later
         // -------------------------------------------------------------------------------------
 
-        </span><span class="kw">for </span>edge <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.edges {
+        </span><span class="kw">for </span>edge <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.data {
             <span class="kw">let </span>distance = <span class="self">self</span>.position.distance_to_segment(edge.a, edge.b);
             <span class="kw">if </span>distance &lt;= <span class="self">self</span>.max_length {
-                edges.push(EdgeWithDistance { a: edge.a, b: edge.b, distance });
+                <span class="self">self</span>.edges.push(EdgeWithDistance { a: edge.a, b: edge.b, distance });
             }
         }
 
-        edges.sort_unstable_by(|a, b| a.distance.partial_cmp(<span class="kw-2">&amp;</span>b.distance).unwrap());
+        <span class="self">self</span>.edges.sort_unstable_by(|a, b| a.distance.partial_cmp(<span class="kw-2">&amp;</span>b.distance).unwrap());
 
         <span class="comment">// ----------------------------------------------------------------------------
         // Step 4: add the most outer edges, so every ray will eventually hit something
@@ -376,16 +396,16 @@
         <span class="kw">let </span>right_top = <span class="self">self</span>.position + outer_edge_distance * Vec2::new(<span class="number">1.0</span>, <span class="number">1.0</span>);
         <span class="kw">let </span>left_top = <span class="self">self</span>.position + outer_edge_distance * Vec2::new(-<span class="number">1.0</span>, <span class="number">1.0</span>);
 
-        edges.push(EdgeWithDistance { a: left_bottom, b: right_bottom, distance: outer_edge_distance });
-        edges.push(EdgeWithDistance { a: right_bottom, b: right_top, distance: outer_edge_distance });
-        edges.push(EdgeWithDistance { a: right_top, b: left_top, distance: outer_edge_distance });
-        edges.push(EdgeWithDistance { a: left_top, b: left_bottom, distance: outer_edge_distance });
+        <span class="self">self</span>.edges.push(EdgeWithDistance { a: left_bottom, b: right_bottom, distance: outer_edge_distance });
+        <span class="self">self</span>.edges.push(EdgeWithDistance { a: right_bottom, b: right_top, distance: outer_edge_distance });
+        <span class="self">self</span>.edges.push(EdgeWithDistance { a: right_top, b: left_top, distance: outer_edge_distance });
+        <span class="self">self</span>.edges.push(EdgeWithDistance { a: left_top, b: left_bottom, distance: outer_edge_distance });
 
         <span class="comment">// ----------------------------------------------------
         // Step 5: iterate through all edges and collect points
         // ----------------------------------------------------
 
-        </span><span class="kw">for </span>edge <span class="kw">in </span><span class="kw-2">&amp;</span>edges {
+        </span><span class="kw">for </span>edge <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.edges {
             <span class="kw">for </span>offset <span class="kw">in </span>[-<span class="self">self</span>.offset, <span class="number">0.0</span>, <span class="self">self</span>.offset] {
                 <span class="kw">let </span>angle_a = Vec2::new(<span class="number">0.0</span>, <span class="number">1.0</span>).angle_between(<span class="self">self</span>.position - edge.a) - consts::FRAC_PI_2 + offset;
                 <span class="kw">let </span>angle_b = Vec2::new(<span class="number">0.0</span>, <span class="number">1.0</span>).angle_between(<span class="self">self</span>.position - edge.b) - consts::FRAC_PI_2 + offset;
@@ -408,10 +428,10 @@
                 }
 
                 <span class="kw">if </span><span class="self">self</span>.arc == consts::TAU || (angle_a &gt;= angle_from &amp;&amp; angle_a &lt;= angle_to) {
-                    points.push(RayTarget::new(edge.a, angle_a));
+                    <span class="self">self</span>.points.push(RayTarget::new(edge.a, angle_a));
                 }
                 <span class="kw">if </span><span class="self">self</span>.arc == consts::TAU || (angle_b &gt;= angle_from &amp;&amp; angle_b &lt;= angle_to) {
-                    points.push(RayTarget::new(edge.b, angle_b));
+                    <span class="self">self</span>.points.push(RayTarget::new(edge.b, angle_b));
                 }
             }
         }
@@ -420,14 +440,14 @@
         // Step 6: sort and deduplicate points, so the mesh can be later generated in correct order
         // ----------------------------------------------------------------------------------------
 
-        </span>points.sort_by(|a, b| a.angle.partial_cmp(<span class="kw-2">&amp;</span>b.angle).unwrap());
-        points.dedup_by(|a, b| a.angle == b.angle);
+        </span><span class="self">self</span>.points.sort_by(|a, b| a.angle.partial_cmp(<span class="kw-2">&amp;</span>b.angle).unwrap());
+        <span class="self">self</span>.points.dedup_by(|a, b| a.angle == b.angle);
 
         <span class="comment">// ----------------------------------------------------------------------------------------------
         // Step 7: calculate points of hits between rays and edges, select nearest ones and put into list
         // ----------------------------------------------------------------------------------------------
 
-        </span><span class="kw">for </span>point <span class="kw">in </span><span class="kw-2">&amp;</span>points {
+        </span><span class="kw">for </span>point <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.points {
             <span class="comment">// Ray  = pa + da * ta, 0.0 &lt; ta
             // Edge = pb + db * tb, 0.0 &lt; tb &lt; 1.0
 
@@ -435,7 +455,7 @@
             <span class="kw">let </span>da = Vec2::from_angle(point.angle);
             <span class="kw">let </span><span class="kw-2">mut </span>ta_min = f32::MAX;
 
-            <span class="kw">for </span>edge <span class="kw">in </span><span class="kw-2">&amp;</span>edges {
+            <span class="kw">for </span>edge <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.edges {
                 <span class="comment">// Edges are sorted, so do not search these with larger distance than the found hit
                 </span><span class="kw">if </span>ta_min != f32::MAX &amp;&amp; edge.distance &gt; ta_min + <span class="self">self</span>.tolerance {
                     <span class="kw">break</span>;
@@ -453,7 +473,7 @@
             }
 
             <span class="kw">if </span>ta_min != f32::MAX {
-                hits.push(RayTarget::new(pa + da * (ta_min + <span class="self">self</span>.extension).min(<span class="self">self</span>.max_length), point.angle));
+                <span class="self">self</span>.hits.push(RayTarget::new(pa + da * (ta_min + <span class="self">self</span>.extension).min(<span class="self">self</span>.max_length), point.angle));
             }
         }
 
@@ -465,7 +485,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>last_position = Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>);
 
         shape.vertices.push(ShapeVertex::new(<span class="self">self</span>.position, <span class="self">self</span>.color_begin.to_rgb_packed(), Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>)));
-        <span class="kw">for </span>hit <span class="kw">in </span><span class="kw-2">&amp;</span>hits {
+        <span class="kw">for </span>hit <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.hits {
             <span class="kw">if </span>hit.position.distance(last_position) &lt;= <span class="self">self</span>.merge_distance {
                 <span class="kw">continue</span>;
             }
@@ -491,7 +511,11 @@
             shape.indices.push(<span class="number">1</span>);
         }
 
-        LightResponse { shape, points, hits }
+        LightResponse {
+            shape,
+            points: <span class="kw">if </span><span class="self">self</span>.debug.enabled { <span class="self">self</span>.points.clone() } <span class="kw">else </span>{ Vec::new() },
+            hits: <span class="kw">if </span><span class="self">self</span>.debug.enabled { <span class="self">self</span>.hits.clone() } <span class="kw">else </span>{ Vec::new() },
+        }
     }
 }
 

@@ -23,6 +23,7 @@
 <a href="#23" id="23">23</a>
 <a href="#24" id="24">24</a>
 <a href="#25" id="25">25</a>
+<a href="#26" id="26">26</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>capybara::assets::loader::AssetsLoader;
 <span class="kw">use </span>capybara::kira::track::TrackHandle;
 <span class="kw">use </span>capybara::utils::settings::SettingsStorage;
@@ -32,20 +33,21 @@
 <span class="kw">pub mod </span>loading;
 <span class="kw">pub mod </span>menu;
 
-<span class="kw">pub const </span>SETTINGS_MUSIC_LEVEL: <span class="kw-2">&amp;</span>str = <span class="string">&quot;MUSIC_LEVEL&quot;</span>;
-<span class="kw">pub const </span>SETTINGS_SOUND_LEVEL: <span class="kw-2">&amp;</span>str = <span class="string">&quot;SOUND_LEVEL&quot;</span>;
+<span class="kw">pub const </span>SETTINGS_MASTER_VOLUME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;MASTER_VOLUME&quot;</span>;
+<span class="kw">pub const </span>SETTINGS_MUSIC_VOLUME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;MUSIC_VOLUME&quot;</span>;
+<span class="kw">pub const </span>SETTINGS_EFFECTS_VOLUME: <span class="kw-2">&amp;</span>str = <span class="string">&quot;EFFECTS_VOLUME&quot;</span>;
 
 <span class="kw">pub struct </span>GlobalData {
     <span class="kw">pub </span>assets: AssetsLoader,
     <span class="kw">pub </span>settings: SettingsStorage,
 
     <span class="kw">pub </span>music_track: <span class="prelude-ty">Option</span>&lt;TrackHandle&gt;,
-    <span class="kw">pub </span>sound_track: <span class="prelude-ty">Option</span>&lt;TrackHandle&gt;,
+    <span class="kw">pub </span>effects_track: <span class="prelude-ty">Option</span>&lt;TrackHandle&gt;,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>GlobalData {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ assets: Default::default(), settings: SettingsStorage::new(<span class="string">&quot;./settings.cfg&quot;</span>), music_track: <span class="prelude-val">None</span>, sound_track: <span class="prelude-val">None </span>}
+        <span class="self">Self </span>{ assets: Default::default(), settings: SettingsStorage::new(<span class="string">&quot;./settings.cfg&quot;</span>), music_track: <span class="prelude-val">None</span>, effects_track: <span class="prelude-val">None </span>}
     }
 }
 </code></pre></div></section></main></body></html>

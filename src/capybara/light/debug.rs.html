@@ -66,6 +66,10 @@
 <a href="#66" id="66">66</a>
 <a href="#67" id="67">67</a>
 <a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::emitter::LightEmitter;
 <span class="kw">use </span><span class="kw">super</span>::emitter::LightResponse;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::context::RendererContext;
@@ -75,6 +79,8 @@
 <span class="kw">use </span>std::f32::consts;
 
 <span class="kw">pub struct </span>LightDebugSettings {
+    <span class="kw">pub </span>enabled: bool,
+
     <span class="kw">pub </span>edge_color: Vec4,
     <span class="kw">pub </span>ray_color: Vec4,
     <span class="kw">pub </span>arc_color: Vec4,
@@ -91,6 +97,8 @@
 <span class="kw">impl </span>Default <span class="kw">for </span>LightDebugSettings {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
+            enabled: <span class="bool-val">false</span>,
+
             edge_color: Vec4::new(<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>),
             ray_color: Vec4::new(<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>),
             arc_color: Vec4::new(<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>),
@@ -108,7 +116,7 @@
 
 <span class="kw">impl </span>LightEmitter {
     <span class="kw">pub fn </span>draw_debug(<span class="kw-2">&amp;</span><span class="self">self</span>, renderer: <span class="kw-2">&amp;mut </span>RendererContext, response: <span class="kw-2">&amp;</span>LightResponse) {
-        <span class="kw">for </span>edge <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.edges {
+        <span class="kw">for </span>edge <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.data {
             renderer.draw_shape(<span class="kw-2">&amp;</span>Shape::new_line(edge.a, edge.b, <span class="self">self</span>.debug.edge_thickness, <span class="self">self</span>.debug.edge_color));
         }
 

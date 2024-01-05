@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["SETTINGS_MUSIC_LEVEL","SETTINGS_SOUND_LEVEL"],"mod":["boot","game","loading","menu"],"struct":["GlobalData"]};
+window.SIDEBAR_ITEMS = {"constant":["SETTINGS_EFFECTS_VOLUME","SETTINGS_MASTER_VOLUME","SETTINGS_MUSIC_VOLUME"],"mod":["boot","game","loading","menu"],"struct":["GlobalData"]};

@@ -108,6 +108,28 @@
 <a href="#108" id="108">108</a>
 <a href="#109" id="109">109</a>
 <a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::GlobalData;
 <span class="kw">use </span><span class="kw">crate</span>::ui::components;
 <span class="kw">use </span><span class="kw">crate</span>::ui::state::WidgetState;
@@ -134,8 +156,9 @@
     exit_button_state: WidgetState,
     exit_menu_visible: bool,
 
-    console: Console,
-    profiler: Profiler,
+    debug_enabled: bool,
+    debug_console: Console,
+    debug_profiler: Profiler,
     debug_collector: DebugCollector,
 }
 
@@ -152,36 +175,44 @@
     }
 
     <span class="kw">fn </span>input(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _state: ApplicationState&lt;GlobalData&gt;, event: InputEvent) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-        <span class="self">self</span>.profiler.resume(<span class="string">&quot;input&quot;</span>);
+        <span class="self">self</span>.debug_profiler.resume(<span class="string">&quot;input&quot;</span>);
 
-        <span class="kw">if let </span>InputEvent::KeyPress { key, repeat: <span class="kw">_</span>, modifiers: <span class="kw">_ </span>} = event {
+        <span class="kw">if let </span>InputEvent::KeyPress { key, repeat: <span class="kw">_</span>, modifiers } = event {
             <span class="kw">if </span>key == Key::Escape {
                 <span class="self">self</span>.exit_menu_visible = !<span class="self">self</span>.exit_menu_visible;
+            } <span class="kw">else if </span>key == Key::KeyD &amp;&amp; modifiers.shift {
+                <span class="self">self</span>.debug_enabled = !<span class="self">self</span>.debug_enabled;
+                <span class="self">self</span>.debug_profiler.enabled = !<span class="self">self</span>.debug_profiler.enabled;
+                <span class="self">self</span>.debug_collector.enabled = !<span class="self">self</span>.debug_collector.enabled;
             }
         }
 
-        <span class="self">self</span>.profiler.pause(<span class="string">&quot;input&quot;</span>);
+        <span class="self">self</span>.debug_profiler.pause(<span class="string">&quot;input&quot;</span>);
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn </span>fixed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _state: ApplicationState&lt;GlobalData&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;FrameCommand&gt;&gt; {
-        <span class="self">self</span>.profiler.start(<span class="string">&quot;fixed&quot;</span>);
-        <span class="self">self</span>.profiler.stop(<span class="string">&quot;fixed&quot;</span>);
+        <span class="self">self</span>.debug_profiler.start(<span class="string">&quot;fixed&quot;</span>);
+        <span class="self">self</span>.debug_profiler.stop(<span class="string">&quot;fixed&quot;</span>);
 
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
     }
 
     <span class="kw">fn </span>frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;, _accumulator: f32, delta: f32) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;FrameCommand&gt;&gt; {
-        <span class="self">self</span>.profiler.start(<span class="string">&quot;frame&quot;</span>);
-        <span class="self">self</span>.debug_collector.collect(<span class="kw-2">&amp;</span>state, delta);
-        <span class="self">self</span>.profiler.stop(<span class="string">&quot;frame&quot;</span>);
+        <span class="self">self</span>.debug_profiler.start(<span class="string">&quot;frame&quot;</span>);
+
+        <span class="kw">if </span><span class="self">self</span>.debug_enabled {
+            <span class="self">self</span>.debug_collector.collect(<span class="kw-2">&amp;</span>state, delta);
+            <span class="self">self</span>.process_console();
+        }
+        <span class="self">self</span>.debug_profiler.stop(<span class="string">&quot;frame&quot;</span>);
 
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
     }
 
     <span class="kw">fn </span>ui(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;, input: RawInput) -&gt; <span class="prelude-ty">Result</span>&lt;(FullOutput, <span class="prelude-ty">Option</span>&lt;FrameCommand&gt;)&gt; {
-        <span class="self">self</span>.profiler.start(<span class="string">&quot;ui&quot;</span>);
-        <span class="self">self</span>.profiler.stop(<span class="string">&quot;input&quot;</span>);
+        <span class="self">self</span>.debug_profiler.start(<span class="string">&quot;ui&quot;</span>);
+        <span class="self">self</span>.debug_profiler.stop(<span class="string">&quot;input&quot;</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>command = <span class="prelude-val">None</span>;
         <span class="kw">let </span>output = state.ui.inner.read().unwrap().run(input, |context| {
@@ -198,24 +229,37 @@
                     .show(context, |ui| {
                         ui.add_space(<span class="number">15.0</span>);
                         ui.horizontal(|ui| {
-                            <span class="kw">if </span>components::button_secondary(ui, state.ui, state.renderer, <span class="string">&quot;Yes&quot;</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.play_button_state).clicked() {
+                            <span class="kw">if </span>components::button_primary(ui, state.ui, state.renderer, <span class="string">&quot;Yes&quot;</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.play_button_state).clicked() {
                                 command = <span class="prelude-val">Some</span>(FrameCommand::ChangeScene { name: <span class="string">&quot;MenuScene&quot;</span>.to_string() });
                             }
 
                             ui.add_space(<span class="number">32.0</span>);
 
-                            <span class="kw">if </span>components::button_primary(ui, state.ui, state.renderer, <span class="string">&quot;No&quot;</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.exit_button_state).clicked() {
+                            <span class="kw">if </span>components::button_secondary(ui, state.ui, state.renderer, <span class="string">&quot;No&quot;</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.exit_button_state).clicked() {
                                 <span class="self">self</span>.exit_menu_visible = <span class="bool-val">false</span>;
                             }
                         });
                     });
             }
 
-            components::debug_window(context, <span class="kw-2">&amp;mut </span><span class="self">self</span>.console, <span class="kw-2">&amp;</span><span class="self">self</span>.profiler, <span class="kw-2">&amp;mut </span><span class="self">self</span>.debug_collector);
+            <span class="kw">if </span><span class="self">self</span>.debug_enabled {
+                components::debug_window(context, <span class="kw-2">&amp;mut </span><span class="self">self</span>.debug_console, <span class="kw-2">&amp;</span><span class="self">self</span>.debug_profiler, <span class="kw-2">&amp;mut </span><span class="self">self</span>.debug_collector);
+            }
         });
 
-        <span class="self">self</span>.profiler.stop(<span class="string">&quot;ui&quot;</span>);
+        <span class="self">self</span>.debug_profiler.stop(<span class="string">&quot;ui&quot;</span>);
         <span class="prelude-val">Ok</span>((output, command))
+    }
+}
+
+<span class="kw">impl </span>GameScene {
+    <span class="kw">pub fn </span>process_console(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">while let </span><span class="prelude-val">Some</span>(command) = <span class="self">self</span>.debug_console.poll_command() {
+            <span class="kw">match </span>command.to_lowercase().as_str() {
+                <span class="string">&quot;test&quot; </span>=&gt; <span class="self">self</span>.debug_console.apply_output(<span class="string">&quot;Test&quot;</span>),
+                <span class="kw">_ </span>=&gt; <span class="self">self</span>.debug_console.apply_output(<span class="string">&quot;Invalid command&quot;</span>),
+            }
+        }
     }
 }
 </code></pre></div></section></main></body></html>

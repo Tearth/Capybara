@@ -130,7 +130,9 @@
 <a href="#130" id="130">130</a>
 <a href="#131" id="131">131</a>
 <a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>glam::Vec2;
 <span class="kw">use </span>glam::Vec4;
 <span class="kw">use </span>instant::Instant;
@@ -209,7 +211,7 @@
         }
     }
 
-    <span class="kw">pub fn </span>get_edges(<span class="kw-2">&amp;</span><span class="self">self</span>, texture_size: Vec2) -&gt; Vec&lt;Edge&gt; {
+    <span class="kw">pub fn </span>get_edges(<span class="kw-2">&amp;</span><span class="self">self</span>, texture_size: Vec2) -&gt; ArrayVec&lt;Edge, <span class="number">4</span>&gt; {
         <span class="kw">let </span>size = <span class="self">self</span>.size.unwrap_or(texture_size) * <span class="self">self</span>.scale;
         <span class="kw">let </span>a = Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>) - size * <span class="self">self</span>.anchor;
         <span class="kw">let </span>b = Vec2::new(size.x, <span class="number">0.0</span>) - size * <span class="self">self</span>.anchor;
@@ -224,7 +226,7 @@
         <span class="kw">let </span>c = Vec2::new(c.x * cos - c.y * sin, c.y * cos + c.x * sin) + <span class="self">self</span>.position;
         <span class="kw">let </span>d = Vec2::new(d.x * cos - d.y * sin, d.y * cos + d.x * sin) + <span class="self">self</span>.position;
 
-        <span class="macro">vec!</span>[Edge::new(a, b), Edge::new(b, c), Edge::new(c, d), Edge::new(d, a)]
+        ArrayVec::from([Edge::new(a, b), Edge::new(b, c), Edge::new(c, d), Edge::new(d, a)])
     }
 
     <span class="kw">pub fn </span>is_animation(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {

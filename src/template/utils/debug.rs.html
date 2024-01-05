@@ -133,14 +133,32 @@
 <a href="#133" id="133">133</a>
 <a href="#134" id="134">134</a>
 <a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::scenes::GlobalData;
 <span class="kw">use </span>capybara::app::ApplicationState;
+<span class="kw">use </span>capybara::glam::Vec2;
 <span class="kw">use </span>capybara::instant::Instant;
 <span class="kw">use </span>capybara::renderer::context::RendererStatistics;
 <span class="kw">use </span>std::cmp;
 <span class="kw">use </span>std::collections::VecDeque;
 
 <span class="kw">pub struct </span>DebugCollector {
+    <span class="kw">pub </span>enabled: bool,
+
     <span class="kw">pub </span>fps_average: u32,
     <span class="kw">pub </span>delta_history: VecDeque&lt;f32&gt;,
     <span class="kw">pub </span>delta_history_capacity: usize,
@@ -150,6 +168,7 @@
     <span class="kw">pub </span>reserved_memory_peak: usize,
     <span class="kw">pub </span>memory_history_capacity: usize,
     <span class="kw">pub </span>hardware_info: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub </span>resolution: Vec2,
     <span class="kw">pub </span>renderer: RendererStatistics,
 
     <span class="kw">pub </span>cache: <span class="prelude-ty">Option</span>&lt;DebugCollectorData&gt;,
@@ -168,12 +187,15 @@
     <span class="kw">pub </span>reserved_memory_current: usize,
     <span class="kw">pub </span>reserved_memory_peak: usize,
     <span class="kw">pub </span>hardware_info: String,
+    <span class="kw">pub </span>resolution: Vec2,
     <span class="kw">pub </span>renderer: RendererStatistics,
 }
 
 <span class="kw">impl </span>DebugCollector {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
+            enabled: <span class="bool-val">false</span>,
+
             fps_average: <span class="number">0</span>,
             delta_history: VecDeque::new(),
             delta_history_capacity: <span class="number">400</span>,
@@ -183,6 +205,7 @@
             reserved_memory_peak: <span class="number">0</span>,
             memory_history_capacity: <span class="number">400</span>,
             hardware_info: <span class="prelude-val">None</span>,
+            resolution: Vec2::ZERO,
             renderer: Default::default(),
 
             cache: <span class="prelude-val">None</span>,
@@ -192,6 +215,10 @@
     }
 
     <span class="kw">pub fn </span>collect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: <span class="kw-2">&amp;</span>ApplicationState&lt;GlobalData&gt;, delta: f32) {
+        <span class="kw">if </span>!<span class="self">self</span>.enabled {
+            <span class="kw">return</span>;
+        }
+
         <span class="self">self</span>.fps_average = state.renderer.fps;
         <span class="self">self</span>.delta_history.push_back(delta);
 
@@ -218,6 +245,7 @@
             <span class="self">self</span>.hardware_info = <span class="prelude-val">Some</span>(state.renderer.get_hardware_info());
         }
 
+        <span class="self">self</span>.resolution = state.renderer.viewport_size;
         <span class="self">self</span>.renderer = state.renderer.statistics;
     }
 
@@ -243,6 +271,7 @@
         <span class="kw">let </span>reserved_memory_current = <span class="kw-2">*</span><span class="self">self</span>.reserved_memory_history.back().unwrap_or(<span class="kw-2">&amp;</span><span class="number">0</span>);
         <span class="kw">let </span>reserved_memory_peak = <span class="self">self</span>.reserved_memory_peak;
         <span class="kw">let </span>hardware_info = <span class="self">self</span>.hardware_info.as_ref().cloned().unwrap_or(<span class="string">&quot;&quot;</span>.to_string());
+        <span class="kw">let </span>resolution = <span class="self">self</span>.resolution;
         <span class="kw">let </span>renderer = <span class="self">self</span>.renderer;
 
         <span class="self">self</span>.cache = <span class="prelude-val">Some</span>(DebugCollectorData {
@@ -255,6 +284,7 @@
             reserved_memory_current,
             reserved_memory_peak,
             hardware_info,
+            resolution,
             renderer,
         });
         <span class="self">self</span>.cache_timestamp = <span class="prelude-val">Some</span>(now);

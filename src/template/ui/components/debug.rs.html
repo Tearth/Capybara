@@ -277,7 +277,7 @@
     <span class="kw">let </span>data = collector.get_data();
     <span class="kw">let </span><span class="kw-2">mut </span>plot_data = Vec::new();
 
-    Window::new(<span class="string">&quot;Debug window&quot;</span>)
+    Window::new(<span class="string">&quot;Debug&quot;</span>)
         .frame(debug_frame())
         .resizable(<span class="bool-val">false</span>)
         .collapsible(<span class="bool-val">false</span>)
@@ -287,7 +287,7 @@
             ui.style_mut().visuals.widgets.noninteractive.fg_stroke = Stroke::new(<span class="number">1.0</span>, Color32::from_rgb(<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>));
             ui.style_mut().override_text_style = <span class="prelude-val">Some</span>(TextStyle::Name(<span class="string">&quot;Debug&quot;</span>.into()));
 
-            ui.label(<span class="kw-2">&amp;</span>data.hardware_info);
+            ui.label(<span class="macro">format!</span>(<span class="string">&quot;{}, {}x{}&quot;</span>, data.hardware_info, data.resolution.x, data.resolution.y));
             ui.add_space(<span class="number">15.0</span>);
             ui.columns(<span class="number">4</span>, |ui| {
                 ui[<span class="number">0</span>].vertical(|ui| {
@@ -476,7 +476,7 @@
 
                 <span class="kw">if </span>ui.add(TextEdit::multiline(<span class="kw-2">&amp;mut </span>console.input_content).desired_rows(<span class="number">1</span>)).changed() {
                     <span class="kw">if </span>console.input_content.chars().last().unwrap_or(<span class="string">&#39;\0&#39;</span>) == <span class="string">&#39;\n&#39; </span>{
-                        console.test();
+                        console.apply_input();
                     }
                 }
             });

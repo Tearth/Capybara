@@ -31,7 +31,9 @@
 <a href="#31" id="31">31</a>
 <a href="#32" id="32">32</a>
 <a href="#33" id="33">33</a>
+<a href="#34" id="34">34</a>
 </pre></div><pre class="rust"><code><span class="attr">#![allow(clippy::too_many_arguments, clippy::collapsible_if)]
+#![cfg_attr(all(target_os = <span class="string">&quot;windows&quot;</span>, not(debug_assertions)), windows_subsystem = <span class="string">&quot;windows&quot;</span>)]
 
 </span><span class="kw">use </span>capybara::anyhow::Result;
 <span class="kw">use </span>capybara::app::ApplicationContext;

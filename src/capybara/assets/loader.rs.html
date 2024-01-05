@@ -260,6 +260,38 @@
 <a href="#260" id="260">260</a>
 <a href="#261" id="261">261</a>
 <a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::ldtk::LdtkWorld;
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::error_continue;
@@ -287,6 +319,8 @@
     <span class="kw">pub </span>input: String,
     <span class="kw">pub </span>status: AssetsLoadingStatus,
     <span class="kw">pub </span>filesystem: FileSystem,
+    <span class="kw">pub </span>current_index: usize,
+    <span class="kw">pub </span>progress: f32,
 
     <span class="kw">pub </span>raw_textures: Vec&lt;RawTexture&gt;,
     <span class="kw">pub </span>raw_fonts: Vec&lt;RawFont&gt;,
@@ -301,6 +335,8 @@
             input: Default::default(),
             status: AssetsLoadingStatus::Idle,
             filesystem: Default::default(),
+            current_index: <span class="number">0</span>,
+            progress: <span class="number">0.0</span>,
 
             raw_textures: Default::default(),
             raw_fonts: Default::default(),
@@ -313,6 +349,8 @@
     <span class="kw">pub fn </span>load(<span class="kw-2">&amp;mut </span><span class="self">self</span>, path: <span class="kw-2">&amp;</span>str) -&gt; AssetsLoadingStatus {
         <span class="kw">if </span>(<span class="self">self</span>.status == AssetsLoadingStatus::Finished || <span class="self">self</span>.status == AssetsLoadingStatus::Error) &amp;&amp; <span class="self">self</span>.input != path {
             <span class="self">self</span>.status = AssetsLoadingStatus::Idle;
+            <span class="self">self</span>.current_index = <span class="number">0</span>;
+            <span class="self">self</span>.progress = <span class="number">0.0</span>;
         }
 
         <span class="kw">match </span><span class="self">self</span>.status {
@@ -326,69 +364,7 @@
             AssetsLoadingStatus::Loading =&gt; {
                 <span class="kw">match </span><span class="self">self</span>.filesystem.read(path) {
                     FileLoadingStatus::Finished =&gt; {
-                        <span class="kw">let </span>buffer = <span class="self">self</span>.filesystem.buffer.clone();
-                        <span class="kw">let </span>buffer = buffer.borrow();
-
-                        <span class="kw">let </span>slice = buffer.as_slice();
-                        <span class="kw">let </span>cursor = Cursor::new(slice);
-                        <span class="kw">let </span><span class="kw-2">mut </span>archive = <span class="kw">match </span>ZipArchive::new(cursor) {
-                            <span class="prelude-val">Ok</span>(archive) =&gt; archive,
-                            <span class="prelude-val">Err</span>(err) =&gt; {
-                                <span class="self">self</span>.status = AssetsLoadingStatus::Error;
-                                <span class="macro">error!</span>(<span class="string">&quot;Failed to create archive reader ({})&quot;</span>, err);
-
-                                <span class="kw">return </span><span class="self">self</span>.status;
-                            }
-                        };
-
-                        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..archive.len() {
-                            <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::new();
-                            <span class="kw">let </span><span class="kw-2">mut </span>entry = <span class="kw">match </span>archive.by_index(i) {
-                                <span class="prelude-val">Ok</span>(entry) =&gt; entry,
-                                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to read archive file ({})&quot;</span>, err),
-                            };
-
-                            <span class="kw">if </span>entry.is_file() {
-                                <span class="kw">let </span>path = Path::new(entry.name());
-                                <span class="kw">let </span>path_str = <span class="kw">match </span>path.to_str() {
-                                    <span class="prelude-val">Some</span>(name) =&gt; name.to_string(),
-                                    <span class="prelude-val">None </span>=&gt; <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to get string path {:?}&quot;</span>, path),
-                                };
-                                <span class="kw">let </span>name = <span class="kw">match </span>path.file_stem().and_then(|p| p.to_str()) {
-                                    <span class="prelude-val">Some</span>(name) =&gt; name.to_string(),
-                                    <span class="prelude-val">None </span>=&gt; <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to get name from path {:?}&quot;</span>, path),
-                                };
-                                <span class="kw">let </span>extension = <span class="kw">match </span>path.extension().and_then(|p| p.to_str()) {
-                                    <span class="prelude-val">Some</span>(extension) =&gt; extension.to_string(),
-                                    <span class="prelude-val">None </span>=&gt; <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to get extension from path {:?}&quot;</span>, path),
-                                };
-                                <span class="kw">let </span>asset_path = <span class="macro">format!</span>(<span class="string">&quot;/{}&quot;</span>, path_str);
-
-                                data.clear();
-
-                                <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = entry.read_to_end(<span class="kw-2">&amp;mut </span>data) {
-                                    <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to read data from archive file ({})&quot;</span>, err);
-                                }
-
-                                <span class="kw">let </span>result = <span class="kw">match </span>extension.as_str() {
-                                    <span class="string">&quot;png&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.load_png(<span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>asset_path, <span class="kw-2">&amp;</span>data)),
-                                    <span class="string">&quot;ttf&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.load_ttf(<span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>asset_path, <span class="kw-2">&amp;</span>data)),
-                                    <span class="string">&quot;xml&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.load_xml(<span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>asset_path, <span class="kw-2">&amp;</span>data)),
-                                    <span class="string">&quot;ldtk&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.load_ldtk(<span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>asset_path, <span class="kw-2">&amp;</span>data)),
-                                    <span class="string">&quot;wav&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.load_wav(<span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>asset_path, <span class="kw-2">&amp;</span>data)),
-                                    <span class="string">&quot;ogg&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.load_ogg(<span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>asset_path, <span class="kw-2">&amp;</span>data)),
-                                    <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-                                };
-
-                                <span class="kw">match </span>result {
-                                    <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(())) =&gt; <span class="macro">info!</span>(<span class="string">&quot;Asset {} loaded ({} bytes)&quot;</span>, entry.name(), entry.size()),
-                                    <span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err)) =&gt; <span class="macro">error!</span>(<span class="string">&quot;Failed to load asset {} ({})&quot;</span>, entry.name(), err),
-                                    <span class="prelude-val">None </span>=&gt; <span class="macro">info!</span>(<span class="string">&quot;Asset {} skipped (extension not supported)&quot;</span>, entry.name()),
-                                };
-                            }
-                        }
-
-                        <span class="self">self</span>.status = AssetsLoadingStatus::Finished;
+                        <span class="self">self</span>.status = AssetsLoadingStatus::Parsing;
                     }
                     FileLoadingStatus::Error =&gt; {
                         <span class="self">self</span>.status = AssetsLoadingStatus::Error;
@@ -396,6 +372,94 @@
                     }
                     <span class="kw">_ </span>=&gt; {}
                 };
+
+                <span class="self">self</span>.progress = <span class="kw-2">*</span><span class="self">self</span>.filesystem.progress.borrow() / <span class="number">2.0</span>;
+            }
+            AssetsLoadingStatus::Parsing =&gt; {
+                <span class="kw">let </span>buffer = <span class="self">self</span>.filesystem.buffer.clone();
+                <span class="kw">let </span>buffer = buffer.borrow();
+
+                <span class="kw">let </span>slice = buffer.as_slice();
+                <span class="kw">let </span>cursor = Cursor::new(slice);
+                <span class="kw">let </span><span class="kw-2">mut </span>archive = <span class="kw">match </span>ZipArchive::new(cursor) {
+                    <span class="prelude-val">Ok</span>(archive) =&gt; archive,
+                    <span class="prelude-val">Err</span>(err) =&gt; {
+                        <span class="self">self</span>.status = AssetsLoadingStatus::Error;
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed to create archive reader ({})&quot;</span>, err);
+
+                        <span class="kw">return </span><span class="self">self</span>.status;
+                    }
+                };
+
+                <span class="kw">if </span><span class="self">self</span>.current_index == archive.len() {
+                    <span class="self">self</span>.status = AssetsLoadingStatus::Finished;
+                    <span class="kw">return </span><span class="self">self</span>.status;
+                }
+
+                <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::new();
+                <span class="kw">let </span>entries_count = archive.len();
+
+                <span class="kw">let </span><span class="kw-2">mut </span>entry = <span class="kw">match </span>archive.by_index(<span class="self">self</span>.current_index) {
+                    <span class="prelude-val">Ok</span>(entry) =&gt; entry,
+                    <span class="prelude-val">Err</span>(err) =&gt; {
+                        <span class="self">self</span>.current_index += <span class="number">1</span>;
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed to read archive file ({})&quot;</span>, err);
+
+                        <span class="kw">return </span><span class="self">self</span>.status;
+                    }
+                };
+
+                <span class="self">self</span>.current_index += <span class="number">1</span>;
+                <span class="self">self</span>.progress = <span class="number">0.5 </span>+ (<span class="self">self</span>.current_index <span class="kw">as </span>f32 / entries_count <span class="kw">as </span>f32 / <span class="number">2.0</span>);
+
+                <span class="kw">if </span>entry.is_file() {
+                    <span class="kw">let </span>path = Path::new(entry.name());
+                    <span class="kw">let </span>path_str = <span class="kw">match </span>path.to_str() {
+                        <span class="prelude-val">Some</span>(name) =&gt; name.to_string(),
+                        <span class="prelude-val">None </span>=&gt; {
+                            <span class="macro">error!</span>(<span class="string">&quot;Failed to get string path {:?}&quot;</span>, path);
+                            <span class="kw">return </span><span class="self">self</span>.status;
+                        }
+                    };
+                    <span class="kw">let </span>name = <span class="kw">match </span>path.file_stem().and_then(|p| p.to_str()) {
+                        <span class="prelude-val">Some</span>(name) =&gt; name.to_string(),
+                        <span class="prelude-val">None </span>=&gt; {
+                            <span class="macro">error!</span>(<span class="string">&quot;Failed to get name from path {:?}&quot;</span>, path);
+                            <span class="kw">return </span><span class="self">self</span>.status;
+                        }
+                    };
+                    <span class="kw">let </span>extension = <span class="kw">match </span>path.extension().and_then(|p| p.to_str()) {
+                        <span class="prelude-val">Some</span>(extension) =&gt; extension.to_string(),
+                        <span class="prelude-val">None </span>=&gt; {
+                            <span class="macro">error!</span>(<span class="string">&quot;Failed to get extension from path {:?}&quot;</span>, path);
+                            <span class="kw">return </span><span class="self">self</span>.status;
+                        }
+                    };
+                    <span class="kw">let </span>asset_path = <span class="macro">format!</span>(<span class="string">&quot;/{}&quot;</span>, path_str);
+
+                    data.clear();
+
+                    <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = entry.read_to_end(<span class="kw-2">&amp;mut </span>data) {
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed to read data from archive file ({})&quot;</span>, err);
+                        <span class="kw">return </span><span class="self">self</span>.status;
+                    }
+
+                    <span class="kw">let </span>result = <span class="kw">match </span>extension.as_str() {
+                        <span class="string">&quot;png&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.load_png(<span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>asset_path, <span class="kw-2">&amp;</span>data)),
+                        <span class="string">&quot;ttf&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.load_ttf(<span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>asset_path, <span class="kw-2">&amp;</span>data)),
+                        <span class="string">&quot;xml&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.load_xml(<span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>asset_path, <span class="kw-2">&amp;</span>data)),
+                        <span class="string">&quot;ldtk&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.load_ldtk(<span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>asset_path, <span class="kw-2">&amp;</span>data)),
+                        <span class="string">&quot;wav&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.load_wav(<span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>asset_path, <span class="kw-2">&amp;</span>data)),
+                        <span class="string">&quot;ogg&quot; </span>=&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.load_ogg(<span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>asset_path, <span class="kw-2">&amp;</span>data)),
+                        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+                    };
+
+                    <span class="kw">match </span>result {
+                        <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(())) =&gt; <span class="macro">info!</span>(<span class="string">&quot;Asset {} loaded ({} bytes)&quot;</span>, entry.name(), entry.size()),
+                        <span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err)) =&gt; <span class="macro">error!</span>(<span class="string">&quot;Failed to load asset {} ({})&quot;</span>, entry.name(), err),
+                        <span class="prelude-val">None </span>=&gt; <span class="macro">info!</span>(<span class="string">&quot;Asset {} skipped (extension not supported)&quot;</span>, entry.name()),
+                    };
+                }
             }
             AssetsLoadingStatus::Finished =&gt; {
                 <span class="self">self</span>.status = AssetsLoadingStatus::Idle;

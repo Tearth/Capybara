@@ -61,11 +61,11 @@
 <span class="kw">use </span>capybara::ui::ImageAtlas;
 
 <span class="kw">pub fn </span>button_primary(ui: <span class="kw-2">&amp;mut </span>Ui, context: <span class="kw-2">&amp;</span>UiContext, renderer: <span class="kw-2">&amp;</span>RendererContext, label: <span class="kw-2">&amp;</span>str, state: <span class="kw-2">&amp;mut </span>WidgetState) -&gt; Response {
-    button(ui, context, renderer, <span class="string">&quot;button_green&quot;</span>, label, Color32::from_rgb(<span class="number">40</span>, <span class="number">70</span>, <span class="number">30</span>), state)
+    button(ui, context, renderer, <span class="string">&quot;button_primary&quot;</span>, label, Color32::from_rgb(<span class="number">40</span>, <span class="number">70</span>, <span class="number">30</span>), state)
 }
 
 <span class="kw">pub fn </span>button_secondary(ui: <span class="kw-2">&amp;mut </span>Ui, context: <span class="kw-2">&amp;</span>UiContext, renderer: <span class="kw-2">&amp;</span>RendererContext, label: <span class="kw-2">&amp;</span>str, state: <span class="kw-2">&amp;mut </span>WidgetState) -&gt; Response {
-    button(ui, context, renderer, <span class="string">&quot;button_orange&quot;</span>, label, Color32::from_rgb(<span class="number">120</span>, <span class="number">50</span>, <span class="number">0</span>), state)
+    button(ui, context, renderer, <span class="string">&quot;button_secondary&quot;</span>, label, Color32::from_rgb(<span class="number">120</span>, <span class="number">50</span>, <span class="number">0</span>), state)
 }
 
 <span class="kw">pub fn </span>button(

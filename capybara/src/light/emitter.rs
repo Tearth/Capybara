@@ -12,7 +12,6 @@ use std::f32::consts;
 
 pub struct LightEmitter {
     pub position: Vec2,
-    pub data: Vec<Edge>,
     pub offset: f32,
     pub color_begin: Vec4,
     pub color_end: Vec4,
@@ -41,7 +40,6 @@ impl LightEmitter {
     pub fn new() -> Self {
         Self {
             position: Vec2::ZERO,
-            data: Vec::new(),
             offset: 0.002,
             color_begin: Vec4::new(1.0, 1.0, 1.0, 1.0),
             color_end: Vec4::new(1.0, 1.0, 1.0, 1.0),
@@ -60,7 +58,7 @@ impl LightEmitter {
         }
     }
 
-    pub fn generate(&mut self) -> LightResponse {
+    pub fn generate(&mut self, data: &[Edge]) -> LightResponse {
         // Algorithm based on:
         // - https://ncase.me/sight-and-light/
         // - https://rootllama.wordpress.com/2014/06/20/ray-line-segment-intersection-test-in-2d/
@@ -114,14 +112,14 @@ impl LightEmitter {
         // Step 3: sort edges by distance from the position so the search can be optimized later
         // -------------------------------------------------------------------------------------
 
-        for edge in &self.data {
+        for edge in data {
             let distance = self.position.distance_to_segment(edge.a, edge.b);
             if distance <= self.max_length {
                 self.edges.push(EdgeWithDistance { a: edge.a, b: edge.b, distance });
             }
         }
 
-        self.edges.sort_unstable_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap());
+        self.edges.sort_unstable_by(|a, b| unsafe { a.distance.partial_cmp(&b.distance).unwrap_unchecked() });
 
         // ----------------------------------------------------------------------------
         // Step 4: add the most outer edges, so every ray will eventually hit something
@@ -177,7 +175,7 @@ impl LightEmitter {
         // Step 6: sort and deduplicate points, so the mesh can be later generated in correct order
         // ----------------------------------------------------------------------------------------
 
-        self.points.sort_by(|a, b| a.angle.partial_cmp(&b.angle).unwrap());
+        self.points.sort_by(|a, b| unsafe { a.angle.partial_cmp(&b.angle).unwrap_unchecked() });
         self.points.dedup_by(|a, b| a.angle == b.angle);
 
         // ----------------------------------------------------------------------------------------------

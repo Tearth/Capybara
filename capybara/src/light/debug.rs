@@ -2,6 +2,7 @@ use super::emitter::LightEmitter;
 use super::emitter::LightResponse;
 use crate::renderer::context::RendererContext;
 use crate::renderer::shape::Shape;
+use crate::renderer::Edge;
 use glam::Vec2;
 use glam::Vec4;
 use std::f32::consts;
@@ -43,8 +44,8 @@ impl Default for LightDebugSettings {
 }
 
 impl LightEmitter {
-    pub fn draw_debug(&self, renderer: &mut RendererContext, response: &LightResponse) {
-        for edge in &self.data {
+    pub fn draw_debug(&self, renderer: &mut RendererContext, data: &[Edge], response: &LightResponse) {
+        for edge in data {
             renderer.draw_shape(&Shape::new_line(edge.a, edge.b, self.debug.edge_thickness, self.debug.edge_color));
         }
 

@@ -26,6 +26,7 @@ use capybara::renderer::shader::Shader;
 use capybara::renderer::sprite::Sprite;
 use capybara::renderer::sprite::TextureId;
 use capybara::renderer::texture::Texture;
+use capybara::renderer::Edge;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
 use capybara::window::Coordinates;
@@ -49,8 +50,8 @@ struct MainScene {
     delta_history: VecDeque<f32>,
     emitter: LightEmitter,
     emitter_last_response: Option<LightResponse>,
+    edges: Vec<Edge>,
     msaa: bool,
-    debug: bool,
 
     blur_directions: f32,
     blur_quality: f32,
@@ -142,8 +143,8 @@ impl Scene<GlobalData> for MainScene {
         }
 
         if self.initialized {
-            let mut edges = Vec::new();
             let texture_size = state.renderer.textures.get_by_name("Takodachi")?.size;
+            self.edges.clear();
 
             state.renderer.set_target_texture(Some(self.main_texture_id));
             state.renderer.draw_sprite(&Sprite {
@@ -164,37 +165,36 @@ impl Scene<GlobalData> for MainScene {
                 }
 
                 state.renderer.draw_sprite(&object.sprite);
-                edges.append(&mut object.sprite.get_edges(texture_size));
+                self.edges.extend_from_slice(object.sprite.get_edges(texture_size).as_slice());
             }
 
-            // let c = state.renderer.viewport_size / 2.0;
+            /*
+            let c = state.renderer.viewport_size / 2.0;
 
-            // let circle = Shape::new_circle(c, 100.0, Some(24), 10.0, Vec4::new(1.0, 1.0, 1.0, 1.0));
-            // state.renderer.draw_shape(&circle);
-            // edges.append(&mut circle.get_edges());
+            let circle = capybara::renderer::shape::Shape::new_circle(c, 100.0, Some(24), 10.0, Vec4::new(1.0, 1.0, 1.0, 1.0));
+            state.renderer.draw_shape(&circle);
+            self.edges.append(&mut circle.get_edges());
 
-            // let disc = Shape::new_disc(c, 100.0, Some(24), Vec4::new(1.0, 1.0, 1.0, 1.0), Vec4::new(1.0, 1.0, 1.0, 1.0));
-            // state.renderer.draw_shape(&disc);
-            // edges.append(&mut disc.get_edges());
+            let disc = capybara::renderer::shape::Shape::new_disc(c, 100.0, Some(24), Vec4::new(1.0, 1.0, 1.0, 1.0), Vec4::new(1.0, 1.0, 1.0, 1.0));
+            state.renderer.draw_shape(&disc);
+            self.edges.append(&mut disc.get_edges());
 
-            // let frame = Shape::new_frame(c - Vec2::new(50.0, 50.0), c + Vec2::new(50.0, 50.0), 10.0, Vec4::new(1.0, 1.0, 1.0, 1.0));
-            // state.renderer.draw_shape(&frame);
-            // edges.append(&mut frame.get_edges());
+            let frame = capybara::renderer::shape::Shape::new_frame(c - Vec2::new(50.0, 50.0), c + Vec2::new(50.0, 50.0), 10.0, Vec4::new(1.0, 1.0, 1.0, 1.0));
+            state.renderer.draw_shape(&frame);
+            self.edges.append(&mut frame.get_edges());
 
-            // let rectangle = Shape::new_rectangle(c - Vec2::new(50.0, 50.0), c + Vec2::new(50.0, 50.0), Vec4::new(1.0, 1.0, 1.0, 1.0));
-            // state.renderer.draw_shape(&rectangle);
-            // edges.append(&mut rectangle.get_edges());
+            let rectangle = capybara::renderer::shape::Shape::new_rectangle(c - Vec2::new(50.0, 50.0), c + Vec2::new(50.0, 50.0), Vec4::new(1.0, 1.0, 1.0, 1.0));
+            state.renderer.draw_shape(&rectangle);
+            self.edges.append(&mut rectangle.get_edges());
 
-            // let line = Shape::new_line(c - Vec2::new(50.0, 50.0), c + Vec2::new(50.0, 50.0), 1.0, Vec4::new(1.0, 1.0, 1.0, 1.0));
-            // state.renderer.draw_shape(&line);
-            // edges.append(&mut line.get_edges());
-
-            state.renderer.set_target_texture(None);
+            let line = capybara::renderer::shape::Shape::new_line(c - Vec2::new(50.0, 50.0), c + Vec2::new(50.0, 50.0), 1.0, Vec4::new(1.0, 1.0, 1.0, 1.0));
+            state.renderer.draw_shape(&line);
+            self.edges.append(&mut line.get_edges());
+            */
 
             self.emitter.position = state.renderer.cameras.get(0)?.from_window_to_screen_coordinates(state.window.cursor_position.into());
-            self.emitter.edges = edges;
 
-            let response = self.emitter.generate();
+            let response = self.emitter.generate(&self.edges);
             state.renderer.set_target_texture(Some(self.light_texture_id));
             state.renderer.clear();
             state.renderer.draw_sprite(&Sprite {
@@ -218,8 +218,8 @@ impl Scene<GlobalData> for MainScene {
             });
             state.renderer.set_sprite_shader(None);
 
-            if self.debug {
-                self.emitter.draw_debug(state.renderer, &response);
+            if self.emitter.debug.enabled {
+                self.emitter.draw_debug(state.renderer, &self.edges, &response);
             }
 
             self.emitter_last_response = Some(response);
@@ -312,7 +312,7 @@ impl Scene<GlobalData> for MainScene {
                             state.renderer.set_framebuffer_msaa(None);
                         }
                     }
-                    ui.checkbox(&mut self.debug, RichText::new("Debug mode").font(font.clone()).heading().color(color));
+                    ui.checkbox(&mut self.emitter.debug.enabled, RichText::new("Debug mode").font(font.clone()).heading().color(color));
                 }
             });
         });

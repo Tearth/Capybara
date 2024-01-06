@@ -93,7 +93,7 @@ impl Sprite {
         let c = Vec2::new(c.x * cos - c.y * sin, c.y * cos + c.x * sin) + self.position;
         let d = Vec2::new(d.x * cos - d.y * sin, d.y * cos + d.x * sin) + self.position;
 
-        ArrayVec::from([Edge::new(a, b), Edge::new(b, c), Edge::new(c, d), Edge::new(d, a)])
+        ArrayVec::from([Edge::new(a, b), Edge::new(d, c), Edge::new(a, d), Edge::new(b, c)])
     }
 
     pub fn is_animation(&self) -> bool {

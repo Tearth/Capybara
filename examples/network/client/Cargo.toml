@@ -8,4 +8,4 @@ network-base = { path = "../base" }
 capybara = { path = "../../../capybara", features = [ "network" ] }
 
 [build-dependencies]
-anyhow = { version = "1.0.75" }
+anyhow = { version = "1.0.79" }

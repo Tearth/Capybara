@@ -7,4 +7,4 @@ edition = "2021"
 capybara = { path = "../../capybara", features = [ "physics" ] }
 
 [build-dependencies]
-anyhow = { version = "1.0.75" }
+anyhow = { version = "1.0.79" }

@@ -7,7 +7,8 @@
     clippy::type_complexity,
     clippy::identity_op,
     clippy::too_many_arguments,
-    clippy::collapsible_else_if
+    clippy::collapsible_else_if,
+    clippy::get_first
 )]
 
 pub mod app;

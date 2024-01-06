@@ -118,6 +118,10 @@ impl Scene<GlobalData> for GameScene {
         self.debug_profiler.stop("ui");
         Ok((output, command))
     }
+
+    fn reset(&self) -> Box<dyn Scene<GlobalData>> {
+        Box::<Self>::default()
+    }
 }
 
 impl GameScene {

@@ -150,6 +150,18 @@ where
                     };
                 }
 
+                let current_scene_reset = match self.scenes.get_by_name_mut(&self.current_scene) {
+                    Ok(scene) => Some(scene.reset()),
+                    Err(_) => None,
+                };
+
+                if let Some(current_scene_reset) = current_scene_reset {
+                    self.scenes.remove_by_name(&self.current_scene);
+                    self.scenes.store_with_name(&self.current_scene, current_scene_reset).unwrap();
+                } else {
+                    error!("Failed to reset scene {}", self.current_scene);
+                }
+
                 if let Err(err) = self.scenes.get_by_name_mut(next_scene).and_then(|p| p.activation(state!(self))) {
                     error_break!("Failed to activate scene {} ({})", next_scene, err);
                 };
@@ -228,6 +240,7 @@ where
     fn process_frame_command(&mut self, command: Option<FrameCommand>) {
         match command {
             Some(FrameCommand::ChangeScene { name }) => self.next_scene = Some(name),
+            Some(FrameCommand::ResetScene) => self.next_scene = Some(self.current_scene.clone()),
             Some(FrameCommand::Exit) => self.running = false,
             None => {}
         }

@@ -199,6 +199,10 @@ impl Scene<GlobalData> for MainScene {
 
         Ok((output, None))
     }
+
+    fn reset(&self) -> Box<dyn Scene<GlobalData>> {
+        Box::<Self>::default()
+    }
 }
 
 impl MainScene {

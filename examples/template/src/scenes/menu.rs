@@ -117,6 +117,10 @@ impl Scene<GlobalData> for MenuScene {
 
         Ok((output, command))
     }
+
+    fn reset(&self) -> Box<dyn Scene<GlobalData>> {
+        Box::<Self>::default()
+    }
 }
 
 impl MenuScene {

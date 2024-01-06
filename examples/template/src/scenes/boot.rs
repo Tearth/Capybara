@@ -57,4 +57,8 @@ impl Scene<GlobalData> for BootScene {
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         Ok((state.ui.inner.read().unwrap().run(input, |_| {}), None))
     }
+
+    fn reset(&self) -> Box<dyn Scene<GlobalData>> {
+        Box::<Self>::default()
+    }
 }

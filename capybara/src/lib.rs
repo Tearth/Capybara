@@ -6,7 +6,8 @@
     clippy::not_unsafe_ptr_arg_deref,
     clippy::type_complexity,
     clippy::identity_op,
-    clippy::too_many_arguments
+    clippy::too_many_arguments,
+    clippy::collapsible_else_if
 )]
 
 pub mod app;

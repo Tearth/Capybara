@@ -145,21 +145,21 @@ where
                 info!("Changing scene from {} to {}", self.current_scene, next_scene);
 
                 if !self.current_scene.is_empty() {
-                    if let Err(err) = self.scenes.get_by_name_mut(&self.current_scene).and_then(|p| p.deactivation(state!(self))) {
+                    let scene = match self.scenes.get_by_name_mut(&self.current_scene) {
+                        Ok(scene) => scene,
+                        Err(err) => error_break!("Failed to get scene {} ({})", self.current_scene, err),
+                    };
+
+                    if let Err(err) = scene.deactivation(state!(self)) {
                         error_break!("Failed to deactivate scene {} ({})", self.current_scene, err);
                     };
-                }
 
-                let current_scene_reset = match self.scenes.get_by_name_mut(&self.current_scene) {
-                    Ok(scene) => Some(scene.reset()),
-                    Err(_) => None,
-                };
-
-                if let Some(current_scene_reset) = current_scene_reset {
+                    let current_scene_reset = scene.reset();
                     self.scenes.remove_by_name(&self.current_scene);
-                    self.scenes.store_with_name(&self.current_scene, current_scene_reset).unwrap();
-                } else {
-                    error!("Failed to reset scene {}", self.current_scene);
+
+                    if let Err(err) = self.scenes.store_with_name(&self.current_scene, current_scene_reset) {
+                        error!("Failed to reset scene {} ({})", self.current_scene, err)
+                    }
                 }
 
                 if let Err(err) = self.scenes.get_by_name_mut(next_scene).and_then(|p| p.activation(state!(self))) {

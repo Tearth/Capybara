@@ -447,20 +447,45 @@ impl WindowContext {
 
 impl Drop for WindowContext {
     fn drop(&mut self) {
-        self.window.remove_event_listener_with_callback("resize", self.resize_callback.as_ref().unchecked_ref()).unwrap();
-        self.window.remove_event_listener_with_callback("mousemove", self.mousemove_callback.as_ref().unchecked_ref()).unwrap();
+        self.window
+            .remove_event_listener_with_callback("resize", self.resize_callback.as_ref().unchecked_ref())
+            .map_or_else(|_| error!("Failed to remove resize callback"), |_| ());
+
+        self.window
+            .remove_event_listener_with_callback("mousemove", self.mousemove_callback.as_ref().unchecked_ref())
+            .map_or_else(|_| error!("Failed to remove mousemove callback"), |_| ());
+
         self.window
             .remove_event_listener_with_callback("mouseenter", self.mouseenter_callback.as_ref().unchecked_ref())
-            .unwrap();
+            .map_or_else(|_| error!("Failed to remove mouseenter callback"), |_| ());
+
         self.window
             .remove_event_listener_with_callback("mouseleave", self.mouseleave_callback.as_ref().unchecked_ref())
-            .unwrap();
-        self.window.remove_event_listener_with_callback("mousedown", self.mousedown_callback.as_ref().unchecked_ref()).unwrap();
-        self.window.remove_event_listener_with_callback("mouseup", self.mouseup_callback.as_ref().unchecked_ref()).unwrap();
-        self.window.remove_event_listener_with_callback("wheel", self.wheel_callback.as_ref().unchecked_ref()).unwrap();
-        self.window.remove_event_listener_with_callback("keydown", self.keydown_callback.as_ref().unchecked_ref()).unwrap();
-        self.window.remove_event_listener_with_callback("keyup", self.keyup_callback.as_ref().unchecked_ref()).unwrap();
-        self.window.remove_event_listener_with_callback("keypress", self.keypress_callback.as_ref().unchecked_ref()).unwrap();
+            .map_or_else(|_| error!("Failed to remove mouseleave callback"), |_| ());
+
+        self.window
+            .remove_event_listener_with_callback("mousedown", self.mousedown_callback.as_ref().unchecked_ref())
+            .map_or_else(|_| error!("Failed to remove mousedown callback"), |_| ());
+
+        self.window
+            .remove_event_listener_with_callback("mouseup", self.mouseup_callback.as_ref().unchecked_ref())
+            .map_or_else(|_| error!("Failed to remove mouseup callback"), |_| ());
+
+        self.window
+            .remove_event_listener_with_callback("wheel", self.wheel_callback.as_ref().unchecked_ref())
+            .map_or_else(|_| error!("Failed to remove wheel callback"), |_| ());
+
+        self.window
+            .remove_event_listener_with_callback("keydown", self.keydown_callback.as_ref().unchecked_ref())
+            .map_or_else(|_| error!("Failed to remove keydown callback"), |_| ());
+
+        self.window
+            .remove_event_listener_with_callback("keyup", self.keyup_callback.as_ref().unchecked_ref())
+            .map_or_else(|_| error!("Failed to remove keyup callback"), |_| ());
+
+        self.window
+            .remove_event_listener_with_callback("keypress", self.keypress_callback.as_ref().unchecked_ref())
+            .map_or_else(|_| error!("Failed to remove keypress callback"), |_| ());
     }
 }
 

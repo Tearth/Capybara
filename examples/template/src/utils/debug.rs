@@ -124,7 +124,7 @@ impl DebugCollector {
         let resolution = self.resolution;
         let renderer = self.renderer;
 
-        self.cache = Some(DebugCollectorData {
+        let data = DebugCollectorData {
             fps_average,
             delta_current,
             delta_average,
@@ -136,10 +136,11 @@ impl DebugCollector {
             hardware_info,
             resolution,
             renderer,
-        });
+        };
+        self.cache = Some(data.clone());
         self.cache_timestamp = Some(now);
 
-        return self.cache.as_ref().cloned().unwrap();
+        data
     }
 }
 

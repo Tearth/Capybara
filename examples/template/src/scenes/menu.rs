@@ -23,6 +23,7 @@ use capybara::egui::Vec2;
 use capybara::egui::Window;
 use capybara::glam::Vec4;
 use capybara::kira::tween::Tween;
+use capybara::log::error;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
 use capybara::utils::color::Vec4Color;
@@ -59,10 +60,24 @@ impl Scene<GlobalData> for MenuScene {
     fn activation(&mut self, state: ApplicationState<GlobalData>) -> Result<()> {
         state.renderer.set_clear_color(Vec4::new_rgb(40, 80, 30, 255));
 
+        let master_volume = state.global.settings.get::<f32>(SETTINGS_MASTER_VOLUME);
+        let music_volume = state.global.settings.get::<f32>(SETTINGS_MUSIC_VOLUME);
+        let effects_volume = state.global.settings.get::<f32>(SETTINGS_EFFECTS_VOLUME);
+
+        if let Err(ref err) = master_volume {
+            error!("Failed to read master volume ({})", err);
+        }
+        if let Err(ref err) = music_volume {
+            error!("Failed to read music volume ({})", err);
+        }
+        if let Err(ref err) = effects_volume {
+            error!("Failed to read effects volume ({})", err);
+        }
+
         self.settings = SettingsData {
-            master_volume: state.global.settings.get(SETTINGS_MASTER_VOLUME).unwrap(),
-            music_volume: state.global.settings.get(SETTINGS_MUSIC_VOLUME).unwrap(),
-            effects_volume: state.global.settings.get(SETTINGS_EFFECTS_VOLUME).unwrap(),
+            master_volume: master_volume.unwrap_or(1.0),
+            music_volume: music_volume.unwrap_or(1.0),
+            effects_volume: effects_volume.unwrap_or(1.0),
         };
 
         Ok(())
@@ -200,20 +215,29 @@ impl MenuScene {
 
                         ui.label("Master Volume:");
                         if ui.add(Slider::new(master_volume, 0.0..=1.0).show_value(false)).changed() {
-                            music_track.set_volume((*master_volume * *music_volume) as f64, Tween::default()).unwrap();
-                            effects_track.set_volume((*master_volume * *effects_volume) as f64, Tween::default()).unwrap();
+                            if let Err(err) = music_track.set_volume((*master_volume * *music_volume) as f64, Tween::default()) {
+                                error!("Failed to set music volume ({})", err);
+                            }
+
+                            if let Err(err) = effects_track.set_volume((*master_volume * *effects_volume) as f64, Tween::default()) {
+                                error!("Failed to set effects volume ({})", err);
+                            }
                         }
                         ui.end_row();
 
                         ui.label("Music Volume:");
                         if ui.add(Slider::new(music_volume, 0.0..=1.0).show_value(false)).changed() {
-                            music_track.set_volume((*master_volume * *music_volume) as f64, Tween::default()).unwrap();
+                            if let Err(err) = music_track.set_volume((*master_volume * *music_volume) as f64, Tween::default()) {
+                                error!("Failed to set music volume ({})", err);
+                            }
                         }
                         ui.end_row();
 
                         ui.label("Effects Volume:");
                         if ui.add(Slider::new(effects_volume, 0.0..=1.0).show_value(false)).changed() {
-                            effects_track.set_volume((*master_volume * *effects_volume) as f64, Tween::default()).unwrap();
+                            if let Err(err) = effects_track.set_volume((*master_volume * *effects_volume) as f64, Tween::default()) {
+                                error!("Failed to set effects volume ({})", err);
+                            }
                         }
                         ui.end_row();
                     });
@@ -235,12 +259,31 @@ impl MenuScene {
                             let music_track = state.global.music_track.as_ref().unwrap();
                             let effect_track = state.global.effects_track.as_ref().unwrap();
 
-                            let master_volume = state.global.settings.get::<f64>(SETTINGS_MASTER_VOLUME).unwrap();
-                            let music_volume = state.global.settings.get::<f64>(SETTINGS_MUSIC_VOLUME).unwrap();
-                            let effects_volume = state.global.settings.get::<f64>(SETTINGS_EFFECTS_VOLUME).unwrap();
+                            let master_volume = state.global.settings.get::<f64>(SETTINGS_MASTER_VOLUME);
+                            let music_volume = state.global.settings.get::<f64>(SETTINGS_MUSIC_VOLUME);
+                            let effects_volume = state.global.settings.get::<f64>(SETTINGS_EFFECTS_VOLUME);
 
-                            music_track.set_volume(music_volume * master_volume, Tween::default()).unwrap();
-                            effect_track.set_volume(effects_volume * master_volume, Tween::default()).unwrap();
+                            if let Err(ref err) = master_volume {
+                                error!("Failed to read master volume ({})", err);
+                            }
+                            if let Err(ref err) = music_volume {
+                                error!("Failed to read music volume ({})", err);
+                            }
+                            if let Err(ref err) = effects_volume {
+                                error!("Failed to read effects volume ({})", err);
+                            }
+
+                            let master_volume = master_volume.unwrap_or(1.0);
+                            let music_volume = music_volume.unwrap_or(1.0);
+                            let effects_volume = effects_volume.unwrap_or(1.0);
+
+                            if let Err(err) = music_track.set_volume(music_volume * master_volume, Tween::default()) {
+                                error!("Failed to set music volume ({})", err);
+                            }
+
+                            if let Err(err) = effect_track.set_volume(effects_volume * master_volume, Tween::default()) {
+                                error!("Failed to set effects volume ({})", err);
+                            }
 
                             self.sub_scene = MenuSubScene::Main;
                         }

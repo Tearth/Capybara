@@ -7,6 +7,7 @@ use capybara::egui::Label;
 use capybara::egui::Response;
 use capybara::egui::RichText;
 use capybara::egui::Ui;
+use capybara::log::error;
 use capybara::renderer::context::RendererContext;
 use capybara::ui::context::UiContext;
 use capybara::ui::ImageAtlas;
@@ -28,8 +29,29 @@ pub fn button(
     label_color: Color32,
     state: &mut WidgetState,
 ) -> Response {
-    let atlas_handle = context.handles.get("ui").unwrap();
-    let atlas_texture = renderer.textures.get_by_name("ui").unwrap();
+    let atlas_handle = match context.handles.get("ui") {
+        Some(handle) => handle,
+        None => {
+            error!("Failed to get ui atlas handle");
+            return ui.button(label);
+        }
+    };
+
+    let atlas_texture = match renderer.textures.get_by_name("ui") {
+        Ok(texture) => texture,
+        Err(err) => {
+            error!("Failed to get ui atlas texture ({})", err);
+            return ui.button(label);
+        }
+    };
+
+    let image = match Image::from_atlas(atlas_handle, atlas_texture, texture) {
+        Ok(image) => image,
+        Err(err) => {
+            error!("Failed to create image from atlas ({})", err);
+            return ui.button(label);
+        }
+    };
 
     let tint = if state.pressed {
         Color32::from_rgba_premultiplied(220, 220, 220, 255)
@@ -39,11 +61,13 @@ pub fn button(
         Color32::from_rgba_premultiplied(255, 255, 255, 255)
     };
 
-    let mut response = ui.add(ImageButton::new(Image::from_atlas(atlas_handle, atlas_texture, texture).unwrap()).tint(tint).frame(false));
+    let response = ui.add(ImageButton::new(image).tint(tint).frame(false));
     *state = response.get_state();
 
-    response.rect.set_height(response.rect.height() - 6.0);
-    ui.put(response.rect, Label::new(RichText::new(label).size(32.0).color(label_color)));
+    let mut label_rect = response.rect;
+    label_rect.set_height(response.rect.height() - 6.0);
+
+    ui.put(label_rect, Label::new(RichText::new(label).size(32.0).color(label_color)));
 
     response
 }

@@ -148,6 +148,7 @@
 <a href="#148" id="148">148</a>
 <a href="#149" id="149">149</a>
 <a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::scenes::GlobalData;
 <span class="kw">use </span>capybara::app::ApplicationState;
 <span class="kw">use </span>capybara::glam::Vec2;
@@ -274,7 +275,7 @@
         <span class="kw">let </span>resolution = <span class="self">self</span>.resolution;
         <span class="kw">let </span>renderer = <span class="self">self</span>.renderer;
 
-        <span class="self">self</span>.cache = <span class="prelude-val">Some</span>(DebugCollectorData {
+        <span class="kw">let </span>data = DebugCollectorData {
             fps_average,
             delta_current,
             delta_average,
@@ -286,10 +287,11 @@
             hardware_info,
             resolution,
             renderer,
-        });
+        };
+        <span class="self">self</span>.cache = <span class="prelude-val">Some</span>(data.clone());
         <span class="self">self</span>.cache_timestamp = <span class="prelude-val">Some</span>(now);
 
-        <span class="kw">return </span><span class="self">self</span>.cache.as_ref().cloned().unwrap();
+        data
     }
 }
 

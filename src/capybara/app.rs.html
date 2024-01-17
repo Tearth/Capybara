@@ -233,6 +233,19 @@
 <a href="#233" id="233">233</a>
 <a href="#234" id="234">234</a>
 <a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::error_break;
 <span class="kw">use </span><span class="kw">crate</span>::error_continue;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::context::RendererContext;
@@ -380,9 +393,21 @@
                 <span class="macro">info!</span>(<span class="string">&quot;Changing scene from {} to {}&quot;</span>, <span class="self">self</span>.current_scene, next_scene);
 
                 <span class="kw">if </span>!<span class="self">self</span>.current_scene.is_empty() {
-                    <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.scenes.get_by_name_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene).and_then(|p| p.deactivation(<span class="macro">state!</span>(<span class="self">self</span>))) {
+                    <span class="kw">let </span>scene = <span class="kw">match </span><span class="self">self</span>.scenes.get_by_name_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene) {
+                        <span class="prelude-val">Ok</span>(scene) =&gt; scene,
+                        <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_break!</span>(<span class="string">&quot;Failed to get scene {} ({})&quot;</span>, <span class="self">self</span>.current_scene, err),
+                    };
+
+                    <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = scene.deactivation(<span class="macro">state!</span>(<span class="self">self</span>)) {
                         <span class="macro">error_break!</span>(<span class="string">&quot;Failed to deactivate scene {} ({})&quot;</span>, <span class="self">self</span>.current_scene, err);
                     };
+
+                    <span class="kw">let </span>current_scene_reset = scene.reset();
+                    <span class="self">self</span>.scenes.remove_by_name(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene);
+
+                    <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.scenes.store_with_name(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene, current_scene_reset) {
+                        <span class="macro">error!</span>(<span class="string">&quot;Failed to reset scene {} ({})&quot;</span>, <span class="self">self</span>.current_scene, err)
+                    }
                 }
 
                 <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.scenes.get_by_name_mut(next_scene).and_then(|p| p.activation(<span class="macro">state!</span>(<span class="self">self</span>))) {
@@ -463,6 +488,7 @@
     <span class="kw">fn </span>process_frame_command(<span class="kw-2">&amp;mut </span><span class="self">self</span>, command: <span class="prelude-ty">Option</span>&lt;FrameCommand&gt;) {
         <span class="kw">match </span>command {
             <span class="prelude-val">Some</span>(FrameCommand::ChangeScene { name }) =&gt; <span class="self">self</span>.next_scene = <span class="prelude-val">Some</span>(name),
+            <span class="prelude-val">Some</span>(FrameCommand::ResetScene) =&gt; <span class="self">self</span>.next_scene = <span class="prelude-val">Some</span>(<span class="self">self</span>.current_scene.clone()),
             <span class="prelude-val">Some</span>(FrameCommand::Exit) =&gt; <span class="self">self</span>.running = <span class="bool-val">false</span>,
             <span class="prelude-val">None </span>=&gt; {}
         }

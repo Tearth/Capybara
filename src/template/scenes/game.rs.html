@@ -130,6 +130,10 @@
 <a href="#130" id="130">130</a>
 <a href="#131" id="131">131</a>
 <a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::GlobalData;
 <span class="kw">use </span><span class="kw">crate</span>::ui::components;
 <span class="kw">use </span><span class="kw">crate</span>::ui::state::WidgetState;
@@ -249,6 +253,10 @@
 
         <span class="self">self</span>.debug_profiler.stop(<span class="string">&quot;ui&quot;</span>);
         <span class="prelude-val">Ok</span>((output, command))
+    }
+
+    <span class="kw">fn </span>reset(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Scene&lt;GlobalData&gt;&gt; {
+        Box::&lt;<span class="self">Self</span>&gt;::default()
     }
 }
 

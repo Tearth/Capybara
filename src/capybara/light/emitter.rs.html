@@ -259,8 +259,6 @@
 <a href="#259" id="259">259</a>
 <a href="#260" id="260">260</a>
 <a href="#261" id="261">261</a>
-<a href="#262" id="262">262</a>
-<a href="#263" id="263">263</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::debug::LightDebugSettings;
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::shape::Shape;
@@ -275,7 +273,6 @@
 
 <span class="kw">pub struct </span>LightEmitter {
     <span class="kw">pub </span>position: Vec2,
-    <span class="kw">pub </span>data: Vec&lt;Edge&gt;,
     <span class="kw">pub </span>offset: f32,
     <span class="kw">pub </span>color_begin: Vec4,
     <span class="kw">pub </span>color_end: Vec4,
@@ -304,7 +301,6 @@
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             position: Vec2::ZERO,
-            data: Vec::new(),
             offset: <span class="number">0.002</span>,
             color_begin: Vec4::new(<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>),
             color_end: Vec4::new(<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>),
@@ -323,7 +319,7 @@
         }
     }
 
-    <span class="kw">pub fn </span>generate(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; LightResponse {
+    <span class="kw">pub fn </span>generate(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: <span class="kw-2">&amp;</span>[Edge]) -&gt; LightResponse {
         <span class="comment">// Algorithm based on:
         // - https://ncase.me/sight-and-light/
         // - https://rootllama.wordpress.com/2014/06/20/ray-line-segment-intersection-test-in-2d/
@@ -377,14 +373,14 @@
         // Step 3: sort edges by distance from the position so the search can be optimized later
         // -------------------------------------------------------------------------------------
 
-        </span><span class="kw">for </span>edge <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.data {
+        </span><span class="kw">for </span>edge <span class="kw">in </span>data {
             <span class="kw">let </span>distance = <span class="self">self</span>.position.distance_to_segment(edge.a, edge.b);
             <span class="kw">if </span>distance &lt;= <span class="self">self</span>.max_length {
                 <span class="self">self</span>.edges.push(EdgeWithDistance { a: edge.a, b: edge.b, distance });
             }
         }
 
-        <span class="self">self</span>.edges.sort_unstable_by(|a, b| a.distance.partial_cmp(<span class="kw-2">&amp;</span>b.distance).unwrap());
+        <span class="self">self</span>.edges.sort_unstable_by(|a, b| <span class="kw">unsafe </span>{ a.distance.partial_cmp(<span class="kw-2">&amp;</span>b.distance).unwrap_unchecked() });
 
         <span class="comment">// ----------------------------------------------------------------------------
         // Step 4: add the most outer edges, so every ray will eventually hit something
@@ -440,7 +436,7 @@
         // Step 6: sort and deduplicate points, so the mesh can be later generated in correct order
         // ----------------------------------------------------------------------------------------
 
-        </span><span class="self">self</span>.points.sort_by(|a, b| a.angle.partial_cmp(<span class="kw-2">&amp;</span>b.angle).unwrap());
+        </span><span class="self">self</span>.points.sort_by(|a, b| <span class="kw">unsafe </span>{ a.angle.partial_cmp(<span class="kw-2">&amp;</span>b.angle).unwrap_unchecked() });
         <span class="self">self</span>.points.dedup_by(|a, b| a.angle == b.angle);
 
         <span class="comment">// ----------------------------------------------------------------------------------------------

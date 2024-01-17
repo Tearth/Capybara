@@ -352,6 +352,10 @@
 <a href="#352" id="352">352</a>
 <a href="#353" id="353">353</a>
 <a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>capybara::anyhow::Result;
 <span class="kw">use </span>capybara::app::ApplicationContext;
 <span class="kw">use </span>capybara::app::ApplicationState;
@@ -380,6 +384,7 @@
 <span class="kw">use </span>capybara::renderer::sprite::Sprite;
 <span class="kw">use </span>capybara::renderer::sprite::TextureId;
 <span class="kw">use </span>capybara::renderer::texture::Texture;
+<span class="kw">use </span>capybara::renderer::Edge;
 <span class="kw">use </span>capybara::scene::FrameCommand;
 <span class="kw">use </span>capybara::scene::Scene;
 <span class="kw">use </span>capybara::window::Coordinates;
@@ -403,8 +408,8 @@
     delta_history: VecDeque&lt;f32&gt;,
     emitter: LightEmitter,
     emitter_last_response: <span class="prelude-ty">Option</span>&lt;LightResponse&gt;,
+    edges: Vec&lt;Edge&gt;,
     msaa: bool,
-    debug: bool,
 
     blur_directions: f32,
     blur_quality: f32,
@@ -496,8 +501,8 @@
         }
 
         <span class="kw">if </span><span class="self">self</span>.initialized {
-            <span class="kw">let </span><span class="kw-2">mut </span>edges = Vec::new();
             <span class="kw">let </span>texture_size = state.renderer.textures.get_by_name(<span class="string">&quot;Takodachi&quot;</span>)<span class="question-mark">?</span>.size;
+            <span class="self">self</span>.edges.clear();
 
             state.renderer.set_target_texture(<span class="prelude-val">Some</span>(<span class="self">self</span>.main_texture_id));
             state.renderer.draw_sprite(<span class="kw-2">&amp;</span>Sprite {
@@ -518,37 +523,36 @@
                 }
 
                 state.renderer.draw_sprite(<span class="kw-2">&amp;</span>object.sprite);
-                edges.append(<span class="kw-2">&amp;mut </span>object.sprite.get_edges(texture_size));
+                <span class="self">self</span>.edges.extend_from_slice(object.sprite.get_edges(texture_size).as_slice());
             }
 
-            <span class="comment">// let c = state.renderer.viewport_size / 2.0;
+            <span class="comment">/*
+            let c = state.renderer.viewport_size / 2.0;
 
-            // let circle = Shape::new_circle(c, 100.0, Some(24), 10.0, Vec4::new(1.0, 1.0, 1.0, 1.0));
-            // state.renderer.draw_shape(&amp;circle);
-            // edges.append(&amp;mut circle.get_edges());
+            let circle = capybara::renderer::shape::Shape::new_circle(c, 100.0, Some(24), 10.0, Vec4::new(1.0, 1.0, 1.0, 1.0));
+            state.renderer.draw_shape(&amp;circle);
+            self.edges.append(&amp;mut circle.get_edges());
 
-            // let disc = Shape::new_disc(c, 100.0, Some(24), Vec4::new(1.0, 1.0, 1.0, 1.0), Vec4::new(1.0, 1.0, 1.0, 1.0));
-            // state.renderer.draw_shape(&amp;disc);
-            // edges.append(&amp;mut disc.get_edges());
+            let disc = capybara::renderer::shape::Shape::new_disc(c, 100.0, Some(24), Vec4::new(1.0, 1.0, 1.0, 1.0), Vec4::new(1.0, 1.0, 1.0, 1.0));
+            state.renderer.draw_shape(&amp;disc);
+            self.edges.append(&amp;mut disc.get_edges());
 
-            // let frame = Shape::new_frame(c - Vec2::new(50.0, 50.0), c + Vec2::new(50.0, 50.0), 10.0, Vec4::new(1.0, 1.0, 1.0, 1.0));
-            // state.renderer.draw_shape(&amp;frame);
-            // edges.append(&amp;mut frame.get_edges());
+            let frame = capybara::renderer::shape::Shape::new_frame(c - Vec2::new(50.0, 50.0), c + Vec2::new(50.0, 50.0), 10.0, Vec4::new(1.0, 1.0, 1.0, 1.0));
+            state.renderer.draw_shape(&amp;frame);
+            self.edges.append(&amp;mut frame.get_edges());
 
-            // let rectangle = Shape::new_rectangle(c - Vec2::new(50.0, 50.0), c + Vec2::new(50.0, 50.0), Vec4::new(1.0, 1.0, 1.0, 1.0));
-            // state.renderer.draw_shape(&amp;rectangle);
-            // edges.append(&amp;mut rectangle.get_edges());
+            let rectangle = capybara::renderer::shape::Shape::new_rectangle(c - Vec2::new(50.0, 50.0), c + Vec2::new(50.0, 50.0), Vec4::new(1.0, 1.0, 1.0, 1.0));
+            state.renderer.draw_shape(&amp;rectangle);
+            self.edges.append(&amp;mut rectangle.get_edges());
 
-            // let line = Shape::new_line(c - Vec2::new(50.0, 50.0), c + Vec2::new(50.0, 50.0), 1.0, Vec4::new(1.0, 1.0, 1.0, 1.0));
-            // state.renderer.draw_shape(&amp;line);
-            // edges.append(&amp;mut line.get_edges());
+            let line = capybara::renderer::shape::Shape::new_line(c - Vec2::new(50.0, 50.0), c + Vec2::new(50.0, 50.0), 1.0, Vec4::new(1.0, 1.0, 1.0, 1.0));
+            state.renderer.draw_shape(&amp;line);
+            self.edges.append(&amp;mut line.get_edges());
+            */
 
-            </span>state.renderer.set_target_texture(<span class="prelude-val">None</span>);
+            </span><span class="self">self</span>.emitter.position = state.renderer.cameras.get(<span class="number">0</span>)<span class="question-mark">?</span>.from_window_to_screen_coordinates(state.window.cursor_position.into());
 
-            <span class="self">self</span>.emitter.position = state.renderer.cameras.get(<span class="number">0</span>)<span class="question-mark">?</span>.from_window_to_screen_coordinates(state.window.cursor_position.into());
-            <span class="self">self</span>.emitter.edges = edges;
-
-            <span class="kw">let </span>response = <span class="self">self</span>.emitter.generate();
+            <span class="kw">let </span>response = <span class="self">self</span>.emitter.generate(<span class="kw-2">&amp;</span><span class="self">self</span>.edges);
             state.renderer.set_target_texture(<span class="prelude-val">Some</span>(<span class="self">self</span>.light_texture_id));
             state.renderer.clear();
             state.renderer.draw_sprite(<span class="kw-2">&amp;</span>Sprite {
@@ -572,8 +576,8 @@
             });
             state.renderer.set_sprite_shader(<span class="prelude-val">None</span>);
 
-            <span class="kw">if </span><span class="self">self</span>.debug {
-                <span class="self">self</span>.emitter.draw_debug(state.renderer, <span class="kw-2">&amp;</span>response);
+            <span class="kw">if </span><span class="self">self</span>.emitter.debug.enabled {
+                <span class="self">self</span>.emitter.draw_debug(state.renderer, <span class="kw-2">&amp;</span><span class="self">self</span>.edges, <span class="kw-2">&amp;</span>response);
             }
 
             <span class="self">self</span>.emitter_last_response = <span class="prelude-val">Some</span>(response);
@@ -666,12 +670,16 @@
                             state.renderer.set_framebuffer_msaa(<span class="prelude-val">None</span>);
                         }
                     }
-                    ui.checkbox(<span class="kw-2">&amp;mut </span><span class="self">self</span>.debug, RichText::new(<span class="string">&quot;Debug mode&quot;</span>).font(font.clone()).heading().color(color));
+                    ui.checkbox(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.debug.enabled, RichText::new(<span class="string">&quot;Debug mode&quot;</span>).font(font.clone()).heading().color(color));
                 }
             });
         });
 
         <span class="prelude-val">Ok</span>((output, <span class="prelude-val">None</span>))
+    }
+
+    <span class="kw">fn </span>reset(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Scene&lt;GlobalData&gt;&gt; {
+        Box::&lt;<span class="self">Self</span>&gt;::default()
     }
 }
 

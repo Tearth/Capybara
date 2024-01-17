@@ -103,18 +103,16 @@
 <a href="#103" id="103">103</a>
 <a href="#104" id="104">104</a>
 <a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::GlobalData;
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>capybara::anyhow::Result;
 <span class="kw">use </span>capybara::app::ApplicationState;
 <span class="kw">use </span>capybara::assets::AssetsLoadingStatus;
 <span class="kw">use </span>capybara::egui::Align2;
-<span class="kw">use </span>capybara::egui::CentralPanel;
 <span class="kw">use </span>capybara::egui::Color32;
-<span class="kw">use </span>capybara::egui::Direction;
 <span class="kw">use </span>capybara::egui::Frame;
 <span class="kw">use </span>capybara::egui::FullOutput;
-<span class="kw">use </span>capybara::egui::Layout;
 <span class="kw">use </span>capybara::egui::ProgressBar;
 <span class="kw">use </span>capybara::egui::RawInput;
 <span class="kw">use </span>capybara::egui::RichText;
@@ -206,6 +204,10 @@
         });
 
         <span class="prelude-val">Ok</span>((output, <span class="prelude-val">None</span>))
+    }
+
+    <span class="kw">fn </span>reset(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Scene&lt;GlobalData&gt;&gt; {
+        Box::&lt;<span class="self">Self</span>&gt;::default()
     }
 }
 </code></pre></div></section></main></body></html>

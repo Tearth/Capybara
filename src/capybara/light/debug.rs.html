@@ -70,10 +70,12 @@
 <a href="#70" id="70">70</a>
 <a href="#71" id="71">71</a>
 <a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::emitter::LightEmitter;
 <span class="kw">use </span><span class="kw">super</span>::emitter::LightResponse;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::context::RendererContext;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::shape::Shape;
+<span class="kw">use </span><span class="kw">crate</span>::renderer::Edge;
 <span class="kw">use </span>glam::Vec2;
 <span class="kw">use </span>glam::Vec4;
 <span class="kw">use </span>std::f32::consts;
@@ -115,8 +117,8 @@
 }
 
 <span class="kw">impl </span>LightEmitter {
-    <span class="kw">pub fn </span>draw_debug(<span class="kw-2">&amp;</span><span class="self">self</span>, renderer: <span class="kw-2">&amp;mut </span>RendererContext, response: <span class="kw-2">&amp;</span>LightResponse) {
-        <span class="kw">for </span>edge <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.data {
+    <span class="kw">pub fn </span>draw_debug(<span class="kw-2">&amp;</span><span class="self">self</span>, renderer: <span class="kw-2">&amp;mut </span>RendererContext, data: <span class="kw-2">&amp;</span>[Edge], response: <span class="kw-2">&amp;</span>LightResponse) {
+        <span class="kw">for </span>edge <span class="kw">in </span>data {
             renderer.draw_shape(<span class="kw-2">&amp;</span>Shape::new_line(edge.a, edge.b, <span class="self">self</span>.debug.edge_thickness, <span class="self">self</span>.debug.edge_color));
         }
 

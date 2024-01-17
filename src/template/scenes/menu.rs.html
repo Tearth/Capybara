@@ -299,6 +299,53 @@
 <a href="#299" id="299">299</a>
 <a href="#300" id="300">300</a>
 <a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::GlobalData;
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::ui::components;
@@ -324,6 +371,7 @@
 <span class="kw">use </span>capybara::egui::Window;
 <span class="kw">use </span>capybara::glam::Vec4;
 <span class="kw">use </span>capybara::kira::tween::Tween;
+<span class="kw">use </span>capybara::log::error;
 <span class="kw">use </span>capybara::scene::FrameCommand;
 <span class="kw">use </span>capybara::scene::Scene;
 <span class="kw">use </span>capybara::utils::color::Vec4Color;
@@ -360,10 +408,24 @@
     <span class="kw">fn </span>activation(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         state.renderer.set_clear_color(Vec4::new_rgb(<span class="number">40</span>, <span class="number">80</span>, <span class="number">30</span>, <span class="number">255</span>));
 
+        <span class="kw">let </span>master_volume = state.global.settings.get::&lt;f32&gt;(SETTINGS_MASTER_VOLUME);
+        <span class="kw">let </span>music_volume = state.global.settings.get::&lt;f32&gt;(SETTINGS_MUSIC_VOLUME);
+        <span class="kw">let </span>effects_volume = state.global.settings.get::&lt;f32&gt;(SETTINGS_EFFECTS_VOLUME);
+
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(<span class="kw-2">ref </span>err) = master_volume {
+            <span class="macro">error!</span>(<span class="string">&quot;Failed to read master volume ({})&quot;</span>, err);
+        }
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(<span class="kw-2">ref </span>err) = music_volume {
+            <span class="macro">error!</span>(<span class="string">&quot;Failed to read music volume ({})&quot;</span>, err);
+        }
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(<span class="kw-2">ref </span>err) = effects_volume {
+            <span class="macro">error!</span>(<span class="string">&quot;Failed to read effects volume ({})&quot;</span>, err);
+        }
+
         <span class="self">self</span>.settings = SettingsData {
-            master_volume: state.global.settings.get(SETTINGS_MASTER_VOLUME).unwrap(),
-            music_volume: state.global.settings.get(SETTINGS_MUSIC_VOLUME).unwrap(),
-            effects_volume: state.global.settings.get(SETTINGS_EFFECTS_VOLUME).unwrap(),
+            master_volume: master_volume.unwrap_or(<span class="number">1.0</span>),
+            music_volume: music_volume.unwrap_or(<span class="number">1.0</span>),
+            effects_volume: effects_volume.unwrap_or(<span class="number">1.0</span>),
         };
 
         <span class="prelude-val">Ok</span>(())
@@ -417,6 +479,10 @@
         });
 
         <span class="prelude-val">Ok</span>((output, command))
+    }
+
+    <span class="kw">fn </span>reset(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Scene&lt;GlobalData&gt;&gt; {
+        Box::&lt;<span class="self">Self</span>&gt;::default()
     }
 }
 
@@ -497,20 +563,29 @@
 
                         ui.label(<span class="string">&quot;Master Volume:&quot;</span>);
                         <span class="kw">if </span>ui.add(Slider::new(master_volume, <span class="number">0.0</span>..=<span class="number">1.0</span>).show_value(<span class="bool-val">false</span>)).changed() {
-                            music_track.set_volume((<span class="kw-2">*</span>master_volume * <span class="kw-2">*</span>music_volume) <span class="kw">as </span>f64, Tween::default()).unwrap();
-                            effects_track.set_volume((<span class="kw-2">*</span>master_volume * <span class="kw-2">*</span>effects_volume) <span class="kw">as </span>f64, Tween::default()).unwrap();
+                            <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = music_track.set_volume((<span class="kw-2">*</span>master_volume * <span class="kw-2">*</span>music_volume) <span class="kw">as </span>f64, Tween::default()) {
+                                <span class="macro">error!</span>(<span class="string">&quot;Failed to set music volume ({})&quot;</span>, err);
+                            }
+
+                            <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = effects_track.set_volume((<span class="kw-2">*</span>master_volume * <span class="kw-2">*</span>effects_volume) <span class="kw">as </span>f64, Tween::default()) {
+                                <span class="macro">error!</span>(<span class="string">&quot;Failed to set effects volume ({})&quot;</span>, err);
+                            }
                         }
                         ui.end_row();
 
                         ui.label(<span class="string">&quot;Music Volume:&quot;</span>);
                         <span class="kw">if </span>ui.add(Slider::new(music_volume, <span class="number">0.0</span>..=<span class="number">1.0</span>).show_value(<span class="bool-val">false</span>)).changed() {
-                            music_track.set_volume((<span class="kw-2">*</span>master_volume * <span class="kw-2">*</span>music_volume) <span class="kw">as </span>f64, Tween::default()).unwrap();
+                            <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = music_track.set_volume((<span class="kw-2">*</span>master_volume * <span class="kw-2">*</span>music_volume) <span class="kw">as </span>f64, Tween::default()) {
+                                <span class="macro">error!</span>(<span class="string">&quot;Failed to set music volume ({})&quot;</span>, err);
+                            }
                         }
                         ui.end_row();
 
                         ui.label(<span class="string">&quot;Effects Volume:&quot;</span>);
                         <span class="kw">if </span>ui.add(Slider::new(effects_volume, <span class="number">0.0</span>..=<span class="number">1.0</span>).show_value(<span class="bool-val">false</span>)).changed() {
-                            effects_track.set_volume((<span class="kw-2">*</span>master_volume * <span class="kw-2">*</span>effects_volume) <span class="kw">as </span>f64, Tween::default()).unwrap();
+                            <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = effects_track.set_volume((<span class="kw-2">*</span>master_volume * <span class="kw-2">*</span>effects_volume) <span class="kw">as </span>f64, Tween::default()) {
+                                <span class="macro">error!</span>(<span class="string">&quot;Failed to set effects volume ({})&quot;</span>, err);
+                            }
                         }
                         ui.end_row();
                     });
@@ -532,12 +607,31 @@
                             <span class="kw">let </span>music_track = state.global.music_track.as_ref().unwrap();
                             <span class="kw">let </span>effect_track = state.global.effects_track.as_ref().unwrap();
 
-                            <span class="kw">let </span>master_volume = state.global.settings.get::&lt;f64&gt;(SETTINGS_MASTER_VOLUME).unwrap();
-                            <span class="kw">let </span>music_volume = state.global.settings.get::&lt;f64&gt;(SETTINGS_MUSIC_VOLUME).unwrap();
-                            <span class="kw">let </span>effects_volume = state.global.settings.get::&lt;f64&gt;(SETTINGS_EFFECTS_VOLUME).unwrap();
+                            <span class="kw">let </span>master_volume = state.global.settings.get::&lt;f64&gt;(SETTINGS_MASTER_VOLUME);
+                            <span class="kw">let </span>music_volume = state.global.settings.get::&lt;f64&gt;(SETTINGS_MUSIC_VOLUME);
+                            <span class="kw">let </span>effects_volume = state.global.settings.get::&lt;f64&gt;(SETTINGS_EFFECTS_VOLUME);
 
-                            music_track.set_volume(music_volume * master_volume, Tween::default()).unwrap();
-                            effect_track.set_volume(effects_volume * master_volume, Tween::default()).unwrap();
+                            <span class="kw">if let </span><span class="prelude-val">Err</span>(<span class="kw-2">ref </span>err) = master_volume {
+                                <span class="macro">error!</span>(<span class="string">&quot;Failed to read master volume ({})&quot;</span>, err);
+                            }
+                            <span class="kw">if let </span><span class="prelude-val">Err</span>(<span class="kw-2">ref </span>err) = music_volume {
+                                <span class="macro">error!</span>(<span class="string">&quot;Failed to read music volume ({})&quot;</span>, err);
+                            }
+                            <span class="kw">if let </span><span class="prelude-val">Err</span>(<span class="kw-2">ref </span>err) = effects_volume {
+                                <span class="macro">error!</span>(<span class="string">&quot;Failed to read effects volume ({})&quot;</span>, err);
+                            }
+
+                            <span class="kw">let </span>master_volume = master_volume.unwrap_or(<span class="number">1.0</span>);
+                            <span class="kw">let </span>music_volume = music_volume.unwrap_or(<span class="number">1.0</span>);
+                            <span class="kw">let </span>effects_volume = effects_volume.unwrap_or(<span class="number">1.0</span>);
+
+                            <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = music_track.set_volume(music_volume * master_volume, Tween::default()) {
+                                <span class="macro">error!</span>(<span class="string">&quot;Failed to set music volume ({})&quot;</span>, err);
+                            }
+
+                            <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = effect_track.set_volume(effects_volume * master_volume, Tween::default()) {
+                                <span class="macro">error!</span>(<span class="string">&quot;Failed to set effects volume ({})&quot;</span>, err);
+                            }
 
                             <span class="self">self</span>.sub_scene = MenuSubScene::Main;
                         }

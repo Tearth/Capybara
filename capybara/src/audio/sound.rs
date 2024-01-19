@@ -7,6 +7,7 @@ use kira::OutputDestination;
 use log::info;
 use std::io::Cursor;
 
+#[derive(Debug)]
 pub struct Sound {
     pub inner: StaticSoundData,
 }

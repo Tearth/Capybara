@@ -8,8 +8,9 @@ pub mod web;
 #[cfg(web)]
 pub type FileSystem = web::FileSystem;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub enum FileLoadingStatus {
+    #[default]
     Idle,
     Loading,
     Finished,

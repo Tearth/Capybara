@@ -29,7 +29,7 @@ pub struct LightEmitter {
     hits: Vec<RayTarget>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct LightResponse {
     pub shape: Shape,
     pub points: Vec<RayTarget>,

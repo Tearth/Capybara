@@ -9,6 +9,7 @@ use log::info;
 use rustc_hash::FxHashMap;
 use std::rc::Rc;
 
+#[derive(Debug)]
 pub struct Texture {
     pub name: String,
     pub size: Vec2,
@@ -20,11 +21,13 @@ pub struct Texture {
     gl: Rc<Context>,
 }
 
+#[derive(Debug, Default)]
 pub struct AtlasEntity {
     pub position: Vec2,
     pub size: Vec2,
 }
 
+#[derive(Debug)]
 pub enum TextureKind {
     Simple,
     Atlas(FxHashMap<String, AtlasEntity>),

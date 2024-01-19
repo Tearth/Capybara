@@ -14,6 +14,7 @@ use tokio::select;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::WebSocketStream;
 
+#[derive(Debug, Default)]
 pub struct WebSocketConnectedClient {
     pub id: u64,
     pub ping: Arc<RwLock<u32>>,
@@ -23,6 +24,7 @@ pub struct WebSocketConnectedClient {
     disconnection_tx: Option<UnboundedSender<()>>,
 }
 
+#[derive(Debug, Default)]
 pub struct WebSocketConnectedClientSlim {
     pub id: u64,
 

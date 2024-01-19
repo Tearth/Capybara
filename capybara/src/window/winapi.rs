@@ -29,6 +29,7 @@ pub type WGLCHOOSEPIXELFORMATARB = unsafe extern "C" fn(_: HDC, _: *const INT, _
 pub type WGLCREATECONTEXTATTRIBSARB = unsafe extern "C" fn(_: HDC, _: HGLRC, _: *const INT) -> HGLRC;
 pub type WGLSWAPINTERVALEXT = unsafe extern "C" fn(_: INT) -> BOOL;
 
+#[derive(Debug)]
 pub struct WindowContext {
     pub hwnd: HWND,
     pub hdc: HDC,
@@ -46,6 +47,7 @@ pub struct WindowContext {
     event_queue: VecDeque<InputEvent>,
 }
 
+#[derive(Debug)]
 pub struct WglExtensions {
     pub wglChoosePixelFormatARB: Option<WGLCHOOSEPIXELFORMATARB>,
     pub wglCreateContextAttribsARB: Option<WGLCREATECONTEXTATTRIBSARB>,

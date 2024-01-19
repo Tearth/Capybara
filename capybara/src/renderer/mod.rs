@@ -7,7 +7,7 @@ pub mod shape;
 pub mod sprite;
 pub mod texture;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct Edge {
     pub a: Vec2,
     pub b: Vec2,

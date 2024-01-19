@@ -144,7 +144,7 @@ impl FileSystem {
 
         let storage = match self.storage() {
             Ok(storage) => storage,
-            Err(err) => error_return!("Failed to get storage ({})", err),
+            Err(err) => bail!("Failed to get storage ({})", err),
         };
 
         if let Ok(settings) = storage.get(path) {

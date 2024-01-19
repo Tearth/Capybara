@@ -3,6 +3,7 @@ use crate::renderer::context::RendererContext;
 use crate::renderer::shape::Shape;
 use glam::Vec4;
 
+#[derive(Debug)]
 pub struct ParticlesDebugSettings {
     pub frame_color: Vec4,
     pub frame_thickness: f32,

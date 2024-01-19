@@ -39,7 +39,6 @@ pub struct SpriteVertex {
 pub enum TextureId {
     #[default]
     Default,
-
     Some(usize),
     None,
 }

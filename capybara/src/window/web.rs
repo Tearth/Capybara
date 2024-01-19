@@ -22,6 +22,7 @@ use web_sys::WebGl2RenderingContext;
 use web_sys::WheelEvent;
 use web_sys::Window;
 
+#[derive(Debug)]
 pub struct WindowContext {
     pub window: Window,
     pub document: Document,
@@ -85,7 +86,10 @@ impl WindowContext {
             None => JsValue::FALSE,
         };
 
-        Reflect::set(&context_options, &"antialias".into(), &antialias).map_err(|_| anyhow!("Failed to set antialias value"))?;
+        #[allow(unused_unsafe)]
+        unsafe {
+            Reflect::set(&context_options, &"antialias".into(), &antialias).map_err(|_| anyhow!("Failed to set antialias value"))?;
+        }
 
         let webgl = canvas
             .get_context_with_context_options("webgl2", &context_options)
@@ -441,7 +445,10 @@ impl WindowContext {
     }
 
     pub fn get_memory_usage(&self) -> MemoryInfo {
-        unsafe { MemoryInfo { private: get_private_memory_usage(), reserved: get_reserved_memory_usage() } }
+        #[allow(unused_unsafe)]
+        unsafe {
+            MemoryInfo { private: get_private_memory_usage(), reserved: get_reserved_memory_usage() }
+        }
     }
 }
 

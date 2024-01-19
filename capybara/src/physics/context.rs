@@ -26,6 +26,7 @@ pub struct PhysicsContext {
     pub debug: PhysicsDebugSettings,
 }
 
+#[derive(Debug, Default)]
 pub struct PhysicsDebugSettings {
     pub collider_thickness: f32,
     pub force_thickness: f32,
@@ -39,6 +40,7 @@ pub struct PhysicsDebugSettings {
     pub contact_color: Vec4,
 }
 
+#[derive(Debug, Default)]
 pub struct InterpolationData {
     pub position_previous: Option<Vec2>,
     pub rotation_previous: Option<f32>,

@@ -3,8 +3,9 @@ use glam::Vec2;
 pub mod ldtk;
 pub mod loader;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub enum AssetsLoadingStatus {
+    #[default]
     Idle,
     Loading,
     Parsing,
@@ -12,6 +13,7 @@ pub enum AssetsLoadingStatus {
     Error,
 }
 
+#[derive(Debug, Default)]
 pub struct RawTexture {
     pub name: String,
     pub path: String,
@@ -19,12 +21,14 @@ pub struct RawTexture {
     pub data: Vec<u8>,
 }
 
+#[derive(Debug, Default)]
 pub struct RawFont {
     pub name: String,
     pub path: String,
     pub data: Vec<u8>,
 }
 
+#[derive(Debug, Default)]
 pub struct RawAtlas {
     pub name: String,
     pub path: String,
@@ -32,6 +36,7 @@ pub struct RawAtlas {
     pub entities: Vec<RawAtlasEntity>,
 }
 
+#[derive(Debug, Default)]
 pub struct RawAtlasEntity {
     pub name: String,
     pub path: String,
@@ -39,6 +44,7 @@ pub struct RawAtlasEntity {
     pub size: Vec2,
 }
 
+#[derive(Debug, Default)]
 pub struct RawSound {
     pub name: String,
     pub path: String,

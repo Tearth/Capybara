@@ -7,6 +7,7 @@ use glam::Vec2;
 use glam::Vec4;
 use std::f32::consts;
 
+#[derive(Debug)]
 pub struct LightDebugSettings {
     pub enabled: bool,
 

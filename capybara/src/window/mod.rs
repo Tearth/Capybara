@@ -152,6 +152,7 @@ pub struct Coordinates {
     pub y: i32,
 }
 
+#[derive(Debug, Default)]
 pub struct MemoryInfo {
     pub private: usize,
     pub reserved: usize,

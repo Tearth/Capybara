@@ -2,7 +2,7 @@ use glam::Mat4;
 use glam::Vec2;
 use glam::Vec3;
 
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Camera {
     pub position: Vec2,
     pub size: Vec2,

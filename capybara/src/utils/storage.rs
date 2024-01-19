@@ -2,13 +2,14 @@ use crate::error_return;
 use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Result;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 use std::collections::VecDeque;
 
+#[derive(Debug)]
 pub struct Storage<T> {
     data: Vec<Option<T>>,
-    name_to_id_hashmap: HashMap<String, usize>,
-    id_to_name_hashmap: HashMap<usize, String>,
+    name_to_id_hashmap: FxHashMap<String, usize>,
+    id_to_name_hashmap: FxHashMap<usize, String>,
     removed_ids: VecDeque<usize>,
 }
 

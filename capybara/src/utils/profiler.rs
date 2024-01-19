@@ -2,13 +2,14 @@ use instant::Instant;
 use rustc_hash::FxHashMap;
 use std::collections::VecDeque;
 
+#[derive(Debug)]
 pub struct Profiler {
     pub enabled: bool,
     pub data: FxHashMap<String, ProfilerData>,
     pub history_capacity: usize,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct ProfilerData {
     pub history: VecDeque<f32>,
     pub timestamp: Option<Instant>,

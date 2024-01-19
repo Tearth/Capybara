@@ -6,12 +6,13 @@ use anyhow::Result;
 use colors_transform::Rgb;
 use glam::Vec2;
 use glam::Vec4;
+use rustc_hash::FxHashMap;
 use std::collections::HashMap;
 use std::path::Path;
 use tinyjson::InnerAsRef;
 use tinyjson::JsonValue;
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct LdtkWorld {
     pub name: String,
     pub path: String,
@@ -19,16 +20,16 @@ pub struct LdtkWorld {
     pub levels: Vec<LdtkLevel>,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct LdtkTilemap {
     pub id: usize,
     pub name: String,
     pub path: String,
     pub tile_size: Vec2,
-    pub custom: HashMap<usize, String>,
+    pub custom: FxHashMap<usize, String>,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct LdtkLevel {
     pub id: usize,
     pub name: String,
@@ -37,7 +38,7 @@ pub struct LdtkLevel {
     pub layers: Vec<LdtkLayer>,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct LdtkLayer {
     pub id: usize,
     pub name: String,
@@ -47,14 +48,14 @@ pub struct LdtkLayer {
     pub entities: Vec<LdtkEntity>,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct LdtkTile {
     pub id: usize,
     pub position: Vec2,
     pub source: Vec2,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct LdtkEntity {
     pub name: String,
     pub position: Vec2,
@@ -62,9 +63,10 @@ pub struct LdtkEntity {
     pub pivot: Vec2,
     pub source: Vec2,
     pub tilemap_id: usize,
-    pub fields: HashMap<String, LdtkEntityField>,
+    pub fields: FxHashMap<String, LdtkEntityField>,
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum LdtkEntityField {
     Bool(bool),
     Int(i32),
@@ -202,7 +204,7 @@ fn load_level(
                     None => bail!("Failed to find tilemap {}", tilemap_id),
                 };
 
-                let mut fields = HashMap::new();
+                let mut fields = FxHashMap::default();
                 let field_instances = read_array(data, "fieldInstances")?;
 
                 for data in field_instances {

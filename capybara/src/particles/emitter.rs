@@ -41,6 +41,7 @@ pub struct ParticleEmitter<const WAYPOINTS: usize> {
     pub debug: ParticlesDebugSettings,
 }
 
+#[derive(Debug)]
 pub struct Particle<const WAYPOINTS: usize> {
     pub postion: Vec2,
     pub rotation: f32,
@@ -56,12 +57,13 @@ pub struct Particle<const WAYPOINTS: usize> {
     pub color_variations: ArrayVec<Vec4, WAYPOINTS>,
 }
 
+#[derive(Debug, Default)]
 pub struct ParticleParameter<T> {
     pub base: T,
     pub variation: T,
 }
 
-#[derive(Copy, Clone, Debug, Default)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub enum ParticleInterpolation {
     #[default]
     Linear,

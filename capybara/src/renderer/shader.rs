@@ -10,7 +10,7 @@ use glow::Program;
 use glow::UniformLocation;
 use log::error;
 use log::info;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 use std::rc::Rc;
 use std::slice;
 
@@ -20,14 +20,16 @@ pub const SPRITE_FRAGMENT_SHADER: &str = include_str!("./shaders/sprite.frag");
 pub const SHAPE_VERTEX_SHADER: &str = include_str!("./shaders/shape.vert");
 pub const SHAPE_FRAGMENT_SHADER: &str = include_str!("./shaders/shape.frag");
 
+#[derive(Debug)]
 pub struct Shader {
     pub name: String,
     pub program: Program,
-    pub uniforms: HashMap<String, ShaderParameter>,
+    pub uniforms: FxHashMap<String, ShaderParameter>,
 
     gl: Rc<Context>,
 }
 
+#[derive(Debug)]
 pub struct ShaderParameter {
     pub location: UniformLocation,
     pub r#type: u32,
@@ -74,7 +76,7 @@ impl Shader {
             gl.delete_shader(fragment_shader);
 
             let active_uniforms = gl.get_active_uniforms(program);
-            let mut uniforms: HashMap<String, ShaderParameter> = Default::default();
+            let mut uniforms: FxHashMap<String, ShaderParameter> = Default::default();
 
             for index in 0..active_uniforms {
                 let uniform = gl.get_active_uniform(program, index).ok_or_else(|| anyhow!("Uniform not found"))?;

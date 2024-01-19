@@ -13,7 +13,7 @@ const PONG_CID: u8 = 0x01;
 const OBJECT_CID: u8 = 0x02;
 const ARRAY_CID: u8 = 0x03;
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Packet {
     Ping { timestamp: u64 },
     Pong { timestamp: u64 },

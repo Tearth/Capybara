@@ -3,14 +3,14 @@ use glam::Vec2;
 pub mod debug;
 pub mod emitter;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct EdgeWithDistance {
     pub a: Vec2,
     pub b: Vec2,
     pub distance: f32,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct RayTarget {
     pub position: Vec2,
     pub angle: f32,

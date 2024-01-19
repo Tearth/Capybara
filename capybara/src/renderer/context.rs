@@ -94,6 +94,7 @@ pub struct RendererContext {
     statistics_current: RendererStatistics,
 }
 
+#[derive(Debug)]
 pub struct BufferMetadata {
     pub content_type: BufferContentType,
     pub texture_id: TextureId,
@@ -101,7 +102,7 @@ pub struct BufferMetadata {
     pub selected_shader_id: usize,
 }
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct RendererStatistics {
     pub draw_calls: usize,
     pub triangles: usize,

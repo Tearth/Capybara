@@ -9,6 +9,7 @@ use log::info;
 use tokio::net::TcpListener;
 use tokio::select;
 
+#[derive(Debug)]
 pub struct WebSocketListener {
     disconnection_tx: Option<UnboundedSender<()>>,
 }

@@ -389,6 +389,8 @@
 <a href="#389" id="389">389</a>
 <a href="#390" id="390">390</a>
 <a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils::color::RgbToVec4;
 <span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>anyhow::bail;
@@ -397,12 +399,13 @@
 <span class="kw">use </span>colors_transform::Rgb;
 <span class="kw">use </span>glam::Vec2;
 <span class="kw">use </span>glam::Vec4;
+<span class="kw">use </span>rustc_hash::FxHashMap;
 <span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::path::Path;
 <span class="kw">use </span>tinyjson::InnerAsRef;
 <span class="kw">use </span>tinyjson::JsonValue;
 
-<span class="attr">#[derive(Default)]
+<span class="attr">#[derive(Debug, Default)]
 </span><span class="kw">pub struct </span>LdtkWorld {
     <span class="kw">pub </span>name: String,
     <span class="kw">pub </span>path: String,
@@ -410,16 +413,16 @@
     <span class="kw">pub </span>levels: Vec&lt;LdtkLevel&gt;,
 }
 
-<span class="attr">#[derive(Default)]
+<span class="attr">#[derive(Debug, Default)]
 </span><span class="kw">pub struct </span>LdtkTilemap {
     <span class="kw">pub </span>id: usize,
     <span class="kw">pub </span>name: String,
     <span class="kw">pub </span>path: String,
     <span class="kw">pub </span>tile_size: Vec2,
-    <span class="kw">pub </span>custom: HashMap&lt;usize, String&gt;,
+    <span class="kw">pub </span>custom: FxHashMap&lt;usize, String&gt;,
 }
 
-<span class="attr">#[derive(Default)]
+<span class="attr">#[derive(Debug, Default)]
 </span><span class="kw">pub struct </span>LdtkLevel {
     <span class="kw">pub </span>id: usize,
     <span class="kw">pub </span>name: String,
@@ -428,7 +431,7 @@
     <span class="kw">pub </span>layers: Vec&lt;LdtkLayer&gt;,
 }
 
-<span class="attr">#[derive(Default)]
+<span class="attr">#[derive(Debug, Default)]
 </span><span class="kw">pub struct </span>LdtkLayer {
     <span class="kw">pub </span>id: usize,
     <span class="kw">pub </span>name: String,
@@ -438,14 +441,14 @@
     <span class="kw">pub </span>entities: Vec&lt;LdtkEntity&gt;,
 }
 
-<span class="attr">#[derive(Default)]
+<span class="attr">#[derive(Debug, Default)]
 </span><span class="kw">pub struct </span>LdtkTile {
     <span class="kw">pub </span>id: usize,
     <span class="kw">pub </span>position: Vec2,
     <span class="kw">pub </span>source: Vec2,
 }
 
-<span class="attr">#[derive(Default)]
+<span class="attr">#[derive(Debug, Default)]
 </span><span class="kw">pub struct </span>LdtkEntity {
     <span class="kw">pub </span>name: String,
     <span class="kw">pub </span>position: Vec2,
@@ -453,10 +456,11 @@
     <span class="kw">pub </span>pivot: Vec2,
     <span class="kw">pub </span>source: Vec2,
     <span class="kw">pub </span>tilemap_id: usize,
-    <span class="kw">pub </span>fields: HashMap&lt;String, LdtkEntityField&gt;,
+    <span class="kw">pub </span>fields: FxHashMap&lt;String, LdtkEntityField&gt;,
 }
 
-<span class="kw">pub enum </span>LdtkEntityField {
+<span class="attr">#[derive(Clone, Debug, PartialEq)]
+</span><span class="kw">pub enum </span>LdtkEntityField {
     Bool(bool),
     Int(i32),
     Float(f32),
@@ -593,7 +597,7 @@
                     <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to find tilemap {}&quot;</span>, tilemap_id),
                 };
 
-                <span class="kw">let </span><span class="kw-2">mut </span>fields = HashMap::new();
+                <span class="kw">let </span><span class="kw-2">mut </span>fields = FxHashMap::default();
                 <span class="kw">let </span>field_instances = read_array(data, <span class="string">&quot;fieldInstances&quot;</span>)<span class="question-mark">?</span>;
 
                 <span class="kw">for </span>data <span class="kw">in </span>field_instances {

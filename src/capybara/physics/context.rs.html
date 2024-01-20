@@ -200,6 +200,8 @@
 <a href="#200" id="200">200</a>
 <a href="#201" id="201">201</a>
 <a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::events::EventCollector;
 <span class="kw">use </span>glam::Vec2;
 <span class="kw">use </span>glam::Vec4;
@@ -228,7 +230,8 @@
     <span class="kw">pub </span>debug: PhysicsDebugSettings,
 }
 
-<span class="kw">pub struct </span>PhysicsDebugSettings {
+<span class="attr">#[derive(Debug, Default)]
+</span><span class="kw">pub struct </span>PhysicsDebugSettings {
     <span class="kw">pub </span>collider_thickness: f32,
     <span class="kw">pub </span>force_thickness: f32,
     <span class="kw">pub </span>mass_center_radius: f32,
@@ -241,7 +244,8 @@
     <span class="kw">pub </span>contact_color: Vec4,
 }
 
-<span class="kw">pub struct </span>InterpolationData {
+<span class="attr">#[derive(Debug, Default)]
+</span><span class="kw">pub struct </span>InterpolationData {
     <span class="kw">pub </span>position_previous: <span class="prelude-ty">Option</span>&lt;Vec2&gt;,
     <span class="kw">pub </span>rotation_previous: <span class="prelude-ty">Option</span>&lt;f32&gt;,
     <span class="kw">pub </span>position_current: Vec2,

@@ -179,6 +179,8 @@
 <a href="#179" id="179">179</a>
 <a href="#180" id="180">180</a>
 <a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::error_continue;
 <span class="kw">use </span><span class="kw">crate</span>::error_return;
 <span class="kw">use </span><span class="kw">crate</span>::network::packet::Packet;
@@ -195,7 +197,8 @@
 <span class="kw">use </span>tokio_tungstenite::tungstenite::Message;
 <span class="kw">use </span>tokio_tungstenite::WebSocketStream;
 
-<span class="kw">pub struct </span>WebSocketConnectedClient {
+<span class="attr">#[derive(Debug, Default)]
+</span><span class="kw">pub struct </span>WebSocketConnectedClient {
     <span class="kw">pub </span>id: u64,
     <span class="kw">pub </span>ping: Arc&lt;RwLock&lt;u32&gt;&gt;,
 
@@ -204,7 +207,8 @@
     disconnection_tx: <span class="prelude-ty">Option</span>&lt;UnboundedSender&lt;()&gt;&gt;,
 }
 
-<span class="kw">pub struct </span>WebSocketConnectedClientSlim {
+<span class="attr">#[derive(Debug, Default)]
+</span><span class="kw">pub struct </span>WebSocketConnectedClientSlim {
     <span class="kw">pub </span>id: u64,
 
     outgoing_packets_tx: <span class="prelude-ty">Option</span>&lt;UnboundedSender&lt;Packet&gt;&gt;,

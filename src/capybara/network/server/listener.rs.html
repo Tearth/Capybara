@@ -69,6 +69,7 @@
 <a href="#69" id="69">69</a>
 <a href="#70" id="70">70</a>
 <a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::client::WebSocketConnectedClient;
 <span class="kw">use </span><span class="kw">crate</span>::error_continue;
 <span class="kw">use </span><span class="kw">crate</span>::error_return;
@@ -80,7 +81,8 @@
 <span class="kw">use </span>tokio::net::TcpListener;
 <span class="kw">use </span>tokio::select;
 
-<span class="kw">pub struct </span>WebSocketListener {
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>WebSocketListener {
     disconnection_tx: <span class="prelude-ty">Option</span>&lt;UnboundedSender&lt;()&gt;&gt;,
 }
 

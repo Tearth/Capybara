@@ -30,6 +30,7 @@
 <a href="#30" id="30">30</a>
 <a href="#31" id="31">31</a>
 <a href="#32" id="32">32</a>
+<a href="#33" id="33">33</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::assets::RawSound;
 <span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>kira::sound::static_sound::StaticSoundData;
@@ -39,7 +40,8 @@
 <span class="kw">use </span>log::info;
 <span class="kw">use </span>std::io::Cursor;
 
-<span class="kw">pub struct </span>Sound {
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>Sound {
     <span class="kw">pub </span>inner: StaticSoundData,
 }
 

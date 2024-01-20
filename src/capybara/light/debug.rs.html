@@ -71,6 +71,7 @@
 <a href="#71" id="71">71</a>
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::emitter::LightEmitter;
 <span class="kw">use </span><span class="kw">super</span>::emitter::LightResponse;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::context::RendererContext;
@@ -80,7 +81,8 @@
 <span class="kw">use </span>glam::Vec4;
 <span class="kw">use </span>std::f32::consts;
 
-<span class="kw">pub struct </span>LightDebugSettings {
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>LightDebugSettings {
     <span class="kw">pub </span>enabled: bool,
 
     <span class="kw">pub </span>edge_color: Vec4,

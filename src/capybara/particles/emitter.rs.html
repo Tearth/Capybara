@@ -226,6 +226,8 @@
 <a href="#226" id="226">226</a>
 <a href="#227" id="227">227</a>
 <a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::debug::ParticlesDebugSettings;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::context::RendererContext;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::sprite::Sprite;
@@ -269,7 +271,8 @@
     <span class="kw">pub </span>debug: ParticlesDebugSettings,
 }
 
-<span class="kw">pub struct </span>Particle&lt;<span class="kw">const </span>WAYPOINTS: usize&gt; {
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>Particle&lt;<span class="kw">const </span>WAYPOINTS: usize&gt; {
     <span class="kw">pub </span>postion: Vec2,
     <span class="kw">pub </span>rotation: f32,
     <span class="kw">pub </span>scale: Vec2,
@@ -284,12 +287,13 @@
     <span class="kw">pub </span>color_variations: ArrayVec&lt;Vec4, WAYPOINTS&gt;,
 }
 
-<span class="kw">pub struct </span>ParticleParameter&lt;T&gt; {
+<span class="attr">#[derive(Debug, Default)]
+</span><span class="kw">pub struct </span>ParticleParameter&lt;T&gt; {
     <span class="kw">pub </span>base: T,
     <span class="kw">pub </span>variation: T,
 }
 
-<span class="attr">#[derive(Copy, Clone, Debug, Default)]
+<span class="attr">#[derive(Copy, Clone, Debug, Default, PartialEq)]
 </span><span class="kw">pub enum </span>ParticleInterpolation {
     <span class="attr">#[default]
     </span>Linear,

@@ -26,14 +26,14 @@
 <span class="kw">pub mod </span>debug;
 <span class="kw">pub mod </span>emitter;
 
-<span class="attr">#[derive(Copy, Clone, Debug, PartialEq)]
+<span class="attr">#[derive(Copy, Clone, Debug, Default, PartialEq)]
 </span><span class="kw">pub struct </span>EdgeWithDistance {
     <span class="kw">pub </span>a: Vec2,
     <span class="kw">pub </span>b: Vec2,
     <span class="kw">pub </span>distance: f32,
 }
 
-<span class="attr">#[derive(Copy, Clone, Debug, PartialEq)]
+<span class="attr">#[derive(Copy, Clone, Debug, Default, PartialEq)]
 </span><span class="kw">pub struct </span>RayTarget {
     <span class="kw">pub </span>position: Vec2,
     <span class="kw">pub </span>angle: f32,

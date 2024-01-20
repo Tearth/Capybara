@@ -111,7 +111,7 @@
 <span class="kw">const </span>OBJECT_CID: u8 = <span class="number">0x02</span>;
 <span class="kw">const </span>ARRAY_CID: u8 = <span class="number">0x03</span>;
 
-<span class="attr">#[derive(Debug, Clone)]
+<span class="attr">#[derive(Clone, Debug, PartialEq)]
 </span><span class="kw">pub enum </span>Packet {
     Ping { timestamp: u64 },
     Pong { timestamp: u64 },

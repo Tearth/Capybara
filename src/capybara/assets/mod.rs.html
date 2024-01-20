@@ -74,48 +74,60 @@
 <a href="#74" id="74">74</a>
 <a href="#75" id="75">75</a>
 <a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glam::Vec2;
 
 <span class="kw">pub mod </span>ldtk;
 <span class="kw">pub mod </span>loader;
 
-<span class="attr">#[derive(Copy, Clone, Debug, PartialEq)]
+<span class="attr">#[derive(Copy, Clone, Debug, Default, PartialEq)]
 </span><span class="kw">pub enum </span>AssetsLoadingStatus {
-    Idle,
+    <span class="attr">#[default]
+    </span>Idle,
     Loading,
     Parsing,
     Finished,
     Error,
 }
 
-<span class="kw">pub struct </span>RawTexture {
+<span class="attr">#[derive(Debug, Default)]
+</span><span class="kw">pub struct </span>RawTexture {
     <span class="kw">pub </span>name: String,
     <span class="kw">pub </span>path: String,
     <span class="kw">pub </span>size: Vec2,
     <span class="kw">pub </span>data: Vec&lt;u8&gt;,
 }
 
-<span class="kw">pub struct </span>RawFont {
+<span class="attr">#[derive(Debug, Default)]
+</span><span class="kw">pub struct </span>RawFont {
     <span class="kw">pub </span>name: String,
     <span class="kw">pub </span>path: String,
     <span class="kw">pub </span>data: Vec&lt;u8&gt;,
 }
 
-<span class="kw">pub struct </span>RawAtlas {
+<span class="attr">#[derive(Debug, Default)]
+</span><span class="kw">pub struct </span>RawAtlas {
     <span class="kw">pub </span>name: String,
     <span class="kw">pub </span>path: String,
     <span class="kw">pub </span>image: String,
     <span class="kw">pub </span>entities: Vec&lt;RawAtlasEntity&gt;,
 }
 
-<span class="kw">pub struct </span>RawAtlasEntity {
+<span class="attr">#[derive(Debug, Default)]
+</span><span class="kw">pub struct </span>RawAtlasEntity {
     <span class="kw">pub </span>name: String,
     <span class="kw">pub </span>path: String,
     <span class="kw">pub </span>position: Vec2,
     <span class="kw">pub </span>size: Vec2,
 }
 
-<span class="kw">pub struct </span>RawSound {
+<span class="attr">#[derive(Debug, Default)]
+</span><span class="kw">pub struct </span>RawSound {
     <span class="kw">pub </span>name: String,
     <span class="kw">pub </span>path: String,
     <span class="kw">pub </span>data: Vec&lt;u8&gt;,

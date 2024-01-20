@@ -80,17 +80,19 @@
 <a href="#80" id="80">80</a>
 <a href="#81" id="81">81</a>
 <a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>instant::Instant;
 <span class="kw">use </span>rustc_hash::FxHashMap;
 <span class="kw">use </span>std::collections::VecDeque;
 
-<span class="kw">pub struct </span>Profiler {
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>Profiler {
     <span class="kw">pub </span>enabled: bool,
     <span class="kw">pub </span>data: FxHashMap&lt;String, ProfilerData&gt;,
     <span class="kw">pub </span>history_capacity: usize,
 }
 
-<span class="attr">#[derive(Default)]
+<span class="attr">#[derive(Debug, Default)]
 </span><span class="kw">pub struct </span>ProfilerData {
     <span class="kw">pub </span>history: VecDeque&lt;f32&gt;,
     <span class="kw">pub </span>timestamp: <span class="prelude-ty">Option</span>&lt;Instant&gt;,

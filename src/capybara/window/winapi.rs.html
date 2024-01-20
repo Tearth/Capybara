@@ -801,6 +801,8 @@
 <a href="#801" id="801">801</a>
 <a href="#802" id="802">802</a>
 <a href="#803" id="803">803</a>
+<a href="#804" id="804">804</a>
+<a href="#805" id="805">805</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use crate</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>::winapi::shared::basetsd::<span class="kw-2">*</span>;
@@ -832,7 +834,8 @@
 <span class="kw">pub type </span>WGLCREATECONTEXTATTRIBSARB = <span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn</span>(<span class="kw">_</span>: HDC, <span class="kw">_</span>: HGLRC, <span class="kw">_</span>: <span class="kw-2">*const </span>INT) -&gt; HGLRC;
 <span class="kw">pub type </span>WGLSWAPINTERVALEXT = <span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn</span>(<span class="kw">_</span>: INT) -&gt; BOOL;
 
-<span class="kw">pub struct </span>WindowContext {
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>WindowContext {
     <span class="kw">pub </span>hwnd: HWND,
     <span class="kw">pub </span>hdc: HDC,
     <span class="kw">pub </span>wgl_context: <span class="prelude-ty">Option</span>&lt;HGLRC&gt;,
@@ -849,7 +852,8 @@
     event_queue: VecDeque&lt;InputEvent&gt;,
 }
 
-<span class="kw">pub struct </span>WglExtensions {
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>WglExtensions {
     <span class="kw">pub </span>wglChoosePixelFormatARB: <span class="prelude-ty">Option</span>&lt;WGLCHOOSEPIXELFORMATARB&gt;,
     <span class="kw">pub </span>wglCreateContextAttribsARB: <span class="prelude-ty">Option</span>&lt;WGLCREATECONTEXTATTRIBSARB&gt;,
     <span class="kw">pub </span>wglSwapIntervalEXT: <span class="prelude-ty">Option</span>&lt;WGLSWAPINTERVALEXT&gt;,

@@ -156,17 +156,19 @@
 <a href="#156" id="156">156</a>
 <a href="#157" id="157">157</a>
 <a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::error_return;
 <span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>anyhow::bail;
 <span class="kw">use </span>anyhow::Result;
-<span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>rustc_hash::FxHashMap;
 <span class="kw">use </span>std::collections::VecDeque;
 
-<span class="kw">pub struct </span>Storage&lt;T&gt; {
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>Storage&lt;T&gt; {
     data: Vec&lt;<span class="prelude-ty">Option</span>&lt;T&gt;&gt;,
-    name_to_id_hashmap: HashMap&lt;String, usize&gt;,
-    id_to_name_hashmap: HashMap&lt;usize, String&gt;,
+    name_to_id_hashmap: FxHashMap&lt;String, usize&gt;,
+    id_to_name_hashmap: FxHashMap&lt;usize, String&gt;,
     removed_ids: VecDeque&lt;usize&gt;,
 }
 

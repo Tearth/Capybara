@@ -1,0 +1,77 @@
+<html>
+  <head>
+    <link data-trunk rel="copy-dir" href="./data/"/>
+    <style>
+        *:focus {
+            outline: none;
+        }
+    </style>
+  </head>
+  <body style="margin: 0;">
+    <canvas id="canvas" tabindex="1" oncontextmenu="return false" style="display: block; width: 100%; height: 100%; background: black;"></canvas>
+    <script>
+        // https://github.com/NiklasEi/bevy_game_template/blob/main/build/web/sound.js
+        (function () {
+            const audioContextList = [];
+            const userInputEventNames = [
+                "click",
+                "contextmenu",
+                "auxclick",
+                "dblclick",
+                "mousedown",
+                "mouseup",
+                "pointerup",
+                "touchend",
+                "keydown",
+                "keyup",
+            ];
+
+            self.AudioContext = new Proxy(self.AudioContext, {
+                construct(target, args) {
+                    const result = new target(...args);
+                    audioContextList.push(result);
+                    return result;
+                },
+            });
+
+            function resumeAllContexts(_event) {
+                let count = 0;
+
+                audioContextList.forEach((context) => {
+                    if (context.state !== "running") {
+                        context.resume();
+                    } else {
+                        count++;
+                    }
+                });
+
+                if (count > 0 && count === audioContextList.length) {
+                    userInputEventNames.forEach((eventName) => {
+                        document.removeEventListener(eventName, resumeAllContexts);
+                    });
+                }
+            }
+
+            userInputEventNames.forEach((eventName) => {
+                document.addEventListener(eventName, resumeAllContexts);
+            });
+        })();
+
+        function get_private_memory_usage() {
+            if (performance.memory !== undefined) {
+                return performance.memory.usedJSHeapSize;
+            }
+
+            return 0;
+        }
+
+        function get_reserved_memory_usage() {
+            if (performance.memory !== undefined) {
+                return performance.memory.totalJSHeapSize;
+            }
+            
+            return 0;
+        }
+    </script>
+  </body>
+</html>

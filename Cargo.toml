@@ -14,6 +14,11 @@ members = [
     "examples/network/benchmark/base",
     "examples/network/benchmark/client",
     "examples/network/benchmark/server",
+
+    "examples/network/template/base",
+    "examples/network/template/client",
+    "examples/network/template/hub",
+    "examples/network/template/server",
 ]
 
 [profile.release]

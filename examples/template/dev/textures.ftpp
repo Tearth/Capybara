@@ -2,7 +2,7 @@
   "meta": {
     "version": "0.6.7"
   },
-  "savePath": "..\\tmp\\main\\textures\\",
+  "savePath": "..\\target\\tmp\\main\\textures\\",
   "images": [],
   "folders": [
     ".\\textures"
@@ -19,7 +19,7 @@
     "filter": "none",
     "exporter": "Starling",
     "fileName": "pack-result",
-    "savePath": "..\\tmp\\main\\textures\\",
+    "savePath": "..\\target\\main\\textures\\",
     "width": 2048,
     "height": 2048,
     "fixedSize": false,

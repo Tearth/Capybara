@@ -2,7 +2,7 @@
   "meta": {
     "version": "0.6.7"
   },
-  "savePath": "..\\tmp\\main\\ui\\",
+  "savePath": "..\\target\\tmp\\main\\ui\\",
   "images": [],
   "folders": [
     ".\\ui"
@@ -19,7 +19,7 @@
     "filter": "none",
     "exporter": "Starling",
     "fileName": "pack-result",
-    "savePath": "..\\tmp\\main\\ui\\",
+    "savePath": "..\\target\\tmp\\main\\ui\\",
     "width": 2048,
     "height": 2048,
     "fixedSize": false,

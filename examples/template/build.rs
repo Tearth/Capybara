@@ -31,18 +31,22 @@ fn main() -> Result<()> {
             _ => bail!("Invalid target"),
         };
 
+        fs::create_dir_all("./target/tmp/boot/")?;
+        fs::create_dir_all("./target/tmp/main/textures/")?;
+        fs::create_dir_all("./target/tmp/main/ui/")?;
+
         Command::new(name).args(["--project", "./textures.ftpp"]).current_dir("./dev").spawn()?.wait()?;
         Command::new(name).args(["--project", "./ui.ftpp"]).current_dir("./dev").spawn()?.wait()?;
     }
 
     if Path::new("./assets/boot/").exists() {
         Command::new("7z").args(["a", "-tzip", "./data/boot.zip", "./assets/boot/*"]).spawn()?.wait()?;
-        Command::new("7z").args(["a", "-tzip", "./data/boot.zip", "./tmp/boot/*"]).spawn()?.wait()?;
+        Command::new("7z").args(["a", "-tzip", "./data/boot.zip", "./target/tmp/boot/*"]).spawn()?.wait()?;
     }
 
     if Path::new("./assets/main/").exists() {
         Command::new("7z").args(["a", "-tzip", "./data/main.zip", "./assets/main/*"]).spawn()?.wait()?;
-        Command::new("7z").args(["a", "-tzip", "./data/main.zip", "./tmp/main/*"]).spawn()?.wait()?;
+        Command::new("7z").args(["a", "-tzip", "./data/main.zip", "./target/tmp/main/*"]).spawn()?.wait()?;
     }
 
     if target == "x86_64-pc-windows-msvc" {

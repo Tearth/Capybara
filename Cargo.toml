@@ -11,9 +11,9 @@ members = [
     "examples/template",
     "examples/ui",
     
-    "examples/network/base",
-    "examples/network/client",
-    "examples/network/server",
+    "examples/network/benchmark/base",
+    "examples/network/benchmark/client",
+    "examples/network/benchmark/server",
 ]
 
 [profile.release]

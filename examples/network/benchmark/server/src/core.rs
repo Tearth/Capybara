@@ -7,7 +7,7 @@ use capybara::network::server::client::WebSocketConnectedClientSlim;
 use capybara::network::server::listener::WebSocketListener;
 use futures_channel::mpsc;
 use futures_util::StreamExt;
-use network_base::*;
+use network_benchmark_base::*;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::time::Duration;

@@ -5,7 +5,7 @@ use capybara::instant::Instant;
 use capybara::network::packet::Packet;
 use capybara::network::server::client::WebSocketConnectedClientSlim;
 use capybara::utils::rand::NewRand;
-use network_base::*;
+use network_benchmark_base::*;
 
 pub struct Room {
     last_update: Option<Instant>,

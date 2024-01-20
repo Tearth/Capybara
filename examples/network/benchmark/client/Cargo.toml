@@ -1,0 +1,11 @@
+[package]
+name = "network-benchmark-client"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+network-benchmark-base = { path = "../base" }
+capybara = { path = "../../../../capybara", features = [ "network" ] }
+
+[build-dependencies]
+anyhow = { version = "1.0.79" }

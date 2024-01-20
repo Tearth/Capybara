@@ -30,8 +30,8 @@ use capybara::window::Coordinates;
 use capybara::window::InputEvent;
 use capybara::window::Key;
 use capybara::window::WindowStyle;
-use network_base::PacketSetViewport;
-use network_base::*;
+use network_benchmark_base::PacketSetViewport;
+use network_benchmark_base::*;
 use std::collections::VecDeque;
 
 fast_gpu!();
@@ -94,7 +94,6 @@ impl Scene<GlobalData> for MainScene {
         if !self.initialized && state.global.assets.load("./data/data0.zip") == AssetsLoadingStatus::Finished {
             state.renderer.instantiate_assets(&state.global.assets, None);
             state.ui.instantiate_assets(&state.global.assets, None);
-            state.window.set_swap_interval(0);
 
             //self.client.connect("wss://d8fd-195-136-14-43.ngrok-free.app");
             self.client.connect("ws://localhost:9999");
@@ -214,7 +213,7 @@ fn main() {
 }
 
 fn main_internal() -> Result<()> {
-    ApplicationContext::<GlobalData>::new("Benchmark", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(4))?
+    ApplicationContext::<GlobalData>::new("Network benchmark", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(4))?
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene");
 

@@ -40,7 +40,7 @@ impl WebSocketListener {
                 };
                 info!("WebSocket connection established");
 
-                if let Err(err) = client_event.unbounded_send(WebSocketConnectedClient::new(websocket)) {
+                if let Err(err) = client_event.unbounded_send(WebSocketConnectedClient::new(websocket, addr)) {
                     error!("Failed to send client event ({})", err);
                 }
             }

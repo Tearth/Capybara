@@ -1,4 +1,5 @@
 use crate::core::Core;
+use capybara::instant::Instant;
 
 pub fn process(command: &str, core: &Core) {
     let tokens = command.split_whitespace().collect::<Vec<&str>>();
@@ -27,7 +28,12 @@ fn process_clients_list(_tokens: &[&str], core: &Core) {
     let clients = core.clients.read().unwrap();
 
     for client in clients.iter() {
-        data.push(format!("{} - ping {}", client.1.id, client.1.ping.read().unwrap()))
+        let id = client.1.id;
+        let address = client.1.addr;
+        let ping = client.1.ping.read().unwrap();
+        let online_time = (Instant::now() - client.1.join_time).as_secs() / 60;
+
+        data.push(format!("{}, {}, ping {}, online {} minutes", id, address, ping, online_time));
     }
 
     drop(clients);

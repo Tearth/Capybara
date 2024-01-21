@@ -4,9 +4,11 @@ use crate::network::packet::Packet;
 use futures_channel::mpsc;
 use futures_channel::mpsc::UnboundedSender;
 use futures_util::StreamExt;
+use instant::Instant;
 use instant::SystemTime;
 use log::error;
 use log::info;
+use std::net::SocketAddr;
 use std::sync::Arc;
 use std::sync::RwLock;
 use tokio::net::TcpStream;
@@ -14,17 +16,19 @@ use tokio::select;
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::WebSocketStream;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct WebSocketConnectedClient {
     pub id: u64,
     pub ping: Arc<RwLock<u32>>,
+    pub addr: SocketAddr,
+    pub join_time: Instant,
 
     websocket: Option<WebSocketStream<TcpStream>>,
     outgoing_packets_tx: Option<UnboundedSender<Packet>>,
     disconnection_tx: Option<UnboundedSender<()>>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct WebSocketConnectedClientSlim {
     pub id: u64,
 
@@ -33,13 +37,25 @@ pub struct WebSocketConnectedClientSlim {
 }
 
 impl WebSocketConnectedClient {
-    pub fn new(websocket: WebSocketStream<TcpStream>) -> Self {
-        Self { id: fastrand::u64(..), ping: Default::default(), websocket: Some(websocket), outgoing_packets_tx: None, disconnection_tx: None }
+    pub fn new(websocket: WebSocketStream<TcpStream>, addr: SocketAddr) -> Self {
+        Self {
+            id: fastrand::u64(..),
+            ping: Default::default(),
+            addr,
+            join_time: Instant::now(),
+
+            websocket: Some(websocket),
+            outgoing_packets_tx: None,
+            disconnection_tx: None,
+        }
     }
 
     pub fn run(&mut self, packet_event: UnboundedSender<(u64, Packet)>, disconnection_event: UnboundedSender<u64>) {
         let id = self.id;
-        let websocket = self.websocket.take().unwrap();
+        let websocket = match self.websocket.take() {
+            Some(websocket) => websocket,
+            None => error_return!("Client is not properly set up"),
+        };
 
         info!("Client {} initialized", id);
 

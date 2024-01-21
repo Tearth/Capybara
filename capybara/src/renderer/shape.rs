@@ -1,6 +1,6 @@
 use super::sprite::TextureId;
 use super::*;
-use crate::utils::color::Vec4Color;
+use crate::utils::color::Vec4Utils;
 use glam::Mat4;
 use glam::Vec2;
 use glam::Vec3;

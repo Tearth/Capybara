@@ -31,8 +31,8 @@ impl WebSocketListener {
         self.disconnection_tx = Some(disconnection_tx);
 
         let listen = tokio::spawn(async move {
-            while let Ok((stream, addr)) = tcp_listener.accept().await {
-                info!("New TCP connection with address {}, proceeding WebSocket handshake", addr);
+            while let Ok((stream, address)) = tcp_listener.accept().await {
+                info!("New TCP connection with address {}, proceeding WebSocket handshake", address);
 
                 let websocket = match tokio_tungstenite::accept_async(stream).await {
                     Ok(websocket) => websocket,
@@ -40,7 +40,7 @@ impl WebSocketListener {
                 };
                 info!("WebSocket connection established");
 
-                if let Err(err) = client_event.unbounded_send(WebSocketConnectedClient::new(websocket, addr)) {
+                if let Err(err) = client_event.unbounded_send(WebSocketConnectedClient::new(websocket, address)) {
                     error!("Failed to send client event ({})", err);
                 }
             }

@@ -1,3 +1,4 @@
+use super::*;
 use crate::error_continue;
 use crate::error_return;
 use crate::network::packet::Packet;
@@ -14,12 +15,12 @@ use tokio::runtime::Runtime;
 use tokio_tungstenite::tungstenite::Message;
 use url::Url;
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct WebSocketClient {
-    pub connected: Arc<RwLock<bool>>,
+    pub status: Arc<RwLock<ConnectionStatus>>,
     pub ping: Arc<RwLock<u32>>,
 
-    connected_last_state: bool,
+    connected_last_state: ConnectionStatus,
     received_packets: Arc<RwLock<VecDeque<Packet>>>,
     outgoing_packets_tx: Option<UnboundedSender<Packet>>,
     disconnection_tx: Option<UnboundedSender<()>>,
@@ -30,7 +31,7 @@ impl WebSocketClient {
         info!("Spawning network thread");
 
         let url = url.to_string();
-        let connected = self.connected.clone();
+        let status = self.status.clone();
         let ping = self.ping.clone();
 
         let received_packets = self.received_packets.clone();
@@ -105,7 +106,7 @@ impl WebSocketClient {
                 };
                 let process_disconnection = disconnection_rx.next();
 
-                *connected.write().unwrap() = true;
+                *status.write().unwrap() = ConnectionStatus::Connected;
 
                 tokio::select! {
                     _ = websocket_rx_to_sink => (),
@@ -114,7 +115,7 @@ impl WebSocketClient {
                     _ = process_disconnection => ()
                 };
 
-                *connected.write().unwrap() = false;
+                *status.write().unwrap() = ConnectionStatus::Disconnected;
             });
 
             info!("Connection closed, network runtime completed");
@@ -157,16 +158,16 @@ impl WebSocketClient {
     }
 
     pub fn has_connected(&mut self) -> bool {
-        let connected = *self.connected.read().unwrap();
-        let has_connected = self.connected_last_state != connected && connected;
+        let connected = *self.status.read().unwrap();
+        let has_connected = self.connected_last_state != connected && connected == ConnectionStatus::Connected;
         self.connected_last_state = connected;
 
         has_connected
     }
 
     pub fn has_disconnected(&mut self) -> bool {
-        let connected = *self.connected.read().unwrap();
-        let has_disconnected = self.connected_last_state != connected && !connected;
+        let connected = *self.status.read().unwrap();
+        let has_disconnected = self.connected_last_state != connected && connected == ConnectionStatus::Disconnected;
         self.connected_last_state = connected;
 
         has_disconnected

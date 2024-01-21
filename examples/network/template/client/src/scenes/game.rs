@@ -13,7 +13,7 @@ use capybara::egui::Window;
 use capybara::glam::Vec4;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
-use capybara::utils::color::Vec4Color;
+use capybara::utils::color::Vec4Utils;
 use capybara::utils::profiler::Profiler;
 use capybara::window::InputEvent;
 use capybara::window::Key;

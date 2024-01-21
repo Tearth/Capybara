@@ -29,7 +29,7 @@ fn process_clients_list(_tokens: &[&str], core: &Core) {
 
     for client in clients.iter() {
         let id = client.1.id;
-        let address = client.1.addr;
+        let address = client.1.address;
         let ping = client.1.ping.read().unwrap();
         let online_time = (Instant::now() - client.1.join_time).as_secs() / 60;
 

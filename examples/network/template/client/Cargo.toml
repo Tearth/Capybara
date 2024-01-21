@@ -4,7 +4,9 @@ version = "1.0.0"
 edition = "2021"
 
 [dependencies]
+network-template-base = { path = "../base" }
 capybara = { path = "../../../../capybara", features = [ "audio" ] }
+log = { version = "0.4.20" }
 
 [build-dependencies]
 anyhow = { version = "1.0.79" }

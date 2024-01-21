@@ -1,6 +1,8 @@
 use crate::error_continue;
 use crate::error_return;
 use crate::network::packet::Packet;
+use anyhow::bail;
+use anyhow::Result;
 use futures_channel::mpsc;
 use futures_channel::mpsc::UnboundedSender;
 use futures_util::StreamExt;
@@ -20,7 +22,7 @@ use tokio_tungstenite::WebSocketStream;
 pub struct WebSocketConnectedClient {
     pub id: u64,
     pub ping: Arc<RwLock<u32>>,
-    pub addr: SocketAddr,
+    pub address: SocketAddr,
     pub join_time: Instant,
 
     websocket: Option<WebSocketStream<TcpStream>>,
@@ -37,11 +39,11 @@ pub struct WebSocketConnectedClientSlim {
 }
 
 impl WebSocketConnectedClient {
-    pub fn new(websocket: WebSocketStream<TcpStream>, addr: SocketAddr) -> Self {
+    pub fn new(websocket: WebSocketStream<TcpStream>, address: SocketAddr) -> Self {
         Self {
             id: fastrand::u64(..),
             ping: Default::default(),
-            addr,
+            address,
             join_time: Instant::now(),
 
             websocket: Some(websocket),
@@ -50,11 +52,11 @@ impl WebSocketConnectedClient {
         }
     }
 
-    pub fn run(&mut self, packet_event: UnboundedSender<(u64, Packet)>, disconnection_event: UnboundedSender<u64>) {
+    pub fn run(&mut self, packet_event: UnboundedSender<(u64, Packet)>, disconnection_event: UnboundedSender<u64>) -> Result<()> {
         let id = self.id;
         let websocket = match self.websocket.take() {
             Some(websocket) => websocket,
-            None => error_return!("Client is not properly set up"),
+            None => bail!("Client is not properly set up"),
         };
 
         info!("Client {} initialized", id);
@@ -132,6 +134,8 @@ impl WebSocketConnectedClient {
                 error_return!("Failed to send disconnection event ({})", err)
             }
         });
+
+        Ok(())
     }
 
     pub fn send_packet(&self, packet: Packet) {

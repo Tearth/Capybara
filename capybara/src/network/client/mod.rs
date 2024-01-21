@@ -7,3 +7,11 @@ pub type WebSocketClient = native::WebSocketClient;
 pub mod web;
 #[cfg(web)]
 pub type WebSocketClient = web::WebSocketClient;
+
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+pub enum ConnectionStatus {
+    #[default]
+    Disconnected,
+    Connected,
+    Error,
+}

@@ -17,7 +17,7 @@ use crate::error_continue;
 use crate::error_return;
 use crate::renderer::texture::TextureFilterMag;
 use crate::renderer::texture::TextureFilterMin;
-use crate::utils::color::Vec4Color;
+use crate::utils::color::Vec4Utils;
 use crate::utils::storage::Storage;
 use anyhow::Error;
 use anyhow::Result;

@@ -1,11 +1,13 @@
 use crate::lobby::Lobby;
 use crate::terminal;
 use capybara::egui::ahash::HashMap;
+use capybara::error_continue;
 use capybara::log::Level;
 use capybara::network::packet::Packet;
 use capybara::network::server::client::WebSocketConnectedClient;
 use capybara::network::server::client::WebSocketConnectedClientSlim;
 use capybara::network::server::listener::WebSocketListener;
+use capybara::rustc_hash::FxHashMap;
 use futures_channel::mpsc;
 use futures_util::StreamExt;
 use network_template_base::*;
@@ -48,7 +50,9 @@ impl Core {
         let listen = listener.listen("localhost:9999", listener_tx);
         let accept_clients = async {
             while let Some(mut client) = listener_rx.next().await {
-                client.run(packet_event_tx.clone(), disconnection_event_tx.clone());
+                if let Err(err) = client.run(packet_event_tx.clone(), disconnection_event_tx.clone()) {
+                    error_continue!("Failed to run client ({})", err);
+                }
 
                 lobby.write().unwrap().initialize_client(client.to_slim());
                 clients.write().unwrap().insert(client.id, client);
@@ -85,11 +89,11 @@ impl Core {
         let tick = async {
             let mut interval = time::interval(Duration::from_millis(TICK));
             loop {
-                let clients = clients.read().unwrap().iter().map(|p| (p.1.to_slim())).collect::<Vec<WebSocketConnectedClientSlim>>();
                 let packets = queue.write().unwrap().clone();
+                let clients = clients.read().unwrap().iter().map(|(id, client)| (*id, client.to_slim())).collect::<FxHashMap<_, _>>();
 
                 queue.write().unwrap().clear();
-                lobby.write().unwrap().tick(clients, packets);
+                lobby.write().unwrap().tick(&clients, packets);
 
                 interval.tick().await;
             }

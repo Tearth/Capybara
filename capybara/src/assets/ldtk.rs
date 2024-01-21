@@ -1,4 +1,4 @@
-use crate::utils::color::RgbToVec4;
+use crate::utils::color::RgbUtils;
 use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Error;

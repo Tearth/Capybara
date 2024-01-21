@@ -1,4 +1,5 @@
-use crate::room::Room;
+use crate::lobby::Lobby;
+use crate::terminal;
 use capybara::egui::ahash::HashMap;
 use capybara::log::Level;
 use capybara::network::packet::Packet;
@@ -7,17 +8,18 @@ use capybara::network::server::client::WebSocketConnectedClientSlim;
 use capybara::network::server::listener::WebSocketListener;
 use futures_channel::mpsc;
 use futures_util::StreamExt;
-use network_benchmark_base::*;
+use network_template_base::*;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::time::Duration;
+use tokio::io::AsyncReadExt;
 use tokio::select;
 use tokio::time;
 
 pub struct Core {
-    clients: Arc<RwLock<HashMap<u64, WebSocketConnectedClient>>>,
-    queue: Arc<RwLock<Vec<QueuePacket>>>,
-    room: Arc<RwLock<Room>>,
+    pub clients: Arc<RwLock<HashMap<u64, WebSocketConnectedClient>>>,
+    pub queue: Arc<RwLock<Vec<QueuePacket>>>,
+    pub lobby: Arc<RwLock<Lobby>>,
 }
 
 #[derive(Clone)]
@@ -28,7 +30,7 @@ pub struct QueuePacket {
 
 impl Core {
     pub fn new() -> Self {
-        Self { clients: Default::default(), queue: Default::default(), room: Default::default() }
+        Self { clients: Default::default(), queue: Default::default(), lobby: Default::default() }
     }
 
     pub async fn run(&mut self) {
@@ -41,14 +43,14 @@ impl Core {
 
         let clients = self.clients.clone();
         let queue = self.queue.clone();
-        let room = self.room.clone();
+        let lobby = self.lobby.clone();
 
         let listen = listener.listen("localhost:9999", listener_tx);
         let accept_clients = async {
             while let Some(mut client) = listener_rx.next().await {
                 client.run(packet_event_tx.clone(), disconnection_event_tx.clone());
 
-                room.write().unwrap().initialize_client(client.to_slim());
+                lobby.write().unwrap().initialize_client(client.to_slim());
                 clients.write().unwrap().insert(client.id, client);
             }
         };
@@ -62,6 +64,24 @@ impl Core {
                 clients.write().unwrap().remove(&id);
             }
         };
+        let process_terminal = async {
+            let mut stdin = tokio::io::stdin();
+            loop {
+                let mut buffer = vec![0; 128];
+                let n = match stdin.read(&mut buffer).await {
+                    Err(_) | Ok(0) => break,
+                    Ok(n) => n,
+                };
+                buffer.truncate(n);
+
+                let command = match String::from_utf8(buffer) {
+                    Ok(command) => command,
+                    Err(_) => break,
+                };
+
+                terminal::process(&command, self);
+            }
+        };
         let tick = async {
             let mut interval = time::interval(Duration::from_millis(TICK));
             loop {
@@ -69,7 +89,7 @@ impl Core {
                 let packets = queue.write().unwrap().clone();
 
                 queue.write().unwrap().clear();
-                room.write().unwrap().tick(clients, packets);
+                lobby.write().unwrap().tick(clients, packets);
 
                 interval.tick().await;
             }
@@ -80,6 +100,7 @@ impl Core {
             _ = accept_clients => {}
             _ = read_frames => {}
             _ = process_disconnection => {}
+            _ = process_terminal => {}
             _ = tick => {}
         }
     }

@@ -1,4 +1,4 @@
-trait StringUtils {
+pub trait StringUtils {
     fn as_bytes_array<const N: usize>(&self) -> [u8; N];
 }
 

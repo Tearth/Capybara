@@ -7,6 +7,9 @@ pub mod lobby;
 #[cfg(not(web))]
 pub mod terminal;
 
+#[cfg(not(web))]
+pub mod servers;
+
 fn main() {
     #[cfg(not(web))]
     internal::main();

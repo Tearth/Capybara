@@ -1,11 +1,11 @@
 use crate::lobby::Lobby;
+use crate::servers::ServerManager;
 use crate::terminal;
 use capybara::egui::ahash::HashMap;
 use capybara::error_continue;
 use capybara::log::Level;
 use capybara::network::packet::Packet;
 use capybara::network::server::client::WebSocketConnectedClient;
-use capybara::network::server::client::WebSocketConnectedClientSlim;
 use capybara::network::server::listener::WebSocketListener;
 use capybara::rustc_hash::FxHashMap;
 use futures_channel::mpsc;
@@ -22,6 +22,7 @@ pub struct Core {
     pub clients: Arc<RwLock<HashMap<u64, WebSocketConnectedClient>>>,
     pub queue: Arc<RwLock<Vec<QueuePacket>>>,
     pub lobby: Arc<RwLock<Lobby>>,
+    pub servers: Arc<RwLock<ServerManager>>,
 }
 
 #[derive(Clone)]
@@ -32,7 +33,7 @@ pub struct QueuePacket {
 
 impl Core {
     pub fn new() -> Self {
-        Self { clients: Default::default(), queue: Default::default(), lobby: Default::default() }
+        Self { clients: Default::default(), queue: Default::default(), lobby: Default::default(), servers: Default::default() }
     }
 
     pub async fn run(&mut self) {
@@ -46,6 +47,7 @@ impl Core {
         let clients = self.clients.clone();
         let queue = self.queue.clone();
         let lobby = self.lobby.clone();
+        let servers = self.servers.clone();
 
         let listen = listener.listen("localhost:9999", listener_tx);
         let accept_clients = async {
@@ -86,6 +88,13 @@ impl Core {
                 terminal::process(&command, self);
             }
         };
+        let process_servers = async {
+            let mut interval = time::interval(Duration::from_millis(10000));
+            loop {
+                servers.write().unwrap().send_pings();
+                interval.tick().await;
+            }
+        };
         let tick = async {
             let mut interval = time::interval(Duration::from_millis(TICK));
             loop {
@@ -93,7 +102,7 @@ impl Core {
                 let clients = clients.read().unwrap().iter().map(|(id, client)| (*id, client.to_slim())).collect::<FxHashMap<_, _>>();
 
                 queue.write().unwrap().clear();
-                lobby.write().unwrap().tick(&clients, packets);
+                lobby.write().unwrap().tick(&clients, &servers.read().unwrap().servers, packets);
 
                 interval.tick().await;
             }
@@ -105,6 +114,7 @@ impl Core {
             _ = read_frames => {}
             _ = process_disconnection => {}
             _ = process_terminal => {}
+            _ = process_servers => {}
             _ = tick => {}
         }
     }

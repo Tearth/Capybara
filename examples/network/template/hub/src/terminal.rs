@@ -1,5 +1,6 @@
 use crate::core::Core;
 use capybara::instant::Instant;
+use log::info;
 
 pub fn process(command: &str, core: &mut Core) {
     let tokens = command.split_whitespace().collect::<Vec<&str>>();

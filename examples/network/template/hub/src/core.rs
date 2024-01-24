@@ -2,6 +2,7 @@ use crate::config::ConfigLoader;
 use crate::lobby::Lobby;
 use crate::servers::ServerManager;
 use crate::terminal;
+use capybara::anyhow::Result;
 use capybara::egui::ahash::HashMap;
 use capybara::error_continue;
 use capybara::log::Level;
@@ -9,9 +10,14 @@ use capybara::network::packet::Packet;
 use capybara::network::server::client::WebSocketConnectedClient;
 use capybara::network::server::listener::WebSocketListener;
 use capybara::rustc_hash::FxHashMap;
+use chrono::SecondsFormat;
+use chrono::Utc;
 use futures_channel::mpsc;
 use futures_util::StreamExt;
+use log::error;
 use network_template_base::*;
+use std::fs;
+use std::io;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::time::Duration;
@@ -47,7 +53,10 @@ impl Core {
     }
 
     pub async fn run(&mut self) {
-        simple_logger::init_with_level(Level::Info).unwrap();
+        if let Err(err) = self.init_logger() {
+            println!("Failed to initialize logger ({})", err);
+            return;
+        }
 
         let mut listener = WebSocketListener::new();
         let (listener_tx, mut listener_rx) = mpsc::unbounded::<WebSocketConnectedClient>();
@@ -129,6 +138,25 @@ impl Core {
             _ = process_servers => {}
             _ = tick => {}
         }
+    }
+
+    fn init_logger(&self) -> Result<()> {
+        fs::create_dir_all("./logs/")?;
+
+        fern::Dispatch::new()
+            .format(|out, message, record| {
+                out.finish(format_args!(
+                    "[{}] [{}] [{}] {}",
+                    Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true),
+                    record.level(),
+                    record.target(),
+                    message
+                ))
+            })
+            .chain(fern::Dispatch::new().level(log::LevelFilter::Debug).chain(fern::DateBased::new("./logs/", "log_info_%Y-%m-%d.log")))
+            .apply()?;
+
+        Ok(())
     }
 }
 

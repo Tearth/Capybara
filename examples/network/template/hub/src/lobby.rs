@@ -14,8 +14,6 @@ impl Lobby {
         Self {}
     }
 
-    pub fn initialize_client(&mut self, client: WebSocketConnectedClientSlim) {}
-
     pub fn tick(&mut self, clients: &FxHashMap<u64, WebSocketConnectedClientSlim>, servers: &Vec<ServerConnection>, packets: Vec<QueuePacket>) {
         for packet in packets {
             match packet.inner.get_id() {

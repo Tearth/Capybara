@@ -1,6 +1,4 @@
 use crate::config::ConfigLoader;
-use crate::lobby::Lobby;
-use crate::servers::ServerManager;
 use crate::terminal;
 use capybara::anyhow::Result;
 use capybara::egui::ahash::HashMap;
@@ -28,8 +26,6 @@ use tokio::time;
 pub struct Core {
     pub clients: Arc<RwLock<HashMap<u64, WebSocketConnectedClient>>>,
     pub queue: Arc<RwLock<Vec<QueuePacket>>>,
-    pub lobby: Arc<RwLock<Lobby>>,
-    pub servers: Arc<RwLock<ServerManager>>,
     pub config: ConfigLoader,
 }
 
@@ -43,13 +39,7 @@ impl Core {
     pub fn new() -> Self {
         let config = ConfigLoader::new("config.json");
 
-        Self {
-            clients: Default::default(),
-            queue: Default::default(),
-            lobby: Default::default(),
-            servers: Arc::new(RwLock::new(ServerManager::new(&config))),
-            config,
-        }
+        Self { clients: Default::default(), queue: Default::default(), config }
     }
 
     pub async fn run(&mut self) {
@@ -65,8 +55,6 @@ impl Core {
 
         let clients = self.clients.clone();
         let queue = self.queue.clone();
-        let lobby = self.lobby.clone();
-        let servers = self.servers.clone();
 
         self.config.reload();
 
@@ -108,22 +96,9 @@ impl Core {
                 terminal::process(&command, self);
             }
         };
-        let process_servers = async {
-            let mut interval = time::interval(Duration::from_millis(10000));
-            loop {
-                servers.write().unwrap().send_pings();
-                interval.tick().await;
-            }
-        };
         let tick = async {
             let mut interval = time::interval(Duration::from_millis(TICK));
             loop {
-                let packets = queue.write().unwrap().clone();
-                let clients = clients.read().unwrap().iter().map(|(id, client)| (*id, client.to_slim())).collect::<FxHashMap<_, _>>();
-
-                queue.write().unwrap().clear();
-                lobby.write().unwrap().tick(&clients, &servers.read().unwrap().servers, packets);
-
                 interval.tick().await;
             }
         };
@@ -134,7 +109,6 @@ impl Core {
             _ = read_frames => {}
             _ = process_disconnection => {}
             _ = process_terminal => {}
-            _ = process_servers => {}
             _ = tick => {}
         }
     }

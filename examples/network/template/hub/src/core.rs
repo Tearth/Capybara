@@ -41,7 +41,8 @@ pub struct QueuePacket {
 
 impl Core {
     pub fn new() -> Self {
-        let config = ConfigLoader::new("config.json");
+        let mut config = ConfigLoader::new("config.json");
+        config.reload();
 
         Self {
             clients: Default::default(),
@@ -70,7 +71,9 @@ impl Core {
 
         self.config.reload();
 
-        let listen = listener.listen("localhost:9999", listener_tx);
+        let endpoint = self.config.data.endpoint.clone();
+        let listen = listener.listen(&endpoint, listener_tx);
+
         let accept_clients = async {
             while let Some(mut client) = listener_rx.next().await {
                 if let Err(err) = client.run(packet_event_tx.clone(), disconnection_event_tx.clone()) {

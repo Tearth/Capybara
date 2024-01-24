@@ -58,7 +58,9 @@ impl Core {
 
         self.config.reload();
 
-        let listen = listener.listen("localhost:9999", listener_tx);
+        let endpoint = self.config.data.endpoint.clone();
+        let listen = listener.listen(&endpoint, listener_tx);
+
         let accept_clients = async {
             while let Some(mut client) = listener_rx.next().await {
                 if let Err(err) = client.run(packet_event_tx.clone(), disconnection_event_tx.clone()) {

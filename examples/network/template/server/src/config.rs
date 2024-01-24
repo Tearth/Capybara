@@ -16,6 +16,7 @@ pub struct ConfigLoader {
 
 #[derive(Debug, Default, Clone)]
 pub struct ConfigData {
+    pub endpoint: String,
     pub tick: u32,
 }
 
@@ -58,6 +59,7 @@ impl ConfigLoader {
     }
 
     fn parse(&mut self, data: &HashMap<String, JsonValue>) -> Result<()> {
+        self.data.endpoint = read_value::<String>(data, "endpoint")?;
         self.data.tick = read_value::<f64>(data, "tick")? as u32;
 
         Ok(())

@@ -1,5 +1,5 @@
 use crate::core::Core;
-use capybara::instant::Instant;
+use capybara::{instant::Instant, network::client::ConnectionStatus};
 use log::info;
 
 pub fn process(command: &str, core: &mut Core) {
@@ -9,6 +9,7 @@ pub fn process(command: &str, core: &mut Core) {
         Some(&"config") => process_config(&tokens, core),
         Some(&"clients") => process_clients(&tokens, core),
         Some(&"help") => process_help(&tokens, core),
+        Some(&"servers") => process_servers(&tokens, core),
         _ => println!("Unknown command"),
     }
 }
@@ -78,4 +79,37 @@ fn process_help(_tokens: &[&str], _core: &Core) {
     println!(" config reload - reload configuration from the file");
     println!(" clients list - display a list of all connected clients");
     println!(" help - list all available commands");
+}
+
+fn process_servers(tokens: &[&str], core: &Core) {
+    if tokens.len() < 2 {
+        println!("Unknown parameter");
+        return;
+    }
+
+    match tokens.get(1) {
+        Some(&"status") => process_servers_status(tokens, core),
+        _ => println!("Unknown parameter"),
+    }
+}
+
+fn process_servers_status(_tokens: &[&str], core: &Core) {
+    let mut output = Vec::new();
+    let manager = core.servers.read().unwrap();
+
+    for server in &manager.servers {
+        let enabled = if server.definition.enabled { "enabled" } else { "disabled" };
+        if *server.websocket.status.read().unwrap() == ConnectionStatus::Connected {
+            let ping = *server.websocket.ping.read().unwrap();
+            output.push(format!("{} ({}) - {}, connected, ping {} ms", server.definition.name, server.definition.flag, enabled, ping));
+        } else {
+            output.push(format!("{} ({}) - {}, disconnected", server.definition.name, server.definition.flag, enabled));
+        }
+    }
+
+    println!("Servers status:");
+
+    for line in output {
+        println!(" - {}", line);
+    }
 }

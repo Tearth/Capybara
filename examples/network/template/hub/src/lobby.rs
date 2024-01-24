@@ -1,5 +1,5 @@
 use crate::core::QueuePacket;
-use crate::servers::ServerInfo;
+use crate::servers::ServerConnection;
 use capybara::network::client::ConnectionStatus;
 use capybara::network::packet::Packet;
 use capybara::network::server::client::WebSocketConnectedClientSlim;
@@ -16,7 +16,7 @@ impl Lobby {
 
     pub fn initialize_client(&mut self, client: WebSocketConnectedClientSlim) {}
 
-    pub fn tick(&mut self, clients: &FxHashMap<u64, WebSocketConnectedClientSlim>, servers: &Vec<ServerInfo>, packets: Vec<QueuePacket>) {
+    pub fn tick(&mut self, clients: &FxHashMap<u64, WebSocketConnectedClientSlim>, servers: &Vec<ServerConnection>, packets: Vec<QueuePacket>) {
         for packet in packets {
             match packet.inner.get_id() {
                 Some(PACKET_PLAYER_NAME_REQUEST) => {
@@ -33,11 +33,11 @@ impl Lobby {
                         let mut data = [PacketServerListData::default(); 3];
 
                         for server in servers {
-                            if server.enabled && *server.websocket.status.read().unwrap() == ConnectionStatus::Connected {
+                            if server.definition.enabled && *server.websocket.status.read().unwrap() == ConnectionStatus::Connected {
                                 data[count as usize] = PacketServerListData {
-                                    name: server.name.as_bytes_array(),
-                                    flag: server.flag.as_bytes_array(),
-                                    address: server.address.as_bytes_array(),
+                                    name: server.definition.name.as_bytes_array(),
+                                    flag: server.definition.flag.as_bytes_array(),
+                                    address: server.definition.address.as_bytes_array(),
                                 };
 
                                 count += 1;

@@ -1,3 +1,4 @@
+use crate::config::ConfigLoader;
 use crate::lobby::Lobby;
 use crate::servers::ServerManager;
 use crate::terminal;
@@ -23,6 +24,7 @@ pub struct Core {
     pub queue: Arc<RwLock<Vec<QueuePacket>>>,
     pub lobby: Arc<RwLock<Lobby>>,
     pub servers: Arc<RwLock<ServerManager>>,
+    pub config: ConfigLoader,
 }
 
 #[derive(Clone)]
@@ -33,7 +35,15 @@ pub struct QueuePacket {
 
 impl Core {
     pub fn new() -> Self {
-        Self { clients: Default::default(), queue: Default::default(), lobby: Default::default(), servers: Default::default() }
+        let config = ConfigLoader::new("config.json");
+
+        Self {
+            clients: Default::default(),
+            queue: Default::default(),
+            lobby: Default::default(),
+            servers: Arc::new(RwLock::new(ServerManager::new(&config))),
+            config,
+        }
     }
 
     pub async fn run(&mut self) {
@@ -48,6 +58,8 @@ impl Core {
         let queue = self.queue.clone();
         let lobby = self.lobby.clone();
         let servers = self.servers.clone();
+
+        self.config.reload();
 
         let listen = listener.listen("localhost:9999", listener_tx);
         let accept_clients = async {

@@ -10,6 +10,9 @@ pub mod terminal;
 #[cfg(not(web))]
 pub mod servers;
 
+#[cfg(not(web))]
+pub mod config;
+
 fn main() {
     #[cfg(not(web))]
     internal::main();

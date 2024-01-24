@@ -11,6 +11,7 @@ simple_logger = { version = "4.3.3", default-features = false, features = [ "tim
 tokio = { version = "1.35.1", features = [ "time", "io-std" ] }
 futures-util = { version = "0.3" }
 futures-channel = { version = "0.3" }
+tinyjson = { version = "2.5.1" }
 
 [build-dependencies]
 cfg_aliases = { version = "0.2.0" }

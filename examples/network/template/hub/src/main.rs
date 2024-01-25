@@ -8,7 +8,7 @@ pub mod lobby;
 pub mod terminal;
 
 #[cfg(not(web))]
-pub mod servers;
+pub mod workers;
 
 #[cfg(not(web))]
 pub mod config;

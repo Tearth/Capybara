@@ -1,5 +1,5 @@
 [package]
-name = "network-template-server"
+name = "network-template-worker"
 version = "1.0.0"
 edition = "2021"
 

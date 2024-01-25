@@ -17,12 +17,12 @@ pub struct ConfigLoader {
 pub struct ConfigData {
     pub endpoint: String,
     pub lobby_tick: u32,
-    pub server_status_interval: u32,
-    pub servers: Vec<ConfigServerData>,
+    pub worker_status_interval: u32,
+    pub workers: Vec<ConfigWorkerData>,
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct ConfigServerData {
+pub struct ConfigWorkerData {
     pub id: String,
     pub name: String,
     pub flag: String,
@@ -74,15 +74,15 @@ impl ConfigLoader {
     fn parse(&mut self, data: &HashMap<String, JsonValue>) -> Result<()> {
         self.data.endpoint = read_value::<String>(data, "endpoint")?;
         self.data.lobby_tick = read_value::<f64>(data, "lobby_tick")? as u32;
-        self.data.server_status_interval = read_value::<f64>(data, "server_status_interval")? as u32;
+        self.data.worker_status_interval = read_value::<f64>(data, "worker_status_interval")? as u32;
 
-        for server_data in read_array(data, "servers")? {
-            self.data.servers.push(ConfigServerData {
-                id: read_value::<String>(server_data, "id")?,
-                name: read_value::<String>(server_data, "name")?,
-                flag: read_value::<String>(server_data, "flag")?,
-                address: read_value::<String>(server_data, "address")?,
-                enabled: read_value::<bool>(server_data, "enabled")?,
+        for worker_data in read_array(data, "workers")? {
+            self.data.workers.push(ConfigWorkerData {
+                id: read_value::<String>(worker_data, "id")?,
+                name: read_value::<String>(worker_data, "name")?,
+                flag: read_value::<String>(worker_data, "flag")?,
+                address: read_value::<String>(worker_data, "address")?,
+                enabled: read_value::<bool>(worker_data, "enabled")?,
             });
         }
 

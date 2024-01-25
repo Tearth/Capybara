@@ -8,7 +8,7 @@ pub fn process(command: &str, core: &mut Core) {
         Some(&"config") => process_config(&tokens, core),
         Some(&"clients") => process_clients(&tokens, core),
         Some(&"help") => process_help(&tokens, core),
-        Some(&"servers") => process_servers(&tokens, core),
+        Some(&"workers") => process_workers(&tokens, core),
         _ => println!("Unknown command"),
     }
 }
@@ -31,17 +31,17 @@ fn process_config_show(_tokens: &[&str], core: &Core) {
     let config = core.config.read().unwrap();
 
     data.push(format!(" - lobby tick: {} ms", config.data.lobby_tick));
-    data.push(format!(" - server status interval: {} ms", config.data.server_status_interval));
-    data.push(" - servers:".to_string());
+    data.push(format!(" - worker status interval: {} ms", config.data.worker_status_interval));
+    data.push(" - workers:".to_string());
 
-    for server in &core.config.read().unwrap().data.servers {
+    for worker in &core.config.read().unwrap().data.workers {
         data.push(format!(
             "   - {} {} ({}), {}, {}",
-            server.id,
-            server.name,
-            server.flag,
-            server.address,
-            if server.enabled { "enabled " } else { "disabled " }
+            worker.id,
+            worker.name,
+            worker.flag,
+            worker.address,
+            if worker.enabled { "enabled " } else { "disabled " }
         ));
     }
 
@@ -94,35 +94,36 @@ fn process_help(_tokens: &[&str], _core: &Core) {
     println!(" config reload - reload configuration from the file");
     println!(" clients list - display a list of all connected clients");
     println!(" help - list all available commands");
+    println!(" workers status - display a status of all workers");
 }
 
-fn process_servers(tokens: &[&str], core: &Core) {
+fn process_workers(tokens: &[&str], core: &Core) {
     if tokens.len() < 2 {
         println!("Unknown parameter");
         return;
     }
 
     match tokens.get(1) {
-        Some(&"status") => process_servers_status(tokens, core),
+        Some(&"status") => process_workers_status(tokens, core),
         _ => println!("Unknown parameter"),
     }
 }
 
-fn process_servers_status(_tokens: &[&str], core: &Core) {
+fn process_workers_status(_tokens: &[&str], core: &Core) {
     let mut output = Vec::new();
-    let manager = core.servers.read().unwrap();
+    let manager = core.workers.read().unwrap();
 
-    for server in &manager.servers {
-        let enabled = if server.definition.enabled { "enabled" } else { "disabled" };
-        if *server.websocket.status.read().unwrap() == ConnectionStatus::Connected {
-            let ping = *server.websocket.ping.read().unwrap();
-            output.push(format!("{} ({}) - {}, connected, ping {} ms", server.definition.name, server.definition.flag, enabled, ping));
+    for worker in &manager.workers {
+        let enabled = if worker.definition.enabled { "enabled" } else { "disabled" };
+        if *worker.websocket.status.read().unwrap() == ConnectionStatus::Connected {
+            let ping = *worker.websocket.ping.read().unwrap();
+            output.push(format!("{} ({}) - {}, connected, ping {} ms", worker.definition.name, worker.definition.flag, enabled, ping));
         } else {
-            output.push(format!("{} ({}) - {}, disconnected", server.definition.name, server.definition.flag, enabled));
+            output.push(format!("{} ({}) - {}, disconnected", worker.definition.name, worker.definition.flag, enabled));
         }
     }
 
-    println!("Servers status:");
+    println!("Workers status:");
 
     for line in output {
         println!(" - {}", line);

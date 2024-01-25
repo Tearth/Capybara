@@ -1,5 +1,5 @@
 use crate::core::QueuePacket;
-use crate::servers::ServerConnection;
+use crate::workers::WorkerConnection;
 use capybara::network::client::ConnectionStatus;
 use capybara::network::packet::Packet;
 use capybara::network::server::client::WebSocketConnectedClientSlim;
@@ -14,7 +14,7 @@ impl Lobby {
         Self {}
     }
 
-    pub fn tick(&mut self, clients: &FxHashMap<u64, WebSocketConnectedClientSlim>, servers: &Vec<ServerConnection>, packets: Vec<QueuePacket>) {
+    pub fn tick(&mut self, clients: &FxHashMap<u64, WebSocketConnectedClientSlim>, workers: &Vec<WorkerConnection>, packets: Vec<QueuePacket>) {
         for packet in packets {
             match packet.inner.get_id() {
                 Some(PACKET_PLAYER_NAME_REQUEST) => {
@@ -30,13 +30,13 @@ impl Lobby {
                         let mut count = 0;
                         let mut data = [PacketServerListData::default(); 3];
 
-                        for server in servers {
-                            if server.definition.enabled && *server.websocket.status.read().unwrap() == ConnectionStatus::Connected {
+                        for worker in workers {
+                            if worker.definition.enabled && *worker.websocket.status.read().unwrap() == ConnectionStatus::Connected {
                                 data[count as usize] = PacketServerListData {
-                                    id: server.definition.id.as_bytes_array(),
-                                    name: server.definition.name.as_bytes_array(),
-                                    flag: server.definition.flag.as_bytes_array(),
-                                    address: server.definition.address.as_bytes_array(),
+                                    id: worker.definition.id.as_bytes_array(),
+                                    name: worker.definition.name.as_bytes_array(),
+                                    flag: worker.definition.flag.as_bytes_array(),
+                                    address: worker.definition.address.as_bytes_array(),
                                 };
 
                                 count += 1;

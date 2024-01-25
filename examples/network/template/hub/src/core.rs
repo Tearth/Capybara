@@ -1,7 +1,7 @@
 use crate::config::ConfigLoader;
 use crate::lobby::Lobby;
-use crate::servers::ServerManager;
 use crate::terminal;
+use crate::workers::WorkersManager;
 use capybara::anyhow::Result;
 use capybara::egui::ahash::HashMap;
 use capybara::error_continue;
@@ -26,7 +26,7 @@ pub struct Core {
     pub clients: Arc<RwLock<HashMap<u64, WebSocketConnectedClient>>>,
     pub queue: Arc<RwLock<Vec<QueuePacket>>>,
     pub lobby: Arc<RwLock<Lobby>>,
-    pub servers: Arc<RwLock<ServerManager>>,
+    pub workers: Arc<RwLock<WorkersManager>>,
     pub config: Arc<RwLock<ConfigLoader>>,
 }
 
@@ -44,7 +44,7 @@ impl Core {
             clients: Default::default(),
             queue: Default::default(),
             lobby: Default::default(),
-            servers: Arc::new(RwLock::new(ServerManager::new(&config))),
+            workers: Arc::new(RwLock::new(WorkersManager::new(&config))),
             config: Arc::new(RwLock::new(config)),
         }
     }
@@ -63,7 +63,7 @@ impl Core {
         let clients = self.clients.clone();
         let queue = self.queue.clone();
         let lobby = self.lobby.clone();
-        let servers = self.servers.clone();
+        let workers = self.workers.clone();
         let config = self.config.clone();
 
         let endpoint = config.read().unwrap().data.endpoint.clone();
@@ -106,19 +106,19 @@ impl Core {
                 terminal::process(&command, self);
             }
         };
-        let process_servers = async {
-            let server_status_interval = config.read().unwrap().data.server_status_interval;
-            let mut interval = time::interval(Duration::from_millis(server_status_interval as u64));
+        let process_workers = async {
+            let worker_status_interval = config.read().unwrap().data.worker_status_interval;
+            let mut interval = time::interval(Duration::from_millis(worker_status_interval as u64));
 
             loop {
-                let server_statu_interval = config.read().unwrap().data.server_status_interval;
+                let worker_statu_interval = config.read().unwrap().data.worker_status_interval;
 
-                if interval.period().as_millis() != server_statu_interval as u128 {
-                    interval = time::interval(Duration::from_millis(server_statu_interval as u64));
-                    info!("Server status interval changed to {} ms", server_statu_interval);
+                if interval.period().as_millis() != worker_statu_interval as u128 {
+                    interval = time::interval(Duration::from_millis(worker_statu_interval as u64));
+                    info!("Worker status interval changed to {} ms", worker_statu_interval);
                 }
 
-                servers.write().unwrap().send_pings();
+                workers.write().unwrap().send_pings();
                 interval.tick().await;
             }
         };
@@ -137,7 +137,7 @@ impl Core {
                 }
 
                 queue.write().unwrap().clear();
-                lobby.write().unwrap().tick(&clients, &servers.read().unwrap().servers, packets);
+                lobby.write().unwrap().tick(&clients, &workers.read().unwrap().workers, packets);
 
                 interval.tick().await;
             }
@@ -149,7 +149,7 @@ impl Core {
             _ = read_frames => {}
             _ = process_disconnection => {}
             _ = process_terminal => {}
-            _ = process_servers => {}
+            _ = process_workers => {}
             _ = tick => {}
         }
     }

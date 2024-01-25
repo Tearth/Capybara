@@ -1,6 +1,5 @@
 use crate::core::Core;
 use capybara::{instant::Instant, network::client::ConnectionStatus};
-use log::info;
 
 pub fn process(command: &str, core: &mut Core) {
     let tokens = command.split_whitespace().collect::<Vec<&str>>();
@@ -28,17 +27,33 @@ fn process_config(tokens: &[&str], core: &mut Core) {
 }
 
 fn process_config_show(_tokens: &[&str], core: &Core) {
-    println!(" - tick: {} ms", core.config.data.tick);
-    println!(" - servers:");
+    let mut data = Vec::new();
+    let config = core.config.read().unwrap();
 
-    for server in &core.config.data.servers {
-        println!("   - {} ({}), {}, {}", server.name, server.flag, server.address, if server.enabled { "enabled " } else { "disabled " });
+    data.push(format!(" - lobby tick: {} ms", config.data.lobby_tick));
+    data.push(format!(" - server status interval: {} ms", config.data.server_status_interval));
+    data.push(" - servers:".to_string());
+
+    for server in &core.config.read().unwrap().data.servers {
+        data.push(format!(
+            "   - {} {} ({}), {}, {}",
+            server.id,
+            server.name,
+            server.flag,
+            server.address,
+            if server.enabled { "enabled " } else { "disabled " }
+        ));
     }
+
+    drop(config);
+
+    println!("Current configuration:");
+    println!("{}", data.join("\n"));
 }
 
 fn process_config_reload(_tokens: &[&str], core: &mut Core) {
     println!("Reloading configuration file");
-    core.config.reload();
+    core.config.write().unwrap().reload();
     println!("Configuration reloaded");
 }
 

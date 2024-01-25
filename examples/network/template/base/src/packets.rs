@@ -27,6 +27,7 @@ pub struct PacketServerListResponse {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct PacketServerListData {
+    pub id: [u8; 8],
     pub name: [u8; 64],
     pub flag: [u8; 4],
     pub address: [u8; 32],
@@ -34,6 +35,6 @@ pub struct PacketServerListData {
 
 impl Default for PacketServerListData {
     fn default() -> Self {
-        Self { name: [0; 64], flag: [0; 4], address: [0; 32] }
+        Self { id: [0; 8], name: [0; 64], flag: [0; 4], address: [0; 32] }
     }
 }

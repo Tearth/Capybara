@@ -3,19 +3,15 @@ use crate::terminal;
 use capybara::anyhow::Result;
 use capybara::egui::ahash::HashMap;
 use capybara::error_continue;
-use capybara::log::Level;
 use capybara::network::packet::Packet;
 use capybara::network::server::client::WebSocketConnectedClient;
 use capybara::network::server::listener::WebSocketListener;
-use capybara::rustc_hash::FxHashMap;
 use chrono::SecondsFormat;
 use chrono::Utc;
 use futures_channel::mpsc;
 use futures_util::StreamExt;
-use log::error;
-use network_template_base::*;
+use log::info;
 use std::fs;
-use std::io;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::time::Duration;
@@ -26,7 +22,7 @@ use tokio::time;
 pub struct Core {
     pub clients: Arc<RwLock<HashMap<u64, WebSocketConnectedClient>>>,
     pub queue: Arc<RwLock<Vec<QueuePacket>>>,
-    pub config: ConfigLoader,
+    pub config: Arc<RwLock<ConfigLoader>>,
 }
 
 #[derive(Clone)]
@@ -39,7 +35,7 @@ impl Core {
     pub fn new() -> Self {
         let config = ConfigLoader::new("config.json");
 
-        Self { clients: Default::default(), queue: Default::default(), config }
+        Self { clients: Default::default(), queue: Default::default(), config: Arc::new(RwLock::new(config)) }
     }
 
     pub async fn run(&mut self) {
@@ -55,16 +51,15 @@ impl Core {
 
         let clients = self.clients.clone();
         let queue = self.queue.clone();
+        let config = self.config.clone();
 
-        self.config.reload();
-
-        let endpoint = self.config.data.endpoint.clone();
+        let endpoint = config.read().unwrap().data.endpoint.clone();
         let listen = listener.listen(&endpoint, listener_tx);
 
         let accept_clients = async {
             while let Some(mut client) = listener_rx.next().await {
                 if let Err(err) = client.run(packet_event_tx.clone(), disconnection_event_tx.clone()) {
-                    error_continue!("Failed to run client ({})", err);
+                    error_continue!("Failed to run client runtime ({})", err);
                 }
 
                 clients.write().unwrap().insert(client.id, client);
@@ -99,8 +94,17 @@ impl Core {
             }
         };
         let tick = async {
-            let mut interval = time::interval(Duration::from_millis(TICK));
+            let worker_tick = config.read().unwrap().data.worker_tick;
+            let mut interval = time::interval(Duration::from_millis(worker_tick as u64));
+
             loop {
+                let worker_tick = config.read().unwrap().data.worker_tick;
+
+                if interval.period().as_millis() != worker_tick as u128 {
+                    interval = time::interval(Duration::from_millis(worker_tick as u64));
+                    info!("Worker tick changed to {} ms", worker_tick);
+                }
+
                 interval.tick().await;
             }
         };

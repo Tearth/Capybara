@@ -1,7 +1,6 @@
 use capybara::anyhow::Result;
 use capybara::error_return;
 use capybara::utils::json::*;
-use log::info;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
@@ -17,12 +16,15 @@ pub struct ConfigLoader {
 #[derive(Debug, Default, Clone)]
 pub struct ConfigData {
     pub endpoint: String,
-    pub tick: u32,
+    pub worker_tick: u32,
 }
 
 impl ConfigLoader {
     pub fn new(path: &str) -> Self {
-        Self { path: path.to_string(), ..Default::default() }
+        let mut config = Self { path: path.to_string(), ..Default::default() };
+
+        config.reload();
+        config
     }
 
     pub fn reload(&mut self) {
@@ -60,7 +62,7 @@ impl ConfigLoader {
 
     fn parse(&mut self, data: &HashMap<String, JsonValue>) -> Result<()> {
         self.data.endpoint = read_value::<String>(data, "endpoint")?;
-        self.data.tick = read_value::<f64>(data, "tick")? as u32;
+        self.data.worker_tick = read_value::<f64>(data, "worker_tick")? as u32;
 
         Ok(())
     }

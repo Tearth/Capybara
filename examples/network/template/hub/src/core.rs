@@ -5,7 +5,6 @@ use crate::terminal;
 use capybara::anyhow::Result;
 use capybara::egui::ahash::HashMap;
 use capybara::error_continue;
-use capybara::log::Level;
 use capybara::network::packet::Packet;
 use capybara::network::server::client::WebSocketConnectedClient;
 use capybara::network::server::listener::WebSocketListener;
@@ -14,10 +13,8 @@ use chrono::SecondsFormat;
 use chrono::Utc;
 use futures_channel::mpsc;
 use futures_util::StreamExt;
-use log::error;
-use network_template_base::*;
+use log::info;
 use std::fs;
-use std::io;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::time::Duration;
@@ -30,7 +27,7 @@ pub struct Core {
     pub queue: Arc<RwLock<Vec<QueuePacket>>>,
     pub lobby: Arc<RwLock<Lobby>>,
     pub servers: Arc<RwLock<ServerManager>>,
-    pub config: ConfigLoader,
+    pub config: Arc<RwLock<ConfigLoader>>,
 }
 
 #[derive(Clone)]
@@ -41,15 +38,14 @@ pub struct QueuePacket {
 
 impl Core {
     pub fn new() -> Self {
-        let mut config = ConfigLoader::new("config.json");
-        config.reload();
+        let config = ConfigLoader::new("config.json");
 
         Self {
             clients: Default::default(),
             queue: Default::default(),
             lobby: Default::default(),
             servers: Arc::new(RwLock::new(ServerManager::new(&config))),
-            config,
+            config: Arc::new(RwLock::new(config)),
         }
     }
 
@@ -68,16 +64,15 @@ impl Core {
         let queue = self.queue.clone();
         let lobby = self.lobby.clone();
         let servers = self.servers.clone();
+        let config = self.config.clone();
 
-        self.config.reload();
-
-        let endpoint = self.config.data.endpoint.clone();
+        let endpoint = config.read().unwrap().data.endpoint.clone();
         let listen = listener.listen(&endpoint, listener_tx);
 
         let accept_clients = async {
             while let Some(mut client) = listener_rx.next().await {
                 if let Err(err) = client.run(packet_event_tx.clone(), disconnection_event_tx.clone()) {
-                    error_continue!("Failed to run client ({})", err);
+                    error_continue!("Failed to run client runtime ({})", err);
                 }
 
                 clients.write().unwrap().insert(client.id, client);
@@ -112,17 +107,34 @@ impl Core {
             }
         };
         let process_servers = async {
-            let mut interval = time::interval(Duration::from_millis(10000));
+            let server_status_interval = config.read().unwrap().data.server_status_interval;
+            let mut interval = time::interval(Duration::from_millis(server_status_interval as u64));
+
             loop {
+                let server_statu_interval = config.read().unwrap().data.server_status_interval;
+
+                if interval.period().as_millis() != server_statu_interval as u128 {
+                    interval = time::interval(Duration::from_millis(server_statu_interval as u64));
+                    info!("Server status interval changed to {} ms", server_statu_interval);
+                }
+
                 servers.write().unwrap().send_pings();
                 interval.tick().await;
             }
         };
         let tick = async {
-            let mut interval = time::interval(Duration::from_millis(TICK));
+            let lobby_tick = config.read().unwrap().data.lobby_tick;
+            let mut interval = time::interval(Duration::from_millis(lobby_tick as u64));
+
             loop {
                 let packets = queue.write().unwrap().clone();
                 let clients = clients.read().unwrap().iter().map(|(id, client)| (*id, client.to_slim())).collect::<FxHashMap<_, _>>();
+                let lobby_tick = config.read().unwrap().data.lobby_tick;
+
+                if interval.period().as_millis() != lobby_tick as u128 {
+                    interval = time::interval(Duration::from_millis(lobby_tick as u64));
+                    info!("Lobby tick changed to {} ms", lobby_tick);
+                }
 
                 queue.write().unwrap().clear();
                 lobby.write().unwrap().tick(&clients, &servers.read().unwrap().servers, packets);

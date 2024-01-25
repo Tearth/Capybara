@@ -1,7 +1,6 @@
 use capybara::anyhow::Result;
 use capybara::error_return;
 use capybara::utils::json::*;
-use log::info;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
@@ -17,12 +16,14 @@ pub struct ConfigLoader {
 #[derive(Debug, Default, Clone)]
 pub struct ConfigData {
     pub endpoint: String,
-    pub tick: u32,
+    pub lobby_tick: u32,
+    pub server_status_interval: u32,
     pub servers: Vec<ConfigServerData>,
 }
 
 #[derive(Debug, Default, Clone)]
 pub struct ConfigServerData {
+    pub id: String,
     pub name: String,
     pub flag: String,
     pub address: String,
@@ -31,7 +32,10 @@ pub struct ConfigServerData {
 
 impl ConfigLoader {
     pub fn new(path: &str) -> Self {
-        Self { path: path.to_string(), ..Default::default() }
+        let mut config = Self { path: path.to_string(), ..Default::default() };
+
+        config.reload();
+        config
     }
 
     pub fn reload(&mut self) {
@@ -69,10 +73,12 @@ impl ConfigLoader {
 
     fn parse(&mut self, data: &HashMap<String, JsonValue>) -> Result<()> {
         self.data.endpoint = read_value::<String>(data, "endpoint")?;
-        self.data.tick = read_value::<f64>(data, "tick")? as u32;
+        self.data.lobby_tick = read_value::<f64>(data, "lobby_tick")? as u32;
+        self.data.server_status_interval = read_value::<f64>(data, "server_status_interval")? as u32;
 
         for server_data in read_array(data, "servers")? {
             self.data.servers.push(ConfigServerData {
+                id: read_value::<String>(server_data, "id")?,
                 name: read_value::<String>(server_data, "name")?,
                 flag: read_value::<String>(server_data, "flag")?,
                 address: read_value::<String>(server_data, "address")?,

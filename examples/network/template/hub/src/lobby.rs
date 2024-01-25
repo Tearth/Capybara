@@ -33,6 +33,7 @@ impl Lobby {
                         for server in servers {
                             if server.definition.enabled && *server.websocket.status.read().unwrap() == ConnectionStatus::Connected {
                                 data[count as usize] = PacketServerListData {
+                                    id: server.definition.id.as_bytes_array(),
                                     name: server.definition.name.as_bytes_array(),
                                     flag: server.definition.flag.as_bytes_array(),
                                     address: server.definition.address.as_bytes_array(),

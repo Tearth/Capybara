@@ -1,6 +1,5 @@
 use crate::core::Core;
 use capybara::instant::Instant;
-use log::info;
 
 pub fn process(command: &str, core: &mut Core) {
     let tokens = command.split_whitespace().collect::<Vec<&str>>();
@@ -27,12 +26,17 @@ fn process_config(tokens: &[&str], core: &mut Core) {
 }
 
 fn process_config_show(_tokens: &[&str], core: &Core) {
-    println!(" - tick: {} ms", core.config.data.tick);
+    let mut data = Vec::new();
+    let config = core.config.read().unwrap();
+
+    data.push(format!(" - worker tick: {} ms", config.data.worker_tick));
+
+    drop(config);
 }
 
 fn process_config_reload(_tokens: &[&str], core: &mut Core) {
     println!("Reloading configuration file");
-    core.config.reload();
+    core.config.write().unwrap().reload();
     println!("Configuration reloaded");
 }
 

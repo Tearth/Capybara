@@ -18,6 +18,8 @@ pub struct ConfigData {
     pub endpoint: String,
     pub lobby_tick: u32,
     pub worker_status_interval: u32,
+    pub packet_delay_base: u32,
+    pub packet_delay_variation: u32,
     pub workers: Vec<ConfigWorkerData>,
 }
 
@@ -75,6 +77,8 @@ impl ConfigLoader {
         self.data.endpoint = read_value::<String>(data, "endpoint")?;
         self.data.lobby_tick = read_value::<f64>(data, "lobby_tick")? as u32;
         self.data.worker_status_interval = read_value::<f64>(data, "worker_status_interval")? as u32;
+        self.data.packet_delay_base = read_value::<f64>(data, "packet_delay_base")? as u32;
+        self.data.packet_delay_variation = read_value::<f64>(data, "packet_delay_variation")? as u32;
 
         for worker_data in read_array(data, "workers")? {
             self.data.workers.push(ConfigWorkerData {

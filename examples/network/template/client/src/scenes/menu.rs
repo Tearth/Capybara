@@ -91,7 +91,7 @@ impl Scene<GlobalData> for MenuScene {
                 effects_volume: effects_volume.unwrap_or(1.0),
             };
 
-            self.hub_websocket.connect("ws://localhost:9999");
+            self.hub_websocket.connect("ws://localhost:10000");
         }
 
         Ok(())

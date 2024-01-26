@@ -17,6 +17,8 @@ pub struct ConfigLoader {
 pub struct ConfigData {
     pub endpoint: String,
     pub worker_tick: u32,
+    pub packet_delay_base: u32,
+    pub packet_delay_variation: u32,
 }
 
 impl ConfigLoader {
@@ -63,6 +65,8 @@ impl ConfigLoader {
     fn parse(&mut self, data: &HashMap<String, JsonValue>) -> Result<()> {
         self.data.endpoint = read_value::<String>(data, "endpoint")?;
         self.data.worker_tick = read_value::<f64>(data, "worker_tick")? as u32;
+        self.data.packet_delay_base = read_value::<f64>(data, "packet_delay_base")? as u32;
+        self.data.packet_delay_variation = read_value::<f64>(data, "packet_delay_variation")? as u32;
 
         Ok(())
     }

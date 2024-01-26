@@ -15,12 +15,28 @@ pub struct GlobalData {
     pub assets: AssetsLoader,
     pub settings: SettingsStorage,
 
+    pub player_name: String,
+    pub server_name: String,
+    pub server_flag: String,
+    pub server_address: String,
+
     pub music_track: Option<TrackHandle>,
     pub effects_track: Option<TrackHandle>,
 }
 
 impl Default for GlobalData {
     fn default() -> Self {
-        Self { assets: Default::default(), settings: SettingsStorage::new("./settings.cfg"), music_track: None, effects_track: None }
+        Self {
+            assets: Default::default(),
+            settings: SettingsStorage::new("./settings.cfg"),
+
+            player_name: String::new(),
+            server_name: String::new(),
+            server_flag: String::new(),
+            server_address: String::new(),
+
+            music_track: None,
+            effects_track: None,
+        }
     }
 }

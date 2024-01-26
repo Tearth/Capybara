@@ -18,23 +18,15 @@ pub struct PacketPlayerNameResponse {
 pub struct PacketServerListRequest {}
 
 #[repr(C)]
-#[derive(Debug, Clone)]
-pub struct PacketServerListResponse {
-    pub count: u8,
-    pub servers: [PacketServerListData; 3],
-}
-
-#[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct PacketServerListData {
-    pub id: [u8; 8],
+pub struct PacketServerListResponse {
     pub name: [u8; 64],
     pub flag: [u8; 4],
     pub address: [u8; 32],
 }
 
-impl Default for PacketServerListData {
+impl Default for PacketServerListResponse {
     fn default() -> Self {
-        Self { id: [0; 8], name: [0; 64], flag: [0; 4], address: [0; 32] }
+        Self { name: [0; 64], flag: [0; 4], address: [0; 32] }
     }
 }

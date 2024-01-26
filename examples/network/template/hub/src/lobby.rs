@@ -24,26 +24,19 @@ impl Lobby {
                     ));
                 }
                 Some(PACKET_SERVER_LIST_REQUEST) => {
-                    let mut count = 0;
-                    let mut data = [PacketServerListData::default(); 3];
+                    let mut data = Vec::new();
 
                     for worker in workers {
                         if worker.definition.enabled && *worker.websocket.status.read().unwrap() == ConnectionStatus::Connected {
-                            data[count as usize] = PacketServerListData {
-                                id: worker.definition.id.as_bytes_array(),
+                            data.push(PacketServerListResponse {
                                 name: worker.definition.name.as_bytes_array(),
                                 flag: worker.definition.flag.as_bytes_array(),
                                 address: worker.definition.address.as_bytes_array(),
-                            };
-
-                            count += 1;
+                            });
                         }
                     }
 
-                    outgoing_packets.push(QueuePacket::new(
-                        packet.client_id,
-                        Packet::from_object(PACKET_SERVER_LIST_RESPONSE, &PacketServerListResponse { count, servers: data }),
-                    ));
+                    outgoing_packets.push(QueuePacket::new(packet.client_id, Packet::from_array(PACKET_SERVER_LIST_RESPONSE, &data)));
                 }
                 _ => {}
             }

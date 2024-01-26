@@ -1,4 +1,5 @@
 use super::GlobalData;
+use crate::network::game::GameNetworkContext;
 use crate::ui::components;
 use crate::ui::state::WidgetState;
 use crate::utils::console::Console;
@@ -20,6 +21,8 @@ use capybara::window::Key;
 
 #[derive(Default)]
 pub struct GameScene {
+    network: GameNetworkContext,
+
     play_button_state: WidgetState,
     exit_button_state: WidgetState,
     exit_menu_visible: bool,
@@ -32,6 +35,7 @@ pub struct GameScene {
 
 impl Scene<GlobalData> for GameScene {
     fn activation(&mut self, state: ApplicationState<GlobalData>) -> Result<()> {
+        self.network.hub_endpoint = state.global.server_address.clone();
         self.exit_menu_visible = false;
 
         state.renderer.set_clear_color(Vec4::new_rgb(40, 80, 30, 255));
@@ -73,6 +77,8 @@ impl Scene<GlobalData> for GameScene {
             self.debug_collector.collect(&state, delta);
             self.process_console();
         }
+
+        self.network.process();
         self.debug_profiler.stop("frame");
 
         Ok(None)

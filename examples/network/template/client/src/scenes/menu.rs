@@ -1,5 +1,6 @@
 use super::GlobalData;
 use super::*;
+use crate::network::lobby::LobbyNetworkContext;
 use crate::ui::components;
 use crate::ui::state::WidgetState;
 use capybara::anyhow::Result;
@@ -13,7 +14,6 @@ use capybara::egui::Frame;
 use capybara::egui::FullOutput;
 use capybara::egui::Grid;
 use capybara::egui::Id;
-use capybara::egui::Label;
 use capybara::egui::Layout;
 use capybara::egui::RawInput;
 use capybara::egui::RichText;
@@ -22,19 +22,13 @@ use capybara::egui::Slider;
 use capybara::egui::TopBottomPanel;
 use capybara::egui::Vec2;
 use capybara::egui::Window;
-use capybara::error_continue;
 use capybara::glam::Vec4;
 use capybara::kira::tween::Tween;
 use capybara::log::error;
-use capybara::network::client::ConnectionStatus;
-use capybara::network::client::WebSocketClient;
-use capybara::network::packet::Packet;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
 use capybara::utils::color::Vec4Utils;
 use capybara::window::InputEvent;
-use log::info;
-use network_template_base::packets::*;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MenuSubScene {
@@ -46,8 +40,7 @@ pub enum MenuSubScene {
 pub struct MenuScene {
     sub_scene: MenuSubScene,
     settings: SettingsData,
-    hub_websocket: WebSocketClient,
-    player_name: String,
+    network: LobbyNetworkContext,
     initialized: bool,
 
     play_button_state: WidgetState,
@@ -90,8 +83,6 @@ impl Scene<GlobalData> for MenuScene {
                 music_volume: music_volume.unwrap_or(1.0),
                 effects_volume: effects_volume.unwrap_or(1.0),
             };
-
-            self.hub_websocket.connect("ws://localhost:10000");
         }
 
         Ok(())
@@ -110,33 +101,7 @@ impl Scene<GlobalData> for MenuScene {
     }
 
     fn frame(&mut self, _state: ApplicationState<GlobalData>, _accumulator: f32, _delta: f32) -> Result<Option<FrameCommand>> {
-        if *self.hub_websocket.status.read().unwrap() == ConnectionStatus::Connected {
-            if self.hub_websocket.has_connected() {
-                self.hub_websocket.send_packet(Packet::from_object(PACKET_PLAYER_NAME_REQUEST, &PacketPlayerNameRequest {}));
-                self.hub_websocket.send_packet(Packet::from_object(PACKET_SERVER_LIST_REQUEST, &PacketServerListRequest {}));
-            }
-
-            while let Some(packet) = self.hub_websocket.poll_packet() {
-                match packet.get_id() {
-                    Some(PACKET_PLAYER_NAME_RESPONSE) => {
-                        let packet = match packet.to_object::<PacketPlayerNameResponse>() {
-                            Ok(packet) => packet,
-                            Err(err) => error_continue!("Invalid packet ({})", err),
-                        };
-
-                        self.player_name = String::from_utf8_lossy(&packet.name).trim_end_matches('\0').to_string();
-                        info!("Received new player name: {}", self.player_name);
-                    }
-                    Some(PACKET_SERVER_LIST_RESPONSE) => {
-                        let packet = match packet.to_object::<PacketServerListResponse>() {
-                            Ok(packet) => packet,
-                            Err(err) => error_continue!("Invalid packet ({})", err),
-                        };
-                    }
-                    _ => {}
-                }
-            }
-        }
+        self.network.process();
 
         Ok(None)
     }
@@ -196,12 +161,19 @@ impl MenuScene {
             .default_width(250.0)
             .show(context, |ui| {
                 ui.vertical_centered(|ui| {
-                    ui.label(RichText::new(format!("Welcome {}!", self.player_name)).heading());
+                    ui.label(RichText::new(format!("Welcome {}!", self.network.player_name)).heading());
 
                     ui.add_space(32.0);
 
                     if components::button_primary(ui, state.ui, state.renderer, "Play", &mut self.play_button_state).clicked() {
-                        command = Some(FrameCommand::ChangeScene { name: "GameScene".to_string() });
+                        if !self.network.servers.is_empty() {
+                            state.global.player_name = self.network.player_name.clone();
+                            state.global.server_name = self.network.servers[0].name.clone();
+                            state.global.server_flag = self.network.servers[0].flag.clone();
+                            state.global.server_address = self.network.servers[0].address.clone();
+
+                            command = Some(FrameCommand::ChangeScene { name: "GameScene".to_string() });
+                        }
                     }
 
                     ui.add_space(32.0);
@@ -381,8 +353,7 @@ impl Default for MenuScene {
         Self {
             sub_scene: MenuSubScene::Main,
             settings: Default::default(),
-            hub_websocket: Default::default(),
-            player_name: String::new(),
+            network: Default::default(),
             initialized: false,
 
             play_button_state: Default::default(),

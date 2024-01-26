@@ -117,9 +117,12 @@ fn process_workers_status(_tokens: &[&str], core: &Core) {
         let enabled = if worker.definition.enabled { "enabled" } else { "disabled" };
         if *worker.websocket.status.read().unwrap() == ConnectionStatus::Connected {
             let ping = *worker.websocket.ping.read().unwrap();
-            output.push(format!("{} ({}) - {}, connected, ping {} ms", worker.definition.name, worker.definition.flag, enabled, ping));
+            output.push(format!(
+                "{}, {} ({}) - {}, connected, ping {} ms",
+                worker.definition.id, worker.definition.name, worker.definition.flag, enabled, ping
+            ));
         } else {
-            output.push(format!("{} ({}) - {}, disconnected", worker.definition.name, worker.definition.flag, enabled));
+            output.push(format!("{}, {} ({}) - {}, disconnected", worker.definition.id, worker.definition.name, worker.definition.flag, enabled));
         }
     }
 

@@ -1,3 +1,4 @@
+use super::ConnectionStatus;
 use crate::error_return;
 use crate::network::packet::Packet;
 use instant::SystemTime;
@@ -15,12 +16,12 @@ use web_sys::MessageEvent;
 use web_sys::WebSocket;
 
 pub struct WebSocketClient {
-    pub connected: Arc<RwLock<bool>>,
+    pub status: Arc<RwLock<ConnectionStatus>>,
     pub ping: Arc<RwLock<u32>>,
 
     websocket: Option<Rc<WebSocket>>,
     received_packets: Arc<RwLock<VecDeque<Packet>>>,
-    connected_last_state: bool,
+    status_last_state: ConnectionStatus,
 
     onopen_callback: Closure<dyn FnMut()>,
     onclose_callback: Closure<dyn FnMut()>,
@@ -31,10 +32,12 @@ pub struct WebSocketClient {
 impl WebSocketClient {
     pub fn new() -> Self {
         Self {
-            connected: Default::default(),
+            status: Default::default(),
             ping: Default::default(),
+
             websocket: None,
-            connected_last_state: false,
+            status_last_state: Default::default(),
+
             onopen_callback: Closure::<dyn FnMut()>::new(|| {}),
             onclose_callback: Closure::<dyn FnMut()>::new(|| {}),
             onmessage_callback: Closure::<dyn FnMut(_)>::new(|_| {}),
@@ -45,6 +48,7 @@ impl WebSocketClient {
 
     pub fn connect(&mut self, url: &str) {
         info!("Connecting to {}", url);
+        *self.status.write().unwrap() = ConnectionStatus::Connecting;
 
         let websocket = match WebSocket::new(url) {
             Ok(websocket) => websocket,
@@ -61,10 +65,10 @@ impl WebSocketClient {
     }
 
     fn init_onopen_callback(&mut self) {
-        let connected = self.connected.clone();
+        let status = self.status.clone();
         self.onopen_callback = Closure::<dyn FnMut()>::new(move || {
             info!("Connection established");
-            *connected.write().unwrap() = true;
+            *status.write().unwrap() = ConnectionStatus::Connected;
         });
 
         match &self.websocket {
@@ -77,10 +81,10 @@ impl WebSocketClient {
     }
 
     fn init_onclose_callback(&mut self) {
-        let connected = self.connected.clone();
+        let status = self.status.clone();
         self.onclose_callback = Closure::<dyn FnMut()>::new(move || {
             info!("Connection closed");
-            *connected.write().unwrap() = false;
+            *status.write().unwrap() = ConnectionStatus::Disconnected;
         });
 
         match &self.websocket {
@@ -190,17 +194,17 @@ impl WebSocketClient {
     }
 
     pub fn has_connected(&mut self) -> bool {
-        let connected = *self.connected.read().unwrap();
-        let has_connected = self.connected_last_state != connected && connected;
-        self.connected_last_state = connected;
+        let status = *self.status.read().unwrap();
+        let has_connected = self.status_last_state != status && status == ConnectionStatus::Connected;
+        self.status_last_state = status;
 
         has_connected
     }
 
     pub fn has_disconnected(&mut self) -> bool {
-        let connected = *self.connected.read().unwrap();
-        let has_disconnected = self.connected_last_state != connected && !connected;
-        self.connected_last_state = connected;
+        let status = *self.status.read().unwrap();
+        let has_disconnected = self.status_last_state != status && status == ConnectionStatus::Disconnected;
+        self.status_last_state = status;
 
         has_disconnected
     }

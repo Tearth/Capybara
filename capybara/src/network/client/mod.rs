@@ -12,6 +12,7 @@ pub type WebSocketClient = web::WebSocketClient;
 pub enum ConnectionStatus {
     #[default]
     Disconnected,
+    Connecting,
     Connected,
     Error,
 }

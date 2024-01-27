@@ -34,6 +34,8 @@ impl WebSocketClient {
         let status = self.status.clone();
         let ping = self.ping.clone();
 
+        *status.write().unwrap() = ConnectionStatus::Connecting;
+
         let received_packets = self.received_packets.clone();
         let (outgoing_packets_tx, mut outgoing_packets_rx) = mpsc::unbounded();
         let (disconnection_tx, mut disconnection_rx) = mpsc::unbounded();
@@ -48,7 +50,10 @@ impl WebSocketClient {
 
             let runtime = match Runtime::new() {
                 Ok(runtime) => runtime,
-                Err(err) => error_return!("Failed to create network runtime ({})", err),
+                Err(err) => {
+                    *status.write().unwrap() = ConnectionStatus::Error;
+                    error_return!("Failed to create network runtime ({})", err);
+                }
             };
 
             runtime.block_on(async move {
@@ -56,12 +61,18 @@ impl WebSocketClient {
 
                 let url = match Url::parse(&url) {
                     Ok(url) => url,
-                    Err(err) => error_return!("Failed to parse server URL ({})", err),
+                    Err(err) => {
+                        *status.write().unwrap() = ConnectionStatus::Error;
+                        error_return!("Failed to parse server URL ({})", err)
+                    }
                 };
 
                 let websocket = match tokio_tungstenite::connect_async(url).await {
                     Ok((websocket, _)) => websocket,
-                    Err(err) => error_return!("Failed to establish connection with the server ({})", err),
+                    Err(err) => {
+                        *status.write().unwrap() = ConnectionStatus::Error;
+                        error_return!("Failed to establish connection with the server ({})", err)
+                    }
                 };
 
                 info!("Connection established");

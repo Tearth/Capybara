@@ -14,6 +14,7 @@ use chrono::Utc;
 use futures_channel::mpsc;
 use futures_util::StreamExt;
 use log::info;
+use network_template_base::packets::*;
 use std::collections::VecDeque;
 use std::fs;
 use std::sync::Arc;
@@ -87,7 +88,13 @@ impl Core {
         };
         let read_frames = async {
             while let Some((id, frame)) = packet_event_rx.next().await {
-                queue_incoming.write().unwrap().push(QueuePacket::new(id, frame));
+                if let Some(PACKET_SERVER_TIME_REQUEST) = frame.get_id() {
+                    if let Some(client) = clients.read().unwrap().get(&id) {
+                        client.send_packet(Packet::from_object(PACKET_SERVER_TIME_RESPONSE, &PacketServerTimeResponse { time: Instant::now() }));
+                    }
+                } else {
+                    queue_incoming.write().unwrap().push(QueuePacket::new(id, frame));
+                }
             }
         };
         let process_disconnection = async {

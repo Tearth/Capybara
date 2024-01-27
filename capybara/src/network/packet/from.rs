@@ -6,7 +6,7 @@ impl From<Packet> for Vec<u8> {
             Packet::Ping { timestamp } => ping(timestamp),
             Packet::Pong { timestamp } => pong(timestamp),
             Packet::Object { id, data } => object(id, data),
-            Packet::Array { id, length, data } => array(id, length, data),
+            Packet::Array { id, data } => array(id, data),
             Packet::Unknown => Vec::new(),
         }
     }
@@ -36,10 +36,9 @@ fn object(id: u16, data: Vec<u8>) -> Vec<u8> {
     output
 }
 
-fn array(id: u16, length: u32, data: Vec<u8>) -> Vec<u8> {
+fn array(id: u16, data: Vec<u8>) -> Vec<u8> {
     let mut output = vec![ARRAY_CID];
     output.extend_from_slice(&id.to_le_bytes());
-    output.extend_from_slice(&length.to_le_bytes());
     output.extend_from_slice(&data);
 
     output

@@ -1,4 +1,4 @@
-use capybara::glam::Vec2;
+use capybara::{glam::Vec2, instant::Instant};
 
 pub const PACKET_PLAYER_NAME_REQUEST: u16 = 0;
 pub const PACKET_PLAYER_NAME_RESPONSE: u16 = 1;
@@ -30,7 +30,13 @@ pub struct PacketServerListResponse {
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
-pub struct PacketPlayerData {
+pub struct PacketTickHeader {
+    pub timestamp: Instant,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct PacketTickData {
     pub player_id: u64,
     pub nodes: [Vec2; 5],
 }

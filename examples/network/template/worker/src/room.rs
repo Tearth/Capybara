@@ -1,11 +1,10 @@
 use crate::core::QueuePacket;
+use capybara::error_continue;
 use capybara::glam::Vec2;
 use capybara::instant::Instant;
 use capybara::network::packet::Packet;
 use capybara::rustc_hash::FxHashMap;
-use capybara::{error_continue, error_return};
 use log::info;
-use network_template_base::packets::PacketPlayerData;
 use network_template_base::packets::*;
 use network_template_base::*;
 use std::collections::VecDeque;
@@ -100,17 +99,22 @@ impl Room {
             self.simulate(client_id, 0);
         }
 
+        let header = PacketTickHeader { timestamp: now };
         let mut data = Vec::new();
 
         for (client_id, player) in &self.state.front_mut().unwrap().players {
-            data.push(PacketPlayerData {
+            data.push(PacketTickData {
                 player_id: *client_id,
                 nodes: [player.nodes[0], player.nodes[1], player.nodes[2], player.nodes[3], player.nodes[4]],
             });
         }
 
         for client_id in self.state.front_mut().unwrap().players.keys() {
-            outgoing_packets.push(QueuePacket { client_id: *client_id, timestamp: now, inner: Packet::from_array(PACKET_TICK, &data) });
+            outgoing_packets.push(QueuePacket {
+                client_id: *client_id,
+                timestamp: now,
+                inner: Packet::from_array_with_header(PACKET_TICK, &header, &data),
+            });
         }
 
         outgoing_packets

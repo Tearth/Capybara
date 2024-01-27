@@ -15,7 +15,7 @@ pub struct GameNetworkContext {
     pub player_name: String,
     pub last_ping_timestamp: Option<Instant>,
 
-    pub state: Vec<PacketPlayerData>,
+    pub state: Vec<PacketTickData>,
 }
 
 pub struct ServerData {
@@ -41,7 +41,8 @@ impl GameNetworkContext {
             while let Some(packet) = self.hub_websocket.poll_packet() {
                 match packet.get_id() {
                     Some(PACKET_TICK) => {
-                        self.state = packet.to_array::<PacketPlayerData>().unwrap();
+                        let (header, data) = packet.to_array_with_header::<PacketTickHeader, PacketTickData>().unwrap();
+                        self.state = data;
                     }
                     _ => {}
                 }

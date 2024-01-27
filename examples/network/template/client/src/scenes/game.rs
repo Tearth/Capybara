@@ -35,6 +35,7 @@ pub struct GameScene {
 
 impl Scene<GlobalData> for GameScene {
     fn activation(&mut self, state: ApplicationState<GlobalData>) -> Result<()> {
+        self.network.hub_name = state.global.server_name.clone();
         self.network.hub_endpoint = state.global.server_address.clone();
         self.exit_menu_visible = false;
 

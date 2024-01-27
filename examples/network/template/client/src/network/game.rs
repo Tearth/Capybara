@@ -2,12 +2,14 @@ use capybara::instant::Instant;
 use capybara::network::client::ConnectionStatus;
 use capybara::network::client::WebSocketClient;
 use capybara::network::packet::Packet;
+use log::info;
 use network_template_base::packets::*;
 
 pub const SERVER_PING_INTERVAL: i32 = 1000;
 
 #[derive(Default)]
 pub struct GameNetworkContext {
+    pub hub_name: String,
     pub hub_endpoint: String,
     pub hub_websocket: WebSocketClient,
     pub player_name: String,
@@ -24,6 +26,7 @@ pub struct ServerData {
 impl GameNetworkContext {
     pub fn process(&mut self) {
         if matches!(*self.hub_websocket.status.read().unwrap(), ConnectionStatus::Disconnected | ConnectionStatus::Error) {
+            info!("Server {} is disconnected, restarting connection", self.hub_name);
             self.hub_websocket.connect(&self.hub_endpoint);
         }
 

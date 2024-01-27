@@ -75,9 +75,12 @@ impl LobbyNetworkContext {
         if let Some(last_ping_timestamp) = self.last_ping_timestamp {
             let now = Instant::now();
             if (now - last_ping_timestamp).as_millis() >= SERVER_PING_INTERVAL as u128 {
-                for server in &self.servers {
+                for server in &mut self.servers {
                     if *server.websocket.status.read().unwrap() == ConnectionStatus::Connected {
                         server.websocket.send_ping();
+                    } else {
+                        info!("Server {} is disconnected, restarting connection", server.name);
+                        server.websocket.connect(&server.address);
                     }
                 }
 

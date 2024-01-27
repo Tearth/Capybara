@@ -7,6 +7,9 @@ pub mod terminal;
 #[cfg(not(web))]
 pub mod config;
 
+#[cfg(not(web))]
+pub mod room;
+
 fn main() {
     #[cfg(not(web))]
     internal::main();

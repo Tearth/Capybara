@@ -12,7 +12,7 @@ impl Lobby {
         Self {}
     }
 
-    pub fn tick(&mut self, workers: &Vec<WorkerConnection>, packets: Vec<QueuePacket>) -> Vec<QueuePacket> {
+    pub fn tick(&mut self, workers: &Vec<WorkerConnection>, packets: &Vec<QueuePacket>) -> Vec<QueuePacket> {
         let mut outgoing_packets = Vec::new();
 
         for packet in packets {

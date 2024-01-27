@@ -1,4 +1,5 @@
 use crate::config::ConfigLoader;
+use crate::room::Room;
 use crate::terminal;
 use capybara::anyhow::Result;
 use capybara::egui::ahash::HashMap;
@@ -19,6 +20,7 @@ use std::sync::Arc;
 use std::sync::RwLock;
 use std::time::Duration;
 use tokio::io::AsyncReadExt;
+use tokio::join;
 use tokio::select;
 use tokio::time;
 
@@ -26,6 +28,7 @@ pub struct Core {
     pub clients: Arc<RwLock<HashMap<u64, WebSocketConnectedClient>>>,
     pub queue_incoming: Arc<RwLock<Vec<QueuePacket>>>,
     pub queue_outgoing: Arc<RwLock<Vec<QueuePacket>>>,
+    pub rooms: Arc<RwLock<Vec<Arc<RwLock<Room>>>>>,
     pub config: Arc<RwLock<ConfigLoader>>,
 }
 
@@ -44,6 +47,7 @@ impl Core {
             clients: Default::default(),
             queue_incoming: Default::default(),
             queue_outgoing: Default::default(),
+            rooms: Default::default(),
             config: Arc::new(RwLock::new(config)),
         }
     }
@@ -62,10 +66,14 @@ impl Core {
         let clients = self.clients.clone();
         let queue_incoming = self.queue_incoming.clone();
         let queue_outgoing = self.queue_outgoing.clone();
+        let rooms = self.rooms.clone();
         let config = self.config.clone();
 
         let endpoint = config.read().unwrap().data.endpoint.clone();
         let listen = listener.listen(&endpoint, listener_tx);
+
+        // Only one server in the template
+        rooms.write().unwrap().push(Arc::new(RwLock::new(Room::new())));
 
         let accept_clients = async {
             while let Some(mut client) = listener_rx.next().await {
@@ -73,6 +81,7 @@ impl Core {
                     error_continue!("Failed to run client runtime ({})", err);
                 }
 
+                rooms.write().unwrap()[0].write().unwrap().add_player(client.id);
                 clients.write().unwrap().insert(client.id, client);
             }
         };
@@ -83,6 +92,7 @@ impl Core {
         };
         let process_disconnection = async {
             while let Some(id) = disconnection_event_rx.next().await {
+                rooms.write().unwrap()[0].write().unwrap().remove_player(id);
                 clients.write().unwrap().remove(&id);
             }
         };
@@ -111,7 +121,7 @@ impl Core {
             loop {
                 let now = Instant::now();
                 let mut queue_packets_to_remove = VecDeque::new();
-                let mut packets = Vec::new();
+                let packets = Arc::new(RwLock::new(Vec::new()));
 
                 let worker_tick = config.read().unwrap().data.worker_tick;
                 let delay_base = config.read().unwrap().data.packet_delay_base as i32;
@@ -120,7 +130,7 @@ impl Core {
                 for (index, queue_packet) in queue_incoming.read().unwrap().iter().enumerate() {
                     let variation = fastrand::i32(-delay_variation..delay_variation);
                     if queue_packet.timestamp + Duration::from_millis((delay_base + variation) as u64) <= now {
-                        packets.push(queue_packet.clone());
+                        packets.write().unwrap().push(queue_packet.clone());
                         queue_packets_to_remove.push_front(index);
                     }
                 }
@@ -129,8 +139,26 @@ impl Core {
                     queue_incoming.write().unwrap().remove(*index);
                 }
 
-                // let outgoing_packets = lobby.write().unwrap().tick(&workers.read().unwrap().workers, packets);
-                // queue_outgoing.write().unwrap().extend_from_slice(&outgoing_packets);
+                let mut rooms = rooms.write().unwrap();
+                let mut handles = Vec::new();
+
+                for room in rooms.iter_mut() {
+                    let room = room.clone();
+                    let packets = packets.clone();
+
+                    // TODO: allow immediate send when packet delay is disabled
+                    handles.push(tokio::spawn(async move { room.write().unwrap().tick(&packets.read().unwrap()) }));
+                }
+
+                drop(rooms);
+
+                for handle in handles {
+                    match join!(handle).0 {
+                        Ok(outgoing_packets) => queue_outgoing.write().unwrap().extend_from_slice(&outgoing_packets),
+                        Err(err) => error_continue!("Failed to perform a tick ({})", err),
+                    };
+                }
+
                 queue_packets_to_remove.clear();
 
                 for (index, queue_packet) in queue_outgoing.read().unwrap().iter().enumerate() {

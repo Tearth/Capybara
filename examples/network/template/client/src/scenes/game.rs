@@ -12,6 +12,7 @@ use capybara::egui::RawInput;
 use capybara::egui::Vec2;
 use capybara::egui::Window;
 use capybara::glam::Vec4;
+use capybara::renderer::shape::Shape;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
 use capybara::utils::color::Vec4Utils;
@@ -73,13 +74,28 @@ impl Scene<GlobalData> for GameScene {
 
     fn frame(&mut self, state: ApplicationState<GlobalData>, _accumulator: f32, delta: f32) -> Result<Option<FrameCommand>> {
         self.debug_profiler.start("frame");
+        self.network.process();
+
+        for player in &self.network.state {
+            for (index, node) in player.nodes.iter().enumerate() {
+                let head_color = Vec4::new_rgb(255, 255, 255, 255);
+                let body_color = Vec4::new_rgb(150, 150, 150, 255);
+
+                state.renderer.draw_shape(&Shape::new_disc(
+                    *node,
+                    30.0,
+                    None,
+                    if index == 0 { head_color } else { body_color },
+                    if index == 0 { head_color } else { body_color },
+                ));
+            }
+        }
 
         if self.debug_enabled {
             self.debug_collector.collect(&state, delta);
             self.process_console();
         }
 
-        self.network.process();
         self.debug_profiler.stop("frame");
 
         Ok(None)

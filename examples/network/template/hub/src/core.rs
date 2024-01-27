@@ -153,7 +153,7 @@ impl Core {
                     queue_incoming.write().unwrap().remove(*index);
                 }
 
-                let outgoing_packets = lobby.write().unwrap().tick(&workers.read().unwrap().workers, packets);
+                let outgoing_packets = lobby.write().unwrap().tick(&workers.read().unwrap().workers, &packets);
                 queue_outgoing.write().unwrap().extend_from_slice(&outgoing_packets);
                 queue_packets_to_remove.clear();
 

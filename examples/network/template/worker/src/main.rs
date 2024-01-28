@@ -1,3 +1,5 @@
+#![allow(clippy::single_match, clippy::collapsible_else_if)]
+
 #[cfg(not(web))]
 pub mod core;
 

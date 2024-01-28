@@ -12,6 +12,7 @@ use capybara::egui::RawInput;
 use capybara::egui::Vec2;
 use capybara::egui::Window;
 use capybara::glam::Vec4;
+use capybara::instant::Instant;
 use capybara::renderer::shape::Shape;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
@@ -23,6 +24,7 @@ use capybara::window::Key;
 #[derive(Default)]
 pub struct GameScene {
     network: GameNetworkContext,
+    last_network_update: Option<Instant>,
 
     play_button_state: WidgetState,
     exit_button_state: WidgetState,
@@ -73,8 +75,24 @@ impl Scene<GlobalData> for GameScene {
     }
 
     fn frame(&mut self, state: ApplicationState<GlobalData>, _accumulator: f32, delta: f32) -> Result<Option<FrameCommand>> {
+        let now = Instant::now();
+
         self.debug_profiler.start("frame");
         self.network.process();
+
+        if let Some(last_network_update) = self.last_network_update {
+            if (now - last_network_update).as_millis() >= 50 {
+                if state.window.keyboard_state[Key::KeyA as usize] {
+                    self.network.send_new_heading(1.0);
+                } else if state.window.keyboard_state[Key::KeyD as usize] {
+                    self.network.send_new_heading(-1.0);
+                }
+
+                self.last_network_update = Some(now);
+            }
+        } else {
+            self.last_network_update = Some(now);
+        }
 
         for player in &self.network.state {
             for (index, node) in player.nodes.iter().enumerate() {

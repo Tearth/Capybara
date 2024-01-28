@@ -100,4 +100,11 @@ impl GameNetworkContext {
             self.last_ping_timestamp = Some(Instant::now());
         }
     }
+
+    pub fn send_new_heading(&mut self, heading: f32) {
+        self.hub_websocket.send_packet(Packet::from_object(
+            PACKET_PLAYER_INPUT,
+            &PacketPlayerInput { timestamp: Instant::now() + Duration::from_millis(self.server_time_offset as u64), heading },
+        ));
+    }
 }

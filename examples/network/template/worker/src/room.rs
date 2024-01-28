@@ -5,6 +5,7 @@ use capybara::instant::Instant;
 use capybara::network::packet::Packet;
 use capybara::rustc_hash::FxHashMap;
 use log::info;
+use network_template_base::game::GameState;
 use network_template_base::packets::*;
 use network_template_base::*;
 use std::collections::VecDeque;
@@ -129,6 +130,7 @@ impl Room {
 
         let state = self.state.front_mut().unwrap();
         let players_to_simulate = state.players.keys().cloned().collect::<Vec<_>>();
+
         for client_id in players_to_simulate {
             let from_state_index = match players_to_resimulate.get(&client_id) {
                 Some(state_index) => *state_index,
@@ -181,48 +183,26 @@ impl Room {
         let mut current_state_index = from_state_index;
 
         loop {
-            let mut heading_updated = None;
+            let mut previous_heading_real = None;
+            let mut previous_nodes = None;
             let previous_state = &self.state[previous_state_index];
-            let mut previous_nodes = Vec::new();
 
             if let Some(previous_state_player) = previous_state.players.get(&player_id) {
-                let mut heading_difference = previous_state_player.heading_target - previous_state_player.heading_real;
-                if heading_difference != 0.0 {
-                    if heading_difference > consts::PI {
-                        heading_difference = consts::TAU - heading_difference;
-                    }
-
-                    let rotation_ratio = ROTATION_SPEED * (1.0 / TICK as f32);
-                    if rotation_ratio >= heading_difference.abs() {
-                        heading_updated = Some(previous_state_player.heading_target);
-                    } else {
-                        heading_updated = Some(previous_state_player.heading_real + heading_difference.signum() * rotation_ratio);
-                    }
-                }
-
-                previous_nodes = previous_state_player.nodes.clone();
+                previous_heading_real = Some(previous_state_player.heading_real);
+                previous_nodes = Some(previous_state_player.nodes.clone());
             }
 
             let current_state = &mut self.state[current_state_index];
             let current_state_player = current_state.players.get_mut(&player_id).unwrap();
 
-            if !previous_nodes.is_empty() {
-                current_state_player.nodes = previous_nodes;
-            }
+            let result = game::simulate(GameState {
+                nodes: previous_nodes.unwrap_or(current_state_player.nodes.clone()),
+                heading_real: previous_heading_real.unwrap_or(current_state_player.heading_real),
+                heading_target: current_state_player.heading_target,
+            });
 
-            if let Some(heading_updated) = heading_updated {
-                current_state_player.heading_real = heading_updated;
-            }
-
-            current_state_player.nodes[0] += Vec2::from_angle(current_state_player.heading_real) * MOVEMENT_SPEED * (1.0 / TICK as f32);
-
-            for node_index in 1..current_state_player.nodes.len() {
-                let current_node = current_state_player.nodes[node_index];
-                let parent_node = current_state_player.nodes[node_index - 1];
-                let direction = (parent_node - current_node).normalize();
-
-                current_state_player.nodes[node_index] = parent_node - direction * DISTANCE_BETWEEN_NODES;
-            }
+            current_state_player.heading_real = result.heading_real;
+            current_state_player.nodes = result.nodes;
 
             if current_state_index == 0 {
                 break;

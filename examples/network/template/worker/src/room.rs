@@ -195,11 +195,14 @@ impl Room {
             let current_state = &mut self.state[current_state_index];
             let current_state_player = current_state.players.get_mut(&player_id).unwrap();
 
-            let result = game::simulate(GameState {
-                nodes: previous_nodes.unwrap_or(current_state_player.nodes.clone()),
-                heading_real: previous_heading_real.unwrap_or(current_state_player.heading_real),
-                heading_target: current_state_player.heading_target,
-            });
+            let result = game::simulate(
+                GameState {
+                    nodes: previous_nodes.unwrap_or(current_state_player.nodes.clone()),
+                    heading_real: previous_heading_real.unwrap_or(current_state_player.heading_real),
+                    heading_target: current_state_player.heading_target,
+                },
+                (TICK as f32) / 1000.0,
+            );
 
             current_state_player.heading_real = result.heading_real;
             current_state_player.nodes = result.nodes;

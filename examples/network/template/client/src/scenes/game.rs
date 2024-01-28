@@ -1,4 +1,5 @@
 use super::GlobalData;
+use crate::entities::player::Player;
 use crate::network::game::GameNetworkContext;
 use crate::ui::components;
 use crate::ui::state::WidgetState;
@@ -24,7 +25,7 @@ use capybara::window::Key;
 #[derive(Default)]
 pub struct GameScene {
     network: GameNetworkContext,
-    last_network_update: Option<Instant>,
+    player: Player,
 
     play_button_state: WidgetState,
     exit_button_state: WidgetState,
@@ -67,47 +68,18 @@ impl Scene<GlobalData> for GameScene {
         Ok(())
     }
 
-    fn fixed(&mut self, _state: ApplicationState<GlobalData>) -> Result<Option<FrameCommand>> {
+    fn fixed(&mut self, state: ApplicationState<GlobalData>) -> Result<Option<FrameCommand>> {
         self.debug_profiler.start("fixed");
         self.debug_profiler.stop("fixed");
-
         Ok(None)
     }
 
-    fn frame(&mut self, state: ApplicationState<GlobalData>, _accumulator: f32, delta: f32) -> Result<Option<FrameCommand>> {
-        let now = Instant::now();
-
+    fn frame(&mut self, mut state: ApplicationState<GlobalData>, _accumulator: f32, delta: f32) -> Result<Option<FrameCommand>> {
         self.debug_profiler.start("frame");
         self.network.process();
 
-        if let Some(last_network_update) = self.last_network_update {
-            if (now - last_network_update).as_millis() >= 50 {
-                if state.window.keyboard_state[Key::KeyA as usize] {
-                    self.network.send_new_heading(1.0);
-                } else if state.window.keyboard_state[Key::KeyD as usize] {
-                    self.network.send_new_heading(-1.0);
-                }
-
-                self.last_network_update = Some(now);
-            }
-        } else {
-            self.last_network_update = Some(now);
-        }
-
-        for player in &self.network.state {
-            for (index, node) in player.nodes.iter().enumerate() {
-                let head_color = Vec4::new_rgb(255, 255, 255, 255);
-                let body_color = Vec4::new_rgb(150, 150, 150, 255);
-
-                state.renderer.draw_shape(&Shape::new_disc(
-                    *node,
-                    30.0,
-                    None,
-                    if index == 0 { head_color } else { body_color },
-                    if index == 0 { head_color } else { body_color },
-                ));
-            }
-        }
+        self.player.logic(&mut state, &mut self.network, delta);
+        self.player.draw(&mut state, &mut self.network);
 
         if self.debug_enabled {
             self.debug_collector.collect(&state, delta);

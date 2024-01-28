@@ -3,8 +3,10 @@ use capybara::instant::Instant;
 use capybara::network::client::ConnectionStatus;
 use capybara::network::client::WebSocketClient;
 use capybara::network::packet::Packet;
+use capybara::rustc_hash::FxHashMap;
 use log::info;
 use network_template_base::packets::*;
+use std::collections::VecDeque;
 use std::time::Duration;
 
 pub const SERVER_PING_INTERVAL: i32 = 1000;
@@ -23,11 +25,12 @@ pub struct GameNetworkContext {
     pub server_time_offset: u32,
     pub server_time_offset_chunks: Vec<u32>,
 
-    pub state: Vec<PacketTickData>,
+    pub state: VecDeque<GameState>,
 }
 
 pub struct GameState {
-    pub state: Vec<PacketTickData>,
+    pub timestamp: Instant,
+    pub players: FxHashMap<u64, PacketTickData>,
 }
 
 impl GameNetworkContext {
@@ -50,7 +53,9 @@ impl GameNetworkContext {
                 match packet.get_id() {
                     Some(PACKET_TICK) => {
                         let (header, data) = packet.to_array_with_header::<PacketTickHeader, PacketTickData>().unwrap();
-                        self.state = data;
+                        let players = data.iter().map(|p| (p.player_id, *p)).collect::<FxHashMap<_, _>>();
+
+                        self.state.push_front(GameState { timestamp: header.timestamp, players });
                     }
                     Some(PACKET_SERVER_TIME_RESPONSE) => match packet.to_object::<PacketServerTimeResponse>() {
                         Ok(response) => {

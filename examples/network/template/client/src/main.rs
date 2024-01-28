@@ -12,6 +12,7 @@ use scenes::loading::LoadingScene;
 use scenes::menu::MenuScene;
 use scenes::GlobalData;
 
+pub mod entities;
 pub mod network;
 pub mod scenes;
 pub mod ui;

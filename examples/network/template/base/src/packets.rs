@@ -7,7 +7,9 @@ pub const PACKET_SERVER_LIST_REQUEST: u16 = 2;
 pub const PACKET_SERVER_LIST_RESPONSE: u16 = 3;
 pub const PACKET_SERVER_TIME_REQUEST: u16 = 4;
 pub const PACKET_SERVER_TIME_RESPONSE: u16 = 5;
-pub const PACKET_TICK: u16 = 6;
+pub const PACKET_JOIN_ROOM_REQUEST: u16 = 6;
+pub const PACKET_JOIN_ROOM_RESPONSE: u16 = 7;
+pub const PACKET_TICK: u16 = 8;
 
 #[repr(C)]
 #[derive(Debug, Clone)]
@@ -39,6 +41,16 @@ pub struct PacketServerTimeRequest {}
 #[derive(Debug, Copy, Clone)]
 pub struct PacketServerTimeResponse {
     pub time: Instant,
+}
+
+#[repr(C)]
+#[derive(Debug, Clone)]
+pub struct PacketJoinRoomRequest {}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct PacketJoinRoomResponse {
+    pub player_id: u64,
 }
 
 #[repr(C)]

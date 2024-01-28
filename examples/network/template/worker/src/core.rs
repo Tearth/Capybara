@@ -82,18 +82,29 @@ impl Core {
                     error_continue!("Failed to run client runtime ({})", err);
                 }
 
-                rooms.write().unwrap()[0].write().unwrap().add_player(client.id);
                 clients.write().unwrap().insert(client.id, client);
             }
         };
         let read_frames = async {
             while let Some((id, frame)) = packet_event_rx.next().await {
-                if let Some(PACKET_SERVER_TIME_REQUEST) = frame.get_id() {
-                    if let Some(client) = clients.read().unwrap().get(&id) {
-                        client.send_packet(Packet::from_object(PACKET_SERVER_TIME_RESPONSE, &PacketServerTimeResponse { time: Instant::now() }));
+                match frame.get_id() {
+                    Some(PACKET_SERVER_TIME_REQUEST) => {
+                        if let Some(client) = clients.read().unwrap().get(&id) {
+                            client.send_packet(Packet::from_object(PACKET_SERVER_TIME_RESPONSE, &PacketServerTimeResponse { time: Instant::now() }));
+                        }
                     }
-                } else {
-                    queue_incoming.write().unwrap().push(QueuePacket::new(id, frame));
+                    Some(PACKET_JOIN_ROOM_REQUEST) => {
+                        if let Some(client) = clients.read().unwrap().get(&id) {
+                            rooms.write().unwrap()[0].write().unwrap().add_player(client.id);
+                            client.send_packet(Packet::from_object(PACKET_JOIN_ROOM_RESPONSE, &PacketJoinRoomResponse { player_id: id }));
+                        }
+                    }
+                    Some(_) => {
+                        queue_incoming.write().unwrap().push(QueuePacket::new(id, frame));
+                    }
+                    None => {
+                        error_continue!("Invalid frame");
+                    }
                 }
             }
         };

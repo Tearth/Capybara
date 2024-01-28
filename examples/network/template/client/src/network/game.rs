@@ -15,6 +15,7 @@ pub struct GameNetworkContext {
     pub hub_name: String,
     pub hub_endpoint: String,
     pub hub_websocket: WebSocketClient,
+    pub player_id: u64,
     pub player_name: String,
     pub last_ping_timestamp: Option<Instant>,
     pub last_server_request_timestamp: Option<Instant>,
@@ -25,11 +26,8 @@ pub struct GameNetworkContext {
     pub state: Vec<PacketTickData>,
 }
 
-pub struct ServerData {
-    pub name: String,
-    pub flag: String,
-    pub address: String,
-    pub websocket: WebSocketClient,
+pub struct GameState {
+    pub state: Vec<PacketTickData>,
 }
 
 impl GameNetworkContext {
@@ -72,7 +70,16 @@ impl GameNetworkContext {
                                 self.last_server_request_timestamp = None;
 
                                 info!("Final server time offset: {} ms", offset);
+                                info!("Joining game room");
+
+                                self.hub_websocket.send_packet(Packet::from_object(PACKET_JOIN_ROOM_REQUEST, &PacketJoinRoomRequest {}));
                             }
+                        }
+                        Err(err) => error_continue!("Failed to parse packet ({})", err),
+                    },
+                    Some(PACKET_JOIN_ROOM_RESPONSE) => match packet.to_object::<PacketJoinRoomResponse>() {
+                        Ok(response) => {
+                            self.player_id = response.player_id;
                         }
                         Err(err) => error_continue!("Failed to parse packet ({})", err),
                     },

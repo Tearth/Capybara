@@ -136,6 +136,14 @@ impl Room {
 
             current_state_player.nodes[0] += MOVEMENT_SPEED * (1.0 / TICK as f32);
 
+            for node_index in 1..current_state_player.nodes.len() {
+                let current_node = current_state_player.nodes[node_index];
+                let parent_node = current_state_player.nodes[node_index - 1];
+                let direction = (parent_node - current_node).normalize();
+
+                current_state_player.nodes[node_index] = parent_node - direction * DISTANCE_BETWEEN_NODES;
+            }
+
             if current_state_index == 0 {
                 break;
             }

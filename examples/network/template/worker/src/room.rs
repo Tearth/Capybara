@@ -28,7 +28,8 @@ pub struct RoomState {
 pub struct RoomPlayer {
     pub heading_real: f32,
     pub heading_target: f32,
-    pub heading_input: Option<f32>,
+    pub input_heading: Option<f32>,
+    pub input_timestamp: Option<Instant>,
     pub nodes: Vec<Vec2>,
 }
 
@@ -56,7 +57,13 @@ impl Room {
         }
 
         let last_state = self.state.front().unwrap();
-        self.state.push_front(RoomState { timestamp: now, players: last_state.players.clone() });
+        let mut players = last_state.players.clone();
+
+        for player in &mut players {
+            player.1.input_heading = None;
+            player.1.input_timestamp = None;
+        }
+        self.state.push_front(RoomState { timestamp: now, players });
 
         if self.state.len() > PRESERVED_STATES_COUNT {
             self.state.pop_back();
@@ -74,7 +81,8 @@ impl Room {
                 RoomPlayer {
                     heading_real: 0.0,
                     heading_target: 0.0,
-                    heading_input: None,
+                    input_heading: None,
+                    input_timestamp: None,
                     nodes: vec![
                         Vec2::new(220.0, 100.0),
                         Vec2::new(190.0, 100.0),
@@ -109,11 +117,16 @@ impl Room {
                             continue;
                         }
 
-                        for (index, state) in self.state.iter_mut().enumerate().rev() {
-                            if input.timestamp <= state.timestamp {
+                        for (index, state) in self.state.iter_mut().enumerate() {
+                            let offset = Duration::from_millis(0);
+                            if input.timestamp + offset >= state.timestamp {
                                 if let Some(player) = state.players.get_mut(&packet.client_id) {
-                                    player.heading_input = Some(input.heading);
-                                    players_to_resimulate.insert(packet.client_id, index);
+                                    player.input_heading = Some(input.heading);
+                                    player.input_timestamp = Some(input.timestamp + offset);
+
+                                    if index > 0 && !players_to_resimulate.contains_key(&packet.client_id) {
+                                        players_to_resimulate.insert(packet.client_id, 19 - 1);
+                                    }
                                 } else {
                                     error_continue!("Player not found");
                                 }
@@ -137,7 +150,6 @@ impl Room {
                 None => 0,
             };
 
-            self.reapply_headings(client_id);
             self.simulate(client_id, from_state_index);
         }
 
@@ -162,50 +174,62 @@ impl Room {
         outgoing_packets
     }
 
-    fn reapply_headings(&mut self, player_id: u64) {
-        let mut last_heading_input = None;
-        for state in self.state.iter_mut().rev() {
-            if let Some(player) = state.players.get_mut(&player_id) {
-                if let Some(heading_input) = player.heading_input {
-                    player.heading_target = heading_input;
-                    last_heading_input = Some(heading_input);
-                } else {
-                    if let Some(last_heading_input) = last_heading_input {
-                        player.heading_target = last_heading_input;
-                    }
-                }
-            }
-        }
-    }
-
     fn simulate(&mut self, player_id: u64, from_state_index: usize) {
         let mut previous_state_index = from_state_index + 1;
         let mut current_state_index = from_state_index;
 
         loop {
-            let mut previous_heading_real = None;
-            let mut previous_nodes = None;
-            let previous_state = &self.state[previous_state_index];
+            let previous_state_timestamp = self.state[previous_state_index].timestamp;
+            let current_state_timestamp = self.state[current_state_index].timestamp;
+            let delta = (current_state_timestamp - previous_state_timestamp).as_millis();
 
-            if let Some(previous_state_player) = previous_state.players.get(&player_id) {
-                previous_heading_real = Some(previous_state_player.heading_real);
-                previous_nodes = Some(previous_state_player.nodes.clone());
+            if let Some(previous_state_player) = self.state[previous_state_index].players.get(&player_id).cloned() {
+                if let Some(current_state_player) = self.state[current_state_index].players.get_mut(&player_id) {
+                    if let Some(previous_heading_input) = previous_state_player.input_heading {
+                        current_state_player.heading_target = previous_heading_input;
+                    } else {
+                        current_state_player.heading_target = previous_state_player.heading_target;
+                    }
+
+                    if let Some(previous_input_timestamp) = previous_state_player.input_timestamp {
+                        let old_heading_time = (previous_input_timestamp - previous_state_timestamp).as_millis();
+                        let new_heading_time = (current_state_timestamp - previous_input_timestamp).as_millis();
+
+                        let result = game::simulate(
+                            GameState {
+                                nodes: previous_state_player.nodes,
+                                heading_real: previous_state_player.heading_real,
+                                heading_target: previous_state_player.heading_target,
+                            },
+                            (old_heading_time as f32) / 1000.0,
+                        );
+
+                        let result = game::simulate(
+                            GameState {
+                                nodes: result.nodes,
+                                heading_real: result.heading_real,
+                                heading_target: previous_state_player.input_heading.unwrap(),
+                            },
+                            (new_heading_time as f32) / 1000.0,
+                        );
+
+                        current_state_player.heading_real = result.heading_real;
+                        current_state_player.nodes = result.nodes;
+                    } else {
+                        let result = game::simulate(
+                            GameState {
+                                nodes: previous_state_player.nodes,
+                                heading_real: previous_state_player.heading_real,
+                                heading_target: previous_state_player.heading_target,
+                            },
+                            (delta as f32) / 1000.0,
+                        );
+
+                        current_state_player.heading_real = result.heading_real;
+                        current_state_player.nodes = result.nodes;
+                    }
+                }
             }
-
-            let current_state = &mut self.state[current_state_index];
-            let current_state_player = current_state.players.get_mut(&player_id).unwrap();
-
-            let result = game::simulate(
-                GameState {
-                    nodes: previous_nodes.unwrap_or(current_state_player.nodes.clone()),
-                    heading_real: previous_heading_real.unwrap_or(current_state_player.heading_real),
-                    heading_target: current_state_player.heading_target,
-                },
-                (TICK as f32) / 1000.0,
-            );
-
-            current_state_player.heading_real = result.heading_real;
-            current_state_player.nodes = result.nodes;
 
             if current_state_index == 0 {
                 break;

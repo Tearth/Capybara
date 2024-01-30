@@ -2,7 +2,7 @@ use crate::*;
 use capybara::glam::Vec2;
 use std::f32::consts;
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct GameState {
     pub nodes: Vec<Vec2>,
     pub heading_real: f32,

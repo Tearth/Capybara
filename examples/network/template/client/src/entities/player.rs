@@ -14,6 +14,7 @@ pub struct Player {
     pub heading_target: f32,
     pub nodes: Vec<Vec2>,
     pub initialized: bool,
+    pub last_cursor_position: Vec2,
 }
 
 impl Player {
@@ -33,7 +34,10 @@ impl Player {
         let cursor_position = camera.from_window_to_world_coordinates(state.window.cursor_position.into());
         let heading_target = -(cursor_position - (self.nodes[0])).angle_between(Vec2::new(1.0, 0.0));
 
-        network.send_new_heading(heading_target);
+        if cursor_position != self.last_cursor_position {
+            network.send_new_heading(heading_target);
+            self.last_cursor_position = cursor_position;
+        }
 
         let result = game::simulate(GameState { nodes: self.nodes.clone(), heading_real: self.heading_real, heading_target }, delta);
         self.nodes = result.nodes;

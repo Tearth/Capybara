@@ -118,14 +118,13 @@ impl Room {
                         }
 
                         for (index, state) in self.state.iter_mut().enumerate() {
-                            let offset = Duration::from_millis(0);
-                            if input.timestamp + offset >= state.timestamp {
+                            if input.timestamp >= state.timestamp {
                                 if let Some(player) = state.players.get_mut(&packet.client_id) {
                                     player.input_heading = Some(input.heading);
-                                    player.input_timestamp = Some(input.timestamp + offset);
+                                    player.input_timestamp = Some(input.timestamp);
 
                                     if index > 0 && !players_to_resimulate.contains_key(&packet.client_id) {
-                                        players_to_resimulate.insert(packet.client_id, 19 - 1);
+                                        players_to_resimulate.insert(packet.client_id, index - 1);
                                     }
                                 } else {
                                     error_continue!("Player not found");
@@ -159,6 +158,7 @@ impl Room {
         for (client_id, player) in &self.state.front_mut().unwrap().players {
             data.push(PacketTickData {
                 player_id: *client_id,
+                heading: player.heading_real,
                 nodes: [player.nodes[0], player.nodes[1], player.nodes[2], player.nodes[3], player.nodes[4]],
             });
         }

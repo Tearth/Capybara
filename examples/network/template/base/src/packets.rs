@@ -71,6 +71,7 @@ pub struct PacketTickHeader {
 #[derive(Debug, Copy, Clone)]
 pub struct PacketTickData {
     pub player_id: u64,
+    pub heading: f32,
     pub nodes: [Vec2; 5],
 }
 

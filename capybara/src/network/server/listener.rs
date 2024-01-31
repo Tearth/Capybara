@@ -20,27 +20,27 @@ impl WebSocketListener {
     }
 
     pub async fn listen(&mut self, address: &str, client_event: UnboundedSender<WebSocketConnectedClient>) {
-        info!("Creating a TCP listener on {}", address);
+        info!("Creating a TCP listener at {}", address);
         let tcp_listener = match TcpListener::bind(&address).await {
             Ok(tcp_listener) => tcp_listener,
             Err(err) => error_return!("Failed to create TCP listener ({})", err),
         };
-        info!("Listener established");
 
         let (disconnection_tx, mut disconnection_rx) = mpsc::unbounded();
         self.disconnection_tx = Some(disconnection_tx);
 
         let listen = tokio::spawn(async move {
             while let Ok((stream, address)) = tcp_listener.accept().await {
-                info!("New TCP connection with address {}, proceeding WebSocket handshake", address);
+                let id = fastrand::u64(..);
+                info!("New client {} connected ({})", id, address);
 
                 let websocket = match tokio_tungstenite::accept_async(stream).await {
                     Ok(websocket) => websocket,
                     Err(err) => error_continue!("Failed to accept WebSocket connection ({})", err),
                 };
-                info!("WebSocket connection established");
+                info!("WebSocket connection for client {} established", id);
 
-                if let Err(err) = client_event.unbounded_send(WebSocketConnectedClient::new(websocket, address)) {
+                if let Err(err) = client_event.unbounded_send(WebSocketConnectedClient::new(id, websocket, address)) {
                     error!("Failed to send client event ({})", err);
                 }
             }

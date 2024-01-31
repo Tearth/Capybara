@@ -39,9 +39,9 @@ pub struct WebSocketConnectedClientSlim {
 }
 
 impl WebSocketConnectedClient {
-    pub fn new(websocket: WebSocketStream<TcpStream>, address: SocketAddr) -> Self {
+    pub fn new(id: u64, websocket: WebSocketStream<TcpStream>, address: SocketAddr) -> Self {
         Self {
-            id: fastrand::u64(..),
+            id,
             ping: Default::default(),
             address,
             join_time: Instant::now(),
@@ -59,8 +59,6 @@ impl WebSocketConnectedClient {
             None => bail!("Client is not properly set up"),
         };
 
-        info!("Client {} initialized", id);
-
         let (websocket_sink, mut websocket_stream) = websocket.split();
         let (websocket_tx, websocket_rx) = mpsc::unbounded();
         let (outgoing_packets_tx, mut outgoing_packets_rx) = mpsc::unbounded();
@@ -72,6 +70,8 @@ impl WebSocketConnectedClient {
 
         self.outgoing_packets_tx = Some(outgoing_packets_tx);
         self.disconnection_tx = Some(disconnection_tx);
+
+        info!("Client {} initialized", id);
 
         tokio::spawn(async move {
             let process_incoming_messages = async {

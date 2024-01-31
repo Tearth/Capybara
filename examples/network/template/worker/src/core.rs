@@ -96,7 +96,10 @@ impl Core {
                     Some(PACKET_JOIN_ROOM_REQUEST) => {
                         if let Some(client) = clients.read().unwrap().get(&id) {
                             rooms.write().unwrap()[0].write().unwrap().add_player(client.id);
-                            client.send_packet(Packet::from_object(PACKET_JOIN_ROOM_RESPONSE, &PacketJoinRoomResponse { player_id: id }));
+                            client.send_packet(Packet::from_object(
+                                PACKET_JOIN_ROOM_RESPONSE,
+                                &PacketJoinRoomResponse { player_id: id, tick: config.read().unwrap().data.worker_tick },
+                            ));
                         }
                     }
                     Some(_) => {
@@ -195,6 +198,10 @@ impl Core {
                 }
 
                 if interval.period().as_millis() != worker_tick as u128 {
+                    for (_, client) in clients.read().unwrap().iter() {
+                        client.send_packet(Packet::from_object(PACKET_SET_TICK_INTERVAL, &PacketSetTickInterval { tick: worker_tick }));
+                    }
+
                     interval = time::interval(Duration::from_millis(worker_tick as u64));
                     info!("Worker tick changed to {} ms", worker_tick);
                 }

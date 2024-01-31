@@ -10,7 +10,8 @@ pub const PACKET_SERVER_TIME_RESPONSE: u16 = 5;
 pub const PACKET_JOIN_ROOM_REQUEST: u16 = 6;
 pub const PACKET_JOIN_ROOM_RESPONSE: u16 = 7;
 pub const PACKET_PLAYER_INPUT: u16 = 8;
-pub const PACKET_TICK: u16 = 9;
+pub const PACKET_SET_TICK_INTERVAL: u16 = 9;
+pub const PACKET_TICK: u16 = 10;
 
 #[repr(C)]
 #[derive(Debug, Clone)]
@@ -52,6 +53,7 @@ pub struct PacketJoinRoomRequest {}
 #[derive(Debug, Copy, Clone)]
 pub struct PacketJoinRoomResponse {
     pub player_id: u64,
+    pub tick: u32,
 }
 
 #[repr(C)]
@@ -59,6 +61,12 @@ pub struct PacketJoinRoomResponse {
 pub struct PacketPlayerInput {
     pub timestamp: Instant,
     pub heading: f32,
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct PacketSetTickInterval {
+    pub tick: u32,
 }
 
 #[repr(C)]

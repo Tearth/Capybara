@@ -25,6 +25,7 @@ pub struct GameNetworkContext {
     pub last_ping_timestamp: Option<Instant>,
     pub last_server_request_timestamp: Option<Instant>,
 
+    pub tick: u32,
     pub server_time_offset: u32,
     pub server_time_offset_chunks: Vec<u32>,
 
@@ -98,6 +99,13 @@ impl GameNetworkContext {
                     Some(PACKET_JOIN_ROOM_RESPONSE) => match packet.to_object::<PacketJoinRoomResponse>() {
                         Ok(response) => {
                             self.player_id = response.player_id;
+                            self.tick = response.tick;
+                        }
+                        Err(err) => error_continue!("Failed to parse packet ({})", err),
+                    },
+                    Some(PACKET_SET_TICK_INTERVAL) => match packet.to_object::<PacketSetTickInterval>() {
+                        Ok(response) => {
+                            self.tick = response.tick;
                         }
                         Err(err) => error_continue!("Failed to parse packet ({})", err),
                     },
@@ -143,8 +151,8 @@ impl GameNetworkContext {
         if let Some(server_state) = &self.server_state {
             if let Some(player_state) = server_state.players.get(&self.player_id) {
                 let timespan = (now - server_state.timestamp).as_millis();
-                let ticks = timespan as u64 / TICK;
-                let tick_remaining = timespan as u64 % TICK;
+                let ticks = timespan as u64 / self.tick as u64;
+                let tick_remaining = timespan as u64 % self.tick as u64;
                 let mut tick_timestamp = server_state.timestamp;
 
                 let mut heading_real = player_state.heading;
@@ -164,11 +172,11 @@ impl GameNetworkContext {
                     }
 
                     let heading_target = heading_target.unwrap_or(0.0);
-                    let result = game::simulate(GameState { nodes: nodes.clone(), heading_real, heading_target }, TICK as f32 / 1000.0);
+                    let result = game::simulate(GameState { nodes: nodes.clone(), heading_real, heading_target }, self.tick as f32 / 1000.0);
 
                     heading_real = result.heading_real;
                     nodes = result.nodes;
-                    tick_timestamp += Duration::from_millis(TICK);
+                    tick_timestamp += Duration::from_millis(self.tick as u64);
                 }
 
                 let heading_target = self.input_history.front().map(|p| p.heading).unwrap_or(0.0);

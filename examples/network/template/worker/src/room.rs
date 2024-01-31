@@ -53,7 +53,7 @@ impl Room {
         let mut outgoing_packets = Vec::new();
 
         if self.state.is_empty() {
-            self.state.push_back(RoomState { timestamp: now - Duration::from_millis(TICK), players: FxHashMap::default() })
+            self.state.push_back(RoomState { timestamp: now, players: FxHashMap::default() })
         }
 
         let last_state = self.state.front().unwrap();

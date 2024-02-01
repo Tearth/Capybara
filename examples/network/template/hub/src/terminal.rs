@@ -1,5 +1,6 @@
 use crate::core::Core;
-use capybara::{instant::Instant, network::client::ConnectionStatus};
+use capybara::instant::Instant;
+use capybara::network::client::ConnectionStatus;
 
 pub fn process(command: &str, core: &mut Core) {
     let tokens = command.split_whitespace().collect::<Vec<&str>>();
@@ -30,8 +31,11 @@ fn process_config_show(_tokens: &[&str], core: &Core) {
     let mut data = Vec::new();
     let config = core.config.read().unwrap();
 
+    data.push(format!(" - endpoint: {}", config.data.endpoint));
     data.push(format!(" - lobby tick: {} ms", config.data.lobby_tick));
     data.push(format!(" - worker status interval: {} ms", config.data.worker_status_interval));
+    data.push(format!(" - packet delay base: {} ms", config.data.packet_delay_base));
+    data.push(format!(" - packet delay variation: {} ms", config.data.packet_delay_variation));
     data.push(" - workers:".to_string());
 
     for worker in &core.config.read().unwrap().data.workers {

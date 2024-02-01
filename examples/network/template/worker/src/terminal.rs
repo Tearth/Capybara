@@ -29,9 +29,16 @@ fn process_config_show(_tokens: &[&str], core: &Core) {
     let mut data = Vec::new();
     let config = core.config.read().unwrap();
 
+    data.push(format!(" - endpoint: {}", config.data.endpoint));
     data.push(format!(" - worker tick: {} ms", config.data.worker_tick));
+    data.push(format!(" - packet delay base: {} ms", config.data.packet_delay_base));
+    data.push(format!(" - packet delay variation: {} ms", config.data.packet_delay_variation));
+    data.push(format!(" - input max delay: {} ms", config.data.input_max_delay));
 
     drop(config);
+
+    println!("Current configuration:");
+    println!("{}", data.join("\n"));
 }
 
 fn process_config_reload(_tokens: &[&str], core: &mut Core) {

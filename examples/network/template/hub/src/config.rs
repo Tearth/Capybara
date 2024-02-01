@@ -45,17 +45,17 @@ impl ConfigLoader {
 
         let mut file = match File::open(&self.path) {
             Ok(file) => file,
-            Err(err) => error_return!("Failed to open file ({})", err),
+            Err(err) => error_return!("Failed to open configuration file ({})", err),
         };
 
         let mut buffer = Vec::new();
         if let Err(err) = file.read_to_end(&mut buffer) {
-            error_return!("Failed to read file ({})", err);
+            error_return!("Failed to read configuration file ({})", err);
         }
 
         let content = match str::from_utf8(&buffer) {
             Ok(content) => content,
-            Err(err) => error_return!("Failed to parse content ({})", err),
+            Err(err) => error_return!("Failed to parse configuration content ({})", err),
         };
 
         let json = match content.parse::<JsonValue>() {

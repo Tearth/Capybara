@@ -66,7 +66,7 @@ impl GameNetworkContext {
                 match packet.get_id() {
                     Some(PACKET_TICK) => {
                         let (header, data) = packet.to_array_with_header::<PacketTickHeader, PacketTickData>().unwrap();
-                        let players = data.iter().map(|p| (p.player_id, *p)).collect::<FxHashMap<_, _>>();
+                        let players = data.iter().map(|p| (p.player_id, p.clone())).collect::<FxHashMap<_, _>>();
 
                         self.server_state = Some(ServerState { timestamp: header.timestamp, players });
                         server_state_received = true;

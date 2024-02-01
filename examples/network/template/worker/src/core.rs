@@ -13,10 +13,12 @@ use chrono::SecondsFormat;
 use chrono::Utc;
 use futures_channel::mpsc;
 use futures_util::StreamExt;
+use log::error;
 use log::info;
 use network_template_base::packets::*;
 use std::collections::VecDeque;
 use std::fs;
+use std::panic;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::time::Duration;
@@ -33,7 +35,7 @@ pub struct Core {
     pub config: Arc<RwLock<ConfigLoader>>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct QueuePacket {
     pub client_id: u64,
     pub timestamp: Instant,
@@ -91,6 +93,8 @@ impl Core {
                     Some(PACKET_SERVER_TIME_REQUEST) => {
                         if let Some(client) = clients.read().unwrap().get(&id) {
                             client.send_packet(Packet::from_object(PACKET_SERVER_TIME_RESPONSE, &PacketServerTimeResponse { time: Instant::now() }));
+                        } else {
+                            error_continue!("Cannot reply with server time, client {} does not exists", id);
                         }
                     }
                     Some(PACKET_JOIN_ROOM_REQUEST) => {
@@ -100,14 +104,14 @@ impl Core {
                                 PACKET_JOIN_ROOM_RESPONSE,
                                 &PacketJoinRoomResponse { player_id: id, tick: config.read().unwrap().data.worker_tick },
                             ));
+                        } else {
+                            error_continue!("Cannot reply for room join request, client {} does not exists", id);
                         }
                     }
                     Some(_) => {
                         queue_incoming.write().unwrap().push(QueuePacket::new(id, frame));
                     }
-                    None => {
-                        error_continue!("Invalid frame");
-                    }
+                    None => error_continue!("Invalid frame ID ({:?})", frame.get_id()),
                 }
             }
         };
@@ -141,64 +145,79 @@ impl Core {
 
             loop {
                 let now = Instant::now();
-                let mut queue_packets_to_remove = VecDeque::new();
                 let packets = Arc::new(RwLock::new(Vec::new()));
+                let mut packets_to_remove = VecDeque::new();
+                let mut handles = Vec::new();
 
                 let worker_tick = config.read().unwrap().data.worker_tick;
                 let delay_base = config.read().unwrap().data.packet_delay_base as i32;
                 let delay_variation = config.read().unwrap().data.packet_delay_variation as i32;
 
+                // Prepare a list of packets ready to process (if delay_base + variation = 0 then take everything from the queue)
                 for (index, queue_packet) in queue_incoming.read().unwrap().iter().enumerate() {
-                    let variation = fastrand::i32(-delay_variation..delay_variation);
+                    let variation = fastrand::i32(-delay_variation..=delay_variation);
                     if queue_packet.timestamp + Duration::from_millis((delay_base + variation) as u64) <= now {
                         packets.write().unwrap().push(queue_packet.clone());
-                        queue_packets_to_remove.push_front(index);
+                        packets_to_remove.push_front(index);
                     }
                 }
 
-                for index in &queue_packets_to_remove {
-                    queue_incoming.write().unwrap().remove(*index);
+                // Remove processed packets from the queue
+                while let Some(index) = packets_to_remove.pop_front() {
+                    queue_incoming.write().unwrap().remove(index);
                 }
 
-                let mut rooms = rooms.write().unwrap();
-                let mut handles = Vec::new();
-
-                for room in rooms.iter_mut() {
+                for room in rooms.write().unwrap().iter_mut() {
                     let room = room.clone();
                     let packets = packets.clone();
+                    let clients = clients.clone();
+                    let queue_outgoing = queue_outgoing.clone();
+                    let config = config.clone();
 
-                    // TODO: allow immediate send when packet delay is disabled
-                    handles.push(tokio::spawn(async move { room.write().unwrap().tick(&packets.read().unwrap()) }));
+                    handles.push(tokio::spawn(async move {
+                        let packets = room.write().unwrap().tick(&packets.read().unwrap(), &config.read().unwrap());
+
+                        if delay_base == 0 && delay_variation == 0 {
+                            for packet in packets {
+                                if let Some(client) = clients.read().unwrap().get(&packet.client_id) {
+                                    client.send_packet(packet.inner.clone());
+                                } else {
+                                    error_continue!("Cannot send the frame, client {} does not exists", packet.client_id);
+                                }
+                            }
+                        } else {
+                            queue_outgoing.write().unwrap().extend_from_slice(&packets);
+                        }
+                    }));
                 }
 
-                drop(rooms);
-
                 for handle in handles {
-                    match join!(handle).0 {
-                        Ok(outgoing_packets) => queue_outgoing.write().unwrap().extend_from_slice(&outgoing_packets),
-                        Err(err) => error_continue!("Failed to perform a tick ({})", err),
+                    if let Err(err) = join!(handle).0 {
+                        error_continue!("Failed to perform a tick ({})", err);
                     };
                 }
 
-                queue_packets_to_remove.clear();
-
+                // Send packets (if delay_base + variation = 0 then take everything from the queue)
                 for (index, queue_packet) in queue_outgoing.read().unwrap().iter().enumerate() {
-                    let variation = fastrand::i32(-delay_variation..delay_variation);
+                    let variation = fastrand::i32(-delay_variation..=delay_variation);
                     if queue_packet.timestamp + Duration::from_millis((delay_base + variation) as u64) <= now {
                         if let Some(client) = clients.read().unwrap().get(&queue_packet.client_id) {
                             client.send_packet(queue_packet.inner.clone());
+                        } else {
+                            error!("Cannot send the frame, client {} does not exists", queue_packet.client_id);
                         }
 
-                        queue_packets_to_remove.push_front(index);
+                        packets_to_remove.push_front(index);
                     }
                 }
 
-                for index in &queue_packets_to_remove {
+                // Remove sent packets from the queue
+                for index in &packets_to_remove {
                     queue_outgoing.write().unwrap().remove(*index);
                 }
 
                 if interval.period().as_millis() != worker_tick as u128 {
-                    for (_, client) in clients.read().unwrap().iter() {
+                    for client in clients.read().unwrap().values() {
                         client.send_packet(Packet::from_object(PACKET_SET_TICK_INTERVAL, &PacketSetTickInterval { tick: worker_tick }));
                     }
 
@@ -235,6 +254,10 @@ impl Core {
             })
             .chain(fern::Dispatch::new().level(log::LevelFilter::Debug).chain(fern::DateBased::new("./logs/", "log_info_%Y-%m-%d.log")))
             .apply()?;
+
+        panic::set_hook(Box::new(move |info| {
+            log::error!("Critical error: {}", info);
+        }));
 
         Ok(())
     }

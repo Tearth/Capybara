@@ -7,18 +7,19 @@ use std::io::Read;
 use std::str;
 use tinyjson::JsonValue;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default)]
 pub struct ConfigLoader {
     pub path: String,
     pub data: ConfigData,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default)]
 pub struct ConfigData {
     pub endpoint: String,
     pub worker_tick: u32,
     pub packet_delay_base: u32,
     pub packet_delay_variation: u32,
+    pub input_max_delay: u32,
 }
 
 impl ConfigLoader {
@@ -34,17 +35,17 @@ impl ConfigLoader {
 
         let mut file = match File::open(&self.path) {
             Ok(file) => file,
-            Err(err) => error_return!("Failed to open file ({})", err),
+            Err(err) => error_return!("Failed to open configuration file ({})", err),
         };
 
         let mut buffer = Vec::new();
         if let Err(err) = file.read_to_end(&mut buffer) {
-            error_return!("Failed to read file ({})", err);
+            error_return!("Failed to read configuration file ({})", err);
         }
 
         let content = match str::from_utf8(&buffer) {
             Ok(content) => content,
-            Err(err) => error_return!("Failed to parse content ({})", err),
+            Err(err) => error_return!("Failed to parse configuration content ({})", err),
         };
 
         let json = match content.parse::<JsonValue>() {
@@ -67,6 +68,7 @@ impl ConfigLoader {
         self.data.worker_tick = read_value::<f64>(data, "worker_tick")? as u32;
         self.data.packet_delay_base = read_value::<f64>(data, "packet_delay_base")? as u32;
         self.data.packet_delay_variation = read_value::<f64>(data, "packet_delay_variation")? as u32;
+        self.data.input_max_delay = read_value::<f64>(data, "input_max_delay")? as u32;
 
         Ok(())
     }

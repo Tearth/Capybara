@@ -1,4 +1,4 @@
-#![allow(clippy::single_match, clippy::collapsible_else_if)]
+#![allow(clippy::single_match, clippy::collapsible_else_if, clippy::await_holding_lock, clippy::collapsible_if)]
 
 #[cfg(not(web))]
 pub mod core;

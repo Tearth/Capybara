@@ -34,6 +34,7 @@ fn process_config_show(_tokens: &[&str], core: &Core) {
     data.push(format!(" - packet delay base: {} ms", config.data.packet_delay_base));
     data.push(format!(" - packet delay variation: {} ms", config.data.packet_delay_variation));
     data.push(format!(" - input max delay: {} ms", config.data.input_max_delay));
+    data.push(format!(" - client ping interval: {} ms", config.data.client_ping_interval));
 
     drop(config);
 

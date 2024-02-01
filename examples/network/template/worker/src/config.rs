@@ -20,6 +20,7 @@ pub struct ConfigData {
     pub packet_delay_base: u32,
     pub packet_delay_variation: u32,
     pub input_max_delay: u32,
+    pub client_ping_interval: u32,
 }
 
 impl ConfigLoader {
@@ -69,6 +70,7 @@ impl ConfigLoader {
         self.data.packet_delay_base = read_value::<f64>(data, "packet_delay_base")? as u32;
         self.data.packet_delay_variation = read_value::<f64>(data, "packet_delay_variation")? as u32;
         self.data.input_max_delay = read_value::<f64>(data, "input_max_delay")? as u32;
+        self.data.client_ping_interval = read_value::<f64>(data, "client_ping_interval")? as u32;
 
         Ok(())
     }

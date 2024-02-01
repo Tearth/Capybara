@@ -115,6 +115,24 @@ impl Core {
                 }
             }
         };
+        let process_clients = async {
+            let client_ping_interval = config.read().unwrap().data.client_ping_interval;
+            let mut interval = time::interval(Duration::from_millis(client_ping_interval as u64));
+
+            loop {
+                for client in clients.read().unwrap().iter() {
+                    client.1.send_ping();
+
+                    let client_ping_interval = config.read().unwrap().data.client_ping_interval;
+                    if interval.period().as_millis() != client_ping_interval as u128 {
+                        interval = time::interval(Duration::from_millis(client_ping_interval as u64));
+                        info!("Client ping interval changed to {} ms", client_ping_interval);
+                    }
+                }
+
+                interval.tick().await;
+            }
+        };
         let process_disconnection = async {
             while let Some(id) = disconnection_event_rx.next().await {
                 rooms.write().unwrap()[0].write().unwrap().remove_player(id);
@@ -233,6 +251,7 @@ impl Core {
             _ = listen => {}
             _ = accept_clients => {}
             _ = read_frames => {}
+            _ = process_clients => {}
             _ = process_disconnection => {}
             _ = process_terminal => {}
             _ = tick => {}

@@ -94,6 +94,22 @@ impl Core {
                 clients.write().unwrap().remove(&id);
             }
         };
+        let process_workers = async {
+            let worker_status_interval = config.read().unwrap().data.worker_status_interval;
+            let mut interval = time::interval(Duration::from_millis(worker_status_interval as u64));
+
+            loop {
+                let worker_statu_interval = config.read().unwrap().data.worker_status_interval;
+
+                if interval.period().as_millis() != worker_statu_interval as u128 {
+                    interval = time::interval(Duration::from_millis(worker_statu_interval as u64));
+                    info!("Worker status interval changed to {} ms", worker_statu_interval);
+                }
+
+                workers.write().unwrap().send_pings();
+                interval.tick().await;
+            }
+        };
         let process_terminal = async {
             let mut stdin = tokio::io::stdin();
             loop {
@@ -112,63 +128,50 @@ impl Core {
                 terminal::process(&command, self);
             }
         };
-        let process_workers = async {
-            let worker_status_interval = config.read().unwrap().data.worker_status_interval;
-            let mut interval = time::interval(Duration::from_millis(worker_status_interval as u64));
-
-            loop {
-                let worker_statu_interval = config.read().unwrap().data.worker_status_interval;
-
-                if interval.period().as_millis() != worker_statu_interval as u128 {
-                    interval = time::interval(Duration::from_millis(worker_statu_interval as u64));
-                    info!("Worker status interval changed to {} ms", worker_statu_interval);
-                }
-
-                workers.write().unwrap().send_pings();
-                interval.tick().await;
-            }
-        };
         let tick = async {
             let lobby_tick = config.read().unwrap().data.lobby_tick;
             let mut interval = time::interval(Duration::from_millis(lobby_tick as u64));
 
             loop {
                 let now = Instant::now();
-                let mut queue_packets_to_remove = VecDeque::new();
                 let mut packets = Vec::new();
+                let mut packets_to_remove = VecDeque::new();
 
                 let lobby_tick = config.read().unwrap().data.lobby_tick;
                 let delay_base = config.read().unwrap().data.packet_delay_base as i32;
                 let delay_variation = config.read().unwrap().data.packet_delay_variation as i32;
 
+                // Prepare a list of packets ready to process (if delay_base + variation = 0 then take everything from the queue)
                 for (index, queue_packet) in queue_incoming.read().unwrap().iter().enumerate() {
-                    let variation = fastrand::i32(-delay_variation..delay_variation);
+                    let variation = fastrand::i32(-delay_variation..=delay_variation);
                     if queue_packet.timestamp + Duration::from_millis((delay_base + variation) as u64) <= now {
                         packets.push(queue_packet.clone());
-                        queue_packets_to_remove.push_front(index);
+                        packets_to_remove.push_front(index);
                     }
                 }
 
-                for index in &queue_packets_to_remove {
-                    queue_incoming.write().unwrap().remove(*index);
+                // Remove processed packets from the queue
+                while let Some(index) = packets_to_remove.pop_front() {
+                    queue_incoming.write().unwrap().remove(index);
                 }
 
                 let outgoing_packets = lobby.write().unwrap().tick(&workers.read().unwrap().workers, &packets);
                 queue_outgoing.write().unwrap().extend_from_slice(&outgoing_packets);
-                queue_packets_to_remove.clear();
 
+                // Send packets (if delay_base + variation = 0 then take everything from the queue)
                 for (index, queue_packet) in queue_outgoing.read().unwrap().iter().enumerate() {
-                    let variation = fastrand::i32(-delay_variation..delay_variation);
+                    let variation = fastrand::i32(-delay_variation..=delay_variation);
                     if queue_packet.timestamp + Duration::from_millis((delay_base + variation) as u64) <= now {
                         if let Some(client) = clients.read().unwrap().get(&queue_packet.client_id) {
                             client.send_packet(queue_packet.inner.clone());
                         }
 
-                        queue_packets_to_remove.push_front(index);
+                        packets_to_remove.push_front(index);
                     }
                 }
 
-                for index in &queue_packets_to_remove {
+                // Remove sent packets from the queue
+                for index in &packets_to_remove {
                     queue_outgoing.write().unwrap().remove(*index);
                 }
 
@@ -186,8 +189,8 @@ impl Core {
             _ = accept_clients => {}
             _ = read_frames => {}
             _ = process_disconnection => {}
-            _ = process_terminal => {}
             _ = process_workers => {}
+            _ = process_terminal => {}
             _ = tick => {}
         }
     }

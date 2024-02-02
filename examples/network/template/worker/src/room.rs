@@ -112,9 +112,9 @@ impl Room {
                     Ok(mut input) => {
                         let oldest_state = self.state.back().unwrap();
 
-                        // Do not accept input which is beyond the oldest saved state
+                        // Do not accept input which is beyond the oldest saved state, clamp it to the oldest timestamp
                         if input.timestamp < oldest_state.timestamp {
-                            continue;
+                            input.timestamp = oldest_state.timestamp;
                         }
 
                         // Do not accept input with too distant timestamp, it would cause sudden jumps for other players - punish

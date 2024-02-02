@@ -14,14 +14,16 @@ use std::time::Duration;
 
 pub const SERVER_PING_INTERVAL: i32 = 1000;
 pub const SERVER_TIME_REQUEST_TRIES: usize = 5;
+pub const INPUT_MAX_TIME: u32 = 1000;
 
 #[derive(Default)]
 pub struct GameNetworkContext {
-    pub hub_name: String,
-    pub hub_endpoint: String,
-    pub hub_websocket: WebSocketClient,
+    pub server_name: String,
+    pub server_endpoint: String,
+    pub server_websocket: WebSocketClient,
     pub player_id: u64,
     pub player_name: String,
+
     pub last_ping_timestamp: Option<Instant>,
     pub last_server_request_timestamp: Option<Instant>,
 
@@ -48,29 +50,32 @@ impl GameNetworkContext {
     pub fn process(&mut self) {
         let now = Instant::now();
 
-        if matches!(*self.hub_websocket.status.read().unwrap(), ConnectionStatus::Disconnected | ConnectionStatus::Error) {
-            info!("Server {} is disconnected, restarting connection", self.hub_name);
-            self.hub_websocket.connect(&self.hub_endpoint);
+        if matches!(*self.server_websocket.status.read().unwrap(), ConnectionStatus::Disconnected | ConnectionStatus::Error) {
+            info!("Server {} is disconnected, restarting connection", self.server_name);
+            self.server_websocket.connect(&self.server_endpoint);
         }
 
-        if *self.hub_websocket.status.read().unwrap() == ConnectionStatus::Connected {
-            if self.hub_websocket.has_connected() {
-                self.hub_websocket.send_packet(Packet::from_object(PACKET_SERVER_TIME_REQUEST, &PacketServerTimeRequest {}));
+        if *self.server_websocket.status.read().unwrap() == ConnectionStatus::Connected {
+            let mut server_state_received = false;
 
+            if self.server_websocket.has_connected() {
+                info!("Connected to the server");
+
+                self.server_websocket.send_packet(Packet::from_object(PACKET_SERVER_TIME_REQUEST, &PacketServerTimeRequest {}));
                 self.last_server_request_timestamp = Some(now);
             }
 
-            let mut server_state_received = false;
-
-            while let Some(packet) = self.hub_websocket.poll_packet() {
+            while let Some(packet) = self.server_websocket.poll_packet() {
                 match packet.get_id() {
-                    Some(PACKET_TICK) => {
-                        let (header, data) = packet.to_array_with_header::<PacketTickHeader, PacketTickData>().unwrap();
-                        let players = data.iter().map(|p| (p.player_id, p.clone())).collect::<FxHashMap<_, _>>();
+                    Some(PACKET_TICK) => match packet.to_array_with_header::<PacketTickHeader, PacketTickData>() {
+                        Ok((header, data)) => {
+                            let players = data.iter().map(|p| (p.player_id, p.clone())).collect::<FxHashMap<_, _>>();
+                            self.server_state = Some(ServerState { timestamp: header.timestamp, players });
 
-                        self.server_state = Some(ServerState { timestamp: header.timestamp, players });
-                        server_state_received = true;
-                    }
+                            server_state_received = true;
+                        }
+                        Err(err) => error_continue!("Failed to parse packet ({})", err),
+                    },
                     Some(PACKET_SERVER_TIME_RESPONSE) => match packet.to_object::<PacketServerTimeResponse>() {
                         Ok(response) => {
                             let travel_time = (now - self.last_server_request_timestamp.unwrap()).as_millis();
@@ -81,7 +86,7 @@ impl GameNetworkContext {
                             self.server_time_offset_chunks.push(offset as u32);
 
                             if self.server_time_offset_chunks.len() < SERVER_TIME_REQUEST_TRIES {
-                                self.hub_websocket.send_packet(Packet::from_object(PACKET_SERVER_TIME_REQUEST, &PacketServerTimeRequest {}));
+                                self.server_websocket.send_packet(Packet::from_object(PACKET_SERVER_TIME_REQUEST, &PacketServerTimeRequest {}));
                                 self.last_server_request_timestamp = Some(now);
                             } else {
                                 self.server_time_offset_chunks.sort_unstable();
@@ -91,7 +96,7 @@ impl GameNetworkContext {
                                 info!("Final server time offset: {} ms", offset);
                                 info!("Joining game room");
 
-                                self.hub_websocket.send_packet(Packet::from_object(PACKET_JOIN_ROOM_REQUEST, &PacketJoinRoomRequest {}));
+                                self.server_websocket.send_packet(Packet::from_object(PACKET_JOIN_ROOM_REQUEST, &PacketJoinRoomRequest {}));
                             }
                         }
                         Err(err) => error_continue!("Failed to parse packet ({})", err),
@@ -114,14 +119,22 @@ impl GameNetworkContext {
             }
 
             if server_state_received {
-                self.process_new_server_state();
+                self.process_new_server_state(now);
+            }
+        }
+
+        for i in (0..self.input_history.len()).rev() {
+            if (now - self.input_history[i].timestamp).as_millis() as u32 > INPUT_MAX_TIME {
+                self.input_history.remove(i);
+            } else {
+                break;
             }
         }
 
         if let Some(last_ping_timestamp) = self.last_ping_timestamp {
             if (now - last_ping_timestamp).as_millis() >= SERVER_PING_INTERVAL as u128 {
-                if *self.hub_websocket.status.read().unwrap() == ConnectionStatus::Connected {
-                    self.hub_websocket.send_ping();
+                if *self.server_websocket.status.read().unwrap() == ConnectionStatus::Connected {
+                    self.server_websocket.send_ping();
                 }
 
                 self.last_ping_timestamp = Some(now);
@@ -131,23 +144,15 @@ impl GameNetworkContext {
         }
     }
 
-    pub fn send_new_heading(&mut self, heading: f32) {
-        let now = Instant::now();
-
-        self.hub_websocket.send_packet(Packet::from_object(
+    pub fn send_new_heading(&mut self, heading: f32, now: Instant) {
+        self.server_websocket.send_packet(Packet::from_object(
             PACKET_PLAYER_INPUT,
             &PacketPlayerInput { timestamp: now + Duration::from_millis(self.server_time_offset as u64), heading },
         ));
         self.input_history.push_front(InputHistory { timestamp: now, heading });
-
-        if self.input_history.len() > 100 {
-            self.input_history.pop_back();
-        }
     }
 
-    pub fn process_new_server_state(&mut self) {
-        let now = Instant::now();
-
+    pub fn process_new_server_state(&mut self, now: Instant) {
         if let Some(server_state) = &self.server_state {
             if let Some(player_state) = server_state.players.get(&self.player_id) {
                 let timespan = (now - server_state.timestamp).as_millis();
@@ -179,6 +184,7 @@ impl GameNetworkContext {
                     tick_timestamp += Duration::from_millis(self.tick as u64);
                 }
 
+                // Simulate remaining of the timespan which wasn't enough to count as the full tick
                 let heading_target = self.input_history.front().map(|p| p.heading).unwrap_or(0.0);
                 let result = game::simulate(GameState { nodes: nodes.clone(), heading_real, heading_target }, tick_remaining as f32 / 1000.0);
 

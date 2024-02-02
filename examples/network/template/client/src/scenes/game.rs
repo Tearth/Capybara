@@ -13,8 +13,6 @@ use capybara::egui::RawInput;
 use capybara::egui::Vec2;
 use capybara::egui::Window;
 use capybara::glam::Vec4;
-use capybara::instant::Instant;
-use capybara::renderer::shape::Shape;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
 use capybara::utils::color::Vec4Utils;
@@ -39,8 +37,8 @@ pub struct GameScene {
 
 impl Scene<GlobalData> for GameScene {
     fn activation(&mut self, state: ApplicationState<GlobalData>) -> Result<()> {
-        self.network.hub_name = state.global.server_name.clone();
-        self.network.hub_endpoint = state.global.server_address.clone();
+        self.network.server_name = state.global.server_name.clone();
+        self.network.server_endpoint = state.global.server_address.clone();
         self.exit_menu_visible = false;
 
         state.renderer.set_clear_color(Vec4::new_rgb(40, 80, 30, 255));
@@ -68,7 +66,7 @@ impl Scene<GlobalData> for GameScene {
         Ok(())
     }
 
-    fn fixed(&mut self, state: ApplicationState<GlobalData>) -> Result<Option<FrameCommand>> {
+    fn fixed(&mut self, _state: ApplicationState<GlobalData>) -> Result<Option<FrameCommand>> {
         self.debug_profiler.start("fixed");
         self.debug_profiler.stop("fixed");
         Ok(None)

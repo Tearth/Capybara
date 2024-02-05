@@ -6,9 +6,9 @@ use capybara::network::client::WebSocketClient;
 use capybara::network::packet::Packet;
 use capybara::rustc_hash::FxHashMap;
 use log::info;
+use network_template_base::game::simulation;
 use network_template_base::game::GameState;
 use network_template_base::packets::*;
-use network_template_base::*;
 use std::collections::VecDeque;
 use std::time::Duration;
 
@@ -182,7 +182,7 @@ impl GameNetworkContext {
                     }
 
                     let heading_target = heading_target.unwrap_or(0.0);
-                    let result = game::simulate(GameState { nodes: nodes.clone(), heading_real, heading_target }, self.tick as f32 / 1000.0);
+                    let result = simulation::run(GameState { nodes: nodes.clone(), heading_real, heading_target }, self.tick as f32 / 1000.0);
 
                     heading_real = result.heading_real;
                     nodes = result.nodes;
@@ -191,7 +191,7 @@ impl GameNetworkContext {
 
                 // Simulate remaining of the timespan which wasn't enough to count as the full tick
                 let heading_target = self.input_history.front().map(|p| p.heading).unwrap_or(0.0);
-                let result = game::simulate(GameState { nodes: nodes.clone(), heading_real, heading_target }, tick_remaining as f32 / 1000.0);
+                let result = simulation::run(GameState { nodes: nodes.clone(), heading_real, heading_target }, tick_remaining as f32 / 1000.0);
 
                 self.player_nodes = result.nodes;
             }

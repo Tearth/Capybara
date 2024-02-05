@@ -6,7 +6,7 @@ use capybara::glam::Vec4;
 use capybara::instant::Instant;
 use capybara::renderer::shape::Shape;
 use capybara::utils::color::Vec4Utils;
-use network_template_base::game;
+use network_template_base::game::simulation;
 use network_template_base::game::GameState;
 
 const INPUT_RESEND_INTERVAL: u32 = 500;
@@ -55,7 +55,7 @@ impl Player {
             self.last_heading_update = Some(now);
         }
 
-        let result = game::simulate(GameState { nodes: self.nodes.clone(), heading_real: self.heading_real, heading_target }, delta);
+        let result = simulation::run(GameState { nodes: self.nodes.clone(), heading_real: self.heading_real, heading_target }, delta);
         self.nodes = result.nodes;
         self.heading_real = result.heading_real;
 

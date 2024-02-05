@@ -1,15 +1,9 @@
+use super::*;
 use crate::*;
 use capybara::glam::Vec2;
 use std::f32::consts;
 
-#[derive(Debug, Default)]
-pub struct GameState {
-    pub nodes: Vec<Vec2>,
-    pub heading_real: f32,
-    pub heading_target: f32,
-}
-
-pub fn simulate(state: GameState, delta: f32) -> GameState {
+pub fn run(state: GameState, delta: f32) -> GameState {
     let mut heading_updated = None;
     let mut state_update = GameState::default();
 

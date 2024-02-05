@@ -25,7 +25,7 @@ pub struct ServerData {
 }
 
 impl LobbyNetworkContext {
-    pub fn process(&mut self) {
+    pub fn process(&mut self, now: Instant) {
         if matches!(*self.hub_websocket.status.read().unwrap(), ConnectionStatus::Disconnected | ConnectionStatus::Error) {
             self.hub_websocket.connect(HUB_ENDPOINT);
         }
@@ -73,7 +73,6 @@ impl LobbyNetworkContext {
         }
 
         if let Some(last_ping_timestamp) = self.last_ping_timestamp {
-            let now = Instant::now();
             if (now - last_ping_timestamp).as_millis() >= SERVER_PING_INTERVAL as u128 {
                 for server in &mut self.servers {
                     if *server.websocket.status.read().unwrap() == ConnectionStatus::Connected {
@@ -87,7 +86,7 @@ impl LobbyNetworkContext {
                 self.last_ping_timestamp = Some(now);
             }
         } else {
-            self.last_ping_timestamp = Some(Instant::now());
+            self.last_ping_timestamp = Some(now);
         }
     }
 }

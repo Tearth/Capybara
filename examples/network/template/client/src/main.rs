@@ -1,4 +1,4 @@
-#![allow(clippy::too_many_arguments, clippy::collapsible_if)]
+#![allow(clippy::too_many_arguments, clippy::collapsible_if, clippy::collapsible_else_if)]
 #![cfg_attr(all(target_os = "windows", not(debug_assertions)), windows_subsystem = "windows")]
 
 use capybara::anyhow::Result;

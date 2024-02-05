@@ -24,11 +24,9 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn logic(&mut self, state: &mut ApplicationState<GlobalData>, network: &mut GameNetworkContext, delta: f32) {
-        let now = Instant::now();
-
+    pub fn logic(&mut self, state: &mut ApplicationState<GlobalData>, network: &mut GameNetworkContext, delta: f32, now: Instant) {
         if !self.initialized {
-            if let Some(state) = &network.server_state {
+            if let Some(state) = network.server_states.front() {
                 if let Some(player) = state.players.get(&network.player_id) {
                     self.nodes = player.nodes.to_vec();
                     self.initialized = true;
@@ -54,17 +52,17 @@ impl Player {
         if send_new_heading {
             network.send_new_heading(heading_target, now);
             self.last_cursor_position = cursor_position;
-            self.last_heading_update = Some(Instant::now());
+            self.last_heading_update = Some(now);
         }
 
         let result = game::simulate(GameState { nodes: self.nodes.clone(), heading_real: self.heading_real, heading_target }, delta);
         self.nodes = result.nodes;
         self.heading_real = result.heading_real;
 
-        if !network.corrected_nodes.is_empty() {
+        if !network.player_nodes.is_empty() {
             for i in 0..5 {
                 let node_position = self.nodes[i];
-                let corrected_node_position = network.corrected_nodes[i];
+                let corrected_node_position = network.player_nodes[i];
                 let difference = corrected_node_position - node_position;
 
                 self.nodes[i] += difference / 200.0;
@@ -87,7 +85,7 @@ impl Player {
         }
 
         // Server-side nodes
-        if let Some(network_state) = &network.server_state {
+        if let Some(network_state) = network.server_states.front() {
             if let Some(player) = network_state.players.get(&network.player_id) {
                 for node in player.nodes {
                     let inner_color = Vec4::new_rgb(255, 180, 180, 255);
@@ -99,7 +97,7 @@ impl Player {
         }
 
         // Server-side nodes with applied input
-        for node in &network.corrected_nodes {
+        for node in &network.player_nodes {
             let inner_color = Vec4::new_rgb(0, 0, 0, 255);
             let outer_color = Vec4::new_rgb(0, 0, 0, 255);
 

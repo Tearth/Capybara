@@ -23,6 +23,7 @@ use capybara::egui::TopBottomPanel;
 use capybara::egui::Vec2;
 use capybara::egui::Window;
 use capybara::glam::Vec4;
+use capybara::instant::Instant;
 use capybara::kira::tween::Tween;
 use capybara::log::error;
 use capybara::scene::FrameCommand;
@@ -101,7 +102,8 @@ impl Scene<GlobalData> for MenuScene {
     }
 
     fn frame(&mut self, _state: ApplicationState<GlobalData>, _accumulator: f32, _delta: f32) -> Result<Option<FrameCommand>> {
-        self.network.process();
+        let now = Instant::now();
+        self.network.process(now);
 
         Ok(None)
     }

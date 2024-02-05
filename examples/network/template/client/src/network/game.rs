@@ -15,6 +15,7 @@ use std::time::Duration;
 pub const SERVER_PING_INTERVAL: i32 = 1000;
 pub const SERVER_TIME_REQUEST_TRIES: usize = 5;
 pub const INPUT_MAX_TIME: u32 = 1000;
+pub const SERVER_STATE_MAX_HISTORY_LENGTH: usize = 10;
 
 #[derive(Default)]
 pub struct GameNetworkContext {
@@ -31,11 +32,12 @@ pub struct GameNetworkContext {
     pub server_time_offset: u32,
     pub server_time_offset_chunks: Vec<u32>,
 
-    pub server_state: Option<ServerState>,
+    pub server_states: VecDeque<ServerState>,
     pub input_history: VecDeque<InputHistory>,
-    pub corrected_nodes: Vec<Vec2>,
+    pub player_nodes: Vec<Vec2>,
 }
 
+#[derive(Clone, Debug)]
 pub struct ServerState {
     pub timestamp: Instant,
     pub players: FxHashMap<u64, PacketTickData>,
@@ -47,17 +49,13 @@ pub struct InputHistory {
 }
 
 impl GameNetworkContext {
-    pub fn process(&mut self) {
-        let now = Instant::now();
-
+    pub fn process(&mut self, now: Instant) {
         if matches!(*self.server_websocket.status.read().unwrap(), ConnectionStatus::Disconnected | ConnectionStatus::Error) {
             info!("Server {} is disconnected, restarting connection", self.server_name);
             self.server_websocket.connect(&self.server_endpoint);
         }
 
         if *self.server_websocket.status.read().unwrap() == ConnectionStatus::Connected {
-            let mut server_state_received = false;
-
             if self.server_websocket.has_connected() {
                 info!("Connected to the server");
 
@@ -69,10 +67,19 @@ impl GameNetworkContext {
                 match packet.get_id() {
                     Some(PACKET_TICK) => match packet.to_array_with_header::<PacketTickHeader, PacketTickData>() {
                         Ok((header, data)) => {
-                            let players = data.iter().map(|p| (p.player_id, p.clone())).collect::<FxHashMap<_, _>>();
-                            self.server_state = Some(ServerState { timestamp: header.timestamp, players });
+                            if let Some(front) = self.server_states.front() {
+                                // Ignore input which is older than the last saved state to avoid stuttering
+                                if header.timestamp < front.timestamp {
+                                    continue;
+                                }
+                            }
 
-                            server_state_received = true;
+                            let players = data.iter().map(|p| (p.player_id, p.clone())).collect::<FxHashMap<_, _>>();
+                            self.server_states.push_front(ServerState { timestamp: header.timestamp, players });
+
+                            if self.server_states.len() > SERVER_STATE_MAX_HISTORY_LENGTH {
+                                self.server_states.pop_back();
+                            }
                         }
                         Err(err) => error_continue!("Failed to parse packet ({})", err),
                     },
@@ -118,9 +125,7 @@ impl GameNetworkContext {
                 }
             }
 
-            if server_state_received {
-                self.process_new_server_state(now);
-            }
+            self.update_player_nodes(now);
         }
 
         for i in (0..self.input_history.len()).rev() {
@@ -140,7 +145,7 @@ impl GameNetworkContext {
                 self.last_ping_timestamp = Some(now);
             }
         } else {
-            self.last_ping_timestamp = Some(Instant::now());
+            self.last_ping_timestamp = Some(now);
         }
     }
 
@@ -152,8 +157,8 @@ impl GameNetworkContext {
         self.input_history.push_front(InputHistory { timestamp: now, heading });
     }
 
-    pub fn process_new_server_state(&mut self, now: Instant) {
-        if let Some(server_state) = &self.server_state {
+    pub fn update_player_nodes(&mut self, now: Instant) {
+        if let Some(server_state) = self.server_states.front() {
             if let Some(player_state) = server_state.players.get(&self.player_id) {
                 let timespan = (now - server_state.timestamp).as_millis();
                 let ticks = timespan as u64 / self.tick as u64;
@@ -188,7 +193,7 @@ impl GameNetworkContext {
                 let heading_target = self.input_history.front().map(|p| p.heading).unwrap_or(0.0);
                 let result = game::simulate(GameState { nodes: nodes.clone(), heading_real, heading_target }, tick_remaining as f32 / 1000.0);
 
-                self.corrected_nodes = result.nodes;
+                self.player_nodes = result.nodes;
             }
         }
     }

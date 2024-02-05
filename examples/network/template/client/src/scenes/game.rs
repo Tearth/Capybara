@@ -1,4 +1,5 @@
 use super::GlobalData;
+use crate::entities::enemy::Enemies;
 use crate::entities::player::Player;
 use crate::network::game::GameNetworkContext;
 use crate::ui::components;
@@ -13,6 +14,7 @@ use capybara::egui::RawInput;
 use capybara::egui::Vec2;
 use capybara::egui::Window;
 use capybara::glam::Vec4;
+use capybara::instant::Instant;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
 use capybara::utils::color::Vec4Utils;
@@ -24,6 +26,7 @@ use capybara::window::Key;
 pub struct GameScene {
     network: GameNetworkContext,
     player: Player,
+    enemies: Enemies,
 
     play_button_state: WidgetState,
     exit_button_state: WidgetState,
@@ -74,10 +77,14 @@ impl Scene<GlobalData> for GameScene {
 
     fn frame(&mut self, mut state: ApplicationState<GlobalData>, _accumulator: f32, delta: f32) -> Result<Option<FrameCommand>> {
         self.debug_profiler.start("frame");
-        self.network.process();
+        let now = Instant::now();
 
-        self.player.logic(&mut state, &mut self.network, delta);
+        self.network.process(now);
+        self.player.logic(&mut state, &mut self.network, delta, now);
+        self.enemies.logic(&mut self.network, now);
+
         self.player.draw(&mut state, &mut self.network);
+        self.enemies.draw(&mut state);
 
         if self.debug_enabled {
             self.debug_collector.collect(&state, delta);

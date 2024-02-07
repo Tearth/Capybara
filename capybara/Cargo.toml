@@ -71,7 +71,10 @@ web-sys = { version = "0.3.66", features = [
     "Storage",
     "WebSocket",
     "MessageEvent",
-    "BinaryType"
+    "BinaryType",
+    "Touch",
+    "TouchEvent",
+    "TouchList"
 ]}
 js-sys = { version = "0.3.66" }
 wasm-bindgen = { version = "0.2.89" }

@@ -34,6 +34,9 @@ pub enum InputEvent {
     KeyPress { key: Key, repeat: bool, modifiers: Modifiers },
     KeyRelease { key: Key, modifiers: Modifiers },
     CharPress { character: char, repeat: bool, modifiers: Modifiers },
+    TouchStart { id: u64, position: Coordinates },
+    TouchMove { id: u64, position: Coordinates },
+    TouchEnd { id: u64, position: Coordinates },
     WindowClose,
     Unknown,
 }

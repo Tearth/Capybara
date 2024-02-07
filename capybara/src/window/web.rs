@@ -18,6 +18,7 @@ use web_sys::Document;
 use web_sys::HtmlCanvasElement;
 use web_sys::KeyboardEvent;
 use web_sys::MouseEvent;
+use web_sys::TouchEvent;
 use web_sys::WebGl2RenderingContext;
 use web_sys::WheelEvent;
 use web_sys::Window;
@@ -47,6 +48,10 @@ pub struct WindowContext {
     keydown_callback: Closure<dyn FnMut(KeyboardEvent)>,
     keyup_callback: Closure<dyn FnMut(KeyboardEvent)>,
     keypress_callback: Closure<dyn FnMut(KeyboardEvent)>,
+    touchstart_callback: Closure<dyn FnMut(TouchEvent)>,
+    touchmove_callback: Closure<dyn FnMut(TouchEvent)>,
+    touchend_callback: Closure<dyn FnMut(TouchEvent)>,
+    touchcancel_callback: Closure<dyn FnMut(TouchEvent)>,
 
     last_character: Option<char>,
     event_queue: VecDeque<InputEvent>,
@@ -121,6 +126,10 @@ impl WindowContext {
             keydown_callback: Closure::<dyn FnMut(_)>::new(|_| {}),
             keyup_callback: Closure::<dyn FnMut(_)>::new(|_| {}),
             keypress_callback: Closure::<dyn FnMut(_)>::new(|_| {}),
+            touchstart_callback: Closure::<dyn FnMut(_)>::new(|_| {}),
+            touchmove_callback: Closure::<dyn FnMut(_)>::new(|_| {}),
+            touchend_callback: Closure::<dyn FnMut(_)>::new(|_| {}),
+            touchcancel_callback: Closure::<dyn FnMut(_)>::new(|_| {}),
 
             last_character: None,
             event_queue: Default::default(),
@@ -156,6 +165,10 @@ impl WindowContext {
         self.init_keydown_callback(app.clone()).map_or_else(|_| error!("Failed to initialize keydown callback"), |_| ());
         self.init_keyup_callback(app.clone()).map_or_else(|_| error!("Failed to initialize keyup callback"), |_| ());
         self.init_keypress_callback(app.clone()).map_or_else(|_| error!("Failed to initialize keypress callback"), |_| ());
+        self.init_touchstart_callback(app.clone()).map_or_else(|_| error!("Failed to initialize touchstart callback"), |_| ());
+        self.init_touchmove_callback(app.clone()).map_or_else(|_| error!("Failed to initialize touchmove callback"), |_| ());
+        self.init_touchend_callback(app.clone()).map_or_else(|_| error!("Failed to initialize touchend callback"), |_| ());
+        self.init_touchcancel_callback(app.clone()).map_or_else(|_| error!("Failed to initialize touchcancel callback"), |_| ());
     }
 
     fn init_frame_callback<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>)
@@ -409,6 +422,106 @@ impl WindowContext {
         Ok(())
     }
 
+    fn init_touchstart_callback<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>) -> core::result::Result<(), JsValue>
+    where
+        G: Default + 'static,
+    {
+        self.touchstart_callback = Closure::<dyn FnMut(_)>::new(move |event: TouchEvent| {
+            let mut app = app.borrow_mut();
+
+            for i in 0..event.changed_touches().length() {
+                let touch = match event.changed_touches().item(i) {
+                    Some(touch) => touch,
+                    None => error_continue!("Failed to retrieve touch data"),
+                };
+                let id = touch.identifier() as u64;
+                let position = Coordinates::new(touch.page_x(), touch.page_y());
+
+                app.window.event_queue.push_back(InputEvent::TouchStart { id, position });
+            }
+        });
+
+        let touchstart_callback = self.touchstart_callback.as_ref().unchecked_ref();
+        self.canvas.add_event_listener_with_callback("touchstart", touchstart_callback)?;
+
+        Ok(())
+    }
+
+    fn init_touchmove_callback<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>) -> core::result::Result<(), JsValue>
+    where
+        G: Default + 'static,
+    {
+        self.touchmove_callback = Closure::<dyn FnMut(_)>::new(move |event: TouchEvent| {
+            let mut app = app.borrow_mut();
+
+            for i in 0..event.changed_touches().length() {
+                let touch = match event.changed_touches().item(i) {
+                    Some(touch) => touch,
+                    None => error_continue!("Failed to retrieve touch data"),
+                };
+                let id = touch.identifier() as u64;
+                let position = Coordinates::new(touch.page_x(), touch.page_y());
+
+                app.window.event_queue.push_back(InputEvent::TouchMove { id, position });
+            }
+        });
+
+        let touchmove_callback = self.touchmove_callback.as_ref().unchecked_ref();
+        self.canvas.add_event_listener_with_callback("touchmove", touchmove_callback)?;
+
+        Ok(())
+    }
+
+    fn init_touchend_callback<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>) -> core::result::Result<(), JsValue>
+    where
+        G: Default + 'static,
+    {
+        self.touchend_callback = Closure::<dyn FnMut(_)>::new(move |event: TouchEvent| {
+            let mut app = app.borrow_mut();
+
+            for i in 0..event.changed_touches().length() {
+                let touch = match event.changed_touches().item(i) {
+                    Some(touch) => touch,
+                    None => error_continue!("Failed to retrieve touch data"),
+                };
+                let id = touch.identifier() as u64;
+                let position = Coordinates::new(touch.page_x(), touch.page_y());
+
+                app.window.event_queue.push_back(InputEvent::TouchEnd { id, position });
+            }
+        });
+
+        let touchend_callback = self.touchend_callback.as_ref().unchecked_ref();
+        self.canvas.add_event_listener_with_callback("touchend", touchend_callback)?;
+
+        Ok(())
+    }
+
+    fn init_touchcancel_callback<G>(&mut self, app: Rc<RefCell<ApplicationContext<G>>>) -> core::result::Result<(), JsValue>
+    where
+        G: Default + 'static,
+    {
+        self.touchcancel_callback = Closure::<dyn FnMut(_)>::new(move |event: TouchEvent| {
+            let mut app = app.borrow_mut();
+
+            for i in 0..event.changed_touches().length() {
+                let touch = match event.changed_touches().item(i) {
+                    Some(touch) => touch,
+                    None => error_continue!("Failed to retrieve touch data"),
+                };
+                let id = touch.identifier() as u64;
+                let position = Coordinates::new(touch.page_x(), touch.page_y());
+
+                app.window.event_queue.push_back(InputEvent::TouchEnd { id, position });
+            }
+        });
+
+        let touchcancel_callback = self.touchcancel_callback.as_ref().unchecked_ref();
+        self.canvas.add_event_listener_with_callback("touchcancel", touchcancel_callback)?;
+
+        Ok(())
+    }
+
     pub fn poll_event(&mut self) -> Option<InputEvent> {
         self.event_queue.pop_front()
     }
@@ -493,6 +606,22 @@ impl Drop for WindowContext {
         self.window
             .remove_event_listener_with_callback("keypress", self.keypress_callback.as_ref().unchecked_ref())
             .map_or_else(|_| error!("Failed to remove keypress callback"), |_| ());
+
+        self.window
+            .remove_event_listener_with_callback("touchstart", self.touchstart_callback.as_ref().unchecked_ref())
+            .map_or_else(|_| error!("Failed to remove touchstart callback"), |_| ());
+
+        self.window
+            .remove_event_listener_with_callback("touchmove", self.touchmove_callback.as_ref().unchecked_ref())
+            .map_or_else(|_| error!("Failed to remove touchmove callback"), |_| ());
+
+        self.window
+            .remove_event_listener_with_callback("touchend", self.touchend_callback.as_ref().unchecked_ref())
+            .map_or_else(|_| error!("Failed to remove touchend callback"), |_| ());
+
+        self.window
+            .remove_event_listener_with_callback("touchcancel", self.touchcancel_callback.as_ref().unchecked_ref())
+            .map_or_else(|_| error!("Failed to remove touchcancel callback"), |_| ());
     }
 }
 

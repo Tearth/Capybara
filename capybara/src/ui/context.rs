@@ -32,6 +32,9 @@ use egui::Rect;
 use egui::TextureHandle;
 use egui::TextureId;
 use egui::TextureOptions;
+use egui::TouchDeviceId;
+use egui::TouchId;
+use egui::TouchPhase;
 use glam::Vec2;
 use glow::HasContext;
 use instant::Instant;
@@ -191,6 +194,33 @@ impl UiContext {
                 if !character.is_ascii_control() {
                     self.collected_events.push(Event::Text(character.to_string()));
                 }
+            }
+            InputEvent::TouchStart { id, position } => {
+                self.collected_events.push(Event::Touch {
+                    device_id: TouchDeviceId(0),
+                    id: TouchId(*id),
+                    phase: TouchPhase::Start,
+                    pos: Pos2::new(position.x as f32, position.y as f32),
+                    force: None,
+                });
+            }
+            InputEvent::TouchMove { id, position } => {
+                self.collected_events.push(Event::Touch {
+                    device_id: TouchDeviceId(0),
+                    id: TouchId(*id),
+                    phase: TouchPhase::Move,
+                    pos: Pos2::new(position.x as f32, position.y as f32),
+                    force: None,
+                });
+            }
+            InputEvent::TouchEnd { id, position } => {
+                self.collected_events.push(Event::Touch {
+                    device_id: TouchDeviceId(0),
+                    id: TouchId(*id),
+                    phase: TouchPhase::End,
+                    pos: Pos2::new(position.x as f32, position.y as f32),
+                    force: None,
+                });
             }
             _ => {}
         }

@@ -17,7 +17,7 @@ use capybara::kira::track::TrackBuilder;
 use capybara::kira::tween::Tween;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
-use capybara::utils::color::Vec4Color;
+use capybara::utils::color::Vec4Utils;
 use capybara::window::InputEvent;
 
 #[derive(Default)]

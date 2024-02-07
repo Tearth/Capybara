@@ -20,6 +20,7 @@ use capybara::egui::TextStyle;
 use capybara::fast_gpu;
 use capybara::glam::Vec2;
 use capybara::instant::Instant;
+use capybara::network::client::ConnectionStatus;
 use capybara::network::client::WebSocketClient;
 use capybara::network::packet::Packet;
 use capybara::renderer::sprite::Sprite;
@@ -70,7 +71,7 @@ impl Scene<GlobalData> for MainScene {
 
     fn input(&mut self, state: ApplicationState<GlobalData>, event: InputEvent) -> Result<()> {
         if let InputEvent::WindowSizeChange { size } = event {
-            if *self.client.connected.read().unwrap() {
+            if *self.client.status.read().unwrap() == ConnectionStatus::Connected {
                 self.client.send_packet(Packet::from_object(PACKET_SET_VIEWPORT, &PacketSetViewport { size: size.into() }));
             }
         } else if let InputEvent::KeyPress { key: Key::Escape, repeat: _, modifiers: _ } = event {
@@ -102,7 +103,7 @@ impl Scene<GlobalData> for MainScene {
 
         let now = Instant::now();
 
-        if *self.client.connected.read().unwrap() {
+        if *self.client.status.read().unwrap() == ConnectionStatus::Connected {
             if self.client.has_connected() {
                 let size = state.renderer.viewport_size;
                 self.client.send_packet(Packet::from_object(PACKET_SET_VIEWPORT, &PacketSetViewport { size }));
@@ -192,7 +193,7 @@ impl Scene<GlobalData> for MainScene {
                     ui.add_space(10.0);
                     ui.label(RichText::new("Objects count:").font(font.clone()).heading().color(color));
                     if ui.add(Slider::new(&mut self.objects_count, 0..=10000).text_color(color).logarithmic(true)).changed() {
-                        if *self.client.connected.read().unwrap() {
+                        if *self.client.status.read().unwrap() == ConnectionStatus::Connected {
                             self.client.send_packet(Packet::from_object(PACKET_SET_COUNT, &PacketSetCount { count: self.objects_count }));
                         }
                     }

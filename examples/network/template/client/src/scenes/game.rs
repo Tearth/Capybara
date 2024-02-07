@@ -8,9 +8,17 @@ use crate::utils::console::Console;
 use crate::utils::debug::DebugCollector;
 use capybara::anyhow::Result;
 use capybara::app::ApplicationState;
+use capybara::egui::panel::TopBottomSide;
+use capybara::egui::Align;
 use capybara::egui::Align2;
+use capybara::egui::Color32;
+use capybara::egui::Frame;
 use capybara::egui::FullOutput;
+use capybara::egui::Id;
+use capybara::egui::Layout;
 use capybara::egui::RawInput;
+use capybara::egui::RichText;
+use capybara::egui::TopBottomPanel;
 use capybara::egui::Vec2;
 use capybara::egui::Window;
 use capybara::glam::Vec4;
@@ -131,6 +139,20 @@ impl Scene<GlobalData> for GameScene {
             if self.debug_enabled {
                 components::debug_window(context, &mut self.debug_console, &self.debug_profiler, &mut self.debug_collector);
             }
+
+            TopBottomPanel::new(TopBottomSide::Bottom, Id::new("bottom_panel"))
+                .exact_height(30.0)
+                .frame(Frame::none())
+                .show_separator_line(false)
+                .resizable(false)
+                .show(context, |ui| {
+                    ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
+                        let text = format!("{}, ping {} ms", self.network.server_name, self.network.server_websocket.ping.read().unwrap());
+
+                        ui.add_space(5.0);
+                        ui.label(RichText::new(text).heading().color(Color32::from_rgb(255, 255, 255)));
+                    });
+                });
         });
 
         self.debug_profiler.stop("ui");

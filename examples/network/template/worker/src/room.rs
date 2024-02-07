@@ -6,7 +6,7 @@ use capybara::instant::Instant;
 use capybara::network::packet::Packet;
 use capybara::rustc_hash::FxHashMap;
 use log::info;
-use network_template_base::game::GameState;
+use network_template_base::game::{simulation, GameState};
 use network_template_base::packets::*;
 use network_template_base::*;
 use std::collections::VecDeque;
@@ -198,7 +198,7 @@ impl Room {
                         let new_heading_time = (current_state_timestamp - previous_input_timestamp).as_millis();
 
                         // Simulate part of the state before input was applied
-                        let result = game::simulate(
+                        let result = simulation::run(
                             GameState {
                                 nodes: previous_state_player.nodes,
                                 heading_real: previous_state_player.heading_real,
@@ -208,7 +208,7 @@ impl Room {
                         );
 
                         // Simulate part of the input after input being applied
-                        let result = game::simulate(
+                        let result = simulation::run(
                             GameState {
                                 nodes: result.nodes,
                                 heading_real: result.heading_real,
@@ -220,7 +220,7 @@ impl Room {
                         current_state_player.heading_real = result.heading_real;
                         current_state_player.nodes = result.nodes;
                     } else {
-                        let result = game::simulate(
+                        let result = simulation::run(
                             GameState {
                                 nodes: previous_state_player.nodes,
                                 heading_real: previous_state_player.heading_real,

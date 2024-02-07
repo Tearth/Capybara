@@ -18,7 +18,7 @@ members = [
     "examples/network/template/base",
     "examples/network/template/client",
     "examples/network/template/hub",
-    "examples/network/template/server",
+    "examples/network/template/worker",
 ]
 
 [profile.release]

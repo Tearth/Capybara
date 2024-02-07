@@ -1,0 +1,21 @@
+{
+    "name": "Template App",
+    "short_name": "Template App",
+    "start_url": "./",
+    "scope": "./",
+    "icons": [
+        {
+            "src": "./icons/icon_128.png",
+            "sizes": "128x128",
+            "type": "image/png"
+        },
+        {
+            "src": "./icons/icon_512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "theme_color": "#ffee00",
+    "background_color": "#ffee00",
+    "display": "standalone"
+}

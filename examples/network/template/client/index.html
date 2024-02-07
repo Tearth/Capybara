@@ -1,6 +1,11 @@
 <html>
   <head>
     <link data-trunk rel="copy-dir" href="./data/"/>
+    <link data-trunk rel="copy-dir" href="./icons/"/>
+    <link data-trunk rel="copy-file" href="./manifest.json"/>
+    <link data-trunk rel="copy-file" href="./sw.js"/>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="viewport" content="width=device-width, user-scalable=no" />
     <style>
         *:focus {
             outline: none;
@@ -55,6 +60,8 @@
             userInputEventNames.forEach((eventName) => {
                 document.addEventListener(eventName, resumeAllContexts);
             });
+
+            navigator.serviceWorker && navigator.serviceWorker.register('./sw.js');
         })();
 
         function get_private_memory_usage() {

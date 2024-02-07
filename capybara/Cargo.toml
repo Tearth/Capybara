@@ -33,7 +33,7 @@ pathfinding = { version = "4.8.0", optional = true }
 [build-dependencies]
 cfg_aliases = { version = "0.2.0" }
 
-[target.'cfg(all(target_os = "windows", target_arch = "x86_64"))'.dependencies]
+[target.'cfg(target_os = "windows")'.dependencies]
 winapi = { version = "0.3.9", features = [ "winuser", "libloaderapi", "errhandlingapi", "processthreadsapi", "psapi" ]}
 simple_logger = { version = "4.3.3" }
 instant = { version = "0.1.12" }
@@ -43,7 +43,7 @@ url = { version = "2.5.0", optional = true }
 futures-util = { version = "0.3", optional = true }
 futures-channel = { version = "0.3", optional = true }
 
-[target.'cfg(all(target_os = "linux", target_arch = "x86_64"))'.dependencies]
+[target.'cfg(target_os = "linux")'.dependencies]
 x11 = { version = "2.21.0", features = [ "xlib", "xfixes", "glx" ]}
 simple_logger = { version = "4.3.3" }
 instant = { version = "0.1.12" }
@@ -53,7 +53,7 @@ url = { version = "2.5.0", optional = true }
 futures-util = { version = "0.3", optional = true }
 futures-channel = { version = "0.3", optional = true }
 
-[target.'cfg(all(target_os = "unknown", target_arch = "wasm32"))'.dependencies]
+[target.'cfg(target_arch = "wasm32")'.dependencies]
 web-sys = { version = "0.3.66", features = [
     "Window", 
     "Document", 

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":["F32MathUtils","Vec2MathUtils"]};
+window.SIDEBAR_ITEMS = {"trait":["F32Utils","Vec2Utils"]};

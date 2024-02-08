@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples\template\src\ui\components\debug.rs`."><title>debug.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../..\../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../..\../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../..\../" data-static-root-path="../../..\../static.files/" data-current-crate="template" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../..\../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../..\../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../..\../src-files.js"></script><script defer src="../../..\../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../..\../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../..\../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../..\../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../..\../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../..\../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../..\../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../..\../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples\template\src\ui\components\debug.rs`."><title>debug.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../..\../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../..\../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../..\../" data-static-root-path="../../..\../static.files/" data-current-crate="template" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../..\../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../..\../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../..\../src-files.js"></script><script defer src="../../..\../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../..\../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../..\../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../..\../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../..\../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../..\../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../..\../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../..\../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -267,9 +268,9 @@
 <span class="kw">use </span>capybara::egui_plot::PlotPoints;
 <span class="kw">use </span>capybara::utils::profiler::Profiler;
 
-<span class="kw">pub struct </span>ProfilerPlotDefinition&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
-    <span class="kw">pub </span>label: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
+<span class="kw">pub struct </span>ProfilerPlotDefinition&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>name: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
+    <span class="kw">pub </span>label: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str,
     <span class="kw">pub </span>color: Color32,
 }
 
@@ -277,7 +278,7 @@
     <span class="kw">let </span>data = collector.get_data();
     <span class="kw">let </span><span class="kw-2">mut </span>plot_data = Vec::new();
 
-    Window::new(<span class="string">&quot;Debug&quot;</span>)
+    Window::new(<span class="string">"Debug"</span>)
         .frame(debug_frame())
         .resizable(<span class="bool-val">false</span>)
         .collapsible(<span class="bool-val">false</span>)
@@ -285,30 +286,30 @@
         .default_width(<span class="number">700.0</span>)
         .show(context, |ui| {
             ui.style_mut().visuals.widgets.noninteractive.fg_stroke = Stroke::new(<span class="number">1.0</span>, Color32::from_rgb(<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>));
-            ui.style_mut().override_text_style = <span class="prelude-val">Some</span>(TextStyle::Name(<span class="string">&quot;Debug&quot;</span>.into()));
+            ui.style_mut().override_text_style = <span class="prelude-val">Some</span>(TextStyle::Name(<span class="string">"Debug"</span>.into()));
 
-            ui.label(<span class="macro">format!</span>(<span class="string">&quot;{}, {}x{}&quot;</span>, data.hardware_info, data.resolution.x, data.resolution.y));
+            ui.label(<span class="macro">format!</span>(<span class="string">"{}, {}x{}"</span>, data.hardware_info, data.resolution.x, data.resolution.y));
             ui.add_space(<span class="number">15.0</span>);
             ui.columns(<span class="number">4</span>, |ui| {
                 ui[<span class="number">0</span>].vertical(|ui| {
                     ui.horizontal(|ui| {
-                        ui.label(<span class="macro">format!</span>(<span class="string">&quot;FPS average: {}&quot;</span>, data.fps_average));
+                        ui.label(<span class="macro">format!</span>(<span class="string">"FPS average: {}"</span>, data.fps_average));
                     });
                     ui.horizontal(|ui| {
                         ui.style_mut().spacing.item_spacing = capybara::egui::Vec2::new(<span class="number">4.0</span>, <span class="number">0.0</span>);
-                        ui.label(<span class="string">&quot;Delta current:&quot;</span>);
-                        ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">&quot;{:.1} ms&quot;</span>, data.delta_current * <span class="number">1000.0</span>)).color(Color32::GREEN));
+                        ui.label(<span class="string">"Delta current:"</span>);
+                        ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">"{:.1} ms"</span>, data.delta_current * <span class="number">1000.0</span>)).color(Color32::GREEN));
                     });
                     ui.horizontal(|ui| {
-                        ui.label(<span class="macro">format!</span>(<span class="string">&quot;Delta average: {:.1} ms&quot;</span>, data.delta_average * <span class="number">1000.0</span>));
+                        ui.label(<span class="macro">format!</span>(<span class="string">"Delta average: {:.1} ms"</span>, data.delta_average * <span class="number">1000.0</span>));
                     });
                     ui.horizontal(|ui| {
-                        ui.label(<span class="macro">format!</span>(<span class="string">&quot;Delta deviation: {:.1} ms&quot;</span>, data.delta_deviation * <span class="number">1000.0</span>));
+                        ui.label(<span class="macro">format!</span>(<span class="string">"Delta deviation: {:.1} ms"</span>, data.delta_deviation * <span class="number">1000.0</span>));
                     });
                 });
 
                 ui[<span class="number">1</span>].horizontal(|ui| {
-                    <span class="kw">let </span>plot = Plot::new(<span class="string">&quot;DeltaPlot&quot;</span>)
+                    <span class="kw">let </span>plot = Plot::new(<span class="string">"DeltaPlot"</span>)
                         .height(<span class="number">100.0</span>)
                         .auto_bounds_x()
                         .auto_bounds_y()
@@ -323,7 +324,7 @@
                         .show_x(<span class="bool-val">false</span>)
                         .show_y(<span class="bool-val">false</span>)
                         .y_axis_width(<span class="number">1</span>)
-                        .x_axis_formatter(|<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="string">&quot;&quot;</span>.to_string())
+                        .x_axis_formatter(|<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="string">""</span>.to_string())
                         .show_grid(Vec2b::new(<span class="bool-val">false</span>, <span class="bool-val">true</span>));
                     <span class="kw">let </span>plot_data = (<span class="number">0</span>..collector.delta_history_capacity)
                         .map(|i| PlotPoint::new(i <span class="kw">as </span>f32, <span class="kw-2">*</span>collector.delta_history.get(i).unwrap_or(<span class="kw-2">&amp;</span><span class="number">0.0</span>) * <span class="number">1000.0</span>))
@@ -338,10 +339,10 @@
                     ui.add_space(<span class="number">15.0</span>);
                     ui.vertical(|ui| {
                         <span class="kw">let </span>plot_definitions = <span class="macro">vec!</span>[
-                            ProfilerPlotDefinition { name: <span class="string">&quot;input&quot;</span>, label: <span class="string">&quot;Input average&quot;</span>, color: Color32::RED },
-                            ProfilerPlotDefinition { name: <span class="string">&quot;fixed&quot;</span>, label: <span class="string">&quot;Fixed average&quot;</span>, color: Color32::GREEN },
-                            ProfilerPlotDefinition { name: <span class="string">&quot;frame&quot;</span>, label: <span class="string">&quot;Frame average&quot;</span>, color: Color32::LIGHT_BLUE },
-                            ProfilerPlotDefinition { name: <span class="string">&quot;ui&quot;</span>, label: <span class="string">&quot;UI average&quot;</span>, color: Color32::YELLOW },
+                            ProfilerPlotDefinition { name: <span class="string">"input"</span>, label: <span class="string">"Input average"</span>, color: Color32::RED },
+                            ProfilerPlotDefinition { name: <span class="string">"fixed"</span>, label: <span class="string">"Fixed average"</span>, color: Color32::GREEN },
+                            ProfilerPlotDefinition { name: <span class="string">"frame"</span>, label: <span class="string">"Frame average"</span>, color: Color32::LIGHT_BLUE },
+                            ProfilerPlotDefinition { name: <span class="string">"ui"</span>, label: <span class="string">"UI average"</span>, color: Color32::YELLOW },
                         ];
 
                         <span class="kw">for </span>definition <span class="kw">in </span>plot_definitions {
@@ -349,8 +350,8 @@
                                 <span class="kw">let </span>average = data.history.iter().sum::&lt;f32&gt;() / data.history.len() <span class="kw">as </span>f32;
                                 ui.horizontal(|ui| {
                                     ui.style_mut().spacing.item_spacing = capybara::egui::Vec2::new(<span class="number">4.0</span>, <span class="number">0.0</span>);
-                                    ui.label(<span class="macro">format!</span>(<span class="string">&quot;{}:&quot;</span>, definition.label));
-                                    ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">&quot;{:.1} ms&quot;</span>, average * <span class="number">1000.0</span>)).color(definition.color));
+                                    ui.label(<span class="macro">format!</span>(<span class="string">"{}:"</span>, definition.label));
+                                    ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">"{:.1} ms"</span>, average * <span class="number">1000.0</span>)).color(definition.color));
                                 });
 
                                 plot_data.push((
@@ -365,7 +366,7 @@
                 });
 
                 ui[<span class="number">3</span>].vertical(|ui| {
-                    <span class="kw">let </span>plot = Plot::new(<span class="string">&quot;ProfilerPlot&quot;</span>)
+                    <span class="kw">let </span>plot = Plot::new(<span class="string">"ProfilerPlot"</span>)
                         .height(<span class="number">100.0</span>)
                         .auto_bounds_x()
                         .auto_bounds_y()
@@ -380,7 +381,7 @@
                         .show_x(<span class="bool-val">false</span>)
                         .show_y(<span class="bool-val">false</span>)
                         .y_axis_width(<span class="number">1</span>)
-                        .x_axis_formatter(|<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="string">&quot;&quot;</span>.to_string())
+                        .x_axis_formatter(|<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="string">""</span>.to_string())
                         .show_grid(Vec2b::new(<span class="bool-val">false</span>, <span class="bool-val">true</span>));
 
                     plot.show(ui, |plot_ui| {
@@ -395,17 +396,17 @@
             </span>ui.horizontal(|ui| {
                 ui.vertical(|ui| {
                     ui.horizontal(|ui| {
-                        ui.label(<span class="macro">format!</span>(<span class="string">&quot;Draw calls: {} ({} tris)&quot;</span>, data.renderer.draw_calls, data.renderer.triangles));
+                        ui.label(<span class="macro">format!</span>(<span class="string">"Draw calls: {} ({} tris)"</span>, data.renderer.draw_calls, data.renderer.triangles));
                     });
                     ui.horizontal(|ui| {
-                        ui.label(<span class="macro">format!</span>(<span class="string">&quot;Sprite buffer size: {:.1} MB&quot;</span>, data.renderer.sprite_buffer_size <span class="kw">as </span>f32 / <span class="number">1024.0 </span>/ <span class="number">1024.0</span>));
+                        ui.label(<span class="macro">format!</span>(<span class="string">"Sprite buffer size: {:.1} MB"</span>, data.renderer.sprite_buffer_size <span class="kw">as </span>f32 / <span class="number">1024.0 </span>/ <span class="number">1024.0</span>));
                     });
                     ui.horizontal(|ui| {
-                        ui.label(<span class="macro">format!</span>(<span class="string">&quot;Shape buffer size: {:.1} MB&quot;</span>, data.renderer.shape_buffer_size <span class="kw">as </span>f32 / <span class="number">1024.0 </span>/ <span class="number">1024.0</span>));
+                        ui.label(<span class="macro">format!</span>(<span class="string">"Shape buffer size: {:.1} MB"</span>, data.renderer.shape_buffer_size <span class="kw">as </span>f32 / <span class="number">1024.0 </span>/ <span class="number">1024.0</span>));
                     });
                     ui.horizontal(|ui| {
                         ui.label(<span class="macro">format!</span>(
-                            <span class="string">&quot;Loaded textures: {} ({:.1} MB)&quot;</span>,
+                            <span class="string">"Loaded textures: {} ({:.1} MB)"</span>,
                             data.renderer.loaded_textures_count,
                             data.renderer.loaded_textures_size <span class="kw">as </span>f32 / <span class="number">1024.0 </span>/ <span class="number">1024.0
                         </span>));
@@ -415,27 +416,27 @@
                 ui.vertical(|ui| {
                     ui.horizontal(|ui| {
                         ui.style_mut().spacing.item_spacing = capybara::egui::Vec2::new(<span class="number">4.0</span>, <span class="number">0.0</span>);
-                        ui.label(<span class="string">&quot;Private memory:&quot;</span>);
-                        ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">&quot;{:.1} MB&quot;</span>, data.private_memory_current <span class="kw">as </span>f32 / <span class="number">1024.0 </span>/ <span class="number">1024.0</span>)).color(Color32::GREEN));
+                        ui.label(<span class="string">"Private memory:"</span>);
+                        ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">"{:.1} MB"</span>, data.private_memory_current <span class="kw">as </span>f32 / <span class="number">1024.0 </span>/ <span class="number">1024.0</span>)).color(Color32::GREEN));
                     });
                     ui.horizontal(|ui| {
                         ui.style_mut().spacing.item_spacing = capybara::egui::Vec2::new(<span class="number">4.0</span>, <span class="number">0.0</span>);
-                        ui.label(<span class="macro">format!</span>(<span class="string">&quot;Private memory (peak): {:.1} MB&quot;</span>, data.private_memory_peak <span class="kw">as </span>f32 / <span class="number">1024.0 </span>/ <span class="number">1024.0</span>));
+                        ui.label(<span class="macro">format!</span>(<span class="string">"Private memory (peak): {:.1} MB"</span>, data.private_memory_peak <span class="kw">as </span>f32 / <span class="number">1024.0 </span>/ <span class="number">1024.0</span>));
                     });
                     ui.horizontal(|ui| {
                         ui.style_mut().spacing.item_spacing = capybara::egui::Vec2::new(<span class="number">4.0</span>, <span class="number">0.0</span>);
-                        ui.label(<span class="string">&quot;Reserved memory:&quot;</span>);
+                        ui.label(<span class="string">"Reserved memory:"</span>);
                         ui.label(
-                            RichText::new(<span class="macro">format!</span>(<span class="string">&quot;{:.1} MB&quot;</span>, data.reserved_memory_current <span class="kw">as </span>f32 / <span class="number">1024.0 </span>/ <span class="number">1024.0</span>)).color(Color32::LIGHT_BLUE),
+                            RichText::new(<span class="macro">format!</span>(<span class="string">"{:.1} MB"</span>, data.reserved_memory_current <span class="kw">as </span>f32 / <span class="number">1024.0 </span>/ <span class="number">1024.0</span>)).color(Color32::LIGHT_BLUE),
                         );
                     });
                     ui.horizontal(|ui| {
                         ui.style_mut().spacing.item_spacing = capybara::egui::Vec2::new(<span class="number">4.0</span>, <span class="number">0.0</span>);
-                        ui.label(<span class="macro">format!</span>(<span class="string">&quot;Reserved memory (peak): {:.1} MB&quot;</span>, data.reserved_memory_peak <span class="kw">as </span>f32 / <span class="number">1024.0 </span>/ <span class="number">1024.0</span>));
+                        ui.label(<span class="macro">format!</span>(<span class="string">"Reserved memory (peak): {:.1} MB"</span>, data.reserved_memory_peak <span class="kw">as </span>f32 / <span class="number">1024.0 </span>/ <span class="number">1024.0</span>));
                     });
                 });
 
-                <span class="kw">let </span>plot = Plot::new(<span class="string">&quot;MemoryPlot&quot;</span>)
+                <span class="kw">let </span>plot = Plot::new(<span class="string">"MemoryPlot"</span>)
                     .height(<span class="number">100.0</span>)
                     .auto_bounds_x()
                     .auto_bounds_y()
@@ -450,7 +451,7 @@
                     .show_x(<span class="bool-val">false</span>)
                     .show_y(<span class="bool-val">false</span>)
                     .y_axis_width(<span class="number">3</span>)
-                    .x_axis_formatter(|<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="string">&quot;&quot;</span>.to_string())
+                    .x_axis_formatter(|<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>| <span class="string">""</span>.to_string())
                     .show_grid(Vec2b::new(<span class="bool-val">false</span>, <span class="bool-val">true</span>));
                 <span class="kw">let </span>plot_data_private_memory = (<span class="number">0</span>..collector.memory_history_capacity)
                     .map(|i| PlotPoint::new(i <span class="kw">as </span>f32, <span class="kw-2">*</span>collector.private_memory_history.get(i).unwrap_or(<span class="kw-2">&amp;</span><span class="number">0</span>) <span class="kw">as </span>f32 / <span class="number">1024.0 </span>/ <span class="number">1024.0</span>))
@@ -475,7 +476,7 @@
                 });
 
                 <span class="kw">if </span>ui.add(TextEdit::multiline(<span class="kw-2">&amp;mut </span>console.input_content).desired_rows(<span class="number">1</span>)).changed() {
-                    <span class="kw">if </span>console.input_content.chars().last().unwrap_or(<span class="string">&#39;\0&#39;</span>) == <span class="string">&#39;\n&#39; </span>{
+                    <span class="kw">if </span>console.input_content.chars().last().unwrap_or(<span class="string">'\0'</span>) == <span class="string">'\n' </span>{
                         console.apply_input();
                     }
                 }

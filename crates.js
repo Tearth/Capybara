@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["benchmark","capybara","ldtk","light","network_base","network_client","network_server","particles","physics","template","ui"];
+window.ALL_CRATES = ["benchmark","capybara","ldtk","light","network_benchmark_base","network_benchmark_client","network_benchmark_server","network_template_base","network_template_client","network_template_hub","network_template_worker","particles","physics","template","ui"];

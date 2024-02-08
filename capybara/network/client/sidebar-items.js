@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["native"],"type":["WebSocketClient"]};
+window.SIDEBAR_ITEMS = {"enum":["ConnectionStatus"],"mod":["native"],"type":["WebSocketClient"]};

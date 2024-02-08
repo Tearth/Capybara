@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `capybara\src\app.rs`."><title>app.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="capybara" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `capybara\src\app.rs`."><title>app.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="capybara" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -264,15 +265,15 @@
 <span class="kw">use </span>std::cell::RefCell;
 <span class="kw">use </span>std::rc::Rc;
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;audio&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"audio"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::audio::context::AudioContext;
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;physics&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"physics"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::physics::context::PhysicsContext;
 
 <span class="kw">pub struct </span>ApplicationContext&lt;G&gt;
 <span class="kw">where
-    </span>G: Default + <span class="lifetime">&#39;static</span>,
+    </span>G: Default + <span class="lifetime">'static</span>,
 {
     <span class="kw">pub </span>window: Box&lt;WindowContext&gt;,
     <span class="kw">pub </span>renderer: RendererContext,
@@ -280,10 +281,10 @@
     <span class="kw">pub </span>scenes: Storage&lt;Box&lt;<span class="kw">dyn </span>Scene&lt;G&gt;&gt;&gt;,
     <span class="kw">pub </span>global: G,
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;audio&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"audio"</span>)]
     </span><span class="kw">pub </span>audio: AudioContext,
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;physics&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">"physics"</span>)]
     </span><span class="kw">pub </span>physics: PhysicsContext,
 
     current_scene: String,
@@ -294,17 +295,17 @@
     accumulator: f32,
 }
 
-<span class="kw">pub struct </span>ApplicationState&lt;<span class="lifetime">&#39;a</span>, G&gt; {
-    <span class="kw">pub </span>window: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Box&lt;WindowContext&gt;,
-    <span class="kw">pub </span>renderer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>RendererContext,
-    <span class="kw">pub </span>ui: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>UiContext,
-    <span class="kw">pub </span>global: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>G,
+<span class="kw">pub struct </span>ApplicationState&lt;<span class="lifetime">'a</span>, G&gt; {
+    <span class="kw">pub </span>window: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>Box&lt;WindowContext&gt;,
+    <span class="kw">pub </span>renderer: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>RendererContext,
+    <span class="kw">pub </span>ui: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>UiContext,
+    <span class="kw">pub </span>global: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>G,
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;audio&quot;</span>)]
-    </span><span class="kw">pub </span>audio: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>AudioContext,
+    <span class="attr">#[cfg(feature = <span class="string">"audio"</span>)]
+    </span><span class="kw">pub </span>audio: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>AudioContext,
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;physics&quot;</span>)]
-    </span><span class="kw">pub </span>physics: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>PhysicsContext,
+    <span class="attr">#[cfg(feature = <span class="string">"physics"</span>)]
+    </span><span class="kw">pub </span>physics: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>PhysicsContext,
 }
 
 <span class="macro">macro_rules! </span>state {
@@ -315,10 +316,10 @@
             ui: <span class="kw-2">&amp;mut </span><span class="macro-nonterminal">$self</span>.ui,
             global: <span class="kw-2">&amp;mut </span><span class="macro-nonterminal">$self</span>.global,
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;audio&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"audio"</span>)]
             </span>audio: <span class="kw-2">&amp;mut </span><span class="macro-nonterminal">$self</span>.audio,
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;physics&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"physics"</span>)]
             </span>physics: <span class="kw-2">&amp;mut </span><span class="macro-nonterminal">$self</span>.physics,
         }
     };
@@ -326,17 +327,17 @@
 
 <span class="kw">impl</span>&lt;G&gt; ApplicationContext&lt;G&gt;
 <span class="kw">where
-    </span>G: Default + <span class="lifetime">&#39;static</span>,
+    </span>G: Default + <span class="lifetime">'static</span>,
 {
     <span class="kw">pub fn </span>new(title: <span class="kw-2">&amp;</span>str, style: WindowStyle, msaa: <span class="prelude-ty">Option</span>&lt;u32&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
         <span class="kw">let </span>window = WindowContext::new(title, style, msaa)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>renderer = RendererContext::new(window.load_gl_pointers(), msaa)<span class="question-mark">?</span>;
         <span class="kw">let </span>ui = UiContext::new(<span class="kw-2">&amp;mut </span>renderer);
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;audio&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"audio"</span>)]
         </span><span class="kw">let </span>audio = AudioContext::new()<span class="question-mark">?</span>;
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;physics&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">"physics"</span>)]
         </span><span class="kw">let </span>physics = PhysicsContext::new();
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
@@ -346,10 +347,10 @@
             scenes: Default::default(),
             global: Default::default(),
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;audio&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"audio"</span>)]
             </span>audio,
 
-            <span class="attr">#[cfg(feature = <span class="string">&quot;physics&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">"physics"</span>)]
             </span>physics,
 
             current_scene: Default::default(),
@@ -363,7 +364,7 @@
 
     <span class="kw">pub fn </span>with_scene(<span class="kw-2">mut </span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, scene: Box&lt;<span class="kw">dyn </span>Scene&lt;G&gt;&gt;) -&gt; <span class="self">Self </span>{
         <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.scenes.store_with_name(name, scene) {
-            <span class="macro">error!</span>(<span class="string">&quot;Failed to register scene {} ({})&quot;</span>, name, err);
+            <span class="macro">error!</span>(<span class="string">"Failed to register scene {} ({})"</span>, name, err);
         }
 
         <span class="self">self
@@ -378,7 +379,7 @@
             app_borrow.window.init_closures(app.clone());
         }
 
-        <span class="macro">info!</span>(<span class="string">&quot;Engine initialization completed, going to main loop&quot;</span>);
+        <span class="macro">info!</span>(<span class="string">"Engine initialization completed, going to main loop"</span>);
 
         app_borrow.next_scene = <span class="prelude-val">Some</span>(scene.to_string());
         app_borrow.window.set_swap_interval(<span class="number">1</span>);
@@ -390,28 +391,28 @@
             <span class="self">self</span>.renderer.begin_frame();
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(next_scene) = <span class="kw-2">&amp;</span><span class="self">self</span>.next_scene {
-                <span class="macro">info!</span>(<span class="string">&quot;Changing scene from {} to {}&quot;</span>, <span class="self">self</span>.current_scene, next_scene);
+                <span class="macro">info!</span>(<span class="string">"Changing scene from {} to {}"</span>, <span class="self">self</span>.current_scene, next_scene);
 
                 <span class="kw">if </span>!<span class="self">self</span>.current_scene.is_empty() {
                     <span class="kw">let </span>scene = <span class="kw">match </span><span class="self">self</span>.scenes.get_by_name_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene) {
                         <span class="prelude-val">Ok</span>(scene) =&gt; scene,
-                        <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_break!</span>(<span class="string">&quot;Failed to get scene {} ({})&quot;</span>, <span class="self">self</span>.current_scene, err),
+                        <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_break!</span>(<span class="string">"Failed to get scene {} ({})"</span>, <span class="self">self</span>.current_scene, err),
                     };
 
                     <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = scene.deactivation(<span class="macro">state!</span>(<span class="self">self</span>)) {
-                        <span class="macro">error_break!</span>(<span class="string">&quot;Failed to deactivate scene {} ({})&quot;</span>, <span class="self">self</span>.current_scene, err);
+                        <span class="macro">error_break!</span>(<span class="string">"Failed to deactivate scene {} ({})"</span>, <span class="self">self</span>.current_scene, err);
                     };
 
                     <span class="kw">let </span>current_scene_reset = scene.reset();
                     <span class="self">self</span>.scenes.remove_by_name(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene);
 
                     <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.scenes.store_with_name(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene, current_scene_reset) {
-                        <span class="macro">error!</span>(<span class="string">&quot;Failed to reset scene {} ({})&quot;</span>, <span class="self">self</span>.current_scene, err)
+                        <span class="macro">error!</span>(<span class="string">"Failed to reset scene {} ({})"</span>, <span class="self">self</span>.current_scene, err)
                     }
                 }
 
                 <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = <span class="self">self</span>.scenes.get_by_name_mut(next_scene).and_then(|p| p.activation(<span class="macro">state!</span>(<span class="self">self</span>))) {
-                    <span class="macro">error_break!</span>(<span class="string">&quot;Failed to activate scene {} ({})&quot;</span>, next_scene, err);
+                    <span class="macro">error_break!</span>(<span class="string">"Failed to activate scene {} ({})"</span>, next_scene, err);
                 };
 
                 <span class="self">self</span>.current_scene = next_scene.clone();
@@ -420,7 +421,7 @@
 
             <span class="kw">let </span>scene = <span class="kw">match </span><span class="self">self</span>.scenes.get_by_name_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene) {
                 <span class="prelude-val">Ok</span>(scene) =&gt; scene,
-                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_break!</span>(<span class="string">&quot;Failed to get scene {} ({})&quot;</span>, <span class="self">self</span>.current_scene, err),
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_break!</span>(<span class="string">"Failed to get scene {} ({})"</span>, <span class="self">self</span>.current_scene, err),
             };
 
             <span class="kw">while let </span><span class="prelude-val">Some</span>(event) = <span class="self">self</span>.window.poll_event() {
@@ -433,14 +434,14 @@
                 <span class="self">self</span>.ui.collect_event(<span class="kw-2">&amp;</span>event);
 
                 <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = scene.input(<span class="macro">state!</span>(<span class="self">self</span>), event) {
-                    <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to process input event {:?} ({})&quot;</span>, event, err);
+                    <span class="macro">error_continue!</span>(<span class="string">"Failed to process input event {:?} ({})"</span>, event, err);
                 }
             }
 
             <span class="kw">let </span>ui_input = <span class="self">self</span>.ui.get_input();
             <span class="kw">let </span>(ui_output, command) = <span class="kw">match </span>scene.ui(<span class="macro">state!</span>(<span class="self">self</span>), ui_input) {
                 <span class="prelude-val">Ok</span>((ui_output, command)) =&gt; (ui_output, command),
-                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to process UI ({})&quot;</span>, err),
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_continue!</span>(<span class="string">"Failed to process UI ({})"</span>, err),
             };
             <span class="self">self</span>.process_frame_command(command);
 
@@ -455,12 +456,12 @@
             <span class="self">self</span>.accumulator += delta;
 
             <span class="kw">while </span><span class="self">self</span>.accumulator &gt;= <span class="self">self</span>.timestep {
-                <span class="attr">#[cfg(feature = <span class="string">&quot;physics&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">"physics"</span>)]
                 </span><span class="self">self</span>.physics.step(<span class="self">self</span>.timestep);
 
                 <span class="kw">let </span>command = <span class="kw">match </span><span class="self">self</span>.scenes.get_by_name_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene).and_then(|p| p.fixed(<span class="macro">state!</span>(<span class="self">self</span>))) {
                     <span class="prelude-val">Ok</span>(command) =&gt; command,
-                    <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to process fixed frame ({})&quot;</span>, err),
+                    <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_continue!</span>(<span class="string">"Failed to process fixed frame ({})"</span>, err),
                 };
 
                 <span class="self">self</span>.process_frame_command(command);
@@ -469,7 +470,7 @@
 
             <span class="kw">let </span>command = <span class="kw">match </span><span class="self">self</span>.scenes.get_by_name_mut(<span class="kw-2">&amp;</span><span class="self">self</span>.current_scene).and_then(|p| p.frame(<span class="macro">state!</span>(<span class="self">self</span>), <span class="self">self</span>.accumulator, delta)) {
                 <span class="prelude-val">Ok</span>(command) =&gt; command,
-                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_continue!</span>(<span class="string">&quot;Failed to process frame ({})&quot;</span>, err),
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_continue!</span>(<span class="string">"Failed to process frame ({})"</span>, err),
             };
 
             <span class="self">self</span>.process_frame_command(command);

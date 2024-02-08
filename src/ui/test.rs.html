@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples\ui\src\test.rs`."><title>test.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="ui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples\ui\src\test.rs`."><title>test.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="ui" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -503,17 +504,17 @@
 </span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>egui_github_link_file {
     () =&gt; {
-        <span class="macro-nonterminal">$</span><span class="macro">crate::egui_github_link_file!</span>(<span class="string">&quot;(source code)&quot;</span>)
+        <span class="macro-nonterminal">$</span><span class="macro">crate::egui_github_link_file!</span>(<span class="string">"(source code)"</span>)
     };
     (<span class="macro-nonterminal">$label</span>: expr) =&gt; {
-        <span class="macro">egui::github_link_file!</span>(<span class="string">&quot;https://github.com/emilk/egui/blob/master/&quot;</span>, egui::RichText::new(<span class="macro-nonterminal">$label</span>).small())
+        <span class="macro">egui::github_link_file!</span>(<span class="string">"https://github.com/emilk/egui/blob/master/"</span>, egui::RichText::new(<span class="macro-nonterminal">$label</span>).small())
     };
 }
 
 <span class="doccomment">/// A test for sanity-checking and diagnosing egui rendering backends.
-</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(serde::Deserialize, serde::Serialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(serde::Deserialize, serde::Serialize))]
 </span><span class="kw">pub struct </span>ColorTest {
-    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, serde(skip))]
     </span>tex_mngr: TextureManager,
     vertex_gradients: bool,
     texture_gradients: bool,
@@ -534,29 +535,29 @@
         });
 
         ui.horizontal_wrapped(|ui|{
-            ui.label(<span class="string">&quot;This is made to test that the egui painter backend is set up correctly.&quot;</span>);
-            ui.add(egui::Label::new(<span class="string">&quot;❓&quot;</span>).sense(egui::Sense::click()))
-                .on_hover_text(<span class="string">&quot;The texture sampling should be sRGB-aware, and every other color operation should be done in gamma-space (sRGB). All colors should use pre-multiplied alpha&quot;</span>);
+            ui.label(<span class="string">"This is made to test that the egui painter backend is set up correctly."</span>);
+            ui.add(egui::Label::new(<span class="string">"❓"</span>).sense(egui::Sense::click()))
+                .on_hover_text(<span class="string">"The texture sampling should be sRGB-aware, and every other color operation should be done in gamma-space (sRGB). All colors should use pre-multiplied alpha"</span>);
         });
-        ui.label(<span class="string">&quot;If the rendering is done right, all groups of gradients will look uniform.&quot;</span>);
+        ui.label(<span class="string">"If the rendering is done right, all groups of gradients will look uniform."</span>);
 
         ui.horizontal(|ui| {
-            ui.checkbox(<span class="kw-2">&amp;mut </span><span class="self">self</span>.vertex_gradients, <span class="string">&quot;Vertex gradients&quot;</span>);
-            ui.checkbox(<span class="kw-2">&amp;mut </span><span class="self">self</span>.texture_gradients, <span class="string">&quot;Texture gradients&quot;</span>);
+            ui.checkbox(<span class="kw-2">&amp;mut </span><span class="self">self</span>.vertex_gradients, <span class="string">"Vertex gradients"</span>);
+            ui.checkbox(<span class="kw-2">&amp;mut </span><span class="self">self</span>.texture_gradients, <span class="string">"Texture gradients"</span>);
         });
 
-        ui.heading(<span class="string">&quot;sRGB color test&quot;</span>);
-        ui.label(<span class="string">&quot;Use a color picker to ensure this color is (255, 165, 0) / #ffa500&quot;</span>);
+        ui.heading(<span class="string">"sRGB color test"</span>);
+        ui.label(<span class="string">"Use a color picker to ensure this color is (255, 165, 0) / #ffa500"</span>);
         ui.scope(|ui| {
             ui.spacing_mut().item_spacing.y = <span class="number">0.0</span>; <span class="comment">// No spacing between gradients
             </span><span class="kw">let </span>g = Gradient::one_color(Color32::from_rgb(<span class="number">255</span>, <span class="number">165</span>, <span class="number">0</span>));
-            <span class="self">self</span>.vertex_gradient(ui, <span class="string">&quot;orange rgb(255, 165, 0) - vertex&quot;</span>, WHITE, <span class="kw-2">&amp;</span>g);
-            <span class="self">self</span>.tex_gradient(ui, <span class="string">&quot;orange rgb(255, 165, 0) - texture&quot;</span>, WHITE, <span class="kw-2">&amp;</span>g);
+            <span class="self">self</span>.vertex_gradient(ui, <span class="string">"orange rgb(255, 165, 0) - vertex"</span>, WHITE, <span class="kw-2">&amp;</span>g);
+            <span class="self">self</span>.tex_gradient(ui, <span class="string">"orange rgb(255, 165, 0) - texture"</span>, WHITE, <span class="kw-2">&amp;</span>g);
         });
 
         ui.separator();
 
-        ui.label(<span class="string">&quot;Test that vertex color times texture color is done in gamma space:&quot;</span>);
+        ui.label(<span class="string">"Test that vertex color times texture color is done in gamma space:"</span>);
         ui.scope(|ui| {
             ui.spacing_mut().item_spacing.y = <span class="number">0.0</span>; <span class="comment">// No spacing between gradients
 
@@ -566,16 +567,16 @@
 
             ui.horizontal(|ui| {
                 <span class="kw">let </span>color_size = ui.spacing().interact_size;
-                ui.label(<span class="string">&quot;texture&quot;</span>);
+                ui.label(<span class="string">"texture"</span>);
                 show_color(ui, tex_color, color_size);
-                ui.label(<span class="string">&quot; * &quot;</span>);
+                ui.label(<span class="string">" * "</span>);
                 show_color(ui, vertex_color, color_size);
-                ui.label(<span class="string">&quot; vertex color =&quot;</span>);
+                ui.label(<span class="string">" vertex color ="</span>);
             });
             {
                 <span class="kw">let </span>g = Gradient::one_color(ground_truth);
-                <span class="self">self</span>.vertex_gradient(ui, <span class="string">&quot;Ground truth (vertices)&quot;</span>, WHITE, <span class="kw-2">&amp;</span>g);
-                <span class="self">self</span>.tex_gradient(ui, <span class="string">&quot;Ground truth (texture)&quot;</span>, WHITE, <span class="kw-2">&amp;</span>g);
+                <span class="self">self</span>.vertex_gradient(ui, <span class="string">"Ground truth (vertices)"</span>, WHITE, <span class="kw-2">&amp;</span>g);
+                <span class="self">self</span>.tex_gradient(ui, <span class="string">"Ground truth (texture)"</span>, WHITE, <span class="kw-2">&amp;</span>g);
             }
 
             ui.horizontal(|ui| {
@@ -584,8 +585,8 @@
                 <span class="kw">let </span>texel_offset = <span class="number">0.5 </span>/ (g.<span class="number">0</span>.len() <span class="kw">as </span>f32);
                 <span class="kw">let </span>uv = Rect::from_min_max(pos2(texel_offset, <span class="number">0.0</span>), pos2(<span class="number">1.0 </span>- texel_offset, <span class="number">1.0</span>));
                 ui.add(Image::from_texture((tex.id(), GRADIENT_SIZE)).tint(vertex_color).uv(uv))
-                    .on_hover_text(<span class="macro">format!</span>(<span class="string">&quot;A texture that is {} texels wide&quot;</span>, g.<span class="number">0</span>.len()));
-                ui.label(<span class="string">&quot;GPU result&quot;</span>);
+                    .on_hover_text(<span class="macro">format!</span>(<span class="string">"A texture that is {} texels wide"</span>, g.<span class="number">0</span>.len()));
+                ui.label(<span class="string">"GPU result"</span>);
             });
         });
 
@@ -594,7 +595,7 @@
         <span class="comment">// TODO(emilk): test color multiplication (image tint),
         // to make sure vertex and texture color multiplication is done in linear space.
 
-        </span>ui.label(<span class="string">&quot;Gamma interpolation:&quot;</span>);
+        </span>ui.label(<span class="string">"Gamma interpolation:"</span>);
         <span class="self">self</span>.show_gradients(ui, WHITE, (RED, GREEN), Interpolation::Gamma);
 
         ui.separator();
@@ -614,12 +615,12 @@
         <span class="self">self</span>.show_gradients(ui, BLACK, (TRANSPARENT, WHITE), Interpolation::Gamma);
         ui.separator();
 
-        ui.label(<span class="string">&quot;Additive blending: add more and more blue to the red background:&quot;</span>);
+        ui.label(<span class="string">"Additive blending: add more and more blue to the red background:"</span>);
         <span class="self">self</span>.show_gradients(ui, RED, (TRANSPARENT, Color32::from_rgb_additive(<span class="number">0</span>, <span class="number">0</span>, <span class="number">255</span>)), Interpolation::Gamma);
 
         ui.separator();
 
-        ui.label(<span class="string">&quot;Linear interpolation (texture sampling):&quot;</span>);
+        ui.label(<span class="string">"Linear interpolation (texture sampling):"</span>);
         <span class="self">self</span>.show_gradients(ui, WHITE, (RED, GREEN), Interpolation::Linear);
 
         ui.separator();
@@ -627,7 +628,7 @@
         pixel_test(ui);
 
         ui.separator();
-        ui.label(<span class="string">&quot;Testing text rendering:&quot;</span>);
+        ui.label(<span class="string">"Testing text rendering:"</span>);
 
         text_on_bg(ui, Color32::from_gray(<span class="number">200</span>), Color32::from_gray(<span class="number">230</span>)); <span class="comment">// gray on gray
         </span>text_on_bg(ui, Color32::from_gray(<span class="number">140</span>), Color32::from_gray(<span class="number">28</span>)); <span class="comment">// dark mode normal text
@@ -647,12 +648,12 @@
         ui.horizontal(|ui| {
             <span class="kw">let </span>color_size = ui.spacing().interact_size;
             <span class="kw">if </span>!is_opaque {
-                ui.label(<span class="string">&quot;Background:&quot;</span>);
+                ui.label(<span class="string">"Background:"</span>);
                 show_color(ui, bg_fill, color_size);
             }
-            ui.label(<span class="string">&quot;gradient&quot;</span>);
+            ui.label(<span class="string">"gradient"</span>);
             show_color(ui, left, color_size);
-            ui.label(<span class="string">&quot;-&quot;</span>);
+            ui.label(<span class="string">"-"</span>);
             show_color(ui, right, color_size);
         });
 
@@ -660,15 +661,15 @@
             ui.spacing_mut().item_spacing.y = <span class="number">0.0</span>; <span class="comment">// No spacing between gradients
             </span><span class="kw">if </span>is_opaque {
                 <span class="kw">let </span>g = Gradient::ground_truth_gradient(left, right, interpolation);
-                <span class="self">self</span>.vertex_gradient(ui, <span class="string">&quot;Ground Truth (CPU gradient) - vertices&quot;</span>, bg_fill, <span class="kw-2">&amp;</span>g);
-                <span class="self">self</span>.tex_gradient(ui, <span class="string">&quot;Ground Truth (CPU gradient) - texture&quot;</span>, bg_fill, <span class="kw-2">&amp;</span>g);
+                <span class="self">self</span>.vertex_gradient(ui, <span class="string">"Ground Truth (CPU gradient) - vertices"</span>, bg_fill, <span class="kw-2">&amp;</span>g);
+                <span class="self">self</span>.tex_gradient(ui, <span class="string">"Ground Truth (CPU gradient) - texture"</span>, bg_fill, <span class="kw-2">&amp;</span>g);
             } <span class="kw">else </span>{
                 <span class="kw">let </span>g = Gradient::ground_truth_gradient(left, right, interpolation).with_bg_fill(bg_fill);
-                <span class="self">self</span>.vertex_gradient(ui, <span class="string">&quot;Ground Truth (CPU gradient, CPU blending) - vertices&quot;</span>, bg_fill, <span class="kw-2">&amp;</span>g);
-                <span class="self">self</span>.tex_gradient(ui, <span class="string">&quot;Ground Truth (CPU gradient, CPU blending) - texture&quot;</span>, bg_fill, <span class="kw-2">&amp;</span>g);
+                <span class="self">self</span>.vertex_gradient(ui, <span class="string">"Ground Truth (CPU gradient, CPU blending) - vertices"</span>, bg_fill, <span class="kw-2">&amp;</span>g);
+                <span class="self">self</span>.tex_gradient(ui, <span class="string">"Ground Truth (CPU gradient, CPU blending) - texture"</span>, bg_fill, <span class="kw-2">&amp;</span>g);
                 <span class="kw">let </span>g = Gradient::ground_truth_gradient(left, right, interpolation);
-                <span class="self">self</span>.vertex_gradient(ui, <span class="string">&quot;CPU gradient, GPU blending - vertices&quot;</span>, bg_fill, <span class="kw-2">&amp;</span>g);
-                <span class="self">self</span>.tex_gradient(ui, <span class="string">&quot;CPU gradient, GPU blending - texture&quot;</span>, bg_fill, <span class="kw-2">&amp;</span>g);
+                <span class="self">self</span>.vertex_gradient(ui, <span class="string">"CPU gradient, GPU blending - vertices"</span>, bg_fill, <span class="kw-2">&amp;</span>g);
+                <span class="self">self</span>.tex_gradient(ui, <span class="string">"CPU gradient, GPU blending - texture"</span>, bg_fill, <span class="kw-2">&amp;</span>g);
             }
 
             <span class="kw">let </span>g = Gradient::endpoints(left, right);
@@ -676,11 +677,11 @@
             <span class="kw">match </span>interpolation {
                 Interpolation::Linear =&gt; {
                     <span class="comment">// texture sampler is sRGBA aware, and should therefore be linear
-                    </span><span class="self">self</span>.tex_gradient(ui, <span class="string">&quot;Texture of width 2 (test texture sampler)&quot;</span>, bg_fill, <span class="kw-2">&amp;</span>g);
+                    </span><span class="self">self</span>.tex_gradient(ui, <span class="string">"Texture of width 2 (test texture sampler)"</span>, bg_fill, <span class="kw-2">&amp;</span>g);
                 }
                 Interpolation::Gamma =&gt; {
                     <span class="comment">// vertex shader uses gamma
-                    </span><span class="self">self</span>.vertex_gradient(ui, <span class="string">&quot;Triangle mesh of width 2 (test vertex decode and interpolation)&quot;</span>, bg_fill, <span class="kw-2">&amp;</span>g);
+                    </span><span class="self">self</span>.vertex_gradient(ui, <span class="string">"Triangle mesh of width 2 (test vertex decode and interpolation)"</span>, bg_fill, <span class="kw-2">&amp;</span>g);
                 }
             }
         });
@@ -695,7 +696,7 @@
             <span class="kw">let </span>texel_offset = <span class="number">0.5 </span>/ (gradient.<span class="number">0</span>.len() <span class="kw">as </span>f32);
             <span class="kw">let </span>uv = Rect::from_min_max(pos2(texel_offset, <span class="number">0.0</span>), pos2(<span class="number">1.0 </span>- texel_offset, <span class="number">1.0</span>));
             ui.add(Image::from_texture((tex.id(), GRADIENT_SIZE)).bg_fill(bg_fill).uv(uv))
-                .on_hover_text(<span class="macro">format!</span>(<span class="string">&quot;A texture that is {} texels wide&quot;</span>, gradient.<span class="number">0</span>.len()));
+                .on_hover_text(<span class="macro">format!</span>(<span class="string">"A texture that is {} texels wide"</span>, gradient.<span class="number">0</span>.len()));
             ui.label(label);
         });
     }
@@ -705,7 +706,7 @@
             <span class="kw">return</span>;
         }
         ui.horizontal(|ui| {
-            vertex_gradient(ui, bg_fill, gradient).on_hover_text(<span class="macro">format!</span>(<span class="string">&quot;A triangle mesh that is {} vertices wide&quot;</span>, gradient.<span class="number">0</span>.len()));
+            vertex_gradient(ui, bg_fill, gradient).on_hover_text(<span class="macro">format!</span>(<span class="string">"A triangle mesh that is {} vertices wide"</span>, gradient.<span class="number">0</span>.len()));
             ui.label(label);
         });
     }
@@ -824,13 +825,13 @@
             <span class="kw">let </span>pixels = gradient.to_pixel_row();
             <span class="kw">let </span>width = pixels.len();
             <span class="kw">let </span>height = <span class="number">1</span>;
-            ctx.load_texture(<span class="string">&quot;color_test_gradient&quot;</span>, epaint::ColorImage { size: [width, height], pixels }, TextureOptions::LINEAR)
+            ctx.load_texture(<span class="string">"color_test_gradient"</span>, epaint::ColorImage { size: [width, height], pixels }, TextureOptions::LINEAR)
         })
     }
 }
 
 <span class="kw">fn </span>pixel_test(ui: <span class="kw-2">&amp;mut </span>Ui) {
-    ui.label(<span class="string">&quot;Each subsequent square should be one physical pixel larger than the previous. They should be exactly one physical pixel apart. They should be perfectly aligned to the pixel grid.&quot;</span>);
+    ui.label(<span class="string">"Each subsequent square should be one physical pixel larger than the previous. They should be exactly one physical pixel apart. They should be perfectly aligned to the pixel grid."</span>);
 
     <span class="kw">let </span>color = <span class="kw">if </span>ui.style().visuals.dark_mode { egui::Color32::WHITE } <span class="kw">else </span>{ egui::Color32::BLACK };
 
@@ -872,8 +873,8 @@
     <span class="macro">assert!</span>(bg.is_opaque());
 
     ui.horizontal(|ui| {
-        ui.label(RichText::from(<span class="string">&quot;▣ The quick brown fox jumps over the lazy dog and runs away.&quot;</span>).background_color(bg).color(fg));
-        ui.label(<span class="macro">format!</span>(<span class="string">&quot;({} {} {}) on ({} {} {})&quot;</span>, fg.r(), fg.g(), fg.b(), bg.r(), bg.g(), bg.b(),));
+        ui.label(RichText::from(<span class="string">"▣ The quick brown fox jumps over the lazy dog and runs away."</span>).background_color(bg).color(fg));
+        ui.label(<span class="macro">format!</span>(<span class="string">"({} {} {}) on ({} {} {})"</span>, fg.r(), fg.g(), fg.b(), bg.r(), bg.g(), bg.b(),));
     });
 }
 
@@ -884,21 +885,21 @@
             painter.text(
                 rect.center_top() + vec2(<span class="number">0.0</span>, y),
                 Align2::LEFT_TOP,
-                <span class="macro">format!</span>(<span class="string">&quot;{:.0}% white&quot;</span>, <span class="number">100.0 </span>* opacity),
+                <span class="macro">format!</span>(<span class="string">"{:.0}% white"</span>, <span class="number">100.0 </span>* opacity),
                 FontId::proportional(<span class="number">14.0</span>),
                 Color32::WHITE.gamma_multiply(opacity),
             );
             painter.text(
                 rect.center_top() + vec2(<span class="number">80.0</span>, y),
                 Align2::LEFT_TOP,
-                <span class="macro">format!</span>(<span class="string">&quot;{:.0}% gray&quot;</span>, <span class="number">100.0 </span>* opacity),
+                <span class="macro">format!</span>(<span class="string">"{:.0}% gray"</span>, <span class="number">100.0 </span>* opacity),
                 FontId::proportional(<span class="number">14.0</span>),
                 Color32::GRAY.gamma_multiply(opacity),
             );
             painter.text(
                 rect.center_top() + vec2(<span class="number">160.0</span>, y),
                 Align2::LEFT_TOP,
-                <span class="macro">format!</span>(<span class="string">&quot;{:.0}% black&quot;</span>, <span class="number">100.0 </span>* opacity),
+                <span class="macro">format!</span>(<span class="string">"{:.0}% black"</span>, <span class="number">100.0 </span>* opacity),
                 FontId::proportional(<span class="number">14.0</span>),
                 Color32::BLACK.gamma_multiply(opacity),
             );
@@ -909,7 +910,7 @@
             painter.text(
                 rect.center_top() + vec2(<span class="number">0.0</span>, y),
                 Align2::LEFT_TOP,
-                <span class="macro">format!</span>(<span class="string">&quot;{font_size}px - The quick brown fox jumps over the lazy dog and runs away.&quot;</span>),
+                <span class="macro">format!</span>(<span class="string">"{font_size}px - The quick brown fox jumps over the lazy dog and runs away."</span>),
                 FontId::proportional(font_size),
                 color,
             );
@@ -935,7 +936,7 @@
     }
 
     rect.min.y += <span class="number">16.0</span>;
-    painter.text(rect.left_top(), Align2::LEFT_CENTER, <span class="string">&quot;transparent --&gt; opaque&quot;</span>, FontId::monospace(<span class="number">10.0</span>), color);
+    painter.text(rect.left_top(), Align2::LEFT_CENTER, <span class="string">"transparent --&gt; opaque"</span>, FontId::monospace(<span class="number">10.0</span>), color);
     rect.min.y += <span class="number">12.0</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>mesh = Mesh::default();
     mesh.colored_vertex(rect.left_bottom(), Color32::TRANSPARENT);

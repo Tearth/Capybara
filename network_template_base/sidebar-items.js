@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DISTANCE_BETWEEN_NODES","MOVEMENT_SPEED","ROTATION_SPEED"],"mod":["game","packets","utils"]};

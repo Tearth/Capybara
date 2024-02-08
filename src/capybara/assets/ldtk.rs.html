@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `capybara\src\assets\ldtk.rs`."><title>ldtk.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="capybara" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `capybara\src\assets\ldtk.rs`."><title>ldtk.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="capybara" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -303,95 +304,8 @@
 <a href="#303" id="303">303</a>
 <a href="#304" id="304">304</a>
 <a href="#305" id="305">305</a>
-<a href="#306" id="306">306</a>
-<a href="#307" id="307">307</a>
-<a href="#308" id="308">308</a>
-<a href="#309" id="309">309</a>
-<a href="#310" id="310">310</a>
-<a href="#311" id="311">311</a>
-<a href="#312" id="312">312</a>
-<a href="#313" id="313">313</a>
-<a href="#314" id="314">314</a>
-<a href="#315" id="315">315</a>
-<a href="#316" id="316">316</a>
-<a href="#317" id="317">317</a>
-<a href="#318" id="318">318</a>
-<a href="#319" id="319">319</a>
-<a href="#320" id="320">320</a>
-<a href="#321" id="321">321</a>
-<a href="#322" id="322">322</a>
-<a href="#323" id="323">323</a>
-<a href="#324" id="324">324</a>
-<a href="#325" id="325">325</a>
-<a href="#326" id="326">326</a>
-<a href="#327" id="327">327</a>
-<a href="#328" id="328">328</a>
-<a href="#329" id="329">329</a>
-<a href="#330" id="330">330</a>
-<a href="#331" id="331">331</a>
-<a href="#332" id="332">332</a>
-<a href="#333" id="333">333</a>
-<a href="#334" id="334">334</a>
-<a href="#335" id="335">335</a>
-<a href="#336" id="336">336</a>
-<a href="#337" id="337">337</a>
-<a href="#338" id="338">338</a>
-<a href="#339" id="339">339</a>
-<a href="#340" id="340">340</a>
-<a href="#341" id="341">341</a>
-<a href="#342" id="342">342</a>
-<a href="#343" id="343">343</a>
-<a href="#344" id="344">344</a>
-<a href="#345" id="345">345</a>
-<a href="#346" id="346">346</a>
-<a href="#347" id="347">347</a>
-<a href="#348" id="348">348</a>
-<a href="#349" id="349">349</a>
-<a href="#350" id="350">350</a>
-<a href="#351" id="351">351</a>
-<a href="#352" id="352">352</a>
-<a href="#353" id="353">353</a>
-<a href="#354" id="354">354</a>
-<a href="#355" id="355">355</a>
-<a href="#356" id="356">356</a>
-<a href="#357" id="357">357</a>
-<a href="#358" id="358">358</a>
-<a href="#359" id="359">359</a>
-<a href="#360" id="360">360</a>
-<a href="#361" id="361">361</a>
-<a href="#362" id="362">362</a>
-<a href="#363" id="363">363</a>
-<a href="#364" id="364">364</a>
-<a href="#365" id="365">365</a>
-<a href="#366" id="366">366</a>
-<a href="#367" id="367">367</a>
-<a href="#368" id="368">368</a>
-<a href="#369" id="369">369</a>
-<a href="#370" id="370">370</a>
-<a href="#371" id="371">371</a>
-<a href="#372" id="372">372</a>
-<a href="#373" id="373">373</a>
-<a href="#374" id="374">374</a>
-<a href="#375" id="375">375</a>
-<a href="#376" id="376">376</a>
-<a href="#377" id="377">377</a>
-<a href="#378" id="378">378</a>
-<a href="#379" id="379">379</a>
-<a href="#380" id="380">380</a>
-<a href="#381" id="381">381</a>
-<a href="#382" id="382">382</a>
-<a href="#383" id="383">383</a>
-<a href="#384" id="384">384</a>
-<a href="#385" id="385">385</a>
-<a href="#386" id="386">386</a>
-<a href="#387" id="387">387</a>
-<a href="#388" id="388">388</a>
-<a href="#389" id="389">389</a>
-<a href="#390" id="390">390</a>
-<a href="#391" id="391">391</a>
-<a href="#392" id="392">392</a>
-<a href="#393" id="393">393</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils::color::RgbToVec4;
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils::color::RgbUtils;
+<span class="kw">use </span><span class="kw">crate</span>::utils::json::<span class="kw-2">*</span>;
 <span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>anyhow::bail;
 <span class="kw">use </span>anyhow::Error;
@@ -402,7 +316,6 @@
 <span class="kw">use </span>rustc_hash::FxHashMap;
 <span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::path::Path;
-<span class="kw">use </span>tinyjson::InnerAsRef;
 <span class="kw">use </span>tinyjson::JsonValue;
 
 <span class="attr">#[derive(Debug, Default)]
@@ -475,11 +388,11 @@
 
 <span class="kw">pub fn </span>load_world(name: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>str, data: <span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;LdtkWorld&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>world = LdtkWorld::default();
-    <span class="kw">let </span>definitions = read_object(data, <span class="string">&quot;defs&quot;</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>tilemap_definitions = read_array(definitions, <span class="string">&quot;tilesets&quot;</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>layer_definitions = read_array(definitions, <span class="string">&quot;layers&quot;</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>entity_definitions = read_array(definitions, <span class="string">&quot;entities&quot;</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>levels = read_array(data, <span class="string">&quot;levels&quot;</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>definitions = read_object(data, <span class="string">"defs"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>tilemap_definitions = read_array(definitions, <span class="string">"tilesets"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>layer_definitions = read_array(definitions, <span class="string">"layers"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>entity_definitions = read_array(definitions, <span class="string">"entities"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>levels = read_array(data, <span class="string">"levels"</span>)<span class="question-mark">?</span>;
 
     world.name = name.to_string();
     world.path = path.to_string();
@@ -496,26 +409,26 @@
 }
 
 <span class="kw">fn </span>load_tilemap(data: <span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;LdtkTilemap&gt; {
-    <span class="kw">let </span>path = read_value::&lt;String&gt;(data, <span class="string">&quot;relPath&quot;</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>tile_size = read_value::&lt;f64&gt;(data, <span class="string">&quot;tileGridSize&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>f32;
-    <span class="kw">let </span>custom_data = read_array(data, <span class="string">&quot;customData&quot;</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>path = read_value::&lt;String&gt;(data, <span class="string">"relPath"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>tile_size = read_value::&lt;f64&gt;(data, <span class="string">"tileGridSize"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32;
+    <span class="kw">let </span>custom_data = read_array(data, <span class="string">"customData"</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>name = <span class="kw">match </span>Path::new(<span class="kw-2">&amp;</span>path).file_stem().and_then(|p| p.to_str()) {
         <span class="prelude-val">Some</span>(name) =&gt; name.to_string(),
-        <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to get name from path {:?}&quot;</span>, path),
+        <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">"Failed to get name from path {:?}"</span>, path),
     };
 
     <span class="kw">let </span><span class="kw-2">mut </span>tilemap = LdtkTilemap {
-        id: read_value::&lt;f64&gt;(data, <span class="string">&quot;uid&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>usize,
+        id: read_value::&lt;f64&gt;(data, <span class="string">"uid"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize,
         name,
-        path: read_value::&lt;String&gt;(data, <span class="string">&quot;relPath&quot;</span>)<span class="question-mark">?</span>,
+        path: read_value::&lt;String&gt;(data, <span class="string">"relPath"</span>)<span class="question-mark">?</span>,
         tile_size: Vec2::new(tile_size, tile_size),
         custom: Default::default(),
     };
 
     <span class="kw">for </span>data <span class="kw">in </span>custom_data {
-        <span class="kw">let </span>tile_id = read_value::&lt;f64&gt;(data, <span class="string">&quot;tileId&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
-        <span class="kw">let </span>data = read_value::&lt;String&gt;(data, <span class="string">&quot;data&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>tile_id = read_value::&lt;f64&gt;(data, <span class="string">"tileId"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
+        <span class="kw">let </span>data = read_value::&lt;String&gt;(data, <span class="string">"data"</span>)<span class="question-mark">?</span>;
 
         tilemap.custom.insert(tile_id, data);
     }
@@ -530,25 +443,25 @@
     entity_definitions: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;LdtkLevel&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>level = LdtkLevel {
-        id: read_value::&lt;f64&gt;(data, <span class="string">&quot;uid&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>usize,
-        name: read_value::&lt;String&gt;(data, <span class="string">&quot;identifier&quot;</span>)<span class="question-mark">?</span>,
-        size: Vec2::new(read_value::&lt;f64&gt;(data, <span class="string">&quot;pxWid&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, read_value::&lt;f64&gt;(data, <span class="string">&quot;pxHei&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>f32),
-        background: read_color(data, <span class="string">&quot;bgColor&quot;</span>)<span class="question-mark">?</span>,
+        id: read_value::&lt;f64&gt;(data, <span class="string">"uid"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize,
+        name: read_value::&lt;String&gt;(data, <span class="string">"identifier"</span>)<span class="question-mark">?</span>,
+        size: Vec2::new(read_value::&lt;f64&gt;(data, <span class="string">"pxWid"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, read_value::&lt;f64&gt;(data, <span class="string">"pxHei"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32),
+        background: read_color(data, <span class="string">"bgColor"</span>)<span class="question-mark">?</span>,
         layers: Vec::new(),
     };
 
-    <span class="kw">let </span>layers = read_array(data, <span class="string">&quot;layerInstances&quot;</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>layers = read_array(data, <span class="string">"layerInstances"</span>)<span class="question-mark">?</span>;
 
     <span class="kw">for </span>data <span class="kw">in </span>layers {
-        <span class="kw">let </span>id = read_value::&lt;f64&gt;(data, <span class="string">&quot;layerDefUid&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
-        <span class="kw">let </span>layer_definition = <span class="kw">match </span>layer_definitions.iter().find(|p| read_value::&lt;f64&gt;(p, <span class="string">&quot;uid&quot;</span>).unwrap_or(<span class="number">0.0</span>) <span class="kw">as </span>usize == id) {
+        <span class="kw">let </span>id = read_value::&lt;f64&gt;(data, <span class="string">"layerDefUid"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
+        <span class="kw">let </span>layer_definition = <span class="kw">match </span>layer_definitions.iter().find(|p| read_value::&lt;f64&gt;(p, <span class="string">"uid"</span>).unwrap_or(<span class="number">0.0</span>) <span class="kw">as </span>usize == id) {
             <span class="prelude-val">Some</span>(definition) =&gt; definition,
-            <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to find definition for layer {}&quot;</span>, id),
+            <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">"Failed to find definition for layer {}"</span>, id),
         };
-        <span class="kw">let </span>layer_definition_tilemap = read_value_nullable::&lt;f64&gt;(layer_definition, <span class="string">&quot;tilesetDefUid&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>layer_name = read_value::&lt;String&gt;(layer_definition, <span class="string">&quot;identifier&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>layer_grid_size = read_value::&lt;f64&gt;(layer_definition, <span class="string">&quot;gridSize&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>f32;
-        <span class="kw">let </span>layer_tilemap = read_value_nullable::&lt;f64&gt;(data, <span class="string">&quot;overrideTilesetUid&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>layer_definition_tilemap = read_value_nullable::&lt;f64&gt;(layer_definition, <span class="string">"tilesetDefUid"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>layer_name = read_value::&lt;String&gt;(layer_definition, <span class="string">"identifier"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>layer_grid_size = read_value::&lt;f64&gt;(layer_definition, <span class="string">"gridSize"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32;
+        <span class="kw">let </span>layer_tilemap = read_value_nullable::&lt;f64&gt;(data, <span class="string">"overrideTilesetUid"</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>tilemap_id = layer_tilemap.or(layer_definition_tilemap);
 
         <span class="kw">let </span><span class="kw-2">mut </span>layer = LdtkLayer {
@@ -563,72 +476,72 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(tilemap_id) = tilemap_id {
             <span class="kw">let </span>tilemap = <span class="kw">match </span>tilemaps.iter().find(|p| p.id == tilemap_id <span class="kw">as </span>usize) {
                 <span class="prelude-val">Some</span>(tilemap) =&gt; tilemap,
-                <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to find tilemap {}&quot;</span>, tilemap_id),
+                <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">"Failed to find tilemap {}"</span>, tilemap_id),
             };
-            <span class="kw">let </span>tiles = read_array(data, <span class="string">&quot;gridTiles&quot;</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>tiles = read_array(data, <span class="string">"gridTiles"</span>)<span class="question-mark">?</span>;
 
             <span class="kw">for </span>data <span class="kw">in </span>tiles {
-                <span class="kw">let </span>position = read_position(data, <span class="string">&quot;px&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>position = read_position(data, <span class="string">"px"</span>)<span class="question-mark">?</span>;
                 layer.tiles.push(LdtkTile {
-                    id: read_value::&lt;f64&gt;(data, <span class="string">&quot;t&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>usize,
+                    id: read_value::&lt;f64&gt;(data, <span class="string">"t"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize,
                     position: Vec2::new(position.x, level.size.y - position.y - tilemap.tile_size.y),
-                    source: read_position(data, <span class="string">&quot;src&quot;</span>)<span class="question-mark">?</span>,
+                    source: read_position(data, <span class="string">"src"</span>)<span class="question-mark">?</span>,
                 });
             }
         }
 
-        <span class="kw">let </span>entities = read_array(data, <span class="string">&quot;entityInstances&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>entities = read_array(data, <span class="string">"entityInstances"</span>)<span class="question-mark">?</span>;
         <span class="kw">for </span>data <span class="kw">in </span>entities {
-            <span class="kw">let </span>entity_definition_id = read_value::&lt;f64&gt;(data, <span class="string">&quot;defUid&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
+            <span class="kw">let </span>entity_definition_id = read_value::&lt;f64&gt;(data, <span class="string">"defUid"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
             <span class="kw">let </span>entity_definition =
-                <span class="kw">match </span>entity_definitions.iter().find(|p| read_value::&lt;f64&gt;(p, <span class="string">&quot;uid&quot;</span>).unwrap_or(<span class="number">0.0</span>) <span class="kw">as </span>usize == entity_definition_id) {
+                <span class="kw">match </span>entity_definitions.iter().find(|p| read_value::&lt;f64&gt;(p, <span class="string">"uid"</span>).unwrap_or(<span class="number">0.0</span>) <span class="kw">as </span>usize == entity_definition_id) {
                     <span class="prelude-val">Some</span>(definition) =&gt; definition,
-                    <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to find definition for entity {}&quot;</span>, entity_definition_id),
+                    <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">"Failed to find definition for entity {}"</span>, entity_definition_id),
                 };
-            <span class="kw">let </span>field_definitions = read_array(entity_definition, <span class="string">&quot;fieldDefs&quot;</span>)<span class="question-mark">?</span>;
-            <span class="kw">let </span>tile_data = read_object(entity_definition, <span class="string">&quot;tileRect&quot;</span>)<span class="question-mark">?</span>;
-            <span class="kw">let </span>pivot = Vec2::new(read_value::&lt;f64&gt;(entity_definition, <span class="string">&quot;pivotX&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, read_value::&lt;f64&gt;(entity_definition, <span class="string">&quot;pivotY&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>f32);
+            <span class="kw">let </span>field_definitions = read_array(entity_definition, <span class="string">"fieldDefs"</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>tile_data = read_object(entity_definition, <span class="string">"tileRect"</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>pivot = Vec2::new(read_value::&lt;f64&gt;(entity_definition, <span class="string">"pivotX"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, read_value::&lt;f64&gt;(entity_definition, <span class="string">"pivotY"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32);
 
-            <span class="kw">let </span>entity_definition_tilemap = read_value_nullable::&lt;f64&gt;(entity_definition, <span class="string">&quot;tilesetId&quot;</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>entity_definition_tilemap = read_value_nullable::&lt;f64&gt;(entity_definition, <span class="string">"tilesetId"</span>)<span class="question-mark">?</span>;
             <span class="kw">if let </span><span class="prelude-val">Some</span>(tilemap_id) = layer_tilemap.or(entity_definition_tilemap) {
-                <span class="kw">let </span>position = read_position(data, <span class="string">&quot;px&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>position = read_position(data, <span class="string">"px"</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>tilemap = <span class="kw">match </span>tilemaps.iter().find(|p| p.id == tilemap_id <span class="kw">as </span>usize) {
                     <span class="prelude-val">Some</span>(tilemap) =&gt; tilemap,
-                    <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to find tilemap {}&quot;</span>, tilemap_id),
+                    <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">"Failed to find tilemap {}"</span>, tilemap_id),
                 };
 
                 <span class="kw">let </span><span class="kw-2">mut </span>fields = FxHashMap::default();
-                <span class="kw">let </span>field_instances = read_array(data, <span class="string">&quot;fieldInstances&quot;</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>field_instances = read_array(data, <span class="string">"fieldInstances"</span>)<span class="question-mark">?</span>;
 
                 <span class="kw">for </span>data <span class="kw">in </span>field_instances {
-                    <span class="kw">let </span>field_definition_id = read_value::&lt;f64&gt;(data, <span class="string">&quot;defUid&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
+                    <span class="kw">let </span>field_definition_id = read_value::&lt;f64&gt;(data, <span class="string">"defUid"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
                     <span class="kw">let </span>field_definition =
-                        <span class="kw">match </span>field_definitions.iter().find(|p| read_value::&lt;f64&gt;(p, <span class="string">&quot;uid&quot;</span>).unwrap_or(<span class="number">0.0</span>) <span class="kw">as </span>usize == field_definition_id) {
+                        <span class="kw">match </span>field_definitions.iter().find(|p| read_value::&lt;f64&gt;(p, <span class="string">"uid"</span>).unwrap_or(<span class="number">0.0</span>) <span class="kw">as </span>usize == field_definition_id) {
                             <span class="prelude-val">Some</span>(definition) =&gt; definition,
-                            <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to find definition for field {}&quot;</span>, field_definition_id),
+                            <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">"Failed to find definition for field {}"</span>, field_definition_id),
                         };
 
-                    <span class="kw">let </span>field_name = read_value::&lt;String&gt;(field_definition, <span class="string">&quot;identifier&quot;</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>field_type = read_value::&lt;String&gt;(field_definition, <span class="string">&quot;type&quot;</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>field_is_array = read_value::&lt;bool&gt;(field_definition, <span class="string">&quot;isArray&quot;</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>default_value_object = read_object_nullable(field_definition, <span class="string">&quot;defaultOverride&quot;</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>field_name = read_value::&lt;String&gt;(field_definition, <span class="string">"identifier"</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>field_type = read_value::&lt;String&gt;(field_definition, <span class="string">"type"</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>field_is_array = read_value::&lt;bool&gt;(field_definition, <span class="string">"isArray"</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>default_value_object = read_object_nullable(field_definition, <span class="string">"defaultOverride"</span>)<span class="question-mark">?</span>;
                     <span class="kw">let </span>default_value = <span class="kw">if let </span><span class="prelude-val">Some</span>(default_value_object) = default_value_object {
-                        read_array_values(default_value_object, <span class="string">&quot;params&quot;</span>)<span class="question-mark">?</span>.get(<span class="number">0</span>).cloned()
+                        read_array_values(default_value_object, <span class="string">"params"</span>)<span class="question-mark">?</span>.get(<span class="number">0</span>).cloned()
                     } <span class="kw">else </span>{
                         <span class="prelude-val">None
                     </span>};
 
                     <span class="kw">let </span><span class="kw-2">mut </span>values = Vec::new();
-                    <span class="kw">let </span>field_value_array = read_array_raw(data, <span class="string">&quot;realEditorValues&quot;</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>field_value_array = read_array_raw(data, <span class="string">"realEditorValues"</span>)<span class="question-mark">?</span>;
                     <span class="kw">for </span>field_value <span class="kw">in </span>field_value_array {
                         <span class="kw">match </span>field_value {
                             JsonValue::Object(data) =&gt; {
-                                <span class="kw">let </span>value = read_array_values(data, <span class="string">&quot;params&quot;</span>)<span class="question-mark">?</span>;
+                                <span class="kw">let </span>value = read_array_values(data, <span class="string">"params"</span>)<span class="question-mark">?</span>;
                                 values.push(value[<span class="number">0</span>].clone());
                             }
                             JsonValue::Null =&gt; <span class="kw">match </span><span class="kw-2">&amp;</span>default_value {
                                 <span class="prelude-val">Some</span>(default_value) =&gt; values.push(default_value.clone()),
-                                <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;No default value&quot;</span>),
+                                <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">"No default value"</span>),
                             },
                             <span class="kw">_ </span>=&gt; {}
                         }
@@ -642,37 +555,37 @@
 
                     <span class="kw">let </span>value = <span class="kw">if </span>!field_is_array {
                         <span class="kw">match </span>field_type.as_str() {
-                            <span class="string">&quot;F_Bool&quot; </span>=&gt; LdtkEntityField::Bool(values.get(<span class="number">0</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="string">&quot;false&quot;</span>.to_string()).parse()<span class="question-mark">?</span>),
-                            <span class="string">&quot;F_Int&quot; </span>=&gt; LdtkEntityField::Int(values.get(<span class="number">0</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="string">&quot;0&quot;</span>.to_string()).parse()<span class="question-mark">?</span>),
-                            <span class="string">&quot;F_Float&quot; </span>=&gt; LdtkEntityField::Float(values.get(<span class="number">0</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="string">&quot;0.0&quot;</span>.to_string()).parse()<span class="question-mark">?</span>),
-                            <span class="string">&quot;F_String&quot; </span>=&gt; LdtkEntityField::String(values.get(<span class="number">0</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="string">&quot;&quot;</span>.to_string()).to_string()),
-                            <span class="string">&quot;F_Text&quot; </span>=&gt; LdtkEntityField::String(values.get(<span class="number">0</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="string">&quot;&quot;</span>.to_string()).to_string()),
-                            <span class="string">&quot;F_Color&quot; </span>=&gt; {
-                                <span class="kw">let </span>hex = <span class="macro">format!</span>(<span class="string">&quot;{:x}&quot;</span>, values.get(<span class="number">0</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="string">&quot;0&quot;</span>.to_string()).to_string().parse::&lt;u32&gt;()<span class="question-mark">?</span>);
-                                <span class="kw">let </span>color = Rgb::from_hex_str(<span class="kw-2">&amp;</span>hex).map_err(|<span class="kw">_</span>| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to parse color&quot;</span>))<span class="question-mark">?</span>.to_vec4();
+                            <span class="string">"F_Bool" </span>=&gt; LdtkEntityField::Bool(values.get(<span class="number">0</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="string">"false"</span>.to_string()).parse()<span class="question-mark">?</span>),
+                            <span class="string">"F_Int" </span>=&gt; LdtkEntityField::Int(values.get(<span class="number">0</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="string">"0"</span>.to_string()).parse()<span class="question-mark">?</span>),
+                            <span class="string">"F_Float" </span>=&gt; LdtkEntityField::Float(values.get(<span class="number">0</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="string">"0.0"</span>.to_string()).parse()<span class="question-mark">?</span>),
+                            <span class="string">"F_String" </span>=&gt; LdtkEntityField::String(values.get(<span class="number">0</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="string">""</span>.to_string()).to_string()),
+                            <span class="string">"F_Text" </span>=&gt; LdtkEntityField::String(values.get(<span class="number">0</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="string">""</span>.to_string()).to_string()),
+                            <span class="string">"F_Color" </span>=&gt; {
+                                <span class="kw">let </span>hex = <span class="macro">format!</span>(<span class="string">"{:x}"</span>, values.get(<span class="number">0</span>).unwrap_or(<span class="kw-2">&amp;</span><span class="string">"0"</span>.to_string()).to_string().parse::&lt;u32&gt;()<span class="question-mark">?</span>);
+                                <span class="kw">let </span>color = Rgb::from_hex_str(<span class="kw-2">&amp;</span>hex).map_err(|<span class="kw">_</span>| <span class="macro">anyhow!</span>(<span class="string">"Failed to parse color"</span>))<span class="question-mark">?</span>.to_vec4();
                                 LdtkEntityField::Color(color)
                             }
-                            <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Invalid field type&quot;</span>),
+                            <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">"Invalid field type"</span>),
                         }
                     } <span class="kw">else </span>{
                         <span class="kw">match </span>field_type.as_str() {
-                            <span class="string">&quot;F_Bool&quot; </span>=&gt; LdtkEntityField::BoolArray(values.iter().map(|p| p.parse()).collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;bool&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>),
-                            <span class="string">&quot;F_Int&quot; </span>=&gt; LdtkEntityField::IntArray(values.iter().map(|p| p.parse()).collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;i32&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>),
-                            <span class="string">&quot;F_Float&quot; </span>=&gt; LdtkEntityField::FloatArray(values.iter().map(|p| p.parse()).collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;f32&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>),
-                            <span class="string">&quot;F_String&quot; </span>=&gt; LdtkEntityField::StringArray(values.iter().map(|p| p.to_string()).collect()),
-                            <span class="string">&quot;F_Text&quot; </span>=&gt; LdtkEntityField::StringArray(values.iter().map(|p| p.to_string()).collect()),
-                            <span class="string">&quot;F_Color&quot; </span>=&gt; LdtkEntityField::ColorArray(
+                            <span class="string">"F_Bool" </span>=&gt; LdtkEntityField::BoolArray(values.iter().map(|p| p.parse()).collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;bool&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>),
+                            <span class="string">"F_Int" </span>=&gt; LdtkEntityField::IntArray(values.iter().map(|p| p.parse()).collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;i32&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>),
+                            <span class="string">"F_Float" </span>=&gt; LdtkEntityField::FloatArray(values.iter().map(|p| p.parse()).collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;f32&gt;, <span class="kw">_</span>&gt;&gt;()<span class="question-mark">?</span>),
+                            <span class="string">"F_String" </span>=&gt; LdtkEntityField::StringArray(values.iter().map(|p| p.to_string()).collect()),
+                            <span class="string">"F_Text" </span>=&gt; LdtkEntityField::StringArray(values.iter().map(|p| p.to_string()).collect()),
+                            <span class="string">"F_Color" </span>=&gt; LdtkEntityField::ColorArray(
                                 values
                                     .iter()
                                     .map(|p| {
-                                        <span class="kw">let </span>hex = <span class="macro">format!</span>(<span class="string">&quot;{:x}&quot;</span>, p.parse::&lt;u32&gt;()<span class="question-mark">?</span>);
-                                        <span class="kw">let </span>color = Rgb::from_hex_str(<span class="kw-2">&amp;</span>hex).map_err(|<span class="kw">_</span>| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to parse color&quot;</span>))<span class="question-mark">?</span>.to_vec4();
+                                        <span class="kw">let </span>hex = <span class="macro">format!</span>(<span class="string">"{:x}"</span>, p.parse::&lt;u32&gt;()<span class="question-mark">?</span>);
+                                        <span class="kw">let </span>color = Rgb::from_hex_str(<span class="kw-2">&amp;</span>hex).map_err(|<span class="kw">_</span>| <span class="macro">anyhow!</span>(<span class="string">"Failed to parse color"</span>))<span class="question-mark">?</span>.to_vec4();
 
                                         <span class="prelude-val">Ok</span>(color)
                                     })
                                     .collect::&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;Vec4&gt;, Error&gt;&gt;()<span class="question-mark">?</span>,
                             ),
-                            <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Invalid field type&quot;</span>),
+                            <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">"Invalid field type"</span>),
                         }
                     };
 
@@ -680,11 +593,11 @@
                 }
 
                 layer.entities.push(LdtkEntity {
-                    name: read_value::&lt;String&gt;(entity_definition, <span class="string">&quot;identifier&quot;</span>)<span class="question-mark">?</span>,
+                    name: read_value::&lt;String&gt;(entity_definition, <span class="string">"identifier"</span>)<span class="question-mark">?</span>,
                     position: Vec2::new(position.x, level.size.y - position.y - tilemap.tile_size.y + pivot.y * tilemap.tile_size.y),
-                    size: Vec2::new(read_value::&lt;f64&gt;(data, <span class="string">&quot;width&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, read_value::&lt;f64&gt;(data, <span class="string">&quot;height&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>f32),
+                    size: Vec2::new(read_value::&lt;f64&gt;(data, <span class="string">"width"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, read_value::&lt;f64&gt;(data, <span class="string">"height"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32),
                     pivot,
-                    source: Vec2::new(read_value::&lt;f64&gt;(tile_data, <span class="string">&quot;x&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, read_value::&lt;f64&gt;(tile_data, <span class="string">&quot;y&quot;</span>)<span class="question-mark">? </span><span class="kw">as </span>f32),
+                    source: Vec2::new(read_value::&lt;f64&gt;(tile_data, <span class="string">"x"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, read_value::&lt;f64&gt;(tile_data, <span class="string">"y"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32),
                     tilemap_id: tilemap_id <span class="kw">as </span>usize,
                     fields,
                 });
@@ -695,93 +608,5 @@
     }
 
     <span class="prelude-val">Ok</span>(level)
-}
-
-<span class="kw">fn </span>read_object&lt;<span class="lifetime">&#39;a</span>&gt;(data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HashMap&lt;String, JsonValue&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HashMap&lt;String, JsonValue&gt;&gt; {
-    <span class="kw">match </span>data.get(name) {
-        <span class="prelude-val">Some</span>(JsonValue::Object(object)) =&gt; <span class="prelude-val">Ok</span>(object),
-        <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to read object {}&quot;</span>, name),
-    }
-}
-
-<span class="kw">fn </span>read_object_nullable&lt;<span class="lifetime">&#39;a</span>&gt;(data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HashMap&lt;String, JsonValue&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HashMap&lt;String, JsonValue&gt;&gt;&gt; {
-    <span class="kw">match </span>data.get(name) {
-        <span class="prelude-val">Some</span>(JsonValue::Object(object)) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(object)),
-        <span class="prelude-val">Some</span>(JsonValue::Null) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-        <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to read object {}&quot;</span>, name),
-    }
-}
-
-<span class="kw">fn </span>read_array&lt;<span class="lifetime">&#39;a</span>&gt;(data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HashMap&lt;String, JsonValue&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HashMap&lt;String, JsonValue&gt;&gt;&gt; {
-    <span class="kw">match </span>data.get(name) {
-        <span class="prelude-val">Some</span>(JsonValue::Array(array)) =&gt; <span class="prelude-val">Ok</span>(array.iter().map(|p| p.get().unwrap()).collect()),
-        <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to read array {}&quot;</span>, name),
-    }
-}
-
-<span class="kw">fn </span>read_array_raw&lt;<span class="lifetime">&#39;a</span>&gt;(data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HashMap&lt;String, JsonValue&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Vec&lt;JsonValue&gt;&gt; {
-    <span class="kw">match </span>data.get(name) {
-        <span class="prelude-val">Some</span>(JsonValue::Array(array)) =&gt; <span class="prelude-val">Ok</span>(array),
-        <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to read array {}&quot;</span>, name),
-    }
-}
-
-<span class="kw">fn </span>read_array_values(data: <span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;String&gt;&gt; {
-    <span class="kw">match </span>data.get(name) {
-        <span class="prelude-val">Some</span>(JsonValue::Array(array)) =&gt; <span class="prelude-val">Ok</span>(array.iter().map(|p| p.stringify().unwrap()).collect()),
-        <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to read array {}&quot;</span>, name),
-    }
-}
-
-<span class="kw">fn </span>read_value&lt;T&gt;(data: <span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;T&gt;
-<span class="kw">where
-    </span>T: Clone + Default + InnerAsRef,
-{
-    <span class="kw">let </span>value = data.get(name).ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to read {}&quot;</span>, name))<span class="question-mark">?</span>;
-    <span class="kw">if </span>value.is_null() {
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(Default::default());
-    }
-
-    <span class="prelude-val">Ok</span>(value.get::&lt;T&gt;().ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to parse {}&quot;</span>, name))<span class="question-mark">?</span>.clone())
-}
-
-<span class="kw">fn </span>read_value_nullable&lt;T&gt;(data: <span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;T&gt;&gt;
-<span class="kw">where
-    </span>T: Clone + Default + InnerAsRef,
-{
-    <span class="kw">let </span>value = data.get(name).ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to read {}&quot;</span>, name))<span class="question-mark">?</span>;
-    <span class="kw">if </span>value.is_null() {
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
-    }
-
-    <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(value.get::&lt;T&gt;().ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to parse {}&quot;</span>, name))<span class="question-mark">?</span>.clone()))
-}
-
-<span class="kw">fn </span>read_color(data: <span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec4&gt; {
-    <span class="kw">let </span>value = data.get(name).ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to read {}&quot;</span>, name))<span class="question-mark">?</span>;
-    <span class="kw">if </span>value.is_null() {
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(Vec4::new(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>));
-    }
-    <span class="kw">let </span>parsed = value.get::&lt;String&gt;().ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to parse {}&quot;</span>, name))<span class="question-mark">?</span>.clone();
-
-    <span class="prelude-val">Ok</span>(Rgb::from_hex_str(<span class="kw-2">&amp;</span>parsed).map_err(|<span class="kw">_</span>| <span class="macro">anyhow!</span>(<span class="string">&quot;Failed to parse {} into RGB&quot;</span>, name))<span class="question-mark">?</span>.to_vec4())
-}
-
-<span class="kw">fn </span>read_position(data: <span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec2&gt; {
-    <span class="kw">let </span>position = <span class="kw">match </span>data.get(name) {
-        <span class="prelude-val">Some</span>(JsonValue::Array(array)) =&gt; array,
-        <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to read position&quot;</span>),
-    };
-
-    <span class="kw">let </span>x = <span class="kw">match </span>position.get(<span class="number">0</span>) {
-        <span class="prelude-val">Some</span>(JsonValue::Number(value)) =&gt; <span class="kw-2">*</span>value <span class="kw">as </span>f32,
-        <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to parse position&quot;</span>),
-    };
-    <span class="kw">let </span>y = <span class="kw">match </span>position.get(<span class="number">1</span>) {
-        <span class="prelude-val">Some</span>(JsonValue::Number(value)) =&gt; <span class="kw-2">*</span>value <span class="kw">as </span>f32,
-        <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Failed to parse position&quot;</span>),
-    };
-
-    <span class="prelude-val">Ok</span>(Vec2::new(x, y))
 }
 </code></pre></div></section></main></body></html>

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["INTERPOLATION_BASE","INTERPOLATION_INCREASE","MINIMAL_STATES_COUNT"],"struct":["Enemies","EnemyState"]};

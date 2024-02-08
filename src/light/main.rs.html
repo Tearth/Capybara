@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples\light\src\main.rs`."><title>main.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="light" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples\light\src\main.rs`."><title>main.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="light" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -455,7 +456,7 @@
             <span class="self">self</span>.delta_history.pop_front();
         }
 
-        <span class="kw">if </span>!<span class="self">self</span>.initialized &amp;&amp; state.global.assets.load(<span class="string">&quot;./data/data0.zip&quot;</span>) == AssetsLoadingStatus::Finished {
+        <span class="kw">if </span>!<span class="self">self</span>.initialized &amp;&amp; state.global.assets.load(<span class="string">"./data/data0.zip"</span>) == AssetsLoadingStatus::Finished {
             state.renderer.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>);
             state.renderer.set_framebuffer_msaa(<span class="prelude-val">None</span>);
             state.ui.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>);
@@ -472,23 +473,23 @@
                         position,
                         rotation: fastrand::f32() * consts::TAU,
                         anchor: Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>),
-                        texture_id: TextureId::Some(state.renderer.textures.get_id(<span class="string">&quot;Takodachi&quot;</span>)<span class="question-mark">?</span>),
+                        texture_id: TextureId::Some(state.renderer.textures.get_id(<span class="string">"Takodachi"</span>)<span class="question-mark">?</span>),
                         ..Default::default()
                     },
                     direction: Vec2::new(fastrand::f32() * <span class="number">2.0 </span>- <span class="number">1.0</span>, fastrand::f32() * <span class="number">2.0 </span>- <span class="number">1.0</span>),
                 });
             }
 
-            <span class="kw">let </span>target_texture = Texture::new(state.renderer, <span class="kw-2">&amp;</span>RawTexture::new(<span class="string">&quot;target_texture&quot;</span>, <span class="string">&quot;&quot;</span>, Vec2::new(<span class="number">400.0</span>, <span class="number">400.0</span>), <span class="kw-2">&amp;</span>Vec::new()))<span class="question-mark">?</span>;
+            <span class="kw">let </span>target_texture = Texture::new(state.renderer, <span class="kw-2">&amp;</span>RawTexture::new(<span class="string">"target_texture"</span>, <span class="string">""</span>, Vec2::new(<span class="number">400.0</span>, <span class="number">400.0</span>), <span class="kw-2">&amp;</span>Vec::new()))<span class="question-mark">?</span>;
             <span class="self">self</span>.light_texture_id = state.renderer.textures.store(target_texture);
 
-            <span class="kw">let </span>main_texture = Texture::new(state.renderer, <span class="kw-2">&amp;</span>RawTexture::new(<span class="string">&quot;main_texture&quot;</span>, <span class="string">&quot;&quot;</span>, Vec2::new(<span class="number">400.0</span>, <span class="number">400.0</span>), <span class="kw-2">&amp;</span>Vec::new()))<span class="question-mark">?</span>;
+            <span class="kw">let </span>main_texture = Texture::new(state.renderer, <span class="kw-2">&amp;</span>RawTexture::new(<span class="string">"main_texture"</span>, <span class="string">""</span>, Vec2::new(<span class="number">400.0</span>, <span class="number">400.0</span>), <span class="kw-2">&amp;</span>Vec::new()))<span class="question-mark">?</span>;
             <span class="self">self</span>.main_texture_id = state.renderer.textures.store(main_texture);
 
-            <span class="kw">let </span>mult_shader = Shader::new(state.renderer, <span class="string">&quot;mult&quot;</span>, <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/mult.vert&quot;</span>), <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/mult.frag&quot;</span>))<span class="question-mark">?</span>;
+            <span class="kw">let </span>mult_shader = Shader::new(state.renderer, <span class="string">"mult"</span>, <span class="macro">include_str!</span>(<span class="string">"./shaders/mult.vert"</span>), <span class="macro">include_str!</span>(<span class="string">"./shaders/mult.frag"</span>))<span class="question-mark">?</span>;
             mult_shader.activate();
-            mult_shader.set_uniform(<span class="string">&quot;mainSampler&quot;</span>, <span class="kw-2">&amp;</span><span class="number">0.0</span>);
-            mult_shader.set_uniform(<span class="string">&quot;lightSampler&quot;</span>, <span class="kw-2">&amp;</span><span class="number">1.0</span>);
+            mult_shader.set_uniform(<span class="string">"mainSampler"</span>, <span class="kw-2">&amp;</span><span class="number">0.0</span>);
+            mult_shader.set_uniform(<span class="string">"lightSampler"</span>, <span class="kw-2">&amp;</span><span class="number">1.0</span>);
             <span class="self">self</span>.mult_shader_id = state.renderer.shaders.store(mult_shader);
 
             <span class="self">self</span>.emitter.max_length = <span class="number">200.0</span>;
@@ -501,7 +502,7 @@
         }
 
         <span class="kw">if </span><span class="self">self</span>.initialized {
-            <span class="kw">let </span>texture_size = state.renderer.textures.get_by_name(<span class="string">&quot;Takodachi&quot;</span>)<span class="question-mark">?</span>.size;
+            <span class="kw">let </span>texture_size = state.renderer.textures.get_by_name(<span class="string">"Takodachi"</span>)<span class="question-mark">?</span>.size;
             <span class="self">self</span>.edges.clear();
 
             state.renderer.set_target_texture(<span class="prelude-val">Some</span>(<span class="self">self</span>.main_texture_id));
@@ -588,89 +589,89 @@
 
     <span class="kw">fn </span>ui(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;, input: RawInput) -&gt; <span class="prelude-ty">Result</span>&lt;(FullOutput, <span class="prelude-ty">Option</span>&lt;FrameCommand&gt;)&gt; {
         <span class="kw">let </span>output = state.ui.inner.read().unwrap().run(input, |context| {
-            SidePanel::new(Side::Left, Id::new(<span class="string">&quot;side&quot;</span>)).exact_width(<span class="number">160.0</span>).resizable(<span class="bool-val">false</span>).show(context, |ui| {
+            SidePanel::new(Side::Left, Id::new(<span class="string">"side"</span>)).exact_width(<span class="number">160.0</span>).resizable(<span class="bool-val">false</span>).show(context, |ui| {
                 <span class="kw">if </span><span class="self">self</span>.initialized {
                     <span class="kw">let </span>font = FontId { size: <span class="number">24.0</span>, family: FontFamily::Monospace };
                     <span class="kw">let </span>color = Color32::from_rgb(<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>);
                     <span class="kw">let </span>delta_average = <span class="self">self</span>.delta_history.iter().sum::&lt;f32&gt;() / <span class="self">self</span>.delta_history.len() <span class="kw">as </span>f32;
 
-                    ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">&quot;FPS: {}&quot;</span>, state.renderer.fps)).font(font.clone()).heading().color(color));
-                    ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">&quot;Delta: {:.2}&quot;</span>, delta_average * <span class="number">1000.0</span>)).font(font.clone()).heading().color(color));
-                    ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">&quot;N: {}&quot;</span>, <span class="self">self</span>.objects.len())).font(font.clone()).heading().color(color));
+                    ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">"FPS: {}"</span>, state.renderer.fps)).font(font.clone()).heading().color(color));
+                    ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">"Delta: {:.2}"</span>, delta_average * <span class="number">1000.0</span>)).font(font.clone()).heading().color(color));
+                    ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">"N: {}"</span>, <span class="self">self</span>.objects.len())).font(font.clone()).heading().color(color));
 
                     ui.add_space(<span class="number">10.0</span>);
 
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(response) = <span class="kw-2">&amp;</span><span class="self">self</span>.emitter_last_response {
-                        ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">&quot;Rays: {}&quot;</span>, response.points.len())).font(font.clone()).heading().color(color));
-                        ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">&quot;Tris: {}&quot;</span>, response.shape.indices.len())).font(font.clone()).heading().color(color));
+                        ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">"Rays: {}"</span>, response.points.len())).font(font.clone()).heading().color(color));
+                        ui.label(RichText::new(<span class="macro">format!</span>(<span class="string">"Tris: {}"</span>, response.shape.indices.len())).font(font.clone()).heading().color(color));
                     }
 
                     ui.style_mut().drag_value_text_style = TextStyle::Monospace;
                     ui.style_mut().text_styles.get_mut(<span class="kw-2">&amp;</span>TextStyle::Monospace).unwrap().size = <span class="number">20.0</span>;
 
                     ui.add_space(<span class="number">10.0</span>);
-                    ui.label(RichText::new(<span class="string">&quot;Distance:&quot;</span>).font(font.clone()).heading().color(color));
+                    ui.label(RichText::new(<span class="string">"Distance:"</span>).font(font.clone()).heading().color(color));
                     ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.max_length, <span class="number">0.0</span>..=<span class="number">1000.0</span>).text_color(color));
 
                     ui.add_space(<span class="number">6.0</span>);
-                    ui.label(RichText::new(<span class="string">&quot;Angle:&quot;</span>).font(font.clone()).heading().color(color));
+                    ui.label(RichText::new(<span class="string">"Angle:"</span>).font(font.clone()).heading().color(color));
                     ui.add(
                         Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.angle, -consts::PI..=consts::PI)
-                            .custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, v))
+                            .custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, v))
                             .text_color(color),
                     );
 
                     ui.add_space(<span class="number">6.0</span>);
-                    ui.label(RichText::new(<span class="string">&quot;Arc:&quot;</span>).font(font.clone()).heading().color(color));
-                    ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.arc, <span class="number">0.0</span>..=consts::TAU).custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">&quot;{:.2}&quot;</span>, v)).text_color(color));
+                    ui.label(RichText::new(<span class="string">"Arc:"</span>).font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.arc, <span class="number">0.0</span>..=consts::TAU).custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">"{:.2}"</span>, v)).text_color(color));
 
                     ui.add_space(<span class="number">6.0</span>);
-                    ui.label(RichText::new(<span class="string">&quot;Frame rays:&quot;</span>).font(font.clone()).heading().color(color));
+                    ui.label(RichText::new(<span class="string">"Frame rays:"</span>).font(font.clone()).heading().color(color));
                     ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.frame_rays, <span class="number">0</span>..=<span class="number">256</span>).text_color(color));
 
                     ui.add_space(<span class="number">6.0</span>);
-                    ui.label(RichText::new(<span class="string">&quot;Offset:&quot;</span>).font(font.clone()).heading().color(color));
-                    ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.offset, <span class="number">0.0</span>..=<span class="number">0.02</span>).custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">&quot;{:.3}&quot;</span>, v)).text_color(color));
+                    ui.label(RichText::new(<span class="string">"Offset:"</span>).font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.offset, <span class="number">0.0</span>..=<span class="number">0.02</span>).custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">"{:.3}"</span>, v)).text_color(color));
 
                     ui.add_space(<span class="number">6.0</span>);
-                    ui.label(RichText::new(<span class="string">&quot;Merge distance:&quot;</span>).font(font.clone()).heading().color(color));
-                    ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.merge_distance, <span class="number">0.0</span>..=<span class="number">10.0</span>).custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">&quot;{:.1}&quot;</span>, v)).text_color(color));
+                    ui.label(RichText::new(<span class="string">"Merge distance:"</span>).font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.merge_distance, <span class="number">0.0</span>..=<span class="number">10.0</span>).custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">"{:.1}"</span>, v)).text_color(color));
 
                     ui.add_space(<span class="number">6.0</span>);
-                    ui.label(RichText::new(<span class="string">&quot;Tolerance:&quot;</span>).font(font.clone()).heading().color(color));
-                    ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.tolerance, <span class="number">0.0</span>..=<span class="number">0.003</span>).custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">&quot;{:.4}&quot;</span>, v)).text_color(color));
+                    ui.label(RichText::new(<span class="string">"Tolerance:"</span>).font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.tolerance, <span class="number">0.0</span>..=<span class="number">0.003</span>).custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">"{:.4}"</span>, v)).text_color(color));
 
                     ui.add_space(<span class="number">6.0</span>);
-                    ui.label(RichText::new(<span class="string">&quot;Extension:&quot;</span>).font(font.clone()).heading().color(color));
-                    ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.extension, <span class="number">0.0</span>..=<span class="number">256.0</span>).custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">&quot;{:.1}&quot;</span>, v)).text_color(color));
+                    ui.label(RichText::new(<span class="string">"Extension:"</span>).font(font.clone()).heading().color(color));
+                    ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.extension, <span class="number">0.0</span>..=<span class="number">256.0</span>).custom_formatter(|v, <span class="kw">_</span>| <span class="macro">format!</span>(<span class="string">"{:.1}"</span>, v)).text_color(color));
 
                     ui.add_space(<span class="number">6.0</span>);
-                    ui.label(RichText::new(<span class="string">&quot;Blur directions:&quot;</span>).font(font.clone()).heading().color(color));
+                    ui.label(RichText::new(<span class="string">"Blur directions:"</span>).font(font.clone()).heading().color(color));
                     <span class="kw">if </span>ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.blur_directions, <span class="number">0.0</span>..=<span class="number">64.0</span>).text_color(color)).changed() {
                         <span class="self">self</span>.update_shader_uniforms(state.renderer).unwrap();
                     }
 
                     ui.add_space(<span class="number">6.0</span>);
-                    ui.label(RichText::new(<span class="string">&quot;Blur quality:&quot;</span>).font(font.clone()).heading().color(color));
+                    ui.label(RichText::new(<span class="string">"Blur quality:"</span>).font(font.clone()).heading().color(color));
                     <span class="kw">if </span>ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.blur_quality, <span class="number">0.0</span>..=<span class="number">64.0</span>).text_color(color)).changed() {
                         <span class="self">self</span>.update_shader_uniforms(state.renderer).unwrap();
                     }
 
                     ui.add_space(<span class="number">6.0</span>);
-                    ui.label(RichText::new(<span class="string">&quot;Blur size:&quot;</span>).font(font.clone()).heading().color(color));
+                    ui.label(RichText::new(<span class="string">"Blur size:"</span>).font(font.clone()).heading().color(color));
                     <span class="kw">if </span>ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.blur_size, <span class="number">0.0</span>..=<span class="number">64.0</span>).text_color(color)).changed() {
                         <span class="self">self</span>.update_shader_uniforms(state.renderer).unwrap();
                     }
 
                     ui.add_space(<span class="number">10.0</span>);
-                    <span class="kw">if </span>ui.checkbox(<span class="kw-2">&amp;mut </span><span class="self">self</span>.msaa, RichText::new(<span class="string">&quot;Buffer MSAA&quot;</span>).font(font.clone()).heading().color(color)).changed() {
+                    <span class="kw">if </span>ui.checkbox(<span class="kw-2">&amp;mut </span><span class="self">self</span>.msaa, RichText::new(<span class="string">"Buffer MSAA"</span>).font(font.clone()).heading().color(color)).changed() {
                         <span class="kw">if </span><span class="self">self</span>.msaa {
                             state.renderer.set_framebuffer_msaa(<span class="prelude-val">Some</span>(<span class="number">4</span>));
                         } <span class="kw">else </span>{
                             state.renderer.set_framebuffer_msaa(<span class="prelude-val">None</span>);
                         }
                     }
-                    ui.checkbox(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.debug.enabled, RichText::new(<span class="string">&quot;Debug mode&quot;</span>).font(font.clone()).heading().color(color));
+                    ui.checkbox(<span class="kw-2">&amp;mut </span><span class="self">self</span>.emitter.debug.enabled, RichText::new(<span class="string">"Debug mode"</span>).font(font.clone()).heading().color(color));
                 }
             });
         });
@@ -686,12 +687,12 @@
 <span class="kw">impl </span>MainScene {
     <span class="kw">fn </span>update_shader_uniforms(<span class="kw-2">&amp;mut </span><span class="self">self</span>, renderer: <span class="kw-2">&amp;mut </span>RendererContext) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">for </span>shader <span class="kw">in </span>renderer.shaders.iter_mut() {
-            <span class="kw">if </span>shader.uniforms.contains_key(<span class="string">&quot;resolution&quot;</span>) {
+            <span class="kw">if </span>shader.uniforms.contains_key(<span class="string">"resolution"</span>) {
                 shader.activate();
-                shader.set_uniform(<span class="string">&quot;resolution&quot;</span>, [renderer.viewport_size.x, renderer.viewport_size.y].as_ptr());
-                shader.set_uniform(<span class="string">&quot;directions&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.blur_directions);
-                shader.set_uniform(<span class="string">&quot;quality&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.blur_quality);
-                shader.set_uniform(<span class="string">&quot;size&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.blur_size);
+                shader.set_uniform(<span class="string">"resolution"</span>, [renderer.viewport_size.x, renderer.viewport_size.y].as_ptr());
+                shader.set_uniform(<span class="string">"directions"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.blur_directions);
+                shader.set_uniform(<span class="string">"quality"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.blur_quality);
+                shader.set_uniform(<span class="string">"size"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.blur_size);
             }
         }
 
@@ -708,9 +709,9 @@
 }
 
 <span class="kw">fn </span>main_internal() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    ApplicationContext::&lt;GlobalData&gt;::new(<span class="string">&quot;Light&quot;</span>, WindowStyle::Window { size: Coordinates::new(<span class="number">1280</span>, <span class="number">720</span>) }, <span class="prelude-val">Some</span>(<span class="number">2</span>))<span class="question-mark">?
-        </span>.with_scene(<span class="string">&quot;MainScene&quot;</span>, Box::&lt;MainScene&gt;::default())
-        .run(<span class="string">&quot;MainScene&quot;</span>);
+    ApplicationContext::&lt;GlobalData&gt;::new(<span class="string">"Light"</span>, WindowStyle::Window { size: Coordinates::new(<span class="number">1280</span>, <span class="number">720</span>) }, <span class="prelude-val">Some</span>(<span class="number">2</span>))<span class="question-mark">?
+        </span>.with_scene(<span class="string">"MainScene"</span>, Box::&lt;MainScene&gt;::default())
+        .run(<span class="string">"MainScene"</span>);
 
     <span class="prelude-val">Ok</span>(())
 }

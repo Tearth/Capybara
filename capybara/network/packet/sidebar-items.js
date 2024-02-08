@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":["ARRAY_CID","OBJECT_CID","PING_CID","PONG_CID"],"enum":["Packet"],"mod":["from","into"]};
+window.SIDEBAR_ITEMS = {"constant":["ARRAY_CID","OBJECT_CID","PING_CID","PONG_CID"],"enum":["Packet"],"mod":["from","into"],"struct":["PacketEmptyHeader"]};

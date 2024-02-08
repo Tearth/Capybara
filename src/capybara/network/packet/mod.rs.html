@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `capybara\src\network\packet\mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../..\../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../..\../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../..\../" data-static-root-path="../../..\../static.files/" data-current-crate="capybara" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../..\../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../..\../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../..\../src-files.js"></script><script defer src="../../..\../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../..\../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../..\../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../..\../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../..\../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../..\../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../..\../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../..\../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `capybara\src\network\packet\mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../..\../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../..\../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../..\../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../..\../" data-static-root-path="../../..\../static.files/" data-current-crate="capybara" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../..\../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../..\../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../..\../src-files.js"></script><script defer src="../../..\../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../..\../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../..\../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../..\../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../..\../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../..\../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../..\../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../..\../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -96,6 +97,41 @@
 <a href="#96" id="96">96</a>
 <a href="#97" id="97">97</a>
 <a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>anyhow::bail;
 <span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>std::mem;
@@ -116,15 +152,17 @@
     Ping { timestamp: u64 },
     Pong { timestamp: u64 },
     Object { id: u16, data: Vec&lt;u8&gt; },
-    Array { id: u16, length: u32, data: Vec&lt;u8&gt; },
+    Array { id: u16, data: Vec&lt;u8&gt; },
     Unknown,
 }
+
+<span class="kw">pub struct </span>PacketEmptyHeader;
 
 <span class="kw">impl </span>Packet {
     <span class="kw">pub fn </span>get_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u16&gt; {
         <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self </span>{
             Packet::Object { id, data: <span class="kw">_ </span>} =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">*</span>id),
-            Packet::Array { id, length: <span class="kw">_</span>, data: <span class="kw">_ </span>} =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">*</span>id),
+            Packet::Array { id, data: <span class="kw">_ </span>} =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">*</span>id),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
@@ -143,9 +181,22 @@
     </span><span class="kw">where
         </span>T: Clone,
     {
+        <span class="self">Self</span>::from_array_with_header::&lt;PacketEmptyHeader, T&gt;(id, <span class="kw-2">&amp;</span>PacketEmptyHeader {}, array)
+    }
+
+    <span class="kw">pub fn </span>from_array_with_header&lt;H, T&gt;(id: u16, header: <span class="kw-2">&amp;</span>H, array: <span class="kw-2">&amp;</span>[T]) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>T: Clone,
+    {
         <span class="kw">unsafe </span>{
-            <span class="kw">let </span>data = slice::from_raw_parts(array.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>u8, mem::size_of_val(array));
-            Packet::Array { id, length: array.len() <span class="kw">as </span>u32, data: data.to_vec() }
+            <span class="kw">let </span>header_data = slice::from_raw_parts((header <span class="kw">as </span><span class="kw-2">*const </span>H) <span class="kw">as </span><span class="kw-2">*const </span>u8, mem::size_of::&lt;H&gt;());
+            <span class="kw">let </span>array_data = slice::from_raw_parts(array.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>u8, mem::size_of_val(array));
+
+            <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::new();
+            data.extend_from_slice(header_data);
+            data.extend_from_slice(array_data);
+
+            Packet::Array { id, data: data.to_vec() }
         }
     }
 
@@ -158,7 +209,7 @@
                 Packet::Object { id: <span class="kw">_</span>, data } =&gt; {
                     <span class="kw">let </span>size = mem::size_of::&lt;T&gt;();
                     <span class="kw">if </span>size != data.len() {
-                        <span class="macro">bail!</span>(<span class="string">&quot;Size of object is incorrect&quot;</span>);
+                        <span class="macro">bail!</span>(<span class="string">"Size of object is incorrect"</span>);
                     }
 
                     <span class="kw">let </span><span class="kw-2">mut </span>object = MaybeUninit::&lt;T&gt;::uninit();
@@ -167,7 +218,7 @@
 
                     <span class="prelude-val">Ok</span>(object.assume_init())
                 }
-                <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Packet is not a valid object&quot;</span>),
+                <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">"Packet is not a valid object"</span>),
             }
         }
     }
@@ -176,20 +227,40 @@
     <span class="kw">where
         </span>T: Clone,
     {
+        <span class="self">self</span>.to_array_with_header::&lt;PacketEmptyHeader, T&gt;().map(|p| p.<span class="number">1</span>)
+    }
+
+    <span class="kw">pub fn </span>to_array_with_header&lt;H, T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(H, Vec&lt;T&gt;)&gt;
+    <span class="kw">where
+        </span>T: Clone,
+    {
         <span class="kw">unsafe </span>{
             <span class="kw">match </span><span class="self">self </span>{
-                Packet::Array { id: <span class="kw">_</span>, length, data } =&gt; {
-                    <span class="kw">let </span>size = mem::size_of::&lt;T&gt;();
-                    <span class="kw">let </span>length = <span class="kw-2">*</span>length <span class="kw">as </span>usize;
+                Packet::Array { id: <span class="kw">_</span>, data } =&gt; {
+                    <span class="kw">let </span>header_size = mem::size_of::&lt;H&gt;();
+                    <span class="kw">let </span>item_size = mem::size_of::&lt;T&gt;();
 
-                    <span class="kw">if </span>size * length != data.len() {
-                        <span class="macro">bail!</span>(<span class="string">&quot;Size of array is incorrect&quot;</span>);
+                    <span class="kw">if </span>header_size &gt; data.len() {
+                        <span class="macro">bail!</span>(<span class="string">"Size of array is incorrect"</span>);
                     }
 
-                    <span class="kw">let </span>array = slice::from_raw_parts(data.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>T, length);
-                    <span class="prelude-val">Ok</span>(array.to_vec())
+                    <span class="kw">let </span>array_size = data.len() - header_size;
+                    <span class="kw">let </span>array_length = array_size / item_size;
+
+                    <span class="kw">if </span>item_size * array_length != array_size {
+                        <span class="macro">bail!</span>(<span class="string">"Size of array is incorrect"</span>);
+                    }
+
+                    <span class="kw">let </span><span class="kw-2">mut </span>header = MaybeUninit::&lt;H&gt;::uninit();
+                    <span class="kw">let </span>ptr = header.as_mut_ptr() <span class="kw">as </span><span class="kw-2">*mut </span>u8;
+                    ptr::copy_nonoverlapping(data.as_ptr(), ptr, header_size);
+
+                    <span class="kw">let </span>data_array_slice = <span class="kw-2">&amp;</span>data[header_size..];
+                    <span class="kw">let </span>array = slice::from_raw_parts(data_array_slice.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>T, array_length);
+
+                    <span class="prelude-val">Ok</span>((header.assume_init(), array.to_vec()))
                 }
-                <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">&quot;Packet is not a valid array&quot;</span>),
+                <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">"Packet is not a valid array"</span>),
             }
         }
     }

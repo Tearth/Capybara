@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples\template\src\scenes\menu.rs`."><title>menu.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="template" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples\template\src\scenes\menu.rs`."><title>menu.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="template" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -374,7 +375,7 @@
 <span class="kw">use </span>capybara::log::error;
 <span class="kw">use </span>capybara::scene::FrameCommand;
 <span class="kw">use </span>capybara::scene::Scene;
-<span class="kw">use </span>capybara::utils::color::Vec4Color;
+<span class="kw">use </span>capybara::utils::color::Vec4Utils;
 <span class="kw">use </span>capybara::window::InputEvent;
 
 <span class="attr">#[derive(Copy, Clone, Debug, PartialEq)]
@@ -413,13 +414,13 @@
         <span class="kw">let </span>effects_volume = state.global.settings.get::&lt;f32&gt;(SETTINGS_EFFECTS_VOLUME);
 
         <span class="kw">if let </span><span class="prelude-val">Err</span>(<span class="kw-2">ref </span>err) = master_volume {
-            <span class="macro">error!</span>(<span class="string">&quot;Failed to read master volume ({})&quot;</span>, err);
+            <span class="macro">error!</span>(<span class="string">"Failed to read master volume ({})"</span>, err);
         }
         <span class="kw">if let </span><span class="prelude-val">Err</span>(<span class="kw-2">ref </span>err) = music_volume {
-            <span class="macro">error!</span>(<span class="string">&quot;Failed to read music volume ({})&quot;</span>, err);
+            <span class="macro">error!</span>(<span class="string">"Failed to read music volume ({})"</span>, err);
         }
         <span class="kw">if let </span><span class="prelude-val">Err</span>(<span class="kw-2">ref </span>err) = effects_volume {
-            <span class="macro">error!</span>(<span class="string">&quot;Failed to read effects volume ({})&quot;</span>, err);
+            <span class="macro">error!</span>(<span class="string">"Failed to read effects volume ({})"</span>, err);
         }
 
         <span class="self">self</span>.settings = SettingsData {
@@ -450,24 +451,24 @@
     <span class="kw">fn </span>ui(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>state: ApplicationState&lt;GlobalData&gt;, input: RawInput) -&gt; <span class="prelude-ty">Result</span>&lt;(FullOutput, <span class="prelude-ty">Option</span>&lt;FrameCommand&gt;)&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>command = <span class="prelude-val">None</span>;
         <span class="kw">let </span>output = state.ui.inner.clone().read().unwrap().run(input, |context| {
-            TopBottomPanel::new(TopBottomSide::Top, Id::new(<span class="string">&quot;top_menu_panel&quot;</span>))
+            TopBottomPanel::new(TopBottomSide::Top, Id::new(<span class="string">"top_menu_panel"</span>))
                 .exact_height(<span class="number">200.0</span>)
                 .frame(Frame::none())
                 .show_separator_line(<span class="bool-val">false</span>)
                 .resizable(<span class="bool-val">false</span>)
                 .show(context, |ui| {
                     ui.vertical_centered(|ui| {
-                        ui.label(RichText::new(<span class="string">&quot;Template&quot;</span>.to_string()).size(<span class="number">160.0</span>).color(Color32::from_rgb(<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>)));
+                        ui.label(RichText::new(<span class="string">"Template"</span>.to_string()).size(<span class="number">160.0</span>).color(Color32::from_rgb(<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>)));
                     })
                 });
-            TopBottomPanel::new(TopBottomSide::Bottom, Id::new(<span class="string">&quot;bottom_menu_panel&quot;</span>))
+            TopBottomPanel::new(TopBottomSide::Bottom, Id::new(<span class="string">"bottom_menu_panel"</span>))
                 .exact_height(<span class="number">30.0</span>)
                 .frame(Frame::none())
                 .show_separator_line(<span class="bool-val">false</span>)
                 .resizable(<span class="bool-val">false</span>)
                 .show(context, |ui| {
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                        ui.label(RichText::new(<span class="string">&quot;Template v0.1&quot;</span>.to_string()).heading().color(Color32::from_rgb(<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>)));
+                        ui.label(RichText::new(<span class="string">"Template v0.1"</span>.to_string()).heading().color(Color32::from_rgb(<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>)));
                     });
                 });
 
@@ -491,7 +492,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>command = <span class="prelude-val">None</span>;
         <span class="kw">let </span>center = context.screen_rect().center();
 
-        Window::new(<span class="string">&quot;Main menu&quot;</span>)
+        Window::new(<span class="string">"Main menu"</span>)
             .frame(components::frame())
             .movable(<span class="bool-val">false</span>)
             .resizable(<span class="bool-val">false</span>)
@@ -502,19 +503,19 @@
             .default_width(<span class="number">200.0</span>)
             .show(context, |ui| {
                 ui.vertical_centered(|ui| {
-                    <span class="kw">if </span>components::button_primary(ui, state.ui, state.renderer, <span class="string">&quot;Play&quot;</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.play_button_state).clicked() {
-                        command = <span class="prelude-val">Some</span>(FrameCommand::ChangeScene { name: <span class="string">&quot;GameScene&quot;</span>.to_string() });
+                    <span class="kw">if </span>components::button_primary(ui, state.ui, state.renderer, <span class="string">"Play"</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.play_button_state).clicked() {
+                        command = <span class="prelude-val">Some</span>(FrameCommand::ChangeScene { name: <span class="string">"GameScene"</span>.to_string() });
                     }
 
                     ui.add_space(<span class="number">32.0</span>);
 
-                    <span class="kw">if </span>components::button_primary(ui, state.ui, state.renderer, <span class="string">&quot;Settings&quot;</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.settings_button_state).clicked() {
+                    <span class="kw">if </span>components::button_primary(ui, state.ui, state.renderer, <span class="string">"Settings"</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.settings_button_state).clicked() {
                         <span class="self">self</span>.sub_scene = MenuSubScene::Settings;
                     }
 
                     ui.add_space(<span class="number">32.0</span>);
 
-                    <span class="kw">if </span>components::button_primary(ui, state.ui, state.renderer, <span class="string">&quot;About&quot;</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.about_button_state).clicked() {
+                    <span class="kw">if </span>components::button_primary(ui, state.ui, state.renderer, <span class="string">"About"</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.about_button_state).clicked() {
                         <span class="self">self</span>.sub_scene = MenuSubScene::About;
                     }
 
@@ -522,7 +523,7 @@
                     </span>{
                         ui.add_space(<span class="number">32.0</span>);
 
-                        <span class="kw">if </span>components::button_primary(ui, state.ui, state.renderer, <span class="string">&quot;Exit&quot;</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.exit_button_state).clicked() {
+                        <span class="kw">if </span>components::button_primary(ui, state.ui, state.renderer, <span class="string">"Exit"</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.exit_button_state).clicked() {
                             state.window.close();
                         }
                     }
@@ -536,7 +537,7 @@
         <span class="kw">let </span>command = <span class="prelude-val">None</span>;
         <span class="kw">let </span>center = context.screen_rect().center();
 
-        Window::new(<span class="string">&quot;Settings&quot;</span>)
+        Window::new(<span class="string">"Settings"</span>)
             .frame(components::frame())
             .movable(<span class="bool-val">false</span>)
             .resizable(<span class="bool-val">false</span>)
@@ -553,7 +554,7 @@
                     ui.visuals_mut().selection.bg_fill = Color32::from_rgba_unmultiplied(<span class="number">100</span>, <span class="number">100</span>, <span class="number">100</span>, <span class="number">255</span>);
                     ui.visuals_mut().slider_trailing_fill = <span class="bool-val">true</span>;
 
-                    Grid::new(<span class="string">&quot;SettingsGrid&quot;</span>).min_row_height(<span class="number">24.0</span>).show(ui, |ui| {
+                    Grid::new(<span class="string">"SettingsGrid"</span>).min_row_height(<span class="number">24.0</span>).show(ui, |ui| {
                         <span class="kw">let </span>music_track = state.global.music_track.as_ref().unwrap();
                         <span class="kw">let </span>effects_track = state.global.effects_track.as_ref().unwrap();
 
@@ -561,30 +562,30 @@
                         <span class="kw">let </span>music_volume = <span class="kw-2">&amp;mut </span><span class="self">self</span>.settings.music_volume;
                         <span class="kw">let </span>effects_volume = <span class="kw-2">&amp;mut </span><span class="self">self</span>.settings.effects_volume;
 
-                        ui.label(<span class="string">&quot;Master Volume:&quot;</span>);
+                        ui.label(<span class="string">"Master Volume:"</span>);
                         <span class="kw">if </span>ui.add(Slider::new(master_volume, <span class="number">0.0</span>..=<span class="number">1.0</span>).show_value(<span class="bool-val">false</span>)).changed() {
                             <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = music_track.set_volume((<span class="kw-2">*</span>master_volume * <span class="kw-2">*</span>music_volume) <span class="kw">as </span>f64, Tween::default()) {
-                                <span class="macro">error!</span>(<span class="string">&quot;Failed to set music volume ({})&quot;</span>, err);
+                                <span class="macro">error!</span>(<span class="string">"Failed to set music volume ({})"</span>, err);
                             }
 
                             <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = effects_track.set_volume((<span class="kw-2">*</span>master_volume * <span class="kw-2">*</span>effects_volume) <span class="kw">as </span>f64, Tween::default()) {
-                                <span class="macro">error!</span>(<span class="string">&quot;Failed to set effects volume ({})&quot;</span>, err);
+                                <span class="macro">error!</span>(<span class="string">"Failed to set effects volume ({})"</span>, err);
                             }
                         }
                         ui.end_row();
 
-                        ui.label(<span class="string">&quot;Music Volume:&quot;</span>);
+                        ui.label(<span class="string">"Music Volume:"</span>);
                         <span class="kw">if </span>ui.add(Slider::new(music_volume, <span class="number">0.0</span>..=<span class="number">1.0</span>).show_value(<span class="bool-val">false</span>)).changed() {
                             <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = music_track.set_volume((<span class="kw-2">*</span>master_volume * <span class="kw-2">*</span>music_volume) <span class="kw">as </span>f64, Tween::default()) {
-                                <span class="macro">error!</span>(<span class="string">&quot;Failed to set music volume ({})&quot;</span>, err);
+                                <span class="macro">error!</span>(<span class="string">"Failed to set music volume ({})"</span>, err);
                             }
                         }
                         ui.end_row();
 
-                        ui.label(<span class="string">&quot;Effects Volume:&quot;</span>);
+                        ui.label(<span class="string">"Effects Volume:"</span>);
                         <span class="kw">if </span>ui.add(Slider::new(effects_volume, <span class="number">0.0</span>..=<span class="number">1.0</span>).show_value(<span class="bool-val">false</span>)).changed() {
                             <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = effects_track.set_volume((<span class="kw-2">*</span>master_volume * <span class="kw-2">*</span>effects_volume) <span class="kw">as </span>f64, Tween::default()) {
-                                <span class="macro">error!</span>(<span class="string">&quot;Failed to set effects volume ({})&quot;</span>, err);
+                                <span class="macro">error!</span>(<span class="string">"Failed to set effects volume ({})"</span>, err);
                             }
                         }
                         ui.end_row();
@@ -593,7 +594,7 @@
                     ui.add_space(<span class="number">16.0</span>);
 
                     ui.horizontal(|ui| {
-                        <span class="kw">if </span>components::button_primary(ui, state.ui, state.renderer, <span class="string">&quot;Save&quot;</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.play_button_state).clicked() {
+                        <span class="kw">if </span>components::button_primary(ui, state.ui, state.renderer, <span class="string">"Save"</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.play_button_state).clicked() {
                             state.global.settings.set(SETTINGS_MASTER_VOLUME, <span class="self">self</span>.settings.master_volume, <span class="bool-val">true</span>);
                             state.global.settings.set(SETTINGS_MUSIC_VOLUME, <span class="self">self</span>.settings.music_volume, <span class="bool-val">true</span>);
                             state.global.settings.set(SETTINGS_EFFECTS_VOLUME, <span class="self">self</span>.settings.effects_volume, <span class="bool-val">true</span>);
@@ -603,7 +604,7 @@
 
                         ui.add_space(<span class="number">32.0</span>);
 
-                        <span class="kw">if </span>components::button_secondary(ui, state.ui, state.renderer, <span class="string">&quot;Back&quot;</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.back_button_state).clicked() {
+                        <span class="kw">if </span>components::button_secondary(ui, state.ui, state.renderer, <span class="string">"Back"</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.back_button_state).clicked() {
                             <span class="kw">let </span>music_track = state.global.music_track.as_ref().unwrap();
                             <span class="kw">let </span>effect_track = state.global.effects_track.as_ref().unwrap();
 
@@ -612,13 +613,13 @@
                             <span class="kw">let </span>effects_volume = state.global.settings.get::&lt;f64&gt;(SETTINGS_EFFECTS_VOLUME);
 
                             <span class="kw">if let </span><span class="prelude-val">Err</span>(<span class="kw-2">ref </span>err) = master_volume {
-                                <span class="macro">error!</span>(<span class="string">&quot;Failed to read master volume ({})&quot;</span>, err);
+                                <span class="macro">error!</span>(<span class="string">"Failed to read master volume ({})"</span>, err);
                             }
                             <span class="kw">if let </span><span class="prelude-val">Err</span>(<span class="kw-2">ref </span>err) = music_volume {
-                                <span class="macro">error!</span>(<span class="string">&quot;Failed to read music volume ({})&quot;</span>, err);
+                                <span class="macro">error!</span>(<span class="string">"Failed to read music volume ({})"</span>, err);
                             }
                             <span class="kw">if let </span><span class="prelude-val">Err</span>(<span class="kw-2">ref </span>err) = effects_volume {
-                                <span class="macro">error!</span>(<span class="string">&quot;Failed to read effects volume ({})&quot;</span>, err);
+                                <span class="macro">error!</span>(<span class="string">"Failed to read effects volume ({})"</span>, err);
                             }
 
                             <span class="kw">let </span>master_volume = master_volume.unwrap_or(<span class="number">1.0</span>);
@@ -626,11 +627,11 @@
                             <span class="kw">let </span>effects_volume = effects_volume.unwrap_or(<span class="number">1.0</span>);
 
                             <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = music_track.set_volume(music_volume * master_volume, Tween::default()) {
-                                <span class="macro">error!</span>(<span class="string">&quot;Failed to set music volume ({})&quot;</span>, err);
+                                <span class="macro">error!</span>(<span class="string">"Failed to set music volume ({})"</span>, err);
                             }
 
                             <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = effect_track.set_volume(effects_volume * master_volume, Tween::default()) {
-                                <span class="macro">error!</span>(<span class="string">&quot;Failed to set effects volume ({})&quot;</span>, err);
+                                <span class="macro">error!</span>(<span class="string">"Failed to set effects volume ({})"</span>, err);
                             }
 
                             <span class="self">self</span>.sub_scene = MenuSubScene::Main;
@@ -646,7 +647,7 @@
         <span class="kw">let </span>command = <span class="prelude-val">None</span>;
         <span class="kw">let </span>center = context.screen_rect().center();
 
-        Window::new(<span class="string">&quot;About&quot;</span>)
+        Window::new(<span class="string">"About"</span>)
             .frame(components::frame())
             .movable(<span class="bool-val">false</span>)
             .resizable(<span class="bool-val">false</span>)
@@ -659,16 +660,16 @@
                 ui.vertical_centered(|ui| {
                     ui.label(
                         RichText::new(
-                            <span class="string">&quot;Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras eleifend et mi sit amet convallis. \
+                            <span class="string">"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras eleifend et mi sit amet convallis. \
                             Fusce posuere eget ligula non facilisis. Cras vulputate suscipit ipsum faucibus convallis. \
                             Sed maximus ultricies libero, non varius erat cursus vulputate. Curabitur consequat, dui at semper \
-                            accumsan, mi dui blandit libero, a viverra leo urna nec ligula.&quot;</span>,
+                            accumsan, mi dui blandit libero, a viverra leo urna nec ligula."</span>,
                         )
                         .color(Color32::from_rgb(<span class="number">40</span>, <span class="number">70</span>, <span class="number">30</span>)),
                     );
                     ui.add_space(<span class="number">20.0</span>);
 
-                    <span class="kw">if </span>components::button_primary(ui, state.ui, state.renderer, <span class="string">&quot;Back&quot;</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.back_button_state).clicked() {
+                    <span class="kw">if </span>components::button_primary(ui, state.ui, state.renderer, <span class="string">"Back"</span>, <span class="kw-2">&amp;mut </span><span class="self">self</span>.back_button_state).clicked() {
                         <span class="self">self</span>.sub_scene = MenuSubScene::Main;
                     }
                 });

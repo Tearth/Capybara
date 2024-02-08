@@ -12,23 +12,23 @@ utils = [ "dep:noise", "dep:pathfinding" ]
 [dependencies]
 anyhow = { version = "1.0.79" }
 log = { version = "0.4.20" }
-glow = { version = "0.13.0" }
+glow = { version = "0.13.1" }
 glam = { version = "0.24.2" }
 egui = { version = "0.24.1", default-features = false }
 egui_plot = { version = "0.24.2" }
 zip = { version = "0.6.6", default-features = false, features = [ "deflate" ] }
-png = { version = "0.17.10" }
+png = { version = "0.17.11" }
 quick-xml = { version = "0.31.0" }
 rustc-hash = { version = "1.1.0" }
-kira = { version = "0.8.5", default-features = false, features = [ "cpal", "wav", "ogg" ], optional = true  }
-rapier2d = { version = "0.17.2", optional = true }
+kira = { version = "0.8.7", default-features = false, features = [ "cpal", "wav", "ogg" ], optional = true  }
+rapier2d = { version = "0.18.0", optional = true }
 nalgebra = { version = "0.32.3", features = [ "convert-glam024" ], optional = true }
 fastrand = { version = "2.0.1" }
 arrayvec = { version = "0.7.4" }
 tinyjson = { version = "2.5.1" }
 colors-transform = { version = "0.2.11" }
 noise = { version = "0.8.2", optional = true }
-pathfinding = { version = "4.8.0", optional = true }
+pathfinding = { version = "4.8.2", optional = true }
 
 [build-dependencies]
 cfg_aliases = { version = "0.2.0" }
@@ -37,7 +37,7 @@ cfg_aliases = { version = "0.2.0" }
 winapi = { version = "0.3.9", features = [ "winuser", "libloaderapi", "errhandlingapi", "processthreadsapi", "psapi" ]}
 simple_logger = { version = "4.3.3" }
 instant = { version = "0.1.12" }
-tokio = { version = "1.35.1", features = [ "rt-multi-thread", "macros" ], optional = true }
+tokio = { version = "1.36.0", features = [ "rt-multi-thread", "macros" ], optional = true }
 tokio-tungstenite = { version = "0.21.0", features = [ "native-tls" ], optional = true }
 url = { version = "2.5.0", optional = true }
 futures-util = { version = "0.3", optional = true }
@@ -47,14 +47,14 @@ futures-channel = { version = "0.3", optional = true }
 x11 = { version = "2.21.0", features = [ "xlib", "xfixes", "glx" ]}
 simple_logger = { version = "4.3.3" }
 instant = { version = "0.1.12" }
-tokio = { version = "1.35.1", features = [ "rt-multi-thread", "macros" ], optional = true }
+tokio = { version = "1.36.0", features = [ "rt-multi-thread", "macros" ], optional = true }
 tokio-tungstenite = { version = "0.21.0", features = [ "native-tls" ], optional = true }
 url = { version = "2.5.0", optional = true }
 futures-util = { version = "0.3", optional = true }
 futures-channel = { version = "0.3", optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-web-sys = { version = "0.3.66", features = [
+web-sys = { version = "0.3.68", features = [
     "Window", 
     "Document", 
     "Element", 
@@ -76,8 +76,8 @@ web-sys = { version = "0.3.66", features = [
     "TouchEvent",
     "TouchList"
 ]}
-js-sys = { version = "0.3.66" }
-wasm-bindgen = { version = "0.2.89" }
+js-sys = { version = "0.3.68" }
+wasm-bindgen = { version = "0.2.91" }
 console_log = { version = "1.0.0" }
 console_error_panic_hook = { version = "0.1.7" }
 instant = { version = "0.1.12", features = [ "wasm-bindgen" ] }

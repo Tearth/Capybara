@@ -7,12 +7,12 @@ edition = "2021"
 network-template-base = { path = "../base" }
 capybara = { path = "../../../../capybara", features = [ "network" ] }
 log = { version = "0.4.20" }
-tokio = { version = "1.35.1", features = [ "time", "io-std" ] }
+tokio = { version = "1.36.0", features = [ "time", "io-std" ] }
 futures-util = { version = "0.3" }
 futures-channel = { version = "0.3" }
 tinyjson = { version = "2.5.1" }
 fern = { version = "0.6.2", features = [ "date-based" ] }
-chrono = { version = "0.4.32" }
+chrono = { version = "0.4.33" }
 
 [build-dependencies]
 cfg_aliases = { version = "0.2.0" }

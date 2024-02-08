@@ -1,6 +1,6 @@
 $ZIP = "windows"
-$EXEC_TARGET = "jam"
-$EXEC_ZIP = "jam"
+$EXEC_TARGET = "template"
+$EXEC_ZIP = "template"
 
 Write-Output "Building Windows binary..."
 Start-Process -FilePath "cargo" -ArgumentList "build --release --target=x86_64-pc-windows-msvc" -Wait -NoNewWindow

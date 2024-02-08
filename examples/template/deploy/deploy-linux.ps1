@@ -1,6 +1,6 @@
 $ZIP = "linux"
-$EXEC_TARGET = "jam"
-$EXEC_ZIP = "jam"
+$EXEC_TARGET = "template"
+$EXEC_ZIP = "template"
 
 Write-Output "Building Linux binary..."
 Start-Process -FilePath "cross" -ArgumentList "build --release --target=x86_64-unknown-linux-gnu" -Wait -NoNewWindow

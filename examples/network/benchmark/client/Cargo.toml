@@ -4,8 +4,8 @@ version = "1.0.0"
 edition = "2021"
 
 [dependencies]
-network-benchmark-base = { path = "../base" }
 capybara = { path = "../../../../capybara", features = [ "network" ] }
+network-benchmark-base = { path = "../base" }
 
 [build-dependencies]
 anyhow = { version = "1.0.79" }

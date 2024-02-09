@@ -1,10 +1,10 @@
 [package]
-name = "network-template-worker"
+name = "snake-worker"
 version = "1.0.0"
 edition = "2021"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-network-template-base = { path = "../base" }
+snake-base = { path = "../base" }
 capybara = { path = "../../../../capybara", features = [ "network" ] }
 log = { version = "0.4.20" }
 tokio = { version = "1.36.0", features = [ "time", "io-std" ] }

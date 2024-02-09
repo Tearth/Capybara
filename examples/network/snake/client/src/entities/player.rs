@@ -6,8 +6,8 @@ use capybara::glam::Vec4;
 use capybara::instant::Instant;
 use capybara::renderer::shape::Shape;
 use capybara::utils::color::Vec4Utils;
-use network_template_base::game::simulation;
-use network_template_base::game::GameState;
+use snake_base::game::simulation;
+use snake_base::game::GameState;
 
 const INPUT_RESEND_INTERVAL: u32 = 500;
 

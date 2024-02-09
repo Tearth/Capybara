@@ -4,7 +4,7 @@ use capybara::network::client::ConnectionStatus;
 use capybara::network::client::WebSocketClient;
 use capybara::network::packet::Packet;
 use log::info;
-use network_template_base::packets::*;
+use snake_base::packets::*;
 
 pub const HUB_ENDPOINT: &str = "ws://localhost:10000";
 pub const SERVER_PING_INTERVAL: i32 = 1000;

@@ -1,12 +1,12 @@
 [package]
-name = "network-template-client"
+name = "snake-client"
 version = "1.0.0"
 edition = "2021"
 
 [dependencies]
 capybara = { path = "../../../../capybara", features = [ "audio", "network" ] }
 log = { version = "0.4.20" }
-network-template-base = { path = "../base" }
+snake-base = { path = "../base" }
 
 [build-dependencies]
 anyhow = { version = "1.0.79" }

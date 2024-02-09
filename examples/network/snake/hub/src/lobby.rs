@@ -3,7 +3,7 @@ use crate::workers::WorkerConnection;
 use capybara::network::client::ConnectionStatus;
 use capybara::network::packet::Packet;
 use capybara::utils::string::StringUtils;
-use network_template_base::packets::*;
+use snake_base::packets::*;
 
 pub struct Lobby {}
 

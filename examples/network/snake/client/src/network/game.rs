@@ -6,9 +6,9 @@ use capybara::network::client::WebSocketClient;
 use capybara::network::packet::Packet;
 use capybara::rustc_hash::FxHashMap;
 use log::info;
-use network_template_base::game::simulation;
-use network_template_base::game::GameState;
-use network_template_base::packets::*;
+use snake_base::game::simulation;
+use snake_base::game::GameState;
+use snake_base::packets::*;
 use std::collections::VecDeque;
 use std::time::Duration;
 

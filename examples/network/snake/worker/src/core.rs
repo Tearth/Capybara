@@ -15,7 +15,7 @@ use futures_channel::mpsc;
 use futures_util::StreamExt;
 use log::error;
 use log::info;
-use network_template_base::packets::*;
+use snake_base::packets::*;
 use std::collections::VecDeque;
 use std::fs;
 use std::panic;

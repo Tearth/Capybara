@@ -1,5 +1,5 @@
 [package]
-name = "network-template-base"
+name = "snake-base"
 version = "1.0.0"
 edition = "2021"
 

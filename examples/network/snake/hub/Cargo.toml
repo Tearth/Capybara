@@ -4,15 +4,15 @@ version = "1.0.0"
 edition = "2021"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-snake-base = { path = "../base" }
 capybara = { path = "../../../../capybara", features = [ "network" ] }
-log = { version = "0.4.20" }
-tokio = { version = "1.36.0", features = [ "time", "io-std" ] }
-futures-util = { version = "0.3" }
-futures-channel = { version = "0.3" }
-tinyjson = { version = "2.5.1" }
-fern = { version = "0.6.2", features = [ "date-based" ] }
 chrono = { version = "0.4.33" }
+fern = { version = "0.6.2", features = [ "date-based" ] }
+futures-channel = { version = "0.3" }
+futures-util = { version = "0.3" }
+log = { version = "0.4.20" }
+snake-base = { path = "../base" }
+tinyjson = { version = "2.5.1" }
+tokio = { version = "1.36.0", features = [ "io-std", "time" ] }
 
 [build-dependencies]
 cfg_aliases = { version = "0.2.0" }

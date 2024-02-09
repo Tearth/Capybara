@@ -4,13 +4,13 @@ version = "1.0.0"
 edition = "2021"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-simple-base = { path = "../base" }
 capybara = { path = "../../../../capybara", features = [ "network" ] }
+futures-channel = { version = "0.3" }
+futures-util = { version = "0.3" }
 log = { version = "0.4.20" }
+simple-base = { path = "../base" }
 simple_logger = { version = "4.3.3", default-features = false, features = [ "timestamps" ]}
 tokio = { version = "1.36.0", features = [ "time" ] }
-futures-util = { version = "0.3" }
-futures-channel = { version = "0.3" }
 
 [build-dependencies]
 cfg_aliases = { version = "0.2.0" }

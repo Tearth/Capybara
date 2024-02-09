@@ -31,8 +31,8 @@ use capybara::window::Coordinates;
 use capybara::window::InputEvent;
 use capybara::window::Key;
 use capybara::window::WindowStyle;
-use network_benchmark_base::PacketSetViewport;
-use network_benchmark_base::*;
+use simple_base::PacketSetViewport;
+use simple_base::*;
 use std::collections::VecDeque;
 
 fast_gpu!();
@@ -96,7 +96,6 @@ impl Scene<GlobalData> for MainScene {
             state.renderer.instantiate_assets(&state.global.assets, None);
             state.ui.instantiate_assets(&state.global.assets, None);
 
-            //self.client.connect("wss://d8fd-195-136-14-43.ngrok-free.app");
             self.client.connect("ws://localhost:9999");
             self.initialized = true;
         }

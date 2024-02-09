@@ -11,9 +11,9 @@ members = [
     "examples/template",
     "examples/ui",
     
-    "examples/network/benchmark/base",
-    "examples/network/benchmark/client",
-    "examples/network/benchmark/server",
+    "examples/network/simple/base",
+    "examples/network/simple/client",
+    "examples/network/simple/server",
 
     "examples/network/snake/base",
     "examples/network/snake/client",

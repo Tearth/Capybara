@@ -1,10 +1,10 @@
 [package]
-name = "network-benchmark-server"
+name = "simple-server"
 version = "1.0.0"
 edition = "2021"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-network-benchmark-base = { path = "../base" }
+simple-base = { path = "../base" }
 capybara = { path = "../../../../capybara", features = [ "network" ] }
 log = { version = "0.4.20" }
 simple_logger = { version = "4.3.3", default-features = false, features = [ "timestamps" ]}

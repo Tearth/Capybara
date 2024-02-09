@@ -1,5 +1,5 @@
 [package]
-name = "network-benchmark-base"
+name = "simple-base"
 version = "1.0.0"
 edition = "2021"
 

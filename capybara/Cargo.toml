@@ -4,10 +4,10 @@ version = "1.0.0"
 edition = "2021"
 
 [features]
-audio = [ "dep:kira" ]
-network = [ "dep:futures-channel", "dep:futures-util", "dep:tokio", "dep:tokio-tungstenite", "dep:url" ]
-physics = [ "dep:nalgebra", "dep:rapier2d" ]
-utils = [ "dep:noise", "dep:pathfinding" ]
+audio = ["dep:kira"]
+network = ["dep:futures-channel", "dep:futures-util", "dep:tokio", "dep:tokio-tungstenite", "dep:url"]
+physics = ["dep:nalgebra", "dep:rapier2d"]
+utils = ["dep:noise", "dep:pathfinding"]
 
 [dependencies]
 anyhow = { version = "1.0.79" }
@@ -18,9 +18,9 @@ egui_plot = { version = "0.24.2" }
 fastrand = { version = "2.0.1" }
 glam = { version = "0.24.2" }
 glow = { version = "0.13.1" }
-kira = { version = "0.8.7", default-features = false, features = [ "cpal", "ogg", "wav" ], optional = true  }
+kira = { version = "0.8.7", default-features = false, features = ["cpal", "ogg", "wav"], optional = true  }
 log = { version = "0.4.20" }
-nalgebra = { version = "0.32.3", features = [ "convert-glam024" ], optional = true }
+nalgebra = { version = "0.32.3", features = ["convert-glam024"], optional = true }
 noise = { version = "0.8.2", optional = true }
 pathfinding = { version = "4.8.2", optional = true }
 png = { version = "0.17.11" }
@@ -28,7 +28,7 @@ quick-xml = { version = "0.31.0" }
 rapier2d = { version = "0.18.0", optional = true }
 rustc-hash = { version = "1.1.0" }
 tinyjson = { version = "2.5.1" }
-zip = { version = "0.6.6", default-features = false, features = [ "deflate" ] }
+zip = { version = "0.6.6", default-features = false, features = ["deflate"] }
 
 [build-dependencies]
 cfg_aliases = { version = "0.2.0" }
@@ -38,8 +38,8 @@ futures-channel = { version = "0.3", optional = true }
 futures-util = { version = "0.3", optional = true }
 instant = { version = "0.1.12" }
 simple_logger = { version = "4.3.3" }
-tokio = { version = "1.36.0", features = [ "macros", "rt-multi-thread" ], optional = true }
-tokio-tungstenite = { version = "0.21.0", features = [ "native-tls" ], optional = true }
+tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread"], optional = true }
+tokio-tungstenite = { version = "0.21.0", features = ["native-tls"], optional = true }
 url = { version = "2.5.0", optional = true }
 winapi = { version = "0.3.9", features = [
     "errhandlingapi",
@@ -54,15 +54,15 @@ futures-channel = { version = "0.3", optional = true }
 futures-util = { version = "0.3", optional = true }
 instant = { version = "0.1.12" }
 simple_logger = { version = "4.3.3" }
-tokio = { version = "1.36.0", features = [ "macros", "rt-multi-thread" ], optional = true }
-tokio-tungstenite = { version = "0.21.0", features = [ "native-tls" ], optional = true }
+tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread"], optional = true }
+tokio-tungstenite = { version = "0.21.0", features = ["native-tls"], optional = true }
 url = { version = "2.5.0", optional = true }
-x11 = { version = "2.21.0", features = [ "glx", "xfixes", "xlib" ]}
+x11 = { version = "2.21.0", features = ["glx", "xfixes", "xlib"]}
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = { version = "0.1.7" }
 console_log = { version = "1.0.0" }
-instant = { version = "0.1.12", features = [ "wasm-bindgen" ] }
+instant = { version = "0.1.12", features = ["wasm-bindgen"] }
 js-sys = { version = "0.3.68" }
 wasm-bindgen = { version = "0.2.91" }
 web-sys = { version = "0.3.68", features = [

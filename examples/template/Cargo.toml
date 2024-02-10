@@ -4,7 +4,7 @@ version = "1.0.0"
 edition = "2021"
 
 [dependencies]
-capybara = { path = "../../capybara", features = [ "audio" ] }
+capybara = { path = "../../capybara", features = ["audio"] }
 
 [build-dependencies]
 anyhow = { version = "1.0.79" }

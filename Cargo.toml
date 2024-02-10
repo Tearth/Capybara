@@ -4,6 +4,7 @@ members = [
     "capybara",
 
     "examples/benchmark",
+    "examples/editor",
     "examples/ldtk",
     "examples/light",
     "examples/particles",

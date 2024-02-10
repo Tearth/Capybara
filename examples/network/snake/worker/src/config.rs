@@ -1,6 +1,6 @@
 use capybara::anyhow::Result;
 use capybara::error_return;
-use capybara::utils::json::*;
+use capybara::utils::json;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
@@ -65,12 +65,12 @@ impl ConfigLoader {
     }
 
     fn parse(&mut self, data: &HashMap<String, JsonValue>) -> Result<()> {
-        self.data.endpoint = read_value::<String>(data, "endpoint")?;
-        self.data.worker_tick = read_value::<f64>(data, "worker_tick")? as u32;
-        self.data.packet_delay_base = read_value::<f64>(data, "packet_delay_base")? as u32;
-        self.data.packet_delay_variation = read_value::<f64>(data, "packet_delay_variation")? as u32;
-        self.data.input_max_delay = read_value::<f64>(data, "input_max_delay")? as u32;
-        self.data.client_ping_interval = read_value::<f64>(data, "client_ping_interval")? as u32;
+        self.data.endpoint = json::read_value::<String>(data, "endpoint")?;
+        self.data.worker_tick = json::read_value::<f64>(data, "worker_tick")? as u32;
+        self.data.packet_delay_base = json::read_value::<f64>(data, "packet_delay_base")? as u32;
+        self.data.packet_delay_variation = json::read_value::<f64>(data, "packet_delay_variation")? as u32;
+        self.data.input_max_delay = json::read_value::<f64>(data, "input_max_delay")? as u32;
+        self.data.client_ping_interval = json::read_value::<f64>(data, "client_ping_interval")? as u32;
 
         Ok(())
     }

@@ -1,6 +1,6 @@
 use capybara::anyhow::Result;
 use capybara::error_return;
-use capybara::utils::json::*;
+use capybara::utils::json;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
@@ -74,19 +74,19 @@ impl ConfigLoader {
     }
 
     fn parse(&mut self, data: &HashMap<String, JsonValue>) -> Result<()> {
-        self.data.endpoint = read_value::<String>(data, "endpoint")?;
-        self.data.lobby_tick = read_value::<f64>(data, "lobby_tick")? as u32;
-        self.data.worker_status_interval = read_value::<f64>(data, "worker_status_interval")? as u32;
-        self.data.packet_delay_base = read_value::<f64>(data, "packet_delay_base")? as u32;
-        self.data.packet_delay_variation = read_value::<f64>(data, "packet_delay_variation")? as u32;
+        self.data.endpoint = json::read_value::<String>(data, "endpoint")?;
+        self.data.lobby_tick = json::read_value::<f64>(data, "lobby_tick")? as u32;
+        self.data.worker_status_interval = json::read_value::<f64>(data, "worker_status_interval")? as u32;
+        self.data.packet_delay_base = json::read_value::<f64>(data, "packet_delay_base")? as u32;
+        self.data.packet_delay_variation = json::read_value::<f64>(data, "packet_delay_variation")? as u32;
 
-        for worker_data in read_array(data, "workers")? {
+        for worker_data in json::read_array(data, "workers")? {
             self.data.workers.push(ConfigWorkerData {
-                id: read_value::<String>(worker_data, "id")?,
-                name: read_value::<String>(worker_data, "name")?,
-                flag: read_value::<String>(worker_data, "flag")?,
-                address: read_value::<String>(worker_data, "address")?,
-                enabled: read_value::<bool>(worker_data, "enabled")?,
+                id: json::read_value::<String>(worker_data, "id")?,
+                name: json::read_value::<String>(worker_data, "name")?,
+                flag: json::read_value::<String>(worker_data, "flag")?,
+                address: json::read_value::<String>(worker_data, "address")?,
+                enabled: json::read_value::<bool>(worker_data, "enabled")?,
             });
         }
 

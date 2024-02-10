@@ -1,5 +1,5 @@
 use crate::utils::color::RgbUtils;
-use crate::utils::json::*;
+use crate::utils::json;
 use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Error;
@@ -82,11 +82,11 @@ pub enum LdtkEntityField {
 
 pub fn load_world(name: &str, path: &str, data: &HashMap<String, JsonValue>) -> Result<LdtkWorld> {
     let mut world = LdtkWorld::default();
-    let definitions = read_object(data, "defs")?;
-    let tilemap_definitions = read_array(definitions, "tilesets")?;
-    let layer_definitions = read_array(definitions, "layers")?;
-    let entity_definitions = read_array(definitions, "entities")?;
-    let levels = read_array(data, "levels")?;
+    let definitions = json::read_object(data, "defs")?;
+    let tilemap_definitions = json::read_array(definitions, "tilesets")?;
+    let layer_definitions = json::read_array(definitions, "layers")?;
+    let entity_definitions = json::read_array(definitions, "entities")?;
+    let levels = json::read_array(data, "levels")?;
 
     world.name = name.to_string();
     world.path = path.to_string();
@@ -103,9 +103,9 @@ pub fn load_world(name: &str, path: &str, data: &HashMap<String, JsonValue>) -> 
 }
 
 fn load_tilemap(data: &HashMap<String, JsonValue>) -> Result<LdtkTilemap> {
-    let path = read_value::<String>(data, "relPath")?;
-    let tile_size = read_value::<f64>(data, "tileGridSize")? as f32;
-    let custom_data = read_array(data, "customData")?;
+    let path = json::read_value::<String>(data, "relPath")?;
+    let tile_size = json::read_value::<f64>(data, "tileGridSize")? as f32;
+    let custom_data = json::read_array(data, "customData")?;
 
     let name = match Path::new(&path).file_stem().and_then(|p| p.to_str()) {
         Some(name) => name.to_string(),
@@ -113,16 +113,16 @@ fn load_tilemap(data: &HashMap<String, JsonValue>) -> Result<LdtkTilemap> {
     };
 
     let mut tilemap = LdtkTilemap {
-        id: read_value::<f64>(data, "uid")? as usize,
+        id: json::read_value::<f64>(data, "uid")? as usize,
         name,
-        path: read_value::<String>(data, "relPath")?,
+        path: json::read_value::<String>(data, "relPath")?,
         tile_size: Vec2::new(tile_size, tile_size),
         custom: Default::default(),
     };
 
     for data in custom_data {
-        let tile_id = read_value::<f64>(data, "tileId")? as usize;
-        let data = read_value::<String>(data, "data")?;
+        let tile_id = json::read_value::<f64>(data, "tileId")? as usize;
+        let data = json::read_value::<String>(data, "data")?;
 
         tilemap.custom.insert(tile_id, data);
     }
@@ -137,25 +137,25 @@ fn load_level(
     entity_definitions: &[&HashMap<String, JsonValue>],
 ) -> Result<LdtkLevel> {
     let mut level = LdtkLevel {
-        id: read_value::<f64>(data, "uid")? as usize,
-        name: read_value::<String>(data, "identifier")?,
-        size: Vec2::new(read_value::<f64>(data, "pxWid")? as f32, read_value::<f64>(data, "pxHei")? as f32),
-        background: read_color(data, "bgColor")?,
+        id: json::read_value::<f64>(data, "uid")? as usize,
+        name: json::read_value::<String>(data, "identifier")?,
+        size: Vec2::new(json::read_value::<f64>(data, "pxWid")? as f32, json::read_value::<f64>(data, "pxHei")? as f32),
+        background: json::read_color(data, "bgColor")?,
         layers: Vec::new(),
     };
 
-    let layers = read_array(data, "layerInstances")?;
+    let layers = json::read_array(data, "layerInstances")?;
 
     for data in layers {
-        let id = read_value::<f64>(data, "layerDefUid")? as usize;
-        let layer_definition = match layer_definitions.iter().find(|p| read_value::<f64>(p, "uid").unwrap_or(0.0) as usize == id) {
+        let id = json::read_value::<f64>(data, "layerDefUid")? as usize;
+        let layer_definition = match layer_definitions.iter().find(|p| json::read_value::<f64>(p, "uid").unwrap_or(0.0) as usize == id) {
             Some(definition) => definition,
             None => bail!("Failed to find definition for layer {}", id),
         };
-        let layer_definition_tilemap = read_value_nullable::<f64>(layer_definition, "tilesetDefUid")?;
-        let layer_name = read_value::<String>(layer_definition, "identifier")?;
-        let layer_grid_size = read_value::<f64>(layer_definition, "gridSize")? as f32;
-        let layer_tilemap = read_value_nullable::<f64>(data, "overrideTilesetUid")?;
+        let layer_definition_tilemap = json::read_value_nullable::<f64>(layer_definition, "tilesetDefUid")?;
+        let layer_name = json::read_value::<String>(layer_definition, "identifier")?;
+        let layer_grid_size = json::read_value::<f64>(layer_definition, "gridSize")? as f32;
+        let layer_tilemap = json::read_value_nullable::<f64>(data, "overrideTilesetUid")?;
         let tilemap_id = layer_tilemap.or(layer_definition_tilemap);
 
         let mut layer = LdtkLayer {
@@ -172,65 +172,66 @@ fn load_level(
                 Some(tilemap) => tilemap,
                 None => bail!("Failed to find tilemap {}", tilemap_id),
             };
-            let tiles = read_array(data, "gridTiles")?;
+            let tiles = json::read_array(data, "gridTiles")?;
 
             for data in tiles {
-                let position = read_position(data, "px")?;
+                let position = json::read_position(data, "px")?;
                 layer.tiles.push(LdtkTile {
-                    id: read_value::<f64>(data, "t")? as usize,
+                    id: json::read_value::<f64>(data, "t")? as usize,
                     position: Vec2::new(position.x, level.size.y - position.y - tilemap.tile_size.y),
-                    source: read_position(data, "src")?,
+                    source: json::read_position(data, "src")?,
                 });
             }
         }
 
-        let entities = read_array(data, "entityInstances")?;
+        let entities = json::read_array(data, "entityInstances")?;
         for data in entities {
-            let entity_definition_id = read_value::<f64>(data, "defUid")? as usize;
+            let entity_definition_id = json::read_value::<f64>(data, "defUid")? as usize;
             let entity_definition =
-                match entity_definitions.iter().find(|p| read_value::<f64>(p, "uid").unwrap_or(0.0) as usize == entity_definition_id) {
+                match entity_definitions.iter().find(|p| json::read_value::<f64>(p, "uid").unwrap_or(0.0) as usize == entity_definition_id) {
                     Some(definition) => definition,
                     None => bail!("Failed to find definition for entity {}", entity_definition_id),
                 };
-            let field_definitions = read_array(entity_definition, "fieldDefs")?;
-            let tile_data = read_object(entity_definition, "tileRect")?;
-            let pivot = Vec2::new(read_value::<f64>(entity_definition, "pivotX")? as f32, read_value::<f64>(entity_definition, "pivotY")? as f32);
+            let field_definitions = json::read_array(entity_definition, "fieldDefs")?;
+            let tile_data = json::read_object(entity_definition, "tileRect")?;
+            let pivot =
+                Vec2::new(json::read_value::<f64>(entity_definition, "pivotX")? as f32, json::read_value::<f64>(entity_definition, "pivotY")? as f32);
 
-            let entity_definition_tilemap = read_value_nullable::<f64>(entity_definition, "tilesetId")?;
+            let entity_definition_tilemap = json::read_value_nullable::<f64>(entity_definition, "tilesetId")?;
             if let Some(tilemap_id) = layer_tilemap.or(entity_definition_tilemap) {
-                let position = read_position(data, "px")?;
+                let position = json::read_position(data, "px")?;
                 let tilemap = match tilemaps.iter().find(|p| p.id == tilemap_id as usize) {
                     Some(tilemap) => tilemap,
                     None => bail!("Failed to find tilemap {}", tilemap_id),
                 };
 
                 let mut fields = FxHashMap::default();
-                let field_instances = read_array(data, "fieldInstances")?;
+                let field_instances = json::read_array(data, "fieldInstances")?;
 
                 for data in field_instances {
-                    let field_definition_id = read_value::<f64>(data, "defUid")? as usize;
+                    let field_definition_id = json::read_value::<f64>(data, "defUid")? as usize;
                     let field_definition =
-                        match field_definitions.iter().find(|p| read_value::<f64>(p, "uid").unwrap_or(0.0) as usize == field_definition_id) {
+                        match field_definitions.iter().find(|p| json::read_value::<f64>(p, "uid").unwrap_or(0.0) as usize == field_definition_id) {
                             Some(definition) => definition,
                             None => bail!("Failed to find definition for field {}", field_definition_id),
                         };
 
-                    let field_name = read_value::<String>(field_definition, "identifier")?;
-                    let field_type = read_value::<String>(field_definition, "type")?;
-                    let field_is_array = read_value::<bool>(field_definition, "isArray")?;
-                    let default_value_object = read_object_nullable(field_definition, "defaultOverride")?;
+                    let field_name = json::read_value::<String>(field_definition, "identifier")?;
+                    let field_type = json::read_value::<String>(field_definition, "type")?;
+                    let field_is_array = json::read_value::<bool>(field_definition, "isArray")?;
+                    let default_value_object = json::read_object_nullable(field_definition, "defaultOverride")?;
                     let default_value = if let Some(default_value_object) = default_value_object {
-                        read_array_values(default_value_object, "params")?.get(0).cloned()
+                        json::read_array_values(default_value_object, "params")?.get(0).cloned()
                     } else {
                         None
                     };
 
                     let mut values = Vec::new();
-                    let field_value_array = read_array_raw(data, "realEditorValues")?;
+                    let field_value_array = json::read_array_raw(data, "realEditorValues")?;
                     for field_value in field_value_array {
                         match field_value {
                             JsonValue::Object(data) => {
-                                let value = read_array_values(data, "params")?;
+                                let value = json::read_array_values(data, "params")?;
                                 values.push(value[0].clone());
                             }
                             JsonValue::Null => match &default_value {
@@ -287,11 +288,11 @@ fn load_level(
                 }
 
                 layer.entities.push(LdtkEntity {
-                    name: read_value::<String>(entity_definition, "identifier")?,
+                    name: json::read_value::<String>(entity_definition, "identifier")?,
                     position: Vec2::new(position.x, level.size.y - position.y - tilemap.tile_size.y + pivot.y * tilemap.tile_size.y),
-                    size: Vec2::new(read_value::<f64>(data, "width")? as f32, read_value::<f64>(data, "height")? as f32),
+                    size: Vec2::new(json::read_value::<f64>(data, "width")? as f32, json::read_value::<f64>(data, "height")? as f32),
                     pivot,
-                    source: Vec2::new(read_value::<f64>(tile_data, "x")? as f32, read_value::<f64>(tile_data, "y")? as f32),
+                    source: Vec2::new(json::read_value::<f64>(tile_data, "x")? as f32, json::read_value::<f64>(tile_data, "y")? as f32),
                     tilemap_id: tilemap_id as usize,
                     fields,
                 });

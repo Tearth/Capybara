@@ -217,7 +217,7 @@ impl MainScene {
             );
 
             self.objects.push(Object {
-                sprite: Sprite { position, texture_id: TextureId::Some(state.renderer.textures.get_id("Takodachi")?), ..Default::default() },
+                sprite: Sprite { position, texture_id: TextureId::Some(state.renderer.textures.get_id("takodachi")?), ..Default::default() },
                 direction: Vec2::new(fastrand::f32() * 2.0 - 1.0, fastrand::f32() * 2.0 - 1.0),
             });
         }

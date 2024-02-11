@@ -83,7 +83,7 @@ impl Scene<GlobalData> for MainScene {
             self.emitter.amount = 20;
             self.emitter.particle_size = Vec2::new(16.0, 16.0);
             self.emitter.particle_lifetime = 1.0;
-            self.emitter.particle_texture_id = Some(state.renderer.textures.get_id("Particle")?);
+            self.emitter.particle_texture_id = Some(state.renderer.textures.get_id("particle")?);
             self.emitter.interpolation = ParticleInterpolation::Cosine;
 
             self.emitter.velocity_waypoints.push(ParticleParameter::new(Vec2::new(0.0, 200.0), Vec2::new(100.0, 40.0)));

@@ -114,7 +114,7 @@ impl Scene<GlobalData> for MainScene {
                         position,
                         rotation: fastrand::f32() * consts::TAU,
                         anchor: Vec2::new(0.0, 0.0),
-                        texture_id: TextureId::Some(state.renderer.textures.get_id("Takodachi")?),
+                        texture_id: TextureId::Some(state.renderer.textures.get_id("takodachi")?),
                         ..Default::default()
                     },
                     direction: Vec2::new(fastrand::f32() * 2.0 - 1.0, fastrand::f32() * 2.0 - 1.0),
@@ -143,7 +143,7 @@ impl Scene<GlobalData> for MainScene {
         }
 
         if self.initialized {
-            let texture_size = state.renderer.textures.get_by_name("Takodachi")?.size;
+            let texture_size = state.renderer.textures.get_by_name("takodachi")?.size;
             self.edges.clear();
 
             state.renderer.set_target_texture(Some(self.main_texture_id));

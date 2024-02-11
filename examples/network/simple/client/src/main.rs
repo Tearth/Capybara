@@ -150,7 +150,7 @@ impl Scene<GlobalData> for MainScene {
         }
 
         if self.initialized {
-            let texture_id = state.renderer.textures.get_id("Takodachi")?;
+            let texture_id = state.renderer.textures.get_id("takodachi")?;
             let alpha = (now - self.objects_last_update.unwrap_or(now)).as_millis() as f32 / TICK as f32;
 
             for object in &mut self.objects {

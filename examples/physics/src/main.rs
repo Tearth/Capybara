@@ -109,8 +109,8 @@ impl Scene<GlobalData> for MainScene {
             self.terrain = Sprite { size: Some(Vec2::new(state.renderer.viewport_size.x, 50.0)), ..Default::default() };
             self.terrain_collider = Some(state.physics.colliders.insert(ColliderBuilder::cuboid(100.0, 0.1).build()));
 
-            self.wheel_left = Sprite { texture_id: TextureId::Some(state.renderer.textures.get_id("Wheel")?), ..Default::default() };
-            self.wheel_right = Sprite { texture_id: TextureId::Some(state.renderer.textures.get_id("Wheel")?), ..Default::default() };
+            self.wheel_left = Sprite { texture_id: TextureId::Some(state.renderer.textures.get_id("wheel")?), ..Default::default() };
+            self.wheel_right = Sprite { texture_id: TextureId::Some(state.renderer.textures.get_id("wheel")?), ..Default::default() };
             self.car = Sprite { size: Some(Vec2::new(100.0, 50.0)), color: Vec4::new(0.8, 0.8, 0.8, 1.0), ..Default::default() };
 
             let collider = ColliderBuilder::ball(0.3).restitution(0.7).build();
@@ -139,7 +139,7 @@ impl Scene<GlobalData> for MainScene {
                     fastrand::u32(0..state.renderer.viewport_size.x as u32) as f32,
                     fastrand::u32(0..state.renderer.viewport_size.y as u32) as f32,
                 );
-                let sprite = Sprite { position, texture_id: TextureId::Some(state.renderer.textures.get_id("Takodachi")?), ..Default::default() };
+                let sprite = Sprite { position, texture_id: TextureId::Some(state.renderer.textures.get_id("takodachi")?), ..Default::default() };
                 let collider_flags = ActiveEvents::COLLISION_EVENTS | ActiveEvents::CONTACT_FORCE_EVENTS;
                 let collider = ColliderBuilder::ball(0.3).restitution(0.7).active_events(collider_flags).build();
                 let rigidbody = RigidBodyBuilder::dynamic().translation(vector![position.x, position.y] / PIXELS_PER_METER).build();

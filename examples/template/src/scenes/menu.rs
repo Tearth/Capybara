@@ -205,7 +205,7 @@ impl MenuScene {
                     ui.visuals_mut().selection.bg_fill = Color32::from_rgba_unmultiplied(100, 100, 100, 255);
                     ui.visuals_mut().slider_trailing_fill = true;
 
-                    Grid::new("SettingsGrid").min_row_height(24.0).show(ui, |ui| {
+                    Grid::new("settings_grid").min_row_height(24.0).show(ui, |ui| {
                         let music_track = state.global.music_track.as_ref().unwrap();
                         let effects_track = state.global.effects_track.as_ref().unwrap();
 

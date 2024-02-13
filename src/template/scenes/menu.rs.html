@@ -554,7 +554,7 @@
                     ui.visuals_mut().selection.bg_fill = Color32::from_rgba_unmultiplied(<span class="number">100</span>, <span class="number">100</span>, <span class="number">100</span>, <span class="number">255</span>);
                     ui.visuals_mut().slider_trailing_fill = <span class="bool-val">true</span>;
 
-                    Grid::new(<span class="string">"SettingsGrid"</span>).min_row_height(<span class="number">24.0</span>).show(ui, |ui| {
+                    Grid::new(<span class="string">"settings_grid"</span>).min_row_height(<span class="number">24.0</span>).show(ui, |ui| {
                         <span class="kw">let </span>music_track = state.global.music_track.as_ref().unwrap();
                         <span class="kw">let </span>effects_track = state.global.effects_track.as_ref().unwrap();
 

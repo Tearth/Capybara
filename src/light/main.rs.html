@@ -473,7 +473,7 @@
                         position,
                         rotation: fastrand::f32() * consts::TAU,
                         anchor: Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>),
-                        texture_id: TextureId::Some(state.renderer.textures.get_id(<span class="string">"Takodachi"</span>)<span class="question-mark">?</span>),
+                        texture_id: TextureId::Some(state.renderer.textures.get_id(<span class="string">"takodachi"</span>)<span class="question-mark">?</span>),
                         ..Default::default()
                     },
                     direction: Vec2::new(fastrand::f32() * <span class="number">2.0 </span>- <span class="number">1.0</span>, fastrand::f32() * <span class="number">2.0 </span>- <span class="number">1.0</span>),
@@ -502,7 +502,7 @@
         }
 
         <span class="kw">if </span><span class="self">self</span>.initialized {
-            <span class="kw">let </span>texture_size = state.renderer.textures.get_by_name(<span class="string">"Takodachi"</span>)<span class="question-mark">?</span>.size;
+            <span class="kw">let </span>texture_size = state.renderer.textures.get_by_name(<span class="string">"takodachi"</span>)<span class="question-mark">?</span>.size;
             <span class="self">self</span>.edges.clear();
 
             state.renderer.set_target_texture(<span class="prelude-val">Some</span>(<span class="self">self</span>.main_texture_id));
@@ -589,7 +589,7 @@
 
     <span class="kw">fn </span>ui(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;, input: RawInput) -&gt; <span class="prelude-ty">Result</span>&lt;(FullOutput, <span class="prelude-ty">Option</span>&lt;FrameCommand&gt;)&gt; {
         <span class="kw">let </span>output = state.ui.inner.read().unwrap().run(input, |context| {
-            SidePanel::new(Side::Left, Id::new(<span class="string">"side"</span>)).exact_width(<span class="number">160.0</span>).resizable(<span class="bool-val">false</span>).show(context, |ui| {
+            SidePanel::new(Side::Left, Id::new(<span class="string">"side_panel"</span>)).exact_width(<span class="number">160.0</span>).resizable(<span class="bool-val">false</span>).show(context, |ui| {
                 <span class="kw">if </span><span class="self">self</span>.initialized {
                     <span class="kw">let </span>font = FontId { size: <span class="number">24.0</span>, family: FontFamily::Monospace };
                     <span class="kw">let </span>color = Color32::from_rgb(<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>);

@@ -304,8 +304,9 @@
 <a href="#303" id="303">303</a>
 <a href="#304" id="304">304</a>
 <a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::utils::color::RgbUtils;
-<span class="kw">use </span><span class="kw">crate</span>::utils::json::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::json;
 <span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>anyhow::bail;
 <span class="kw">use </span>anyhow::Error;
@@ -388,11 +389,11 @@
 
 <span class="kw">pub fn </span>load_world(name: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>str, data: <span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;LdtkWorld&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>world = LdtkWorld::default();
-    <span class="kw">let </span>definitions = read_object(data, <span class="string">"defs"</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>tilemap_definitions = read_array(definitions, <span class="string">"tilesets"</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>layer_definitions = read_array(definitions, <span class="string">"layers"</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>entity_definitions = read_array(definitions, <span class="string">"entities"</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>levels = read_array(data, <span class="string">"levels"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>definitions = json::read_object(data, <span class="string">"defs"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>tilemap_definitions = json::read_array(definitions, <span class="string">"tilesets"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>layer_definitions = json::read_array(definitions, <span class="string">"layers"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>entity_definitions = json::read_array(definitions, <span class="string">"entities"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>levels = json::read_array(data, <span class="string">"levels"</span>)<span class="question-mark">?</span>;
 
     world.name = name.to_string();
     world.path = path.to_string();
@@ -409,9 +410,9 @@
 }
 
 <span class="kw">fn </span>load_tilemap(data: <span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;LdtkTilemap&gt; {
-    <span class="kw">let </span>path = read_value::&lt;String&gt;(data, <span class="string">"relPath"</span>)<span class="question-mark">?</span>;
-    <span class="kw">let </span>tile_size = read_value::&lt;f64&gt;(data, <span class="string">"tileGridSize"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32;
-    <span class="kw">let </span>custom_data = read_array(data, <span class="string">"customData"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>path = json::read_value::&lt;String&gt;(data, <span class="string">"relPath"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>tile_size = json::read_value::&lt;f64&gt;(data, <span class="string">"tileGridSize"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32;
+    <span class="kw">let </span>custom_data = json::read_array(data, <span class="string">"customData"</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>name = <span class="kw">match </span>Path::new(<span class="kw-2">&amp;</span>path).file_stem().and_then(|p| p.to_str()) {
         <span class="prelude-val">Some</span>(name) =&gt; name.to_string(),
@@ -419,16 +420,16 @@
     };
 
     <span class="kw">let </span><span class="kw-2">mut </span>tilemap = LdtkTilemap {
-        id: read_value::&lt;f64&gt;(data, <span class="string">"uid"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize,
+        id: json::read_value::&lt;f64&gt;(data, <span class="string">"uid"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize,
         name,
-        path: read_value::&lt;String&gt;(data, <span class="string">"relPath"</span>)<span class="question-mark">?</span>,
+        path: json::read_value::&lt;String&gt;(data, <span class="string">"relPath"</span>)<span class="question-mark">?</span>,
         tile_size: Vec2::new(tile_size, tile_size),
         custom: Default::default(),
     };
 
     <span class="kw">for </span>data <span class="kw">in </span>custom_data {
-        <span class="kw">let </span>tile_id = read_value::&lt;f64&gt;(data, <span class="string">"tileId"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
-        <span class="kw">let </span>data = read_value::&lt;String&gt;(data, <span class="string">"data"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>tile_id = json::read_value::&lt;f64&gt;(data, <span class="string">"tileId"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
+        <span class="kw">let </span>data = json::read_value::&lt;String&gt;(data, <span class="string">"data"</span>)<span class="question-mark">?</span>;
 
         tilemap.custom.insert(tile_id, data);
     }
@@ -443,25 +444,25 @@
     entity_definitions: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;LdtkLevel&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>level = LdtkLevel {
-        id: read_value::&lt;f64&gt;(data, <span class="string">"uid"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize,
-        name: read_value::&lt;String&gt;(data, <span class="string">"identifier"</span>)<span class="question-mark">?</span>,
-        size: Vec2::new(read_value::&lt;f64&gt;(data, <span class="string">"pxWid"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, read_value::&lt;f64&gt;(data, <span class="string">"pxHei"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32),
-        background: read_color(data, <span class="string">"bgColor"</span>)<span class="question-mark">?</span>,
+        id: json::read_value::&lt;f64&gt;(data, <span class="string">"uid"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize,
+        name: json::read_value::&lt;String&gt;(data, <span class="string">"identifier"</span>)<span class="question-mark">?</span>,
+        size: Vec2::new(json::read_value::&lt;f64&gt;(data, <span class="string">"pxWid"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, json::read_value::&lt;f64&gt;(data, <span class="string">"pxHei"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32),
+        background: json::read_color(data, <span class="string">"bgColor"</span>)<span class="question-mark">?</span>,
         layers: Vec::new(),
     };
 
-    <span class="kw">let </span>layers = read_array(data, <span class="string">"layerInstances"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>layers = json::read_array(data, <span class="string">"layerInstances"</span>)<span class="question-mark">?</span>;
 
     <span class="kw">for </span>data <span class="kw">in </span>layers {
-        <span class="kw">let </span>id = read_value::&lt;f64&gt;(data, <span class="string">"layerDefUid"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
-        <span class="kw">let </span>layer_definition = <span class="kw">match </span>layer_definitions.iter().find(|p| read_value::&lt;f64&gt;(p, <span class="string">"uid"</span>).unwrap_or(<span class="number">0.0</span>) <span class="kw">as </span>usize == id) {
+        <span class="kw">let </span>id = json::read_value::&lt;f64&gt;(data, <span class="string">"layerDefUid"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
+        <span class="kw">let </span>layer_definition = <span class="kw">match </span>layer_definitions.iter().find(|p| json::read_value::&lt;f64&gt;(p, <span class="string">"uid"</span>).unwrap_or(<span class="number">0.0</span>) <span class="kw">as </span>usize == id) {
             <span class="prelude-val">Some</span>(definition) =&gt; definition,
             <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">"Failed to find definition for layer {}"</span>, id),
         };
-        <span class="kw">let </span>layer_definition_tilemap = read_value_nullable::&lt;f64&gt;(layer_definition, <span class="string">"tilesetDefUid"</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>layer_name = read_value::&lt;String&gt;(layer_definition, <span class="string">"identifier"</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>layer_grid_size = read_value::&lt;f64&gt;(layer_definition, <span class="string">"gridSize"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32;
-        <span class="kw">let </span>layer_tilemap = read_value_nullable::&lt;f64&gt;(data, <span class="string">"overrideTilesetUid"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>layer_definition_tilemap = json::read_value_nullable::&lt;f64&gt;(layer_definition, <span class="string">"tilesetDefUid"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>layer_name = json::read_value::&lt;String&gt;(layer_definition, <span class="string">"identifier"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>layer_grid_size = json::read_value::&lt;f64&gt;(layer_definition, <span class="string">"gridSize"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32;
+        <span class="kw">let </span>layer_tilemap = json::read_value_nullable::&lt;f64&gt;(data, <span class="string">"overrideTilesetUid"</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>tilemap_id = layer_tilemap.or(layer_definition_tilemap);
 
         <span class="kw">let </span><span class="kw-2">mut </span>layer = LdtkLayer {
@@ -478,65 +479,66 @@
                 <span class="prelude-val">Some</span>(tilemap) =&gt; tilemap,
                 <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">"Failed to find tilemap {}"</span>, tilemap_id),
             };
-            <span class="kw">let </span>tiles = read_array(data, <span class="string">"gridTiles"</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>tiles = json::read_array(data, <span class="string">"gridTiles"</span>)<span class="question-mark">?</span>;
 
             <span class="kw">for </span>data <span class="kw">in </span>tiles {
-                <span class="kw">let </span>position = read_position(data, <span class="string">"px"</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>position = json::read_position(data, <span class="string">"px"</span>)<span class="question-mark">?</span>;
                 layer.tiles.push(LdtkTile {
-                    id: read_value::&lt;f64&gt;(data, <span class="string">"t"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize,
+                    id: json::read_value::&lt;f64&gt;(data, <span class="string">"t"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize,
                     position: Vec2::new(position.x, level.size.y - position.y - tilemap.tile_size.y),
-                    source: read_position(data, <span class="string">"src"</span>)<span class="question-mark">?</span>,
+                    source: json::read_position(data, <span class="string">"src"</span>)<span class="question-mark">?</span>,
                 });
             }
         }
 
-        <span class="kw">let </span>entities = read_array(data, <span class="string">"entityInstances"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>entities = json::read_array(data, <span class="string">"entityInstances"</span>)<span class="question-mark">?</span>;
         <span class="kw">for </span>data <span class="kw">in </span>entities {
-            <span class="kw">let </span>entity_definition_id = read_value::&lt;f64&gt;(data, <span class="string">"defUid"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
+            <span class="kw">let </span>entity_definition_id = json::read_value::&lt;f64&gt;(data, <span class="string">"defUid"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
             <span class="kw">let </span>entity_definition =
-                <span class="kw">match </span>entity_definitions.iter().find(|p| read_value::&lt;f64&gt;(p, <span class="string">"uid"</span>).unwrap_or(<span class="number">0.0</span>) <span class="kw">as </span>usize == entity_definition_id) {
+                <span class="kw">match </span>entity_definitions.iter().find(|p| json::read_value::&lt;f64&gt;(p, <span class="string">"uid"</span>).unwrap_or(<span class="number">0.0</span>) <span class="kw">as </span>usize == entity_definition_id) {
                     <span class="prelude-val">Some</span>(definition) =&gt; definition,
                     <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">"Failed to find definition for entity {}"</span>, entity_definition_id),
                 };
-            <span class="kw">let </span>field_definitions = read_array(entity_definition, <span class="string">"fieldDefs"</span>)<span class="question-mark">?</span>;
-            <span class="kw">let </span>tile_data = read_object(entity_definition, <span class="string">"tileRect"</span>)<span class="question-mark">?</span>;
-            <span class="kw">let </span>pivot = Vec2::new(read_value::&lt;f64&gt;(entity_definition, <span class="string">"pivotX"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, read_value::&lt;f64&gt;(entity_definition, <span class="string">"pivotY"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32);
+            <span class="kw">let </span>field_definitions = json::read_array(entity_definition, <span class="string">"fieldDefs"</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>tile_data = json::read_object(entity_definition, <span class="string">"tileRect"</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>pivot =
+                Vec2::new(json::read_value::&lt;f64&gt;(entity_definition, <span class="string">"pivotX"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, json::read_value::&lt;f64&gt;(entity_definition, <span class="string">"pivotY"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32);
 
-            <span class="kw">let </span>entity_definition_tilemap = read_value_nullable::&lt;f64&gt;(entity_definition, <span class="string">"tilesetId"</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>entity_definition_tilemap = json::read_value_nullable::&lt;f64&gt;(entity_definition, <span class="string">"tilesetId"</span>)<span class="question-mark">?</span>;
             <span class="kw">if let </span><span class="prelude-val">Some</span>(tilemap_id) = layer_tilemap.or(entity_definition_tilemap) {
-                <span class="kw">let </span>position = read_position(data, <span class="string">"px"</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>position = json::read_position(data, <span class="string">"px"</span>)<span class="question-mark">?</span>;
                 <span class="kw">let </span>tilemap = <span class="kw">match </span>tilemaps.iter().find(|p| p.id == tilemap_id <span class="kw">as </span>usize) {
                     <span class="prelude-val">Some</span>(tilemap) =&gt; tilemap,
                     <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">"Failed to find tilemap {}"</span>, tilemap_id),
                 };
 
                 <span class="kw">let </span><span class="kw-2">mut </span>fields = FxHashMap::default();
-                <span class="kw">let </span>field_instances = read_array(data, <span class="string">"fieldInstances"</span>)<span class="question-mark">?</span>;
+                <span class="kw">let </span>field_instances = json::read_array(data, <span class="string">"fieldInstances"</span>)<span class="question-mark">?</span>;
 
                 <span class="kw">for </span>data <span class="kw">in </span>field_instances {
-                    <span class="kw">let </span>field_definition_id = read_value::&lt;f64&gt;(data, <span class="string">"defUid"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
+                    <span class="kw">let </span>field_definition_id = json::read_value::&lt;f64&gt;(data, <span class="string">"defUid"</span>)<span class="question-mark">? </span><span class="kw">as </span>usize;
                     <span class="kw">let </span>field_definition =
-                        <span class="kw">match </span>field_definitions.iter().find(|p| read_value::&lt;f64&gt;(p, <span class="string">"uid"</span>).unwrap_or(<span class="number">0.0</span>) <span class="kw">as </span>usize == field_definition_id) {
+                        <span class="kw">match </span>field_definitions.iter().find(|p| json::read_value::&lt;f64&gt;(p, <span class="string">"uid"</span>).unwrap_or(<span class="number">0.0</span>) <span class="kw">as </span>usize == field_definition_id) {
                             <span class="prelude-val">Some</span>(definition) =&gt; definition,
                             <span class="prelude-val">None </span>=&gt; <span class="macro">bail!</span>(<span class="string">"Failed to find definition for field {}"</span>, field_definition_id),
                         };
 
-                    <span class="kw">let </span>field_name = read_value::&lt;String&gt;(field_definition, <span class="string">"identifier"</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>field_type = read_value::&lt;String&gt;(field_definition, <span class="string">"type"</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>field_is_array = read_value::&lt;bool&gt;(field_definition, <span class="string">"isArray"</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>default_value_object = read_object_nullable(field_definition, <span class="string">"defaultOverride"</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>field_name = json::read_value::&lt;String&gt;(field_definition, <span class="string">"identifier"</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>field_type = json::read_value::&lt;String&gt;(field_definition, <span class="string">"type"</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>field_is_array = json::read_value::&lt;bool&gt;(field_definition, <span class="string">"isArray"</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>default_value_object = json::read_object_nullable(field_definition, <span class="string">"defaultOverride"</span>)<span class="question-mark">?</span>;
                     <span class="kw">let </span>default_value = <span class="kw">if let </span><span class="prelude-val">Some</span>(default_value_object) = default_value_object {
-                        read_array_values(default_value_object, <span class="string">"params"</span>)<span class="question-mark">?</span>.get(<span class="number">0</span>).cloned()
+                        json::read_array_values(default_value_object, <span class="string">"params"</span>)<span class="question-mark">?</span>.get(<span class="number">0</span>).cloned()
                     } <span class="kw">else </span>{
                         <span class="prelude-val">None
                     </span>};
 
                     <span class="kw">let </span><span class="kw-2">mut </span>values = Vec::new();
-                    <span class="kw">let </span>field_value_array = read_array_raw(data, <span class="string">"realEditorValues"</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>field_value_array = json::read_array_raw(data, <span class="string">"realEditorValues"</span>)<span class="question-mark">?</span>;
                     <span class="kw">for </span>field_value <span class="kw">in </span>field_value_array {
                         <span class="kw">match </span>field_value {
                             JsonValue::Object(data) =&gt; {
-                                <span class="kw">let </span>value = read_array_values(data, <span class="string">"params"</span>)<span class="question-mark">?</span>;
+                                <span class="kw">let </span>value = json::read_array_values(data, <span class="string">"params"</span>)<span class="question-mark">?</span>;
                                 values.push(value[<span class="number">0</span>].clone());
                             }
                             JsonValue::Null =&gt; <span class="kw">match </span><span class="kw-2">&amp;</span>default_value {
@@ -593,11 +595,11 @@
                 }
 
                 layer.entities.push(LdtkEntity {
-                    name: read_value::&lt;String&gt;(entity_definition, <span class="string">"identifier"</span>)<span class="question-mark">?</span>,
+                    name: json::read_value::&lt;String&gt;(entity_definition, <span class="string">"identifier"</span>)<span class="question-mark">?</span>,
                     position: Vec2::new(position.x, level.size.y - position.y - tilemap.tile_size.y + pivot.y * tilemap.tile_size.y),
-                    size: Vec2::new(read_value::&lt;f64&gt;(data, <span class="string">"width"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, read_value::&lt;f64&gt;(data, <span class="string">"height"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32),
+                    size: Vec2::new(json::read_value::&lt;f64&gt;(data, <span class="string">"width"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, json::read_value::&lt;f64&gt;(data, <span class="string">"height"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32),
                     pivot,
-                    source: Vec2::new(read_value::&lt;f64&gt;(tile_data, <span class="string">"x"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, read_value::&lt;f64&gt;(tile_data, <span class="string">"y"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32),
+                    source: Vec2::new(json::read_value::&lt;f64&gt;(tile_data, <span class="string">"x"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32, json::read_value::&lt;f64&gt;(tile_data, <span class="string">"y"</span>)<span class="question-mark">? </span><span class="kw">as </span>f32),
                     tilemap_id: tilemap_id <span class="kw">as </span>usize,
                     fields,
                 });

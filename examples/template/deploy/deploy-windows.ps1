@@ -2,6 +2,8 @@ $ZIP = "windows"
 $EXEC_TARGET = "template"
 $EXEC_ZIP = "template"
 
+$env:RUSTFLAGS = '--remap-path-prefix C:\\Users\\Pawel\\=~'
+
 Write-Output "Building Windows binary..."
 Start-Process -FilePath "cargo" -ArgumentList "build --release --target=x86_64-pc-windows-msvc" -Wait -NoNewWindow
 

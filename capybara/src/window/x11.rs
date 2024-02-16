@@ -496,6 +496,10 @@ impl WindowContext {
             xlib::XSendEvent(self.display, self.window, 1, NoEventMask, &mut event);
         }
     }
+
+    pub fn get_memory_usage(&self) -> MemoryInfo {
+        MemoryInfo { private: 0, reserved: 0 }
+    }
 }
 
 impl GlxExtensions {

@@ -1,7 +1,7 @@
 $ZIP = "web"
 $URL = "./"
 
-$env:RUSTFLAGS = '--remap-path-prefix C:\\Users\\Pawel\\=~'
+$env:RUSTFLAGS = '--remap-path-prefix C:\Users\Pawel\=~\'
 
 Write-Output "Building Web binary..."
 Start-Process -FilePath "trunk" -ArgumentList "build --release --public-url $URL" -Wait -NoNewWindow

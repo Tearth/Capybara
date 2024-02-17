@@ -20,6 +20,9 @@ members = [
     "examples/network/snake/hub",
     "examples/network/snake/worker",
 ]
+# exclude = [
+#     "examples/template",
+# ]
 
 [profile.release]
 lto = true

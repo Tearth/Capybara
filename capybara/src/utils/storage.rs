@@ -3,6 +3,7 @@ use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Result;
 use rustc_hash::FxHashMap;
+use std::collections::HashMap;
 use std::collections::VecDeque;
 
 #[derive(Debug)]
@@ -150,10 +151,10 @@ impl<T> Storage<T> {
 impl<T> Default for Storage<T> {
     fn default() -> Self {
         Self {
-            data: Default::default(),
-            name_to_id_hashmap: Default::default(),
-            id_to_name_hashmap: Default::default(),
-            removed_ids: Default::default(),
+            data: Vec::default(),
+            name_to_id_hashmap: HashMap::default(),
+            id_to_name_hashmap: HashMap::default(),
+            removed_ids: VecDeque::default(),
         }
     }
 }

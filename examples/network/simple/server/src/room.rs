@@ -22,7 +22,7 @@ pub struct ServerObject {
 
 impl Room {
     pub fn new() -> Self {
-        Self { last_update: None, objects: Vec::new(), objects_count: 100, viewport: Vec2::new(512.0, 512.0) }
+        Self { last_update: None, objects: Vec::default(), objects_count: 100, viewport: Vec2::new(512.0, 512.0) }
     }
 
     pub fn initialize_client(&mut self, client: WebSocketConnectedClientSlim) {

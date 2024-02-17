@@ -29,13 +29,13 @@ pub struct QueuePacket {
 
 impl Core {
     pub fn new() -> Self {
-        Self { clients: Default::default(), queue: Default::default(), room: Default::default() }
+        Self { clients: Arc::default(), queue: Arc::default(), room: Arc::default() }
     }
 
     pub async fn run(&mut self) {
         simple_logger::init_with_level(Level::Info).unwrap();
 
-        let mut listener = WebSocketListener::new();
+        let mut listener = WebSocketListener::default();
         let (listener_tx, mut listener_rx) = mpsc::unbounded::<WebSocketConnectedClient>();
         let (packet_event_tx, mut packet_event_rx) = mpsc::unbounded::<(u64, Packet)>();
         let (disconnection_event_tx, mut disconnection_event_rx) = mpsc::unbounded::<u64>();

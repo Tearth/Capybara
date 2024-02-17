@@ -334,15 +334,15 @@ impl Default for MenuScene {
     fn default() -> Self {
         Self {
             sub_scene: MenuSubScene::Main,
-            settings: Default::default(),
+            settings: SettingsData::default(),
 
-            play_button_state: Default::default(),
-            settings_button_state: Default::default(),
-            about_button_state: Default::default(),
-            back_button_state: Default::default(),
+            play_button_state: WidgetState::default(),
+            settings_button_state: WidgetState::default(),
+            about_button_state: WidgetState::default(),
+            back_button_state: WidgetState::default(),
 
             #[cfg(not(web))]
-            exit_button_state: Default::default(),
+            exit_button_state: WidgetState::default(),
         }
     }
 }

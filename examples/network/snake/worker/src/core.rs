@@ -47,10 +47,10 @@ impl Core {
         let config = ConfigLoader::new("config.json");
 
         Self {
-            clients: Default::default(),
-            queue_incoming: Default::default(),
-            queue_outgoing: Default::default(),
-            rooms: Default::default(),
+            clients: Arc::default(),
+            queue_incoming: Arc::default(),
+            queue_outgoing: Arc::default(),
+            rooms: Arc::default(),
             config: Arc::new(RwLock::new(config)),
         }
     }
@@ -61,7 +61,7 @@ impl Core {
             return;
         }
 
-        let mut listener = WebSocketListener::new();
+        let mut listener = WebSocketListener::default();
         let (listener_tx, mut listener_rx) = mpsc::unbounded::<WebSocketConnectedClient>();
         let (packet_event_tx, mut packet_event_rx) = mpsc::unbounded::<(u64, Packet)>();
         let (disconnection_event_tx, mut disconnection_event_rx) = mpsc::unbounded::<u64>();
@@ -76,7 +76,7 @@ impl Core {
         let listen = listener.listen(&endpoint, listener_tx);
 
         // Only one server in the template
-        rooms.write().unwrap().push(Arc::new(RwLock::new(Room::new())));
+        rooms.write().unwrap().push(Arc::default());
 
         let accept_clients = async {
             while let Some(mut client) = listener_rx.next().await {
@@ -164,8 +164,8 @@ impl Core {
             loop {
                 let now = Instant::now();
                 let packets = Arc::new(RwLock::new(Vec::new()));
-                let mut packets_to_remove = VecDeque::new();
-                let mut handles = Vec::new();
+                let mut packets_to_remove = VecDeque::default();
+                let mut handles = Vec::default();
 
                 let worker_tick = config.read().unwrap().data.worker_tick;
                 let delay_base = config.read().unwrap().data.packet_delay_base as i32;
@@ -261,7 +261,7 @@ impl Core {
     fn init_logger(&self) -> Result<()> {
         fs::create_dir_all("./logs/")?;
 
-        fern::Dispatch::new()
+        fern::Dispatch::default()
             .format(|out, message, record| {
                 out.finish(format_args!(
                     "[{}] [{}] [{}] {}",
@@ -271,7 +271,7 @@ impl Core {
                     message
                 ))
             })
-            .chain(fern::Dispatch::new().level(log::LevelFilter::Debug).chain(fern::DateBased::new("./logs/", "log_info_%Y-%m-%d.log")))
+            .chain(fern::Dispatch::default().level(log::LevelFilter::Debug).chain(fern::DateBased::new("./logs/", "log_info_%Y-%m-%d.log")))
             .apply()?;
 
         panic::set_hook(Box::new(move |info| {

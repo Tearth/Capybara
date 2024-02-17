@@ -17,9 +17,9 @@ pub struct FileSystem {
 
 impl FileSystem {
     pub fn new() -> Self {
-        let input = Rc::new(RefCell::new(String::new()));
+        let input = Rc::new(RefCell::new(String::default()));
         let status = Rc::new(RefCell::new(FileLoadingStatus::Idle));
-        let buffer = Rc::new(RefCell::new(Vec::new()));
+        let buffer = Rc::new(RefCell::new(Vec::default()));
         let progress = Rc::new(RefCell::new(0.0));
 
         Self { input, status, buffer, progress }

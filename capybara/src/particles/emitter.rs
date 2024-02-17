@@ -71,10 +71,6 @@ pub enum ParticleInterpolation {
 }
 
 impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
-    pub fn new() -> Self {
-        Default::default()
-    }
-
     pub fn update(&mut self, now: Instant, delta: f32) {
         let mut fire = if let Some(last_burst_time) = self.last_burst_time {
             (now - last_burst_time).as_secs_f32() >= self.period
@@ -119,7 +115,7 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
             }
         }
 
-        let mut removed_ids = Vec::new();
+        let mut removed_ids = Vec::default();
         for (index, particle) in self.particles.iter_enumerate_mut() {
             let particle_time = (now - particle.birthday).as_secs_f32();
 
@@ -146,12 +142,14 @@ impl<const WAYPOINTS: usize> ParticleEmitter<WAYPOINTS> {
     }
 
     pub fn draw(&mut self, renderer: &mut RendererContext) {
-        let mut sprite = Sprite::new();
-        sprite.texture_id = match self.particle_texture_id {
-            Some(texture_id) => TextureId::Some(texture_id),
-            None => TextureId::Default,
+        let mut sprite = Sprite {
+            texture_id: match self.particle_texture_id {
+                Some(texture_id) => TextureId::Some(texture_id),
+                None => TextureId::Default,
+            },
+            texture_type: self.particle_texture_type.clone(),
+            ..Default::default()
         };
-        sprite.texture_type = self.particle_texture_type.clone();
 
         if sprite.is_animation() {
             error!("Animations in particles aren't supported");
@@ -183,7 +181,7 @@ fn generate_variations<T, const WAYPOINTS: usize>(waypoints: &ArrayVec<ParticleP
 where
     T: Copy + NewRand<T> + Sub<Output = T> + Mul<T, Output = T> + Div<f32, Output = T>,
 {
-    let mut variations = ArrayVec::new();
+    let mut variations = ArrayVec::default();
     for waypoint in waypoints {
         variations.push(waypoint.variation / 2.0 - waypoint.variation * T::new_rand(0.0..1.0));
     }

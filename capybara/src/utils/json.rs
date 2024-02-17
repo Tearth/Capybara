@@ -51,7 +51,7 @@ where
 {
     let value = data.get(name).ok_or_else(|| anyhow!("Failed to read {}", name))?;
     if value.is_null() {
-        return Ok(Default::default());
+        return Ok(T::default());
     }
 
     Ok(value.get::<T>().ok_or_else(|| anyhow!("Failed to parse {}", name))?.clone())
@@ -79,7 +79,7 @@ pub fn read_color(data: &HashMap<String, JsonValue>, name: &str) -> Result<Vec4>
     Ok(Rgb::from_hex_str(&parsed).map_err(|_| anyhow!("Failed to parse {} into RGB", name))?.to_vec4())
 }
 
-pub fn read_position(data: &HashMap<String, JsonValue>, name: &str) -> Result<Vec2> {
+pub fn read_vec2(data: &HashMap<String, JsonValue>, name: &str) -> Result<Vec2> {
     let position = match data.get(name) {
         Some(JsonValue::Array(array)) => array,
         _ => bail!("Failed to read position"),
@@ -95,4 +95,11 @@ pub fn read_position(data: &HashMap<String, JsonValue>, name: &str) -> Result<Ve
     };
 
     Ok(Vec2::new(x, y))
+}
+
+pub fn read_vec2_dissected(data: &HashMap<String, JsonValue>, name_x: &str, name_y: &str) -> Result<Vec2> {
+    let x = read_value::<f64>(data, name_x)?;
+    let y = read_value::<f64>(data, name_y)?;
+
+    Ok(Vec2::new(x as f32, y as f32))
 }

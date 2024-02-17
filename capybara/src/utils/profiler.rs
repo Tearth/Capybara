@@ -18,7 +18,7 @@ pub struct ProfilerData {
 
 impl Profiler {
     pub fn new() -> Self {
-        Self { enabled: false, data: Default::default(), history_capacity: 400 }
+        Self { enabled: false, data: FxHashMap::default(), history_capacity: 400 }
     }
 
     pub fn start(&mut self, name: &str) {
@@ -31,7 +31,7 @@ impl Profiler {
             data.accumulator = 0.0;
         } else {
             self.data
-                .insert(name.to_string(), ProfilerData { history: Default::default(), timestamp: Some(Instant::now()), accumulator: 0.0 });
+                .insert(name.to_string(), ProfilerData { history: VecDeque::default(), timestamp: Some(Instant::now()), accumulator: 0.0 });
         }
     }
 
@@ -71,7 +71,7 @@ impl Profiler {
             data.timestamp = Some(Instant::now());
         } else {
             self.data
-                .insert(name.to_string(), ProfilerData { history: Default::default(), timestamp: Some(Instant::now()), accumulator: 0.0 });
+                .insert(name.to_string(), ProfilerData { history: VecDeque::default(), timestamp: Some(Instant::now()), accumulator: 0.0 });
         }
     }
 }

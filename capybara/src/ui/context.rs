@@ -61,14 +61,14 @@ pub struct UiContext {
 impl UiContext {
     pub fn new(renderer: &mut RendererContext) -> Self {
         Self {
-            inner: Default::default(),
-            screen_size: Default::default(),
-            collected_events: Default::default(),
-            modifiers: Default::default(),
+            inner: Arc::default(),
+            screen_size: Vec2::ZERO,
+            collected_events: Vec::default(),
+            modifiers: Modifiers::default(),
 
-            camera_id: renderer.cameras.store(Camera::new(Default::default(), renderer.viewport_size, CameraOrigin::LeftTop, true)),
-            textures: Default::default(),
-            handles: Default::default(),
+            camera_id: renderer.cameras.store(Camera::new(Vec2::ZERO, renderer.viewport_size, CameraOrigin::LeftTop, true)),
+            textures: FxHashMap::default(),
+            handles: FxHashMap::default(),
 
             time: Instant::now(),
             max_texture_size: unsafe { renderer.gl.get_parameter_i32(glow::MAX_TEXTURE_SIZE) },
@@ -100,7 +100,7 @@ impl UiContext {
                 }
             }
 
-            let handle = self.inner.write().unwrap().load_texture(raw.name.clone(), image, Default::default());
+            let handle = self.inner.write().unwrap().load_texture(raw.name.clone(), image, TextureOptions::default());
             self.handles.insert(raw.name.clone(), handle);
         }
 
@@ -170,7 +170,7 @@ impl UiContext {
                 self.collected_events.push(Event::Scroll(match direction {
                     MouseWheelDirection::Up => egui::Vec2::new(0.0, 20.0),
                     MouseWheelDirection::Down => egui::Vec2::new(0.0, -20.0),
-                    MouseWheelDirection::Unknown => egui::Vec2::new(0.0, 0.0),
+                    MouseWheelDirection::Unknown => egui::Vec2::ZERO,
                 }));
                 self.modifiers = *modifiers;
             }
@@ -263,7 +263,7 @@ impl UiContext {
 
         for mesh in self.inner.read().unwrap().tessellate(output.shapes, 1.0) {
             if let Primitive::Mesh(data) = mesh.primitive {
-                let mut vertices = Vec::new();
+                let mut vertices = Vec::default();
                 for vertex in data.vertices {
                     let r = vertex.color.r() as u32;
                     let g = vertex.color.g() as u32;
@@ -274,17 +274,18 @@ impl UiContext {
                     vertices.push(ShapeVertex::new(Vec2::new(vertex.pos.x, vertex.pos.y), color, Vec2::new(vertex.uv.x, vertex.uv.y)));
                 }
 
-                let mut shape = Shape::new();
-                shape.vertices = vertices;
-                shape.indices = data.indices;
-                shape.texture_id = match self.textures.get(&data.texture_id) {
-                    Some(texture_id) => sprite::TextureId::Some(*texture_id),
-                    None => {
-                        error!("Failed to read texture {:?}", data.texture_id);
-                        sprite::TextureId::Default
-                    }
+                let shape = Shape {
+                    texture_id: match self.textures.get(&data.texture_id) {
+                        Some(texture_id) => sprite::TextureId::Some(*texture_id),
+                        None => {
+                            error!("Failed to read texture {:?}", data.texture_id);
+                            sprite::TextureId::Default
+                        }
+                    },
+                    vertices,
+                    indices: data.indices,
+                    ..Default::default()
                 };
-                shape.apply_model = false;
 
                 let scissor_position = Vec2::new(mesh.clip_rect.left(), renderer.viewport_size.y - mesh.clip_rect.height() - mesh.clip_rect.top());
                 let scissor_size = Vec2::new(mesh.clip_rect.width(), mesh.clip_rect.height());

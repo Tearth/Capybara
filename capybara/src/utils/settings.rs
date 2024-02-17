@@ -13,7 +13,7 @@ pub struct SettingsStorage {
 
 impl SettingsStorage {
     pub fn new(path: &str) -> Self {
-        Self { path: path.to_string(), filesystem: Default::default(), cache: Default::default() }
+        Self { path: path.to_string(), filesystem: FileSystem::default(), cache: FxHashMap::default() }
     }
 
     pub fn get<T>(&mut self, key: &str) -> Result<T>
@@ -53,7 +53,7 @@ impl SettingsStorage {
     }
 
     fn serialize(&self, settings: &FxHashMap<String, String>) -> String {
-        let mut output = String::new();
+        let mut output = String::default();
 
         for item in settings {
             output.push_str(&format!("{}={}\n", item.0, item.1));

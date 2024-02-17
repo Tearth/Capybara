@@ -58,7 +58,7 @@ impl Packet {
             let header_data = slice::from_raw_parts((header as *const H) as *const u8, mem::size_of::<H>());
             let array_data = slice::from_raw_parts(array.as_ptr() as *const u8, mem::size_of_val(array));
 
-            let mut data = Vec::new();
+            let mut data = Vec::default();
             data.extend_from_slice(header_data);
             data.extend_from_slice(array_data);
 

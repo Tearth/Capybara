@@ -17,7 +17,7 @@ pub struct AudioContext {
 
 impl AudioContext {
     pub fn new() -> Result<Self> {
-        Ok(Self { inner: AudioManager::<CpalBackend>::new(AudioManagerSettings::default())?, sounds: Default::default() })
+        Ok(Self { inner: AudioManager::<CpalBackend>::new(AudioManagerSettings::default())?, sounds: Storage::default() })
     }
 
     pub fn instantiate_assets(&mut self, assets: &AssetsLoader, prefix: Option<&str>, track: Option<TrackId>) {

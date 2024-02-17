@@ -32,14 +32,14 @@ impl ConfigLoader {
     }
 
     pub fn reload(&mut self) {
-        self.data = Default::default();
+        self.data = ConfigData::default();
 
         let mut file = match File::open(&self.path) {
             Ok(file) => file,
             Err(err) => error_return!("Failed to open configuration file ({})", err),
         };
 
-        let mut buffer = Vec::new();
+        let mut buffer = Vec::default();
         if let Err(err) = file.read_to_end(&mut buffer) {
             error_return!("Failed to read configuration file ({})", err);
         }

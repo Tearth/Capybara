@@ -26,7 +26,7 @@ fn process_config(tokens: &[&str], core: &mut Core) {
 }
 
 fn process_config_show(_tokens: &[&str], core: &Core) {
-    let mut data = Vec::new();
+    let mut data = Vec::default();
     let config = core.config.read().unwrap();
 
     data.push(format!(" - endpoint: {}", config.data.endpoint));
@@ -61,7 +61,7 @@ fn process_clients(tokens: &[&str], core: &Core) {
 }
 
 fn process_clients_list(_tokens: &[&str], core: &Core) {
-    let mut data = Vec::new();
+    let mut data = Vec::default();
     let clients = core.clients.read().unwrap();
 
     for client in clients.iter() {

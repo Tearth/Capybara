@@ -97,13 +97,13 @@ impl WindowContext {
 
                 size: Coordinates::new(1, 1),
                 cursor_visible: true,
-                cursor_position: Default::default(),
+                cursor_position: Coordinates::default(),
                 cursor_in_window: false,
                 mouse_state: vec![false; MouseButton::Unknown as usize],
                 keyboard_state: vec![false; Key::Unknown as usize],
 
                 phantom: false,
-                event_queue: Default::default(),
+                event_queue: VecDeque::default(),
             });
 
             let hwnd = winuser::CreateWindowExA(
@@ -172,13 +172,13 @@ impl WindowContext {
 
                 size: Coordinates::new(1, 1),
                 cursor_visible: true,
-                cursor_position: Default::default(),
+                cursor_position: Coordinates::default(),
                 cursor_in_window: false,
-                mouse_state: Vec::new(),
-                keyboard_state: Vec::new(),
+                mouse_state: Vec::default(),
+                keyboard_state: Vec::default(),
 
                 phantom: true,
-                event_queue: Default::default(),
+                event_queue: VecDeque::default(),
             });
 
             let phantom_hwnd = winuser::CreateWindowExA(
@@ -242,7 +242,7 @@ impl WindowContext {
                 bail!("Failed to make phantom current context, code {}", errhandlingapi::GetLastError());
             }
 
-            let phantom_wgl_extensions = WglExtensions::new();
+            let phantom_wgl_extensions = WglExtensions::default();
 
             if winapi::wglDeleteContext(phantom_gl_context) == 0 {
                 error!("Failed to delete phantom context, code {}", errhandlingapi::GetLastError());
@@ -325,7 +325,7 @@ impl WindowContext {
             }
 
             self.wgl_context = Some(wgl_context);
-            self.wgl_extensions = Some(WglExtensions::new());
+            self.wgl_extensions = Some(WglExtensions::default());
 
             Ok(())
         }

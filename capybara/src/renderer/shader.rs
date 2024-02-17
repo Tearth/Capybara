@@ -76,7 +76,7 @@ impl Shader {
             gl.delete_shader(fragment_shader);
 
             let active_uniforms = gl.get_active_uniforms(program);
-            let mut uniforms: FxHashMap<String, ShaderParameter> = Default::default();
+            let mut uniforms = FxHashMap::default();
 
             for index in 0..active_uniforms {
                 let uniform = gl.get_active_uniform(program, index).ok_or_else(|| anyhow!("Uniform not found"))?;

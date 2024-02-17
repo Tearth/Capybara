@@ -42,7 +42,7 @@ impl WebSocketConnectedClient {
     pub fn new(id: u64, websocket: WebSocketStream<TcpStream>, address: SocketAddr) -> Self {
         Self {
             id,
-            ping: Default::default(),
+            ping: Arc::default(),
             address,
             join_time: Instant::now(),
 

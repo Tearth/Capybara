@@ -134,7 +134,7 @@ impl RendererContext {
             let shape_buffer_ebo = gl.create_buffer().map_err(Error::msg)?;
 
             let mut context = Self {
-                viewport_size: Default::default(),
+                viewport_size: Vec2::ZERO,
 
                 default_camera_id: usize::MAX,
                 default_sprite_shader_id: usize::MAX,
@@ -146,12 +146,12 @@ impl RendererContext {
                 active_shape_shader_id: usize::MAX,
                 selected_shader_id: usize::MAX,
 
-                cameras: Default::default(),
-                shaders: Default::default(),
-                textures: Default::default(),
+                cameras: Storage::default(),
+                shaders: Storage::default(),
+                textures: Storage::default(),
                 gl: Rc::new(gl),
 
-                active_camera_data: Default::default(),
+                active_camera_data: Camera::default(),
                 buffer_metadata: None,
 
                 framebuffer,
@@ -166,14 +166,14 @@ impl RendererContext {
                 sprite_buffer_ebo,
                 sprite_buffer_resized: true,
                 sprite_buffer_count: 0,
-                sprite_buffer_vertices_queue: vec![Default::default(); 256],
+                sprite_buffer_vertices_queue: vec![SpriteVertex::default(); 256],
                 sprite_buffer_vertices_count: 0,
 
                 shape_buffer_vao,
                 shape_buffer_vbo,
                 shape_buffer_ebo,
                 shape_buffer_resized: true,
-                shape_buffer_vertices_queue: vec![Default::default(); 256],
+                shape_buffer_vertices_queue: vec![ShapeVertex::default(); 256],
                 shape_buffer_indices_queue: vec![0; 256],
                 shape_buffer_vertices_count: 0,
                 shape_buffer_indices_count: 0,
@@ -183,15 +183,15 @@ impl RendererContext {
                 fps_timestamp: Instant::now(),
                 fps_count: 0,
 
-                statistics: Default::default(),
-                statistics_current: Default::default(),
+                statistics: RendererStatistics::default(),
+                statistics_current: RendererStatistics::default(),
             };
 
             context.gl.enable(glow::BLEND);
             context.gl.blend_func(glow::ONE, glow::ONE_MINUS_SRC_ALPHA);
             context.set_clear_color(Vec4::new(0.0, 0.0, 0.0, 1.0));
 
-            let camera = Camera::new(Default::default(), Default::default(), CameraOrigin::LeftBottom, true);
+            let camera = Camera::new(Vec2::ZERO, Vec2::ZERO, CameraOrigin::LeftBottom, true);
             context.default_camera_id = context.cameras.store(camera);
             context.set_camera(context.default_camera_id);
 
@@ -342,7 +342,7 @@ impl RendererContext {
         self.statistics_current.loaded_textures_size = self.textures.iter().fold(0, |acc, p| acc + (p.size.x * p.size.y) as usize);
 
         self.statistics = self.statistics_current;
-        self.statistics_current = Default::default();
+        self.statistics_current = RendererStatistics::default();
 
         let now = Instant::now();
         if (now - self.fps_timestamp).as_secs() >= 1 {
@@ -423,7 +423,7 @@ impl RendererContext {
         }
 
         if self.sprite_buffer_vertices_count >= self.sprite_buffer_vertices_queue.len() {
-            self.sprite_buffer_vertices_queue.resize(self.sprite_buffer_vertices_queue.len() * 2, Default::default());
+            self.sprite_buffer_vertices_queue.resize(self.sprite_buffer_vertices_queue.len() * 2, SpriteVertex::default());
             self.sprite_buffer_resized = true;
         }
 
@@ -434,7 +434,7 @@ impl RendererContext {
             };
 
             match &sprite.texture_type {
-                TextureType::Simple => (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0)),
+                TextureType::Simple => (Vec2::ZERO, Vec2::new(1.0, 1.0)),
                 TextureType::SimpleOffset { offset } => {
                     let uv_position = *offset / texture.size;
                     let uv_size = sprite_size / texture.size;
@@ -494,7 +494,7 @@ impl RendererContext {
                 }
             }
         } else {
-            (Vec2::new(0.0, 0.0), Vec2::new(1.0, 1.0))
+            (Vec2::ZERO, Vec2::new(1.0, 1.0))
         };
 
         self.sprite_buffer_vertices_queue[self.sprite_buffer_vertices_count] = SpriteVertex {
@@ -527,7 +527,7 @@ impl RendererContext {
             let mut sufficient_space = true;
 
             if self.shape_buffer_vertices_count + shape.vertices.len() >= self.shape_buffer_vertices_queue.len() {
-                self.shape_buffer_vertices_queue.resize(self.shape_buffer_vertices_queue.len() * 2, Default::default());
+                self.shape_buffer_vertices_queue.resize(self.shape_buffer_vertices_queue.len() * 2, ShapeVertex::default());
                 self.shape_buffer_resized = true;
                 sufficient_space = false;
             }

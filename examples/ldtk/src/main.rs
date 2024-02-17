@@ -85,7 +85,7 @@ impl Scene<GlobalData> for MainScene {
                         state.renderer.draw_sprite(&Sprite {
                             position: tile.position + Vec2::new(140.0, 0.0),
                             size: Some(tilemap.tile_size),
-                            anchor: Vec2::new(0.0, 0.0),
+                            anchor: Vec2::ZERO,
                             texture_id: TextureId::Some(state.renderer.textures.get_id(&tilemap.name).unwrap()),
                             texture_type: TextureType::SimpleCoordinates { position: tile.source, size: tilemap.tile_size },
                             ..Default::default()
@@ -98,7 +98,7 @@ impl Scene<GlobalData> for MainScene {
                     state.renderer.draw_sprite(&Sprite {
                         position: entity.position + Vec2::new(140.0, 0.0),
                         size: Some(tilemap.tile_size),
-                        anchor: Vec2::new(0.0, 0.0),
+                        anchor: Vec2::ZERO,
                         texture_id: TextureId::Some(state.renderer.textures.get_id(&tilemap.name).unwrap()),
                         texture_type: TextureType::SimpleCoordinates { position: entity.source, size: tilemap.tile_size },
                         ..Default::default()

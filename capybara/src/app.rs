@@ -89,14 +89,14 @@ where
         let audio = AudioContext::new()?;
 
         #[cfg(feature = "physics")]
-        let physics = PhysicsContext::new();
+        let physics = PhysicsContext::default();
 
         Ok(Self {
             window,
             renderer,
             ui,
-            scenes: Default::default(),
-            global: Default::default(),
+            scenes: Storage::default(),
+            global: G::default(),
 
             #[cfg(feature = "audio")]
             audio,
@@ -104,7 +104,7 @@ where
             #[cfg(feature = "physics")]
             physics,
 
-            current_scene: Default::default(),
+            current_scene: String::default(),
             next_scene: None,
             frame_timestamp: Instant::now(),
             running: true,

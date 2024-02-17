@@ -29,7 +29,7 @@ pub struct ProfilerPlotDefinition<'a> {
 
 pub fn debug_window(context: &Context, console: &mut Console, profiler: &Profiler, collector: &mut DebugCollector) {
     let data = collector.get_data();
-    let mut plot_data = Vec::new();
+    let mut plot_data = Vec::default();
 
     Window::new("Debug")
         .frame(debug_frame())

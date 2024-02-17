@@ -59,10 +59,10 @@ pub enum TextureType {
 impl Sprite {
     pub fn new() -> Self {
         Self {
-            position: Default::default(),
+            position: Vec2::ZERO,
             rotation: 0.0,
             scale: Vec2::ONE,
-            size: Default::default(),
+            size: None,
             anchor: Vec2::new(0.5, 0.5),
             color: Vec4::new(1.0, 1.0, 1.0, 1.0),
             texture_id: TextureId::Default,
@@ -79,7 +79,7 @@ impl Sprite {
 
     pub fn get_edges(&self, texture_size: Vec2) -> ArrayVec<Edge, 4> {
         let size = self.size.unwrap_or(texture_size) * self.scale;
-        let a = Vec2::new(0.0, 0.0) - size * self.anchor;
+        let a = Vec2::ZERO - size * self.anchor;
         let b = Vec2::new(size.x, 0.0) - size * self.anchor;
         let c = Vec2::new(size.x, size.y) - size * self.anchor;
         let d = Vec2::new(0.0, size.y) - size * self.anchor;

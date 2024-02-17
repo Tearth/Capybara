@@ -48,10 +48,10 @@ impl<'a> ImageProgressBar<'a> {
 
 impl<'a> Widget for ImageProgressBar<'a> {
     fn ui(self, ui: &mut Ui) -> Response {
-        let left_frame_size = self.left_frame_image.size().unwrap_or(Vec2::new(0.0, 0.0));
-        let center_frame_size = self.center_frame_image.size().unwrap_or(Vec2::new(0.0, 0.0));
-        let right_frame_size = self.right_frame_image.size().unwrap_or(Vec2::new(0.0, 0.0));
-        let fill_size = self.fill_image.size().unwrap_or(Vec2::new(0.0, 0.0));
+        let left_frame_size = self.left_frame_image.size().unwrap_or(Vec2::ZERO);
+        let center_frame_size = self.center_frame_image.size().unwrap_or(Vec2::ZERO);
+        let right_frame_size = self.right_frame_image.size().unwrap_or(Vec2::ZERO);
+        let fill_size = self.fill_image.size().unwrap_or(Vec2::ZERO);
 
         let width = self.desired_width.unwrap_or_else(|| ui.available_size_before_wrap().x);
         let height = left_frame_size.y.max(center_frame_size.y).max(right_frame_size.y);

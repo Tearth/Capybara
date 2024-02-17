@@ -25,8 +25,8 @@ pub struct LoadingScene {}
 
 impl Scene<GlobalData> for LoadingScene {
     fn activation(&mut self, state: ApplicationState<GlobalData>) -> Result<()> {
-        let music_track = state.audio.inner.add_sub_track(TrackBuilder::new())?;
-        let effects_track = state.audio.inner.add_sub_track(TrackBuilder::new())?;
+        let music_track = state.audio.inner.add_sub_track(TrackBuilder::default())?;
+        let effects_track = state.audio.inner.add_sub_track(TrackBuilder::default())?;
 
         state.global.settings.set(SETTINGS_MASTER_VOLUME, 1.0, false);
         state.global.settings.set(SETTINGS_MUSIC_VOLUME, 1.0, false);

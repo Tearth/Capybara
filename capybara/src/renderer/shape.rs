@@ -31,15 +31,15 @@ pub struct ShapeVertex {
 impl Shape {
     pub fn new() -> Self {
         Self {
-            position: Default::default(),
+            position: Vec2::ZERO,
             rotation: 0.0,
             scale: Vec2::ONE,
             texture_id: TextureId::Default,
             apply_model: true,
             rounded_coordinates: false,
 
-            vertices: Default::default(),
-            indices: Default::default(),
+            vertices: Vec::default(),
+            indices: Vec::default(),
         }
     }
 
@@ -57,7 +57,7 @@ impl Shape {
             // Right-top
             ShapeVertex::new(Vec2::new(width, length - 0.5), color, Vec2::new(1.0, 0.0)),
             // Left-top
-            ShapeVertex::new(Vec2::new(-width, length - 0.5), color, Vec2::new(0.0, 0.0)),
+            ShapeVertex::new(Vec2::new(-width, length - 0.5), color, Vec2::ZERO),
         ];
 
         Shape {
@@ -85,7 +85,7 @@ impl Shape {
             // Right-top
             ShapeVertex::new(left_bottom + size, color, Vec2::new(1.0, 0.0)),
             // Left-top
-            ShapeVertex::new(left_bottom + Vec2::new(0.0, size.y), color, Vec2::new(0.0, 0.0)),
+            ShapeVertex::new(left_bottom + Vec2::new(0.0, size.y), color, Vec2::ZERO),
         ];
 
         Shape {
@@ -120,7 +120,7 @@ impl Shape {
             // Right-top inner
             ShapeVertex::new(left_bottom + size - thickness, color, Vec2::new(1.0 - uv_thickness.x, uv_thickness.y)),
             // Left-top outer
-            ShapeVertex::new(left_bottom + Vec2::new(0.0, size.y), color, Vec2::new(0.0, 0.0)),
+            ShapeVertex::new(left_bottom + Vec2::new(0.0, size.y), color, Vec2::ZERO),
             // Left-top inner
             ShapeVertex::new(left_bottom + Vec2::new(thickness, size.y - thickness), color, uv_thickness),
         ];
@@ -148,7 +148,7 @@ impl Shape {
             // Center
             ShapeVertex::new(center, inner_color, Vec2::new(0.5, 0.5)),
         ];
-        let mut indices = Vec::new();
+        let mut indices = Vec::default();
 
         for i in 0..sides {
             let angle = i as f32 * angle_step;
@@ -184,8 +184,8 @@ impl Shape {
         let uv_thickness = thickness / radius;
         let angle_step = consts::TAU / sides as f32;
         let color = color.to_rgb_packed();
-        let mut vertices = Vec::new();
-        let mut indices = Vec::new();
+        let mut vertices = Vec::default();
+        let mut indices = Vec::default();
 
         for i in 0..sides {
             let angle = i as f32 * angle_step;
@@ -223,7 +223,7 @@ impl Shape {
     }
 
     pub fn get_edges(&self) -> Vec<Edge> {
-        let mut edges = Vec::new();
+        let mut edges = Vec::default();
         let model = self.get_model();
 
         for i in (0..self.indices.len()).step_by(3) {

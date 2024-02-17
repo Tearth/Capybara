@@ -191,14 +191,14 @@ impl WindowContext {
 
                 size: Coordinates::new(1, 1),
                 cursor_visible: true,
-                cursor_position: Default::default(),
+                cursor_position: Coordinates::default(),
                 cursor_in_window: false,
                 mouse_state: vec![false; MouseButton::Unknown as usize],
                 keyboard_state: vec![false; Key::Unknown as usize],
 
                 delete_window_atom,
                 last_character: None,
-                event_queue: Default::default(),
+                event_queue: VecDeque::default(),
             });
             context.init_gl_context()?;
             context.set_style(style);
@@ -211,7 +211,7 @@ impl WindowContext {
         info!("OpenGL context initialization");
 
         unsafe {
-            let glx_extensions = GlxExtensions::new();
+            let glx_extensions = GlxExtensions::default();
             let context_attributes = [
                 arb::GLX_CONTEXT_MAJOR_VERSION_ARB,
                 3,

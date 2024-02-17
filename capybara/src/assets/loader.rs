@@ -37,17 +37,17 @@ pub struct AssetsLoader {
 impl AssetsLoader {
     pub fn new() -> Self {
         Self {
-            input: Default::default(),
+            input: String::default(),
             status: AssetsLoadingStatus::Idle,
-            filesystem: Default::default(),
+            filesystem: FileSystem::default(),
             current_index: 0,
             progress: 0.0,
 
-            raw_textures: Default::default(),
-            raw_fonts: Default::default(),
-            raw_atlases: Default::default(),
-            raw_sounds: Default::default(),
-            worlds: Default::default(),
+            raw_textures: Vec::default(),
+            raw_fonts: Vec::default(),
+            raw_atlases: Vec::default(),
+            raw_sounds: Vec::default(),
+            worlds: Vec::default(),
         }
     }
 
@@ -101,7 +101,7 @@ impl AssetsLoader {
                     return self.status;
                 }
 
-                let mut data = Vec::new();
+                let mut data = Vec::default();
                 let entries_count = archive.len();
 
                 let mut entry = match archive.by_index(self.current_index) {
@@ -208,8 +208,8 @@ impl AssetsLoader {
 
     fn load_xml(&mut self, name: &str, path: &str, data: &[u8]) -> Result<()> {
         let xml = str::from_utf8(data)?;
-        let mut image = String::new();
-        let mut entities = Vec::new();
+        let mut image = String::default();
+        let mut entities = Vec::default();
         let mut reader = Reader::from_str(xml);
 
         reader.trim_text(true);

@@ -15,7 +15,7 @@ pub struct WorkerConnection {
 
 impl WorkersManager {
     pub fn new(config: &ConfigLoader) -> Self {
-        let mut workers = Vec::new();
+        let mut workers = Vec::default();
 
         for worker_definition in &config.data.workers {
             workers.push(WorkerConnection { definition: worker_definition.clone(), websocket: WebSocketClient::default() })

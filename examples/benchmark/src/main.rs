@@ -101,7 +101,7 @@ impl Scene<GlobalData> for MainScene {
 
             self.regenerate_objects(&state, 100000)?;
 
-            let target_texture = Texture::new(state.renderer, &RawTexture::new("target_texture", "", Vec2::new(400.0, 400.0), &Vec::new()))?;
+            let target_texture = Texture::new(state.renderer, &RawTexture::new("target_texture", "", Vec2::new(400.0, 400.0), &Vec::default()))?;
             self.target_texture_id = state.renderer.textures.store(target_texture);
 
             let blur_shader = Shader::new(state.renderer, "blur", include_str!("./shaders/blur.vert"), include_str!("./shaders/blur.frag"))?;
@@ -151,7 +151,7 @@ impl Scene<GlobalData> for MainScene {
             state.renderer.draw_sprite(&Sprite {
                 texture_id: TextureId::Some(self.target_texture_id),
                 texture_type: TextureType::Simple,
-                anchor: Vec2::new(0.0, 0.0),
+                anchor: Vec2::ZERO,
                 ..Default::default()
             });
 

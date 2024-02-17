@@ -92,7 +92,7 @@ impl Scene<GlobalData> for GameScene {
                     .movable(false)
                     .resizable(false)
                     .collapsible(false)
-                    .anchor(Align2::CENTER_CENTER, Vec2::new(0.0, 0.0))
+                    .anchor(Align2::CENTER_CENTER, Vec2::ZERO)
                     .current_pos(center)
                     .show(context, |ui| {
                         ui.add_space(15.0);

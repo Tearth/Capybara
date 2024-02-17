@@ -52,9 +52,9 @@ impl LightEmitter {
             extension: 0.0,
             debug: LightDebugSettings::default(),
 
-            edges: Vec::new(),
-            points: Vec::new(),
-            hits: Vec::new(),
+            edges: Vec::default(),
+            points: Vec::default(),
+            hits: Vec::default(),
         }
     }
 
@@ -216,10 +216,10 @@ impl LightEmitter {
         // Step 8: generate mesh with first vertex centered and all others placed circle-like
         // -----------------------------------------------------------------------------------
 
-        let mut shape = Shape::new();
-        let mut last_position = Vec2::new(0.0, 0.0);
+        let mut shape = Shape::default();
+        let mut last_position = Vec2::ZERO;
 
-        shape.vertices.push(ShapeVertex::new(self.position, self.color_begin.to_rgb_packed(), Vec2::new(0.0, 0.0)));
+        shape.vertices.push(ShapeVertex::new(self.position, self.color_begin.to_rgb_packed(), Vec2::ZERO));
         for hit in &self.hits {
             if hit.position.distance(last_position) <= self.merge_distance {
                 continue;
@@ -248,8 +248,8 @@ impl LightEmitter {
 
         LightResponse {
             shape,
-            points: if self.debug.enabled { self.points.clone() } else { Vec::new() },
-            hits: if self.debug.enabled { self.hits.clone() } else { Vec::new() },
+            points: if self.debug.enabled { self.points.clone() } else { Vec::default() },
+            hits: if self.debug.enabled { self.hits.clone() } else { Vec::default() },
         }
     }
 }

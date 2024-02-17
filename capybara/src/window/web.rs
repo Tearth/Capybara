@@ -85,7 +85,7 @@ impl WindowContext {
 
         info!("WebGL context initialization");
 
-        let context_options = Object::new();
+        let context_options = Object::default();
         let antialias = match msaa {
             Some(_) => JsValue::TRUE,
             None => JsValue::FALSE,
@@ -110,7 +110,7 @@ impl WindowContext {
 
             size: last_canvas_size,
             cursor_visible: true,
-            cursor_position: Default::default(),
+            cursor_position: Coordinates::default(),
             cursor_in_window: false,
             mouse_state: vec![false; MouseButton::Unknown as usize],
             keyboard_state: vec![false; Key::Unknown as usize],
@@ -132,7 +132,7 @@ impl WindowContext {
             touchcancel_callback: Closure::<dyn FnMut(_)>::new(|_| {}),
 
             last_character: None,
-            event_queue: Default::default(),
+            event_queue: VecDeque::default(),
         }))
     }
 

@@ -117,7 +117,7 @@ fn load_tilemap(data: &HashMap<String, JsonValue>) -> Result<LdtkTilemap> {
         name,
         path: json::read_value::<String>(data, "relPath")?,
         tile_size: Vec2::new(tile_size, tile_size),
-        custom: Default::default(),
+        custom: HashMap::default(),
     };
 
     for data in custom_data {
@@ -139,11 +139,10 @@ fn load_level(
     let mut level = LdtkLevel {
         id: json::read_value::<f64>(data, "uid")? as usize,
         name: json::read_value::<String>(data, "identifier")?,
-        size: Vec2::new(json::read_value::<f64>(data, "pxWid")? as f32, json::read_value::<f64>(data, "pxHei")? as f32),
+        size: json::read_vec2_dissected(data, "pxWid", "pxHei")?,
         background: json::read_color(data, "bgColor")?,
-        layers: Vec::new(),
+        layers: Vec::default(),
     };
-
     let layers = json::read_array(data, "layerInstances")?;
 
     for data in layers {
@@ -163,8 +162,8 @@ fn load_level(
             name: layer_name,
             grid_size: Vec2::new(layer_grid_size, layer_grid_size),
             tilemap_id: tilemap_id.map(|p| p as usize),
-            tiles: Vec::new(),
-            entities: Vec::new(),
+            tiles: Vec::default(),
+            entities: Vec::default(),
         };
 
         if let Some(tilemap_id) = tilemap_id {
@@ -175,11 +174,11 @@ fn load_level(
             let tiles = json::read_array(data, "gridTiles")?;
 
             for data in tiles {
-                let position = json::read_position(data, "px")?;
+                let position = json::read_vec2(data, "px")?;
                 layer.tiles.push(LdtkTile {
                     id: json::read_value::<f64>(data, "t")? as usize,
                     position: Vec2::new(position.x, level.size.y - position.y - tilemap.tile_size.y),
-                    source: json::read_position(data, "src")?,
+                    source: json::read_vec2(data, "src")?,
                 });
             }
         }
@@ -194,12 +193,11 @@ fn load_level(
                 };
             let field_definitions = json::read_array(entity_definition, "fieldDefs")?;
             let tile_data = json::read_object(entity_definition, "tileRect")?;
-            let pivot =
-                Vec2::new(json::read_value::<f64>(entity_definition, "pivotX")? as f32, json::read_value::<f64>(entity_definition, "pivotY")? as f32);
+            let pivot = json::read_vec2_dissected(entity_definition, "pivotX", "pivotY")?;
 
             let entity_definition_tilemap = json::read_value_nullable::<f64>(entity_definition, "tilesetId")?;
             if let Some(tilemap_id) = layer_tilemap.or(entity_definition_tilemap) {
-                let position = json::read_position(data, "px")?;
+                let position = json::read_vec2(data, "px")?;
                 let tilemap = match tilemaps.iter().find(|p| p.id == tilemap_id as usize) {
                     Some(tilemap) => tilemap,
                     None => bail!("Failed to find tilemap {}", tilemap_id),
@@ -226,7 +224,7 @@ fn load_level(
                         None
                     };
 
-                    let mut values = Vec::new();
+                    let mut values = Vec::default();
                     let field_value_array = json::read_array_raw(data, "realEditorValues")?;
                     for field_value in field_value_array {
                         match field_value {
@@ -290,9 +288,9 @@ fn load_level(
                 layer.entities.push(LdtkEntity {
                     name: json::read_value::<String>(entity_definition, "identifier")?,
                     position: Vec2::new(position.x, level.size.y - position.y - tilemap.tile_size.y + pivot.y * tilemap.tile_size.y),
-                    size: Vec2::new(json::read_value::<f64>(data, "width")? as f32, json::read_value::<f64>(data, "height")? as f32),
+                    size: json::read_vec2_dissected(data, "width", "height")?,
                     pivot,
-                    source: Vec2::new(json::read_value::<f64>(tile_data, "x")? as f32, json::read_value::<f64>(tile_data, "y")? as f32),
+                    source: json::read_vec2_dissected(tile_data, "x", "y")?,
                     tilemap_id: tilemap_id as usize,
                     fields,
                 });

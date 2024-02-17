@@ -36,7 +36,7 @@ pub struct RoomPlayer {
 
 impl Room {
     pub fn new() -> Self {
-        Self { state: VecDeque::new(), players_added: Vec::new(), players_removed: Vec::new() }
+        Self { state: VecDeque::default(), players_added: Vec::default(), players_removed: Vec::default() }
     }
 
     pub fn add_player(&mut self, client_id: u64) {
@@ -51,7 +51,7 @@ impl Room {
 
     pub fn tick(&mut self, packets: &[QueuePacket], config: &ConfigLoader) -> Vec<QueuePacket> {
         let now = Instant::now();
-        let mut outgoing_packets = Vec::new();
+        let mut outgoing_packets = Vec::default();
 
         if self.state.is_empty() {
             self.state.push_back(RoomState { timestamp: now, players: FxHashMap::default() })
@@ -149,7 +149,7 @@ impl Room {
             }
         }
 
-        let mut data = Vec::new();
+        let mut data = Vec::default();
         let state = self.state.front_mut().unwrap();
         let players = state.players.keys().cloned().collect::<Vec<_>>();
 

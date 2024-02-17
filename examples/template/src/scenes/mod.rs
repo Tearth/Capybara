@@ -21,6 +21,6 @@ pub struct GlobalData {
 
 impl Default for GlobalData {
     fn default() -> Self {
-        Self { assets: Default::default(), settings: SettingsStorage::new("./settings.cfg"), music_track: None, effects_track: None }
+        Self { assets: AssetsLoader::default(), settings: SettingsStorage::new("./settings.cfg"), music_track: None, effects_track: None }
     }
 }

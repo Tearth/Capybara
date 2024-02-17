@@ -60,7 +60,7 @@ impl LobbyNetworkContext {
                                 name: String::from_utf8_lossy(&server.name).trim_end_matches('\0').to_string(),
                                 flag: String::from_utf8_lossy(&server.flag).trim_end_matches('\0').to_string(),
                                 address: String::from_utf8_lossy(&server.address).trim_end_matches('\0').to_string(),
-                                websocket: Default::default(),
+                                websocket: WebSocketClient::default(),
                             };
 
                             info!("{} ({}) - {}", data.name, data.flag, data.address);

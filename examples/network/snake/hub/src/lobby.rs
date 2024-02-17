@@ -13,7 +13,7 @@ impl Lobby {
     }
 
     pub fn tick(&mut self, workers: &Vec<WorkerConnection>, packets: &Vec<QueuePacket>) -> Vec<QueuePacket> {
-        let mut outgoing_packets = Vec::new();
+        let mut outgoing_packets = Vec::default();
 
         for packet in packets {
             match packet.inner.get_id() {
@@ -24,7 +24,7 @@ impl Lobby {
                     ));
                 }
                 Some(PACKET_SERVER_LIST_REQUEST) => {
-                    let mut data = Vec::new();
+                    let mut data = Vec::default();
 
                     for worker in workers {
                         if worker.definition.enabled && *worker.websocket.status.read().unwrap() == ConnectionStatus::Connected {

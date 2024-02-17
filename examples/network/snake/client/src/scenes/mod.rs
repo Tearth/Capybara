@@ -27,13 +27,13 @@ pub struct GlobalData {
 impl Default for GlobalData {
     fn default() -> Self {
         Self {
-            assets: Default::default(),
+            assets: AssetsLoader::default(),
             settings: SettingsStorage::new("./settings.cfg"),
 
-            player_name: String::new(),
-            server_name: String::new(),
-            server_flag: String::new(),
-            server_address: String::new(),
+            player_name: String::default(),
+            server_name: String::default(),
+            server_flag: String::default(),
+            server_address: String::default(),
 
             music_track: None,
             effects_track: None,

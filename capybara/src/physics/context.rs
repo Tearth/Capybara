@@ -4,6 +4,7 @@ use glam::Vec4;
 use rapier2d::na::Vector2;
 use rapier2d::prelude::*;
 use rustc_hash::FxHashMap;
+use std::collections::HashMap;
 use std::f32::consts;
 
 pub struct PhysicsContext {
@@ -52,19 +53,19 @@ impl PhysicsContext {
     pub fn new() -> Self {
         Self {
             gravity: Vector2::new(0.0, -9.81),
-            rigidbodies: RigidBodySet::new(),
-            colliders: ColliderSet::new(),
-            interpolation_data: Default::default(),
+            rigidbodies: RigidBodySet::default(),
+            colliders: ColliderSet::default(),
+            interpolation_data: HashMap::default(),
             integration_parameters: IntegrationParameters::default(),
-            physics_pipeline: PhysicsPipeline::new(),
-            island_manager: IslandManager::new(),
-            broad_phase: BroadPhase::new(),
-            narrow_phase: NarrowPhase::new(),
-            impulse_joints: ImpulseJointSet::new(),
-            multibody_joints: MultibodyJointSet::new(),
-            solver: CCDSolver::new(),
+            physics_pipeline: PhysicsPipeline::default(),
+            island_manager: IslandManager::default(),
+            broad_phase: BroadPhase::default(),
+            narrow_phase: NarrowPhase::default(),
+            impulse_joints: ImpulseJointSet::default(),
+            multibody_joints: MultibodyJointSet::default(),
+            solver: CCDSolver::default(),
             hooks: Box::new(()),
-            events: Default::default(),
+            events: EventCollector::default(),
             running: true,
 
             debug: PhysicsDebugSettings {
@@ -132,7 +133,7 @@ impl PhysicsContext {
             }
         }
 
-        let mut orphans = Vec::new();
+        let mut orphans = Vec::default();
 
         for handle in &mut self.interpolation_data.keys() {
             if !self.rigidbodies.contains(*handle) {
@@ -198,7 +199,7 @@ impl InterpolationData {
     pub fn clear(&mut self) {
         self.position_previous = None;
         self.rotation_previous = None;
-        self.position_current = Vec2::new(0.0, 0.0);
+        self.position_current = Vec2::ZERO;
         self.rotation_current = 0.0;
     }
 }

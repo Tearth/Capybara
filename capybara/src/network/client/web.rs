@@ -32,17 +32,17 @@ pub struct WebSocketClient {
 impl WebSocketClient {
     pub fn new() -> Self {
         Self {
-            status: Default::default(),
-            ping: Default::default(),
+            status: Arc::default(),
+            ping: Arc::default(),
 
             websocket: None,
-            status_last_state: Default::default(),
+            status_last_state: ConnectionStatus::default(),
 
             onopen_callback: Closure::<dyn FnMut()>::new(|| {}),
             onclose_callback: Closure::<dyn FnMut()>::new(|| {}),
             onmessage_callback: Closure::<dyn FnMut(_)>::new(|_| {}),
             onerror_callback: Closure::<dyn FnMut(_)>::new(|_| {}),
-            received_packets: Default::default(),
+            received_packets: Arc::default(),
         }
     }
 

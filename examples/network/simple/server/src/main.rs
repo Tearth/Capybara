@@ -15,6 +15,6 @@ mod internal {
 
     #[tokio::main]
     pub async fn main() {
-        Core::new().run().await;
+        Core::default().run().await;
     }
 }

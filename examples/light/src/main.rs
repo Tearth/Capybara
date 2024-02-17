@@ -113,7 +113,7 @@ impl Scene<GlobalData> for MainScene {
                     sprite: Sprite {
                         position,
                         rotation: fastrand::f32() * consts::TAU,
-                        anchor: Vec2::new(0.0, 0.0),
+                        anchor: Vec2::ZERO,
                         texture_id: TextureId::Some(state.renderer.textures.get_id("takodachi")?),
                         ..Default::default()
                     },
@@ -121,10 +121,10 @@ impl Scene<GlobalData> for MainScene {
                 });
             }
 
-            let target_texture = Texture::new(state.renderer, &RawTexture::new("target_texture", "", Vec2::new(400.0, 400.0), &Vec::new()))?;
+            let target_texture = Texture::new(state.renderer, &RawTexture::new("target_texture", "", Vec2::new(400.0, 400.0), &Vec::default()))?;
             self.light_texture_id = state.renderer.textures.store(target_texture);
 
-            let main_texture = Texture::new(state.renderer, &RawTexture::new("main_texture", "", Vec2::new(400.0, 400.0), &Vec::new()))?;
+            let main_texture = Texture::new(state.renderer, &RawTexture::new("main_texture", "", Vec2::new(400.0, 400.0), &Vec::default()))?;
             self.main_texture_id = state.renderer.textures.store(main_texture);
 
             let mult_shader = Shader::new(state.renderer, "mult", include_str!("./shaders/mult.vert"), include_str!("./shaders/mult.frag"))?;
@@ -148,7 +148,7 @@ impl Scene<GlobalData> for MainScene {
 
             state.renderer.set_target_texture(Some(self.main_texture_id));
             state.renderer.draw_sprite(&Sprite {
-                anchor: Vec2::new(0.0, 0.0),
+                anchor: Vec2::ZERO,
                 size: Some(state.renderer.viewport_size),
                 color: Vec4::new(0.5, 0.5, 0.5, 1.0),
                 ..Default::default()
@@ -198,7 +198,7 @@ impl Scene<GlobalData> for MainScene {
             state.renderer.set_target_texture(Some(self.light_texture_id));
             state.renderer.clear();
             state.renderer.draw_sprite(&Sprite {
-                anchor: Vec2::new(0.0, 0.0),
+                anchor: Vec2::ZERO,
                 size: Some(state.renderer.viewport_size),
                 color: Vec4::new(1.0, 1.0, 1.0, 0.15),
                 ..Default::default()
@@ -212,7 +212,7 @@ impl Scene<GlobalData> for MainScene {
 
             state.renderer.draw_sprite(&Sprite {
                 texture_id: TextureId::None,
-                anchor: Vec2::new(0.0, 0.0),
+                anchor: Vec2::ZERO,
                 size: Some(state.renderer.viewport_size),
                 ..Default::default()
             });

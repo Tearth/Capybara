@@ -7,7 +7,7 @@ impl From<Packet> for Vec<u8> {
             Packet::Pong { timestamp } => pong(timestamp),
             Packet::Object { id, data } => object(id, data),
             Packet::Array { id, data } => array(id, data),
-            Packet::Unknown => Vec::new(),
+            Packet::Unknown => Vec::default(),
         }
     }
 }

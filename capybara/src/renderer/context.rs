@@ -414,12 +414,20 @@ impl RendererContext {
         if let Some(buffer_metadata) = &self.buffer_metadata {
             if buffer_metadata.content_type != BufferContentType::Sprite || buffer_metadata.texture_id != sprite.texture_id {
                 self.flush_buffer();
-                self.buffer_metadata =
-                    Some(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id, self.framebuffer_texture_id, self.selected_shader_id));
+                self.buffer_metadata = Some(BufferMetadata::new(
+                    BufferContentType::Sprite, // fmt
+                    sprite.texture_id,
+                    self.framebuffer_texture_id,
+                    self.selected_shader_id,
+                ));
             }
         } else {
-            self.buffer_metadata =
-                Some(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id, self.framebuffer_texture_id, self.selected_shader_id));
+            self.buffer_metadata = Some(BufferMetadata::new(
+                BufferContentType::Sprite, // fmt
+                sprite.texture_id,
+                self.framebuffer_texture_id,
+                self.selected_shader_id,
+            ));
         }
 
         if self.sprite_buffer_vertices_count >= self.sprite_buffer_vertices_queue.len() {
@@ -515,12 +523,20 @@ impl RendererContext {
         if let Some(buffer_metadata) = &self.buffer_metadata {
             if buffer_metadata.content_type != BufferContentType::Shape || buffer_metadata.texture_id != shape.texture_id {
                 self.flush_buffer();
-                self.buffer_metadata =
-                    Some(BufferMetadata::new(BufferContentType::Shape, shape.texture_id, self.framebuffer_texture_id, self.selected_shader_id));
+                self.buffer_metadata = Some(BufferMetadata::new(
+                    BufferContentType::Shape, // fmt
+                    shape.texture_id,
+                    self.framebuffer_texture_id,
+                    self.selected_shader_id,
+                ));
             }
         } else {
-            self.buffer_metadata =
-                Some(BufferMetadata::new(BufferContentType::Shape, shape.texture_id, self.framebuffer_texture_id, self.selected_shader_id));
+            self.buffer_metadata = Some(BufferMetadata::new(
+                BufferContentType::Shape, // fmt
+                shape.texture_id,
+                self.framebuffer_texture_id,
+                self.selected_shader_id,
+            ));
         }
 
         loop {
@@ -677,11 +693,16 @@ impl RendererContext {
                         self.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.shape_buffer_ebo));
 
                         let buffer_ptr = self.shape_buffer_vertices_queue.as_ptr();
-                        let models_u8 =
-                            slice::from_raw_parts(buffer_ptr as *const u8, self.shape_buffer_vertices_count * mem::size_of::<ShapeVertex>());
+                        let models_u8 = slice::from_raw_parts(
+                            buffer_ptr as *const u8, // fmt
+                            self.shape_buffer_vertices_count * mem::size_of::<ShapeVertex>(),
+                        );
 
                         let buffer_ptr = self.shape_buffer_indices_queue.as_ptr();
-                        let indices_u8 = slice::from_raw_parts(buffer_ptr as *const u8, self.shape_buffer_indices_count * 4);
+                        let indices_u8 = slice::from_raw_parts(
+                            buffer_ptr as *const u8, // fmt
+                            self.shape_buffer_indices_count * 4,
+                        );
 
                         self.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, 0, models_u8);
                         self.gl.buffer_sub_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, 0, indices_u8);

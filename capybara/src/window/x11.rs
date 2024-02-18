@@ -134,8 +134,7 @@ impl WindowContext {
 
             xlib::XFree(frame_buffer_config as *mut c_void);
 
-            let event_mask =
-                ExposureMask | StructureNotifyMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | PointerMotionMask;
+            let mask = ExposureMask | StructureNotifyMask | ButtonPressMask | ButtonReleaseMask | KeyPressMask | KeyReleaseMask | PointerMotionMask;
             let colormap = xlib::XCreateColormap(display, xlib::XRootWindow(display, screen), (*visual_info).visual, AllocNone);
 
             let mut window_attributes = XSetWindowAttributes {
@@ -149,7 +148,7 @@ impl WindowContext {
                 backing_planes: 0,
                 backing_pixel: 0,
                 save_under: 0,
-                event_mask,
+                event_mask: mask,
                 do_not_propagate_mask: 0,
                 override_redirect: 1,
                 colormap,

@@ -60,8 +60,8 @@ impl Room {
             self.objects.clear();
 
             for _ in 0..self.objects_count {
-                let position = Vec2::new_rand(0.0..1.0) * self.viewport;
-                self.objects.push(ServerObject { position, direction: Vec2::new_rand(-1.0..1.0) });
+                let position = Vec2::rand(0.0..1.0) * self.viewport;
+                self.objects.push(ServerObject { position, direction: Vec2::rand(-1.0..1.0) });
             }
         }
 

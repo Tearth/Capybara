@@ -183,7 +183,7 @@ where
 {
     let mut variations = ArrayVec::default();
     for waypoint in waypoints {
-        variations.push(waypoint.variation / 2.0 - waypoint.variation * T::new_rand(0.0..1.0));
+        variations.push(waypoint.variation / 2.0 - waypoint.variation * T::rand(0.0..1.0));
     }
 
     variations

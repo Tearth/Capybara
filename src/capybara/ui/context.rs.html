@@ -456,6 +456,7 @@
 <a href="#455" id="455">455</a>
 <a href="#456" id="456">456</a>
 <a href="#457" id="457">457</a>
+<a href="#458" id="458">458</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::assets::loader::AssetsLoader;
 <span class="kw">use </span><span class="kw">crate</span>::assets::RawTexture;
 <span class="kw">use </span><span class="kw">crate</span>::error_return;
@@ -519,14 +520,14 @@
 <span class="kw">impl </span>UiContext {
     <span class="kw">pub fn </span>new(renderer: <span class="kw-2">&amp;mut </span>RendererContext) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            inner: Default::default(),
-            screen_size: Default::default(),
-            collected_events: Default::default(),
-            modifiers: Default::default(),
+            inner: Arc::default(),
+            screen_size: Vec2::ZERO,
+            collected_events: Vec::default(),
+            modifiers: Modifiers::default(),
 
-            camera_id: renderer.cameras.store(Camera::new(Default::default(), renderer.viewport_size, CameraOrigin::LeftTop, <span class="bool-val">true</span>)),
-            textures: Default::default(),
-            handles: Default::default(),
+            camera_id: renderer.cameras.store(Camera::new(Vec2::ZERO, renderer.viewport_size, CameraOrigin::LeftTop, <span class="bool-val">true</span>)),
+            textures: FxHashMap::default(),
+            handles: FxHashMap::default(),
 
             time: Instant::now(),
             max_texture_size: <span class="kw">unsafe </span>{ renderer.gl.get_parameter_i32(glow::MAX_TEXTURE_SIZE) },
@@ -558,7 +559,7 @@
                 }
             }
 
-            <span class="kw">let </span>handle = <span class="self">self</span>.inner.write().unwrap().load_texture(raw.name.clone(), image, Default::default());
+            <span class="kw">let </span>handle = <span class="self">self</span>.inner.write().unwrap().load_texture(raw.name.clone(), image, TextureOptions::default());
             <span class="self">self</span>.handles.insert(raw.name.clone(), handle);
         }
 
@@ -628,7 +629,7 @@
                 <span class="self">self</span>.collected_events.push(Event::Scroll(<span class="kw">match </span>direction {
                     MouseWheelDirection::Up =&gt; egui::Vec2::new(<span class="number">0.0</span>, <span class="number">20.0</span>),
                     MouseWheelDirection::Down =&gt; egui::Vec2::new(<span class="number">0.0</span>, -<span class="number">20.0</span>),
-                    MouseWheelDirection::Unknown =&gt; egui::Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>),
+                    MouseWheelDirection::Unknown =&gt; egui::Vec2::ZERO,
                 }));
                 <span class="self">self</span>.modifiers = <span class="kw-2">*</span>modifiers;
             }
@@ -721,7 +722,7 @@
 
         <span class="kw">for </span>mesh <span class="kw">in </span><span class="self">self</span>.inner.read().unwrap().tessellate(output.shapes, <span class="number">1.0</span>) {
             <span class="kw">if let </span>Primitive::Mesh(data) = mesh.primitive {
-                <span class="kw">let </span><span class="kw-2">mut </span>vertices = Vec::new();
+                <span class="kw">let </span><span class="kw-2">mut </span>vertices = Vec::default();
                 <span class="kw">for </span>vertex <span class="kw">in </span>data.vertices {
                     <span class="kw">let </span>r = vertex.color.r() <span class="kw">as </span>u32;
                     <span class="kw">let </span>g = vertex.color.g() <span class="kw">as </span>u32;
@@ -732,17 +733,18 @@
                     vertices.push(ShapeVertex::new(Vec2::new(vertex.pos.x, vertex.pos.y), color, Vec2::new(vertex.uv.x, vertex.uv.y)));
                 }
 
-                <span class="kw">let </span><span class="kw-2">mut </span>shape = Shape::new();
-                shape.vertices = vertices;
-                shape.indices = data.indices;
-                shape.texture_id = <span class="kw">match </span><span class="self">self</span>.textures.get(<span class="kw-2">&amp;</span>data.texture_id) {
-                    <span class="prelude-val">Some</span>(texture_id) =&gt; sprite::TextureId::Some(<span class="kw-2">*</span>texture_id),
-                    <span class="prelude-val">None </span>=&gt; {
-                        <span class="macro">error!</span>(<span class="string">"Failed to read texture {:?}"</span>, data.texture_id);
-                        sprite::TextureId::Default
-                    }
+                <span class="kw">let </span>shape = Shape {
+                    texture_id: <span class="kw">match </span><span class="self">self</span>.textures.get(<span class="kw-2">&amp;</span>data.texture_id) {
+                        <span class="prelude-val">Some</span>(texture_id) =&gt; sprite::TextureId::Some(<span class="kw-2">*</span>texture_id),
+                        <span class="prelude-val">None </span>=&gt; {
+                            <span class="macro">error!</span>(<span class="string">"Failed to read texture {:?}"</span>, data.texture_id);
+                            sprite::TextureId::Default
+                        }
+                    },
+                    vertices,
+                    indices: data.indices,
+                    ..Default::default()
                 };
-                shape.apply_model = <span class="bool-val">false</span>;
 
                 <span class="kw">let </span>scissor_position = Vec2::new(mesh.clip_rect.left(), renderer.viewport_size.y - mesh.clip_rect.height() - mesh.clip_rect.top());
                 <span class="kw">let </span>scissor_size = Vec2::new(mesh.clip_rect.width(), mesh.clip_rect.height());

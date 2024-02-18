@@ -116,7 +116,7 @@
 
 <span class="kw">impl </span>Room {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ last_update: <span class="prelude-val">None</span>, objects: Vec::new(), objects_count: <span class="number">100</span>, viewport: Vec2::new(<span class="number">512.0</span>, <span class="number">512.0</span>) }
+        <span class="self">Self </span>{ last_update: <span class="prelude-val">None</span>, objects: Vec::default(), objects_count: <span class="number">100</span>, viewport: Vec2::new(<span class="number">512.0</span>, <span class="number">512.0</span>) }
     }
 
     <span class="kw">pub fn </span>initialize_client(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client: WebSocketConnectedClientSlim) {
@@ -154,8 +154,8 @@
             <span class="self">self</span>.objects.clear();
 
             <span class="kw">for _ in </span><span class="number">0</span>..<span class="self">self</span>.objects_count {
-                <span class="kw">let </span>position = Vec2::new_rand(<span class="number">0.0</span>..<span class="number">1.0</span>) * <span class="self">self</span>.viewport;
-                <span class="self">self</span>.objects.push(ServerObject { position, direction: Vec2::new_rand(-<span class="number">1.0</span>..<span class="number">1.0</span>) });
+                <span class="kw">let </span>position = Vec2::rand(<span class="number">0.0</span>..<span class="number">1.0</span>) * <span class="self">self</span>.viewport;
+                <span class="self">self</span>.objects.push(ServerObject { position, direction: Vec2::rand(-<span class="number">1.0</span>..<span class="number">1.0</span>) });
             }
         }
 

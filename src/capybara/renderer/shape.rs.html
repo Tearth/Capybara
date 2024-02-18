@@ -299,15 +299,15 @@
 <span class="kw">impl </span>Shape {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            position: Default::default(),
+            position: Vec2::ZERO,
             rotation: <span class="number">0.0</span>,
             scale: Vec2::ONE,
             texture_id: TextureId::Default,
             apply_model: <span class="bool-val">true</span>,
             rounded_coordinates: <span class="bool-val">false</span>,
 
-            vertices: Default::default(),
-            indices: Default::default(),
+            vertices: Vec::default(),
+            indices: Vec::default(),
         }
     }
 
@@ -325,7 +325,7 @@
             <span class="comment">// Right-top
             </span>ShapeVertex::new(Vec2::new(width, length - <span class="number">0.5</span>), color, Vec2::new(<span class="number">1.0</span>, <span class="number">0.0</span>)),
             <span class="comment">// Left-top
-            </span>ShapeVertex::new(Vec2::new(-width, length - <span class="number">0.5</span>), color, Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>)),
+            </span>ShapeVertex::new(Vec2::new(-width, length - <span class="number">0.5</span>), color, Vec2::ZERO),
         ];
 
         Shape {
@@ -353,7 +353,7 @@
             <span class="comment">// Right-top
             </span>ShapeVertex::new(left_bottom + size, color, Vec2::new(<span class="number">1.0</span>, <span class="number">0.0</span>)),
             <span class="comment">// Left-top
-            </span>ShapeVertex::new(left_bottom + Vec2::new(<span class="number">0.0</span>, size.y), color, Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>)),
+            </span>ShapeVertex::new(left_bottom + Vec2::new(<span class="number">0.0</span>, size.y), color, Vec2::ZERO),
         ];
 
         Shape {
@@ -388,7 +388,7 @@
             <span class="comment">// Right-top inner
             </span>ShapeVertex::new(left_bottom + size - thickness, color, Vec2::new(<span class="number">1.0 </span>- uv_thickness.x, uv_thickness.y)),
             <span class="comment">// Left-top outer
-            </span>ShapeVertex::new(left_bottom + Vec2::new(<span class="number">0.0</span>, size.y), color, Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>)),
+            </span>ShapeVertex::new(left_bottom + Vec2::new(<span class="number">0.0</span>, size.y), color, Vec2::ZERO),
             <span class="comment">// Left-top inner
             </span>ShapeVertex::new(left_bottom + Vec2::new(thickness, size.y - thickness), color, uv_thickness),
         ];
@@ -416,7 +416,7 @@
             <span class="comment">// Center
             </span>ShapeVertex::new(center, inner_color, Vec2::new(<span class="number">0.5</span>, <span class="number">0.5</span>)),
         ];
-        <span class="kw">let </span><span class="kw-2">mut </span>indices = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>indices = Vec::default();
 
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..sides {
             <span class="kw">let </span>angle = i <span class="kw">as </span>f32 * angle_step;
@@ -452,8 +452,8 @@
         <span class="kw">let </span>uv_thickness = thickness / radius;
         <span class="kw">let </span>angle_step = consts::TAU / sides <span class="kw">as </span>f32;
         <span class="kw">let </span>color = color.to_rgb_packed();
-        <span class="kw">let </span><span class="kw-2">mut </span>vertices = Vec::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>indices = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>vertices = Vec::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>indices = Vec::default();
 
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..sides {
             <span class="kw">let </span>angle = i <span class="kw">as </span>f32 * angle_step;
@@ -491,7 +491,7 @@
     }
 
     <span class="kw">pub fn </span>get_edges(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;Edge&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>edges = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>edges = Vec::default();
         <span class="kw">let </span>model = <span class="self">self</span>.get_model();
 
         <span class="kw">for </span>i <span class="kw">in </span>(<span class="number">0</span>..<span class="self">self</span>.indices.len()).step_by(<span class="number">3</span>) {

@@ -131,13 +131,13 @@
 
 <span class="kw">impl </span>Core {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ clients: Default::default(), queue: Default::default(), room: Default::default() }
+        <span class="self">Self </span>{ clients: Arc::default(), queue: Arc::default(), room: Arc::default() }
     }
 
     <span class="kw">pub async fn </span>run(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         simple_logger::init_with_level(Level::Info).unwrap();
 
-        <span class="kw">let </span><span class="kw-2">mut </span>listener = WebSocketListener::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>listener = WebSocketListener::default();
         <span class="kw">let </span>(listener_tx, <span class="kw-2">mut </span>listener_rx) = mpsc::unbounded::&lt;WebSocketConnectedClient&gt;();
         <span class="kw">let </span>(packet_event_tx, <span class="kw-2">mut </span>packet_event_rx) = mpsc::unbounded::&lt;(u64, Packet)&gt;();
         <span class="kw">let </span>(disconnection_event_tx, <span class="kw-2">mut </span>disconnection_event_rx) = mpsc::unbounded::&lt;u64&gt;();

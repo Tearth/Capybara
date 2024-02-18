@@ -61,7 +61,7 @@
 
 <span class="kw">impl </span>WorkersManager {
     <span class="kw">pub fn </span>new(config: <span class="kw-2">&amp;</span>ConfigLoader) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>workers = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>workers = Vec::default();
 
         <span class="kw">for </span>worker_definition <span class="kw">in </span><span class="kw-2">&amp;</span>config.data.workers {
             workers.push(WorkerConnection { definition: worker_definition.clone(), websocket: WebSocketClient::default() })

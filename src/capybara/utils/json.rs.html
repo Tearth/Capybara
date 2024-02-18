@@ -97,6 +97,13 @@
 <a href="#96" id="96">96</a>
 <a href="#97" id="97">97</a>
 <a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::color::RgbUtils;
 <span class="kw">use </span>anyhow::anyhow;
 <span class="kw">use </span>anyhow::bail;
@@ -150,7 +157,7 @@
 {
     <span class="kw">let </span>value = data.get(name).ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"Failed to read {}"</span>, name))<span class="question-mark">?</span>;
     <span class="kw">if </span>value.is_null() {
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(Default::default());
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(T::default());
     }
 
     <span class="prelude-val">Ok</span>(value.get::&lt;T&gt;().ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"Failed to parse {}"</span>, name))<span class="question-mark">?</span>.clone())
@@ -178,7 +185,7 @@
     <span class="prelude-val">Ok</span>(Rgb::from_hex_str(<span class="kw-2">&amp;</span>parsed).map_err(|<span class="kw">_</span>| <span class="macro">anyhow!</span>(<span class="string">"Failed to parse {} into RGB"</span>, name))<span class="question-mark">?</span>.to_vec4())
 }
 
-<span class="kw">pub fn </span>read_position(data: <span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec2&gt; {
+<span class="kw">pub fn </span>read_vec2(data: <span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec2&gt; {
     <span class="kw">let </span>position = <span class="kw">match </span>data.get(name) {
         <span class="prelude-val">Some</span>(JsonValue::Array(array)) =&gt; array,
         <span class="kw">_ </span>=&gt; <span class="macro">bail!</span>(<span class="string">"Failed to read position"</span>),
@@ -194,5 +201,12 @@
     };
 
     <span class="prelude-val">Ok</span>(Vec2::new(x, y))
+}
+
+<span class="kw">pub fn </span>read_vec2_dissected(data: <span class="kw-2">&amp;</span>HashMap&lt;String, JsonValue&gt;, name_x: <span class="kw-2">&amp;</span>str, name_y: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;Vec2&gt; {
+    <span class="kw">let </span>x = read_value::&lt;f64&gt;(data, name_x)<span class="question-mark">?</span>;
+    <span class="kw">let </span>y = read_value::&lt;f64&gt;(data, name_y)<span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>(Vec2::new(x <span class="kw">as </span>f32, y <span class="kw">as </span>f32))
 }
 </code></pre></div></section></main></body></html>

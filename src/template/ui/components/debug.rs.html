@@ -276,7 +276,7 @@
 
 <span class="kw">pub fn </span>debug_window(context: <span class="kw-2">&amp;</span>Context, console: <span class="kw-2">&amp;mut </span>Console, profiler: <span class="kw-2">&amp;</span>Profiler, collector: <span class="kw-2">&amp;mut </span>DebugCollector) {
     <span class="kw">let </span>data = collector.get_data();
-    <span class="kw">let </span><span class="kw-2">mut </span>plot_data = Vec::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>plot_data = Vec::default();
 
     Window::new(<span class="string">"Debug"</span>)
         .frame(debug_frame())

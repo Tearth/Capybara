@@ -903,13 +903,13 @@
 
                 size: Coordinates::new(<span class="number">1</span>, <span class="number">1</span>),
                 cursor_visible: <span class="bool-val">true</span>,
-                cursor_position: Default::default(),
+                cursor_position: Coordinates::default(),
                 cursor_in_window: <span class="bool-val">false</span>,
                 mouse_state: <span class="macro">vec!</span>[<span class="bool-val">false</span>; MouseButton::Unknown <span class="kw">as </span>usize],
                 keyboard_state: <span class="macro">vec!</span>[<span class="bool-val">false</span>; Key::Unknown <span class="kw">as </span>usize],
 
                 phantom: <span class="bool-val">false</span>,
-                event_queue: Default::default(),
+                event_queue: VecDeque::default(),
             });
 
             <span class="kw">let </span>hwnd = winuser::CreateWindowExA(
@@ -978,13 +978,13 @@
 
                 size: Coordinates::new(<span class="number">1</span>, <span class="number">1</span>),
                 cursor_visible: <span class="bool-val">true</span>,
-                cursor_position: Default::default(),
+                cursor_position: Coordinates::default(),
                 cursor_in_window: <span class="bool-val">false</span>,
-                mouse_state: Vec::new(),
-                keyboard_state: Vec::new(),
+                mouse_state: Vec::default(),
+                keyboard_state: Vec::default(),
 
                 phantom: <span class="bool-val">true</span>,
-                event_queue: Default::default(),
+                event_queue: VecDeque::default(),
             });
 
             <span class="kw">let </span>phantom_hwnd = winuser::CreateWindowExA(
@@ -1048,7 +1048,7 @@
                 <span class="macro">bail!</span>(<span class="string">"Failed to make phantom current context, code {}"</span>, errhandlingapi::GetLastError());
             }
 
-            <span class="kw">let </span>phantom_wgl_extensions = WglExtensions::new();
+            <span class="kw">let </span>phantom_wgl_extensions = WglExtensions::default();
 
             <span class="kw">if </span>winapi::wglDeleteContext(phantom_gl_context) == <span class="number">0 </span>{
                 <span class="macro">error!</span>(<span class="string">"Failed to delete phantom context, code {}"</span>, errhandlingapi::GetLastError());
@@ -1131,7 +1131,7 @@
             }
 
             <span class="self">self</span>.wgl_context = <span class="prelude-val">Some</span>(wgl_context);
-            <span class="self">self</span>.wgl_extensions = <span class="prelude-val">Some</span>(WglExtensions::new());
+            <span class="self">self</span>.wgl_extensions = <span class="prelude-val">Some</span>(WglExtensions::default());
 
             <span class="prelude-val">Ok</span>(())
         }

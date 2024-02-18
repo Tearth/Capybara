@@ -925,6 +925,27 @@
 <a href="#924" id="924">924</a>
 <a href="#925" id="925">925</a>
 <a href="#926" id="926">926</a>
+<a href="#927" id="927">927</a>
+<a href="#928" id="928">928</a>
+<a href="#929" id="929">929</a>
+<a href="#930" id="930">930</a>
+<a href="#931" id="931">931</a>
+<a href="#932" id="932">932</a>
+<a href="#933" id="933">933</a>
+<a href="#934" id="934">934</a>
+<a href="#935" id="935">935</a>
+<a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a>
+<a href="#938" id="938">938</a>
+<a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
+<a href="#941" id="941">941</a>
+<a href="#942" id="942">942</a>
+<a href="#943" id="943">943</a>
+<a href="#944" id="944">944</a>
+<a href="#945" id="945">945</a>
+<a href="#946" id="946">946</a>
+<a href="#947" id="947">947</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::camera::Camera;
 <span class="kw">use </span><span class="kw">super</span>::camera::CameraOrigin;
 <span class="kw">use </span><span class="kw">super</span>::shader::Shader;
@@ -1061,7 +1082,7 @@
             <span class="kw">let </span>shape_buffer_ebo = gl.create_buffer().map_err(Error::msg)<span class="question-mark">?</span>;
 
             <span class="kw">let </span><span class="kw-2">mut </span>context = <span class="self">Self </span>{
-                viewport_size: Default::default(),
+                viewport_size: Vec2::ZERO,
 
                 default_camera_id: usize::MAX,
                 default_sprite_shader_id: usize::MAX,
@@ -1073,12 +1094,12 @@
                 active_shape_shader_id: usize::MAX,
                 selected_shader_id: usize::MAX,
 
-                cameras: Default::default(),
-                shaders: Default::default(),
-                textures: Default::default(),
+                cameras: Storage::default(),
+                shaders: Storage::default(),
+                textures: Storage::default(),
                 gl: Rc::new(gl),
 
-                active_camera_data: Default::default(),
+                active_camera_data: Camera::default(),
                 buffer_metadata: <span class="prelude-val">None</span>,
 
                 framebuffer,
@@ -1093,14 +1114,14 @@
                 sprite_buffer_ebo,
                 sprite_buffer_resized: <span class="bool-val">true</span>,
                 sprite_buffer_count: <span class="number">0</span>,
-                sprite_buffer_vertices_queue: <span class="macro">vec!</span>[Default::default(); <span class="number">256</span>],
+                sprite_buffer_vertices_queue: <span class="macro">vec!</span>[SpriteVertex::default(); <span class="number">256</span>],
                 sprite_buffer_vertices_count: <span class="number">0</span>,
 
                 shape_buffer_vao,
                 shape_buffer_vbo,
                 shape_buffer_ebo,
                 shape_buffer_resized: <span class="bool-val">true</span>,
-                shape_buffer_vertices_queue: <span class="macro">vec!</span>[Default::default(); <span class="number">256</span>],
+                shape_buffer_vertices_queue: <span class="macro">vec!</span>[ShapeVertex::default(); <span class="number">256</span>],
                 shape_buffer_indices_queue: <span class="macro">vec!</span>[<span class="number">0</span>; <span class="number">256</span>],
                 shape_buffer_vertices_count: <span class="number">0</span>,
                 shape_buffer_indices_count: <span class="number">0</span>,
@@ -1110,15 +1131,15 @@
                 fps_timestamp: Instant::now(),
                 fps_count: <span class="number">0</span>,
 
-                statistics: Default::default(),
-                statistics_current: Default::default(),
+                statistics: RendererStatistics::default(),
+                statistics_current: RendererStatistics::default(),
             };
 
             context.gl.enable(glow::BLEND);
             context.gl.blend_func(glow::ONE, glow::ONE_MINUS_SRC_ALPHA);
             context.set_clear_color(Vec4::new(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>));
 
-            <span class="kw">let </span>camera = Camera::new(Default::default(), Default::default(), CameraOrigin::LeftBottom, <span class="bool-val">true</span>);
+            <span class="kw">let </span>camera = Camera::new(Vec2::ZERO, Vec2::ZERO, CameraOrigin::LeftBottom, <span class="bool-val">true</span>);
             context.default_camera_id = context.cameras.store(camera);
             context.set_camera(context.default_camera_id);
 
@@ -1269,7 +1290,7 @@
         <span class="self">self</span>.statistics_current.loaded_textures_size = <span class="self">self</span>.textures.iter().fold(<span class="number">0</span>, |acc, p| acc + (p.size.x * p.size.y) <span class="kw">as </span>usize);
 
         <span class="self">self</span>.statistics = <span class="self">self</span>.statistics_current;
-        <span class="self">self</span>.statistics_current = Default::default();
+        <span class="self">self</span>.statistics_current = RendererStatistics::default();
 
         <span class="kw">let </span>now = Instant::now();
         <span class="kw">if </span>(now - <span class="self">self</span>.fps_timestamp).as_secs() &gt;= <span class="number">1 </span>{
@@ -1341,16 +1362,24 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_metadata) = <span class="kw-2">&amp;</span><span class="self">self</span>.buffer_metadata {
             <span class="kw">if </span>buffer_metadata.content_type != BufferContentType::Sprite || buffer_metadata.texture_id != sprite.texture_id {
                 <span class="self">self</span>.flush_buffer();
-                <span class="self">self</span>.buffer_metadata =
-                    <span class="prelude-val">Some</span>(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id, <span class="self">self</span>.framebuffer_texture_id, <span class="self">self</span>.selected_shader_id));
+                <span class="self">self</span>.buffer_metadata = <span class="prelude-val">Some</span>(BufferMetadata::new(
+                    BufferContentType::Sprite, <span class="comment">// fmt
+                    </span>sprite.texture_id,
+                    <span class="self">self</span>.framebuffer_texture_id,
+                    <span class="self">self</span>.selected_shader_id,
+                ));
             }
         } <span class="kw">else </span>{
-            <span class="self">self</span>.buffer_metadata =
-                <span class="prelude-val">Some</span>(BufferMetadata::new(BufferContentType::Sprite, sprite.texture_id, <span class="self">self</span>.framebuffer_texture_id, <span class="self">self</span>.selected_shader_id));
+            <span class="self">self</span>.buffer_metadata = <span class="prelude-val">Some</span>(BufferMetadata::new(
+                BufferContentType::Sprite, <span class="comment">// fmt
+                </span>sprite.texture_id,
+                <span class="self">self</span>.framebuffer_texture_id,
+                <span class="self">self</span>.selected_shader_id,
+            ));
         }
 
         <span class="kw">if </span><span class="self">self</span>.sprite_buffer_vertices_count &gt;= <span class="self">self</span>.sprite_buffer_vertices_queue.len() {
-            <span class="self">self</span>.sprite_buffer_vertices_queue.resize(<span class="self">self</span>.sprite_buffer_vertices_queue.len() * <span class="number">2</span>, Default::default());
+            <span class="self">self</span>.sprite_buffer_vertices_queue.resize(<span class="self">self</span>.sprite_buffer_vertices_queue.len() * <span class="number">2</span>, SpriteVertex::default());
             <span class="self">self</span>.sprite_buffer_resized = <span class="bool-val">true</span>;
         }
 
@@ -1361,7 +1390,7 @@
             };
 
             <span class="kw">match </span><span class="kw-2">&amp;</span>sprite.texture_type {
-                TextureType::Simple =&gt; (Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>), Vec2::new(<span class="number">1.0</span>, <span class="number">1.0</span>)),
+                TextureType::Simple =&gt; (Vec2::ZERO, Vec2::new(<span class="number">1.0</span>, <span class="number">1.0</span>)),
                 TextureType::SimpleOffset { offset } =&gt; {
                     <span class="kw">let </span>uv_position = <span class="kw-2">*</span>offset / texture.size;
                     <span class="kw">let </span>uv_size = sprite_size / texture.size;
@@ -1421,7 +1450,7 @@
                 }
             }
         } <span class="kw">else </span>{
-            (Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>), Vec2::new(<span class="number">1.0</span>, <span class="number">1.0</span>))
+            (Vec2::ZERO, Vec2::new(<span class="number">1.0</span>, <span class="number">1.0</span>))
         };
 
         <span class="self">self</span>.sprite_buffer_vertices_queue[<span class="self">self</span>.sprite_buffer_vertices_count] = SpriteVertex {
@@ -1442,19 +1471,27 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer_metadata) = <span class="kw-2">&amp;</span><span class="self">self</span>.buffer_metadata {
             <span class="kw">if </span>buffer_metadata.content_type != BufferContentType::Shape || buffer_metadata.texture_id != shape.texture_id {
                 <span class="self">self</span>.flush_buffer();
-                <span class="self">self</span>.buffer_metadata =
-                    <span class="prelude-val">Some</span>(BufferMetadata::new(BufferContentType::Shape, shape.texture_id, <span class="self">self</span>.framebuffer_texture_id, <span class="self">self</span>.selected_shader_id));
+                <span class="self">self</span>.buffer_metadata = <span class="prelude-val">Some</span>(BufferMetadata::new(
+                    BufferContentType::Shape, <span class="comment">// fmt
+                    </span>shape.texture_id,
+                    <span class="self">self</span>.framebuffer_texture_id,
+                    <span class="self">self</span>.selected_shader_id,
+                ));
             }
         } <span class="kw">else </span>{
-            <span class="self">self</span>.buffer_metadata =
-                <span class="prelude-val">Some</span>(BufferMetadata::new(BufferContentType::Shape, shape.texture_id, <span class="self">self</span>.framebuffer_texture_id, <span class="self">self</span>.selected_shader_id));
+            <span class="self">self</span>.buffer_metadata = <span class="prelude-val">Some</span>(BufferMetadata::new(
+                BufferContentType::Shape, <span class="comment">// fmt
+                </span>shape.texture_id,
+                <span class="self">self</span>.framebuffer_texture_id,
+                <span class="self">self</span>.selected_shader_id,
+            ));
         }
 
         <span class="kw">loop </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>sufficient_space = <span class="bool-val">true</span>;
 
             <span class="kw">if </span><span class="self">self</span>.shape_buffer_vertices_count + shape.vertices.len() &gt;= <span class="self">self</span>.shape_buffer_vertices_queue.len() {
-                <span class="self">self</span>.shape_buffer_vertices_queue.resize(<span class="self">self</span>.shape_buffer_vertices_queue.len() * <span class="number">2</span>, Default::default());
+                <span class="self">self</span>.shape_buffer_vertices_queue.resize(<span class="self">self</span>.shape_buffer_vertices_queue.len() * <span class="number">2</span>, ShapeVertex::default());
                 <span class="self">self</span>.shape_buffer_resized = <span class="bool-val">true</span>;
                 sufficient_space = <span class="bool-val">false</span>;
             }
@@ -1604,11 +1641,16 @@
                         <span class="self">self</span>.gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.shape_buffer_ebo));
 
                         <span class="kw">let </span>buffer_ptr = <span class="self">self</span>.shape_buffer_vertices_queue.as_ptr();
-                        <span class="kw">let </span>models_u8 =
-                            slice::from_raw_parts(buffer_ptr <span class="kw">as </span><span class="kw-2">*const </span>u8, <span class="self">self</span>.shape_buffer_vertices_count * mem::size_of::&lt;ShapeVertex&gt;());
+                        <span class="kw">let </span>models_u8 = slice::from_raw_parts(
+                            buffer_ptr <span class="kw">as </span><span class="kw-2">*const </span>u8, <span class="comment">// fmt
+                            </span><span class="self">self</span>.shape_buffer_vertices_count * mem::size_of::&lt;ShapeVertex&gt;(),
+                        );
 
                         <span class="kw">let </span>buffer_ptr = <span class="self">self</span>.shape_buffer_indices_queue.as_ptr();
-                        <span class="kw">let </span>indices_u8 = slice::from_raw_parts(buffer_ptr <span class="kw">as </span><span class="kw-2">*const </span>u8, <span class="self">self</span>.shape_buffer_indices_count * <span class="number">4</span>);
+                        <span class="kw">let </span>indices_u8 = slice::from_raw_parts(
+                            buffer_ptr <span class="kw">as </span><span class="kw-2">*const </span>u8, <span class="comment">// fmt
+                            </span><span class="self">self</span>.shape_buffer_indices_count * <span class="number">4</span>,
+                        );
 
                         <span class="self">self</span>.gl.buffer_sub_data_u8_slice(glow::ARRAY_BUFFER, <span class="number">0</span>, models_u8);
                         <span class="self">self</span>.gl.buffer_sub_data_u8_slice(glow::ELEMENT_ARRAY_BUFFER, <span class="number">0</span>, indices_u8);

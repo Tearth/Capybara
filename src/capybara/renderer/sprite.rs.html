@@ -192,10 +192,10 @@
 <span class="kw">impl </span>Sprite {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            position: Default::default(),
+            position: Vec2::ZERO,
             rotation: <span class="number">0.0</span>,
             scale: Vec2::ONE,
-            size: Default::default(),
+            size: <span class="prelude-val">None</span>,
             anchor: Vec2::new(<span class="number">0.5</span>, <span class="number">0.5</span>),
             color: Vec4::new(<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>),
             texture_id: TextureId::Default,
@@ -212,7 +212,7 @@
 
     <span class="kw">pub fn </span>get_edges(<span class="kw-2">&amp;</span><span class="self">self</span>, texture_size: Vec2) -&gt; ArrayVec&lt;Edge, <span class="number">4</span>&gt; {
         <span class="kw">let </span>size = <span class="self">self</span>.size.unwrap_or(texture_size) * <span class="self">self</span>.scale;
-        <span class="kw">let </span>a = Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>) - size * <span class="self">self</span>.anchor;
+        <span class="kw">let </span>a = Vec2::ZERO - size * <span class="self">self</span>.anchor;
         <span class="kw">let </span>b = Vec2::new(size.x, <span class="number">0.0</span>) - size * <span class="self">self</span>.anchor;
         <span class="kw">let </span>c = Vec2::new(size.x, size.y) - size * <span class="self">self</span>.anchor;
         <span class="kw">let </span>d = Vec2::new(<span class="number">0.0</span>, size.y) - size * <span class="self">self</span>.anchor;

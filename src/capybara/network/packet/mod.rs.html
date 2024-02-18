@@ -192,7 +192,7 @@
             <span class="kw">let </span>header_data = slice::from_raw_parts((header <span class="kw">as </span><span class="kw-2">*const </span>H) <span class="kw">as </span><span class="kw-2">*const </span>u8, mem::size_of::&lt;H&gt;());
             <span class="kw">let </span>array_data = slice::from_raw_parts(array.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>u8, mem::size_of_val(array));
 
-            <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::new();
+            <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::default();
             data.extend_from_slice(header_data);
             data.extend_from_slice(array_data);
 

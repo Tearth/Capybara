@@ -61,7 +61,7 @@
 
 <span class="kw">impl </span>AudioContext {
     <span class="kw">pub fn </span>new() -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ inner: AudioManager::&lt;CpalBackend&gt;::new(AudioManagerSettings::default())<span class="question-mark">?</span>, sounds: Default::default() })
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ inner: AudioManager::&lt;CpalBackend&gt;::new(AudioManagerSettings::default())<span class="question-mark">?</span>, sounds: Storage::default() })
     }
 
     <span class="kw">pub fn </span>instantiate_assets(<span class="kw-2">&amp;mut </span><span class="self">self</span>, assets: <span class="kw-2">&amp;</span>AssetsLoader, prefix: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;, track: <span class="prelude-ty">Option</span>&lt;TrackId&gt;) {

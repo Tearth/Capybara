@@ -338,14 +338,14 @@
         </span><span class="kw">let </span>audio = AudioContext::new()<span class="question-mark">?</span>;
 
         <span class="attr">#[cfg(feature = <span class="string">"physics"</span>)]
-        </span><span class="kw">let </span>physics = PhysicsContext::new();
+        </span><span class="kw">let </span>physics = PhysicsContext::default();
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             window,
             renderer,
             ui,
-            scenes: Default::default(),
-            global: Default::default(),
+            scenes: Storage::default(),
+            global: G::default(),
 
             <span class="attr">#[cfg(feature = <span class="string">"audio"</span>)]
             </span>audio,
@@ -353,7 +353,7 @@
             <span class="attr">#[cfg(feature = <span class="string">"physics"</span>)]
             </span>physics,
 
-            current_scene: Default::default(),
+            current_scene: String::default(),
             next_scene: <span class="prelude-val">None</span>,
             frame_timestamp: Instant::now(),
             running: <span class="bool-val">true</span>,

@@ -343,10 +343,10 @@
         <span class="kw">let </span>config = ConfigLoader::new(<span class="string">"config.json"</span>);
 
         <span class="self">Self </span>{
-            clients: Default::default(),
-            queue_incoming: Default::default(),
-            queue_outgoing: Default::default(),
-            rooms: Default::default(),
+            clients: Arc::default(),
+            queue_incoming: Arc::default(),
+            queue_outgoing: Arc::default(),
+            rooms: Arc::default(),
             config: Arc::new(RwLock::new(config)),
         }
     }
@@ -357,7 +357,7 @@
             <span class="kw">return</span>;
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>listener = WebSocketListener::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>listener = WebSocketListener::default();
         <span class="kw">let </span>(listener_tx, <span class="kw-2">mut </span>listener_rx) = mpsc::unbounded::&lt;WebSocketConnectedClient&gt;();
         <span class="kw">let </span>(packet_event_tx, <span class="kw-2">mut </span>packet_event_rx) = mpsc::unbounded::&lt;(u64, Packet)&gt;();
         <span class="kw">let </span>(disconnection_event_tx, <span class="kw-2">mut </span>disconnection_event_rx) = mpsc::unbounded::&lt;u64&gt;();
@@ -372,7 +372,7 @@
         <span class="kw">let </span>listen = listener.listen(<span class="kw-2">&amp;</span>endpoint, listener_tx);
 
         <span class="comment">// Only one server in the template
-        </span>rooms.write().unwrap().push(Arc::new(RwLock::new(Room::new())));
+        </span>rooms.write().unwrap().push(Arc::default());
 
         <span class="kw">let </span>accept_clients = <span class="kw">async </span>{
             <span class="kw">while let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>client) = listener_rx.next().<span class="kw">await </span>{
@@ -460,8 +460,8 @@
             <span class="kw">loop </span>{
                 <span class="kw">let </span>now = Instant::now();
                 <span class="kw">let </span>packets = Arc::new(RwLock::new(Vec::new()));
-                <span class="kw">let </span><span class="kw-2">mut </span>packets_to_remove = VecDeque::new();
-                <span class="kw">let </span><span class="kw-2">mut </span>handles = Vec::new();
+                <span class="kw">let </span><span class="kw-2">mut </span>packets_to_remove = VecDeque::default();
+                <span class="kw">let </span><span class="kw-2">mut </span>handles = Vec::default();
 
                 <span class="kw">let </span>worker_tick = config.read().unwrap().data.worker_tick;
                 <span class="kw">let </span>delay_base = config.read().unwrap().data.packet_delay_base <span class="kw">as </span>i32;
@@ -557,7 +557,7 @@
     <span class="kw">fn </span>init_logger(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         fs::create_dir_all(<span class="string">"./logs/"</span>)<span class="question-mark">?</span>;
 
-        fern::Dispatch::new()
+        fern::Dispatch::default()
             .format(|out, message, record| {
                 out.finish(<span class="macro">format_args!</span>(
                     <span class="string">"[{}] [{}] [{}] {}"</span>,
@@ -567,7 +567,7 @@
                     message
                 ))
             })
-            .chain(fern::Dispatch::new().level(log::LevelFilter::Debug).chain(fern::DateBased::new(<span class="string">"./logs/"</span>, <span class="string">"log_info_%Y-%m-%d.log"</span>)))
+            .chain(fern::Dispatch::default().level(log::LevelFilter::Debug).chain(fern::DateBased::new(<span class="string">"./logs/"</span>, <span class="string">"log_info_%Y-%m-%d.log"</span>)))
             .apply()<span class="question-mark">?</span>;
 
         panic::set_hook(Box::new(<span class="kw">move </span>|info| {

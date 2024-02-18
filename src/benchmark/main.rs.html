@@ -253,6 +253,15 @@
 <a href="#252" id="252">252</a>
 <a href="#253" id="253">253</a>
 <a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>capybara::anyhow::Result;
 <span class="kw">use </span>capybara::app::ApplicationContext;
 <span class="kw">use </span>capybara::app::ApplicationState;
@@ -356,14 +365,23 @@
 
             <span class="self">self</span>.regenerate_objects(<span class="kw-2">&amp;</span>state, <span class="number">100000</span>)<span class="question-mark">?</span>;
 
-            <span class="kw">let </span>target_texture = Texture::new(state.renderer, <span class="kw-2">&amp;</span>RawTexture::new(<span class="string">"target_texture"</span>, <span class="string">""</span>, Vec2::new(<span class="number">400.0</span>, <span class="number">400.0</span>), <span class="kw-2">&amp;</span>Vec::new()))<span class="question-mark">?</span>;
+            <span class="kw">let </span>target_texture = Texture::new(state.renderer, <span class="kw-2">&amp;</span>RawTexture::new(<span class="string">"target_texture"</span>, <span class="string">""</span>, Vec2::new(<span class="number">400.0</span>, <span class="number">400.0</span>), <span class="kw-2">&amp;</span>Vec::default()))<span class="question-mark">?</span>;
             <span class="self">self</span>.target_texture_id = state.renderer.textures.store(target_texture);
 
-            <span class="kw">let </span>blur_shader = Shader::new(state.renderer, <span class="string">"blur"</span>, <span class="macro">include_str!</span>(<span class="string">"./shaders/blur.vert"</span>), <span class="macro">include_str!</span>(<span class="string">"./shaders/blur.frag"</span>))<span class="question-mark">?</span>;
+            <span class="kw">let </span>blur_shader = Shader::new(
+                state.renderer, <span class="comment">// fmt
+                </span><span class="string">"blur"</span>,
+                <span class="macro">include_str!</span>(<span class="string">"./shaders/blur.vert"</span>),
+                <span class="macro">include_str!</span>(<span class="string">"./shaders/blur.frag"</span>),
+            )<span class="question-mark">?</span>;
             <span class="self">self</span>.blur_shader_id = state.renderer.shaders.store(blur_shader);
 
-            <span class="kw">let </span>grayscale_shader =
-                Shader::new(state.renderer, <span class="string">"grayscale"</span>, <span class="macro">include_str!</span>(<span class="string">"./shaders/grayscale.vert"</span>), <span class="macro">include_str!</span>(<span class="string">"./shaders/grayscale.frag"</span>))<span class="question-mark">?</span>;
+            <span class="kw">let </span>grayscale_shader = Shader::new(
+                state.renderer, <span class="comment">// fmt
+                </span><span class="string">"grayscale"</span>,
+                <span class="macro">include_str!</span>(<span class="string">"./shaders/grayscale.vert"</span>),
+                <span class="macro">include_str!</span>(<span class="string">"./shaders/grayscale.frag"</span>),
+            )<span class="question-mark">?</span>;
             <span class="self">self</span>.grayscale_shader_id = state.renderer.shaders.store(grayscale_shader);
 
             <span class="kw">let </span>resolution = state.renderer.viewport_size.into();
@@ -406,7 +424,7 @@
             state.renderer.draw_sprite(<span class="kw-2">&amp;</span>Sprite {
                 texture_id: TextureId::Some(<span class="self">self</span>.target_texture_id),
                 texture_type: TextureType::Simple,
-                anchor: Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>),
+                anchor: Vec2::ZERO,
                 ..Default::default()
             });
 

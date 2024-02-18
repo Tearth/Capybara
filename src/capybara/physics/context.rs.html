@@ -203,12 +203,14 @@
 <a href="#202" id="202">202</a>
 <a href="#203" id="203">203</a>
 <a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::events::EventCollector;
 <span class="kw">use </span>glam::Vec2;
 <span class="kw">use </span>glam::Vec4;
 <span class="kw">use </span>rapier2d::na::Vector2;
 <span class="kw">use </span>rapier2d::prelude::<span class="kw-2">*</span>;
 <span class="kw">use </span>rustc_hash::FxHashMap;
+<span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::f32::consts;
 
 <span class="kw">pub struct </span>PhysicsContext {
@@ -257,19 +259,19 @@
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             gravity: Vector2::new(<span class="number">0.0</span>, -<span class="number">9.81</span>),
-            rigidbodies: RigidBodySet::new(),
-            colliders: ColliderSet::new(),
-            interpolation_data: Default::default(),
+            rigidbodies: RigidBodySet::default(),
+            colliders: ColliderSet::default(),
+            interpolation_data: HashMap::default(),
             integration_parameters: IntegrationParameters::default(),
-            physics_pipeline: PhysicsPipeline::new(),
-            island_manager: IslandManager::new(),
-            broad_phase: BroadPhase::new(),
-            narrow_phase: NarrowPhase::new(),
-            impulse_joints: ImpulseJointSet::new(),
-            multibody_joints: MultibodyJointSet::new(),
-            solver: CCDSolver::new(),
+            physics_pipeline: PhysicsPipeline::default(),
+            island_manager: IslandManager::default(),
+            broad_phase: BroadPhase::default(),
+            narrow_phase: NarrowPhase::default(),
+            impulse_joints: ImpulseJointSet::default(),
+            multibody_joints: MultibodyJointSet::default(),
+            solver: CCDSolver::default(),
             hooks: Box::new(()),
-            events: Default::default(),
+            events: EventCollector::default(),
             running: <span class="bool-val">true</span>,
 
             debug: PhysicsDebugSettings {
@@ -337,7 +339,7 @@
             }
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>orphans = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>orphans = Vec::default();
 
         <span class="kw">for </span>handle <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.interpolation_data.keys() {
             <span class="kw">if </span>!<span class="self">self</span>.rigidbodies.contains(<span class="kw-2">*</span>handle) {
@@ -403,7 +405,7 @@
     <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.position_previous = <span class="prelude-val">None</span>;
         <span class="self">self</span>.rotation_previous = <span class="prelude-val">None</span>;
-        <span class="self">self</span>.position_current = Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>);
+        <span class="self">self</span>.position_current = Vec2::ZERO;
         <span class="self">self</span>.rotation_current = <span class="number">0.0</span>;
     }
 }

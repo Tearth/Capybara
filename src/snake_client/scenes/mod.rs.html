@@ -70,13 +70,13 @@
 <span class="kw">impl </span>Default <span class="kw">for </span>GlobalData {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            assets: Default::default(),
+            assets: AssetsLoader::default(),
             settings: SettingsStorage::new(<span class="string">"./settings.cfg"</span>),
 
-            player_name: String::new(),
-            server_name: String::new(),
-            server_flag: String::new(),
-            server_address: String::new(),
+            player_name: String::default(),
+            server_name: String::default(),
+            server_flag: String::default(),
+            server_address: String::default(),
 
             music_track: <span class="prelude-val">None</span>,
             effects_track: <span class="prelude-val">None</span>,

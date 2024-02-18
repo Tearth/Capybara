@@ -289,7 +289,7 @@
 
 <span class="kw">impl </span>Room {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{ state: VecDeque::new(), players_added: Vec::new(), players_removed: Vec::new() }
+        <span class="self">Self </span>{ state: VecDeque::default(), players_added: Vec::default(), players_removed: Vec::default() }
     }
 
     <span class="kw">pub fn </span>add_player(<span class="kw-2">&amp;mut </span><span class="self">self</span>, client_id: u64) {
@@ -304,7 +304,7 @@
 
     <span class="kw">pub fn </span>tick(<span class="kw-2">&amp;mut </span><span class="self">self</span>, packets: <span class="kw-2">&amp;</span>[QueuePacket], config: <span class="kw-2">&amp;</span>ConfigLoader) -&gt; Vec&lt;QueuePacket&gt; {
         <span class="kw">let </span>now = Instant::now();
-        <span class="kw">let </span><span class="kw-2">mut </span>outgoing_packets = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>outgoing_packets = Vec::default();
 
         <span class="kw">if </span><span class="self">self</span>.state.is_empty() {
             <span class="self">self</span>.state.push_back(RoomState { timestamp: now, players: FxHashMap::default() })
@@ -402,7 +402,7 @@
             }
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::default();
         <span class="kw">let </span>state = <span class="self">self</span>.state.front_mut().unwrap();
         <span class="kw">let </span>players = state.players.keys().cloned().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 

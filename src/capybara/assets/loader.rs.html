@@ -331,17 +331,17 @@
 <span class="kw">impl </span>AssetsLoader {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            input: Default::default(),
+            input: String::default(),
             status: AssetsLoadingStatus::Idle,
-            filesystem: Default::default(),
+            filesystem: FileSystem::default(),
             current_index: <span class="number">0</span>,
             progress: <span class="number">0.0</span>,
 
-            raw_textures: Default::default(),
-            raw_fonts: Default::default(),
-            raw_atlases: Default::default(),
-            raw_sounds: Default::default(),
-            worlds: Default::default(),
+            raw_textures: Vec::default(),
+            raw_fonts: Vec::default(),
+            raw_atlases: Vec::default(),
+            raw_sounds: Vec::default(),
+            worlds: Vec::default(),
         }
     }
 
@@ -395,7 +395,7 @@
                     <span class="kw">return </span><span class="self">self</span>.status;
                 }
 
-                <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::new();
+                <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::default();
                 <span class="kw">let </span>entries_count = archive.len();
 
                 <span class="kw">let </span><span class="kw-2">mut </span>entry = <span class="kw">match </span>archive.by_index(<span class="self">self</span>.current_index) {
@@ -502,8 +502,8 @@
 
     <span class="kw">fn </span>load_xml(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>str, data: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>xml = str::from_utf8(data)<span class="question-mark">?</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>image = String::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>entities = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>image = String::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>entities = Vec::default();
         <span class="kw">let </span><span class="kw-2">mut </span>reader = Reader::from_str(xml);
 
         reader.trim_text(<span class="bool-val">true</span>);

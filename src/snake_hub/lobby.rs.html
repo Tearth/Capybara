@@ -67,7 +67,7 @@
     }
 
     <span class="kw">pub fn </span>tick(<span class="kw-2">&amp;mut </span><span class="self">self</span>, workers: <span class="kw-2">&amp;</span>Vec&lt;WorkerConnection&gt;, packets: <span class="kw-2">&amp;</span>Vec&lt;QueuePacket&gt;) -&gt; Vec&lt;QueuePacket&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>outgoing_packets = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>outgoing_packets = Vec::default();
 
         <span class="kw">for </span>packet <span class="kw">in </span>packets {
             <span class="kw">match </span>packet.inner.get_id() {
@@ -78,7 +78,7 @@
                     ));
                 }
                 <span class="prelude-val">Some</span>(PACKET_SERVER_LIST_REQUEST) =&gt; {
-                    <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::new();
+                    <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::default();
 
                     <span class="kw">for </span>worker <span class="kw">in </span>workers {
                         <span class="kw">if </span>worker.definition.enabled &amp;&amp; <span class="kw-2">*</span>worker.websocket.status.read().unwrap() == ConnectionStatus::Connected {

@@ -53,7 +53,7 @@
             Packet::Pong { timestamp } =&gt; pong(timestamp),
             Packet::Object { id, data } =&gt; object(id, data),
             Packet::Array { id, data } =&gt; array(id, data),
-            Packet::Unknown =&gt; Vec::new(),
+            Packet::Unknown =&gt; Vec::default(),
         }
     }
 }

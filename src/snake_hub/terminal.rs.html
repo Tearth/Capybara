@@ -167,7 +167,7 @@
 }
 
 <span class="kw">fn </span>process_config_show(_tokens: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], core: <span class="kw-2">&amp;</span>Core) {
-    <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::default();
     <span class="kw">let </span>config = core.config.read().unwrap();
 
     data.push(<span class="macro">format!</span>(<span class="string">" - endpoint: {}"</span>, config.data.endpoint));
@@ -213,7 +213,7 @@
 }
 
 <span class="kw">fn </span>process_clients_list(_tokens: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], core: <span class="kw-2">&amp;</span>Core) {
-    <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::default();
     <span class="kw">let </span>clients = core.clients.read().unwrap();
 
     <span class="kw">for </span>client <span class="kw">in </span>clients.iter() {
@@ -253,7 +253,7 @@
 }
 
 <span class="kw">fn </span>process_workers_status(_tokens: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], core: <span class="kw-2">&amp;</span>Core) {
-    <span class="kw">let </span><span class="kw-2">mut </span>output = Vec::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>output = Vec::default();
     <span class="kw">let </span>manager = core.workers.read().unwrap();
 
     <span class="kw">for </span>worker <span class="kw">in </span><span class="kw-2">&amp;</span>manager.workers {

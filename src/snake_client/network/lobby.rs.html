@@ -153,7 +153,7 @@
                                 name: String::from_utf8_lossy(<span class="kw-2">&amp;</span>server.name).trim_end_matches(<span class="string">'\0'</span>).to_string(),
                                 flag: String::from_utf8_lossy(<span class="kw-2">&amp;</span>server.flag).trim_end_matches(<span class="string">'\0'</span>).to_string(),
                                 address: String::from_utf8_lossy(<span class="kw-2">&amp;</span>server.address).trim_end_matches(<span class="string">'\0'</span>).to_string(),
-                                websocket: Default::default(),
+                                websocket: WebSocketClient::default(),
                             };
 
                             <span class="macro">info!</span>(<span class="string">"{} ({}) - {}"</span>, data.name, data.flag, data.address);

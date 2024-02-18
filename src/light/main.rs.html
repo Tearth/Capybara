@@ -472,7 +472,7 @@
                     sprite: Sprite {
                         position,
                         rotation: fastrand::f32() * consts::TAU,
-                        anchor: Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>),
+                        anchor: Vec2::ZERO,
                         texture_id: TextureId::Some(state.renderer.textures.get_id(<span class="string">"takodachi"</span>)<span class="question-mark">?</span>),
                         ..Default::default()
                     },
@@ -480,10 +480,10 @@
                 });
             }
 
-            <span class="kw">let </span>target_texture = Texture::new(state.renderer, <span class="kw-2">&amp;</span>RawTexture::new(<span class="string">"target_texture"</span>, <span class="string">""</span>, Vec2::new(<span class="number">400.0</span>, <span class="number">400.0</span>), <span class="kw-2">&amp;</span>Vec::new()))<span class="question-mark">?</span>;
+            <span class="kw">let </span>target_texture = Texture::new(state.renderer, <span class="kw-2">&amp;</span>RawTexture::new(<span class="string">"target_texture"</span>, <span class="string">""</span>, Vec2::new(<span class="number">400.0</span>, <span class="number">400.0</span>), <span class="kw-2">&amp;</span>Vec::default()))<span class="question-mark">?</span>;
             <span class="self">self</span>.light_texture_id = state.renderer.textures.store(target_texture);
 
-            <span class="kw">let </span>main_texture = Texture::new(state.renderer, <span class="kw-2">&amp;</span>RawTexture::new(<span class="string">"main_texture"</span>, <span class="string">""</span>, Vec2::new(<span class="number">400.0</span>, <span class="number">400.0</span>), <span class="kw-2">&amp;</span>Vec::new()))<span class="question-mark">?</span>;
+            <span class="kw">let </span>main_texture = Texture::new(state.renderer, <span class="kw-2">&amp;</span>RawTexture::new(<span class="string">"main_texture"</span>, <span class="string">""</span>, Vec2::new(<span class="number">400.0</span>, <span class="number">400.0</span>), <span class="kw-2">&amp;</span>Vec::default()))<span class="question-mark">?</span>;
             <span class="self">self</span>.main_texture_id = state.renderer.textures.store(main_texture);
 
             <span class="kw">let </span>mult_shader = Shader::new(state.renderer, <span class="string">"mult"</span>, <span class="macro">include_str!</span>(<span class="string">"./shaders/mult.vert"</span>), <span class="macro">include_str!</span>(<span class="string">"./shaders/mult.frag"</span>))<span class="question-mark">?</span>;
@@ -507,7 +507,7 @@
 
             state.renderer.set_target_texture(<span class="prelude-val">Some</span>(<span class="self">self</span>.main_texture_id));
             state.renderer.draw_sprite(<span class="kw-2">&amp;</span>Sprite {
-                anchor: Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>),
+                anchor: Vec2::ZERO,
                 size: <span class="prelude-val">Some</span>(state.renderer.viewport_size),
                 color: Vec4::new(<span class="number">0.5</span>, <span class="number">0.5</span>, <span class="number">0.5</span>, <span class="number">1.0</span>),
                 ..Default::default()
@@ -557,7 +557,7 @@
             state.renderer.set_target_texture(<span class="prelude-val">Some</span>(<span class="self">self</span>.light_texture_id));
             state.renderer.clear();
             state.renderer.draw_sprite(<span class="kw-2">&amp;</span>Sprite {
-                anchor: Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>),
+                anchor: Vec2::ZERO,
                 size: <span class="prelude-val">Some</span>(state.renderer.viewport_size),
                 color: Vec4::new(<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">0.15</span>),
                 ..Default::default()
@@ -571,7 +571,7 @@
 
             state.renderer.draw_sprite(<span class="kw-2">&amp;</span>Sprite {
                 texture_id: TextureId::None,
-                anchor: Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>),
+                anchor: Vec2::ZERO,
                 size: <span class="prelude-val">Some</span>(state.renderer.viewport_size),
                 ..Default::default()
             });

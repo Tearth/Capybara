@@ -314,9 +314,9 @@
             extension: <span class="number">0.0</span>,
             debug: LightDebugSettings::default(),
 
-            edges: Vec::new(),
-            points: Vec::new(),
-            hits: Vec::new(),
+            edges: Vec::default(),
+            points: Vec::default(),
+            hits: Vec::default(),
         }
     }
 
@@ -478,10 +478,10 @@
         // Step 8: generate mesh with first vertex centered and all others placed circle-like
         // -----------------------------------------------------------------------------------
 
-        </span><span class="kw">let </span><span class="kw-2">mut </span>shape = Shape::new();
-        <span class="kw">let </span><span class="kw-2">mut </span>last_position = Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>);
+        </span><span class="kw">let </span><span class="kw-2">mut </span>shape = Shape::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>last_position = Vec2::ZERO;
 
-        shape.vertices.push(ShapeVertex::new(<span class="self">self</span>.position, <span class="self">self</span>.color_begin.to_rgb_packed(), Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>)));
+        shape.vertices.push(ShapeVertex::new(<span class="self">self</span>.position, <span class="self">self</span>.color_begin.to_rgb_packed(), Vec2::ZERO));
         <span class="kw">for </span>hit <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.hits {
             <span class="kw">if </span>hit.position.distance(last_position) &lt;= <span class="self">self</span>.merge_distance {
                 <span class="kw">continue</span>;
@@ -510,8 +510,8 @@
 
         LightResponse {
             shape,
-            points: <span class="kw">if </span><span class="self">self</span>.debug.enabled { <span class="self">self</span>.points.clone() } <span class="kw">else </span>{ Vec::new() },
-            hits: <span class="kw">if </span><span class="self">self</span>.debug.enabled { <span class="self">self</span>.hits.clone() } <span class="kw">else </span>{ Vec::new() },
+            points: <span class="kw">if </span><span class="self">self</span>.debug.enabled { <span class="self">self</span>.points.clone() } <span class="kw">else </span>{ Vec::default() },
+            hits: <span class="kw">if </span><span class="self">self</span>.debug.enabled { <span class="self">self</span>.hits.clone() } <span class="kw">else </span>{ Vec::default() },
         }
     }
 }

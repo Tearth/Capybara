@@ -8,7 +8,7 @@ var srcIndex = new Map(JSON.parse('[\
 ["simple_base",["",[],["lib.rs"]]],\
 ["simple_client",["",[],["main.rs"]]],\
 ["simple_server",["",[],["core.rs","main.rs","room.rs"]]],\
-["snake_base",["",[["game",[],["mod.rs","simulation.rs"]]],["lib.rs","packets.rs","utils.rs"]]],\
+["snake_base",["",[["game",[],["mod.rs","simulation.rs"]]],["lib.rs","packets.rs"]]],\
 ["snake_client",["",[["entities",[],["enemy.rs","mod.rs","player.rs"]],["network",[],["game.rs","lobby.rs","mod.rs"]],["scenes",[],["boot.rs","game.rs","loading.rs","menu.rs","mod.rs"]],["ui",[["components",[],["button.rs","debug.rs","frame.rs","mod.rs"]]],["mod.rs","state.rs"]],["utils",[],["console.rs","debug.rs","mod.rs"]]],["main.rs"]]],\
 ["snake_hub",["",[],["config.rs","core.rs","lobby.rs","main.rs","terminal.rs","workers.rs"]]],\
 ["snake_worker",["",[],["config.rs","core.rs","main.rs","room.rs","terminal.rs"]]],\

@@ -111,9 +111,9 @@
 
 <span class="kw">impl </span>FileSystem {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>input = Rc::new(RefCell::new(String::new()));
+        <span class="kw">let </span>input = Rc::new(RefCell::new(String::default()));
         <span class="kw">let </span>status = Rc::new(RefCell::new(FileLoadingStatus::Idle));
-        <span class="kw">let </span>buffer = Rc::new(RefCell::new(Vec::new()));
+        <span class="kw">let </span>buffer = Rc::new(RefCell::new(Vec::default()));
         <span class="kw">let </span>progress = Rc::new(RefCell::new(<span class="number">0.0</span>));
 
         <span class="self">Self </span>{ input, status, buffer, progress }

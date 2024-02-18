@@ -246,7 +246,7 @@
     <span class="kw">pub fn </span>new(id: u64, websocket: WebSocketStream&lt;TcpStream&gt;, address: SocketAddr) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             id,
-            ping: Default::default(),
+            ping: Arc::default(),
             address,
             join_time: Instant::now(),
 

@@ -138,10 +138,10 @@
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Widget <span class="kw">for </span>ImageProgressBar&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">fn </span>ui(<span class="self">self</span>, ui: <span class="kw-2">&amp;mut </span>Ui) -&gt; Response {
-        <span class="kw">let </span>left_frame_size = <span class="self">self</span>.left_frame_image.size().unwrap_or(Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>));
-        <span class="kw">let </span>center_frame_size = <span class="self">self</span>.center_frame_image.size().unwrap_or(Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>));
-        <span class="kw">let </span>right_frame_size = <span class="self">self</span>.right_frame_image.size().unwrap_or(Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>));
-        <span class="kw">let </span>fill_size = <span class="self">self</span>.fill_image.size().unwrap_or(Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>));
+        <span class="kw">let </span>left_frame_size = <span class="self">self</span>.left_frame_image.size().unwrap_or(Vec2::ZERO);
+        <span class="kw">let </span>center_frame_size = <span class="self">self</span>.center_frame_image.size().unwrap_or(Vec2::ZERO);
+        <span class="kw">let </span>right_frame_size = <span class="self">self</span>.right_frame_image.size().unwrap_or(Vec2::ZERO);
+        <span class="kw">let </span>fill_size = <span class="self">self</span>.fill_image.size().unwrap_or(Vec2::ZERO);
 
         <span class="kw">let </span>width = <span class="self">self</span>.desired_width.unwrap_or_else(|| ui.available_size_before_wrap().x);
         <span class="kw">let </span>height = left_frame_size.y.max(center_frame_size.y).max(right_frame_size.y);

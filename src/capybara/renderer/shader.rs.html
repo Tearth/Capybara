@@ -236,7 +236,7 @@
             gl.delete_shader(fragment_shader);
 
             <span class="kw">let </span>active_uniforms = gl.get_active_uniforms(program);
-            <span class="kw">let </span><span class="kw-2">mut </span>uniforms: FxHashMap&lt;String, ShaderParameter&gt; = Default::default();
+            <span class="kw">let </span><span class="kw-2">mut </span>uniforms = FxHashMap::default();
 
             <span class="kw">for </span>index <span class="kw">in </span><span class="number">0</span>..active_uniforms {
                 <span class="kw">let </span>uniform = gl.get_active_uniform(program, index).ok_or_else(|| <span class="macro">anyhow!</span>(<span class="string">"Uniform not found"</span>))<span class="question-mark">?</span>;

@@ -36,9 +36,9 @@ pub struct WindowContext {
     pub wgl_context: Option<HGLRC>,
     pub wgl_extensions: Option<WglExtensions>,
 
-    pub size: Coordinates,
+    pub size: IVec2,
     pub cursor_visible: bool,
-    pub cursor_position: Coordinates,
+    pub cursor_position: IVec2,
     pub cursor_in_window: bool,
     pub mouse_state: Vec<bool>,
     pub keyboard_state: Vec<bool>,
@@ -95,9 +95,9 @@ impl WindowContext {
                 wgl_context: None,
                 wgl_extensions: None,
 
-                size: Coordinates::new(1, 1),
+                size: IVec2::new(1, 1),
                 cursor_visible: true,
-                cursor_position: Coordinates::default(),
+                cursor_position: IVec2::default(),
                 cursor_in_window: false,
                 mouse_state: vec![false; MouseButton::Unknown as usize],
                 keyboard_state: vec![false; Key::Unknown as usize],
@@ -170,9 +170,9 @@ impl WindowContext {
                 wgl_context: None,
                 wgl_extensions: None,
 
-                size: Coordinates::new(1, 1),
+                size: IVec2::new(1, 1),
                 cursor_visible: true,
-                cursor_position: Coordinates::default(),
+                cursor_position: IVec2::default(),
                 cursor_in_window: false,
                 mouse_state: Vec::default(),
                 keyboard_state: Vec::default(),
@@ -484,14 +484,14 @@ impl WindowContext {
                                 error!("Failed to track mouse event, code {}", errhandlingapi::GetLastError());
                             }
 
-                            let coordinates = Coordinates::new(x, y);
+                            let coordinates = IVec2::new(x, y);
                             let modifiers = self.get_modifiers();
 
                             self.event_queue.push_back(InputEvent::MouseEnter { position: coordinates, modifiers });
                             self.cursor_in_window = true;
                         }
 
-                        let coordinates = Coordinates::new(x, y);
+                        let coordinates = IVec2::new(x, y);
                         let modifiers = self.get_modifiers();
 
                         self.event_queue.push_back(InputEvent::MouseMove { position: coordinates, modifiers });
@@ -653,7 +653,7 @@ extern "system" fn wnd_proc(hwnd: HWND, message: u32, w_param: usize, l_param: i
 
                 let x = (l_param & 0xffff) as i32;
                 let y = (l_param >> 16) as i32;
-                let size = Coordinates::new(x, y);
+                let size = IVec2::new(x, y);
 
                 // Squish window size changes, so application is not flooded by events
                 if let Some(InputEvent::WindowSizeChange { size: last_size }) = window.event_queue.back_mut() {

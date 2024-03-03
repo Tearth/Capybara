@@ -17,6 +17,7 @@ use capybara::egui::Slider;
 use capybara::egui::TextStyle;
 use capybara::fast_gpu;
 use capybara::fastrand;
+use capybara::glam::IVec2;
 use capybara::glam::Vec2;
 use capybara::renderer::shader::Shader;
 use capybara::renderer::sprite::Sprite;
@@ -25,7 +26,6 @@ use capybara::renderer::sprite::TextureType;
 use capybara::renderer::texture::Texture;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
-use capybara::window::Coordinates;
 use capybara::window::InputEvent;
 use capybara::window::Key;
 use capybara::window::WindowStyle;
@@ -77,7 +77,7 @@ impl Scene<GlobalData> for MainScene {
         if let InputEvent::KeyPress { key: Key::Escape, repeat: _, modifiers: _ } = event {
             state.window.close();
         } else if let InputEvent::WindowSizeChange { size } = event {
-            self.update_shaders_resolution(&mut state, size)?;
+            self.update_shaders_resolution(&mut state, size.as_vec2())?;
         }
 
         Ok(())
@@ -120,7 +120,7 @@ impl Scene<GlobalData> for MainScene {
             )?;
             self.grayscale_shader_id = state.renderer.shaders.store(grayscale_shader);
 
-            let resolution = state.renderer.viewport_size.into();
+            let resolution = state.renderer.viewport_size;
             self.update_shaders_resolution(&mut state, resolution)?;
 
             self.initialized = true;
@@ -234,11 +234,11 @@ impl MainScene {
         Ok(())
     }
 
-    fn update_shaders_resolution(&mut self, state: &mut ApplicationState<GlobalData>, size: Coordinates) -> Result<()> {
+    fn update_shaders_resolution(&mut self, state: &mut ApplicationState<GlobalData>, size: Vec2) -> Result<()> {
         for shader in state.renderer.shaders.iter_mut() {
             if shader.uniforms.contains_key("resolution") {
                 shader.activate();
-                shader.set_uniform("resolution", [size.x as f32, size.y as f32].as_ptr());
+                shader.set_uniform("resolution", [size.x, size.y].as_ptr());
             }
         }
 
@@ -255,7 +255,7 @@ fn main() {
 }
 
 fn main_internal() -> Result<()> {
-    ApplicationContext::<GlobalData>::new("Benchmark", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(4))?
+    ApplicationContext::<GlobalData>::new("Benchmark", WindowStyle::Window { size: IVec2::new(1280, 720) }, Some(4))?
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene");
 

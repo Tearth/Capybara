@@ -18,6 +18,7 @@ use capybara::egui::SidePanel;
 use capybara::egui::Slider;
 use capybara::egui::TextStyle;
 use capybara::fast_gpu;
+use capybara::glam::IVec2;
 use capybara::glam::Vec2;
 use capybara::instant::Instant;
 use capybara::network::client::ConnectionStatus;
@@ -27,7 +28,6 @@ use capybara::renderer::sprite::Sprite;
 use capybara::renderer::sprite::TextureId;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
-use capybara::window::Coordinates;
 use capybara::window::InputEvent;
 use capybara::window::Key;
 use capybara::window::WindowStyle;
@@ -72,7 +72,7 @@ impl Scene<GlobalData> for MainScene {
     fn input(&mut self, state: ApplicationState<GlobalData>, event: InputEvent) -> Result<()> {
         if let InputEvent::WindowSizeChange { size } = event {
             if *self.client.status.read().unwrap() == ConnectionStatus::Connected {
-                self.client.send_packet(Packet::from_object(PACKET_SET_VIEWPORT, &PacketSetViewport { size: size.into() }));
+                self.client.send_packet(Packet::from_object(PACKET_SET_VIEWPORT, &PacketSetViewport { size: size.as_vec2() }));
             }
         } else if let InputEvent::KeyPress { key: Key::Escape, repeat: _, modifiers: _ } = event {
             state.window.close();
@@ -213,7 +213,7 @@ fn main() {
 }
 
 fn main_internal() -> Result<()> {
-    ApplicationContext::<GlobalData>::new("Network benchmark", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(4))?
+    ApplicationContext::<GlobalData>::new("Network benchmark", WindowStyle::Window { size: IVec2::new(1280, 720) }, Some(4))?
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene");
 

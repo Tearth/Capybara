@@ -37,7 +37,7 @@ impl Player {
         }
 
         let camera = state.renderer.cameras.get_mut(state.renderer.active_camera_id).unwrap();
-        let cursor_position = camera.from_window_to_world_coordinates(state.window.cursor_position.into());
+        let cursor_position = camera.from_window_to_world_coordinates(state.window.cursor_position.as_vec2());
         let heading_target = -(cursor_position - (self.nodes[0])).angle_between(Vec2::new(1.0, 0.0));
         let mut send_new_heading = cursor_position != self.last_cursor_position;
 

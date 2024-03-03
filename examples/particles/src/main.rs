@@ -15,6 +15,7 @@ use capybara::egui::SidePanel;
 use capybara::egui::Slider;
 use capybara::egui::TextStyle;
 use capybara::fast_gpu;
+use capybara::glam::IVec2;
 use capybara::glam::Vec2;
 use capybara::glam::Vec4;
 use capybara::instant::Instant;
@@ -23,7 +24,6 @@ use capybara::particles::emitter::ParticleInterpolation;
 use capybara::particles::emitter::ParticleParameter;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
-use capybara::window::Coordinates;
 use capybara::window::InputEvent;
 use capybara::window::Key;
 use capybara::window::WindowStyle;
@@ -172,7 +172,7 @@ fn main() {
 }
 
 fn main_internal() -> Result<()> {
-    ApplicationContext::<GlobalData>::new("Particles", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(4))?
+    ApplicationContext::<GlobalData>::new("Particles", WindowStyle::Window { size: IVec2::new(1280, 720) }, Some(4))?
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene");
 

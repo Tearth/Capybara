@@ -4,7 +4,7 @@
 use capybara::anyhow::Result;
 use capybara::app::ApplicationContext;
 use capybara::fast_gpu;
-use capybara::window::Coordinates;
+use capybara::glam::IVec2;
 use capybara::window::WindowStyle;
 use scenes::boot::BootScene;
 use scenes::game::GameScene;
@@ -23,7 +23,7 @@ fn main() {
 }
 
 fn main_internal() -> Result<()> {
-    ApplicationContext::<GlobalData>::new("Template", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(4))?
+    ApplicationContext::<GlobalData>::new("Template", WindowStyle::Window { size: IVec2::new(1280, 720) }, Some(4))?
         .with_scene("BootScene", Box::<BootScene>::default())
         .with_scene("LoadingScene", Box::<LoadingScene>::default())
         .with_scene("MenuScene", Box::<MenuScene>::default())

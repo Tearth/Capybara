@@ -17,6 +17,7 @@ use capybara::egui::Slider;
 use capybara::egui::TextStyle;
 use capybara::fast_gpu;
 use capybara::fastrand;
+use capybara::glam::IVec2;
 use capybara::glam::Vec2;
 use capybara::glam::Vec4;
 use capybara::light::emitter::LightEmitter;
@@ -29,7 +30,6 @@ use capybara::renderer::texture::Texture;
 use capybara::renderer::Edge;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
-use capybara::window::Coordinates;
 use capybara::window::InputEvent;
 use capybara::window::Key;
 use capybara::window::WindowStyle;
@@ -192,7 +192,7 @@ impl Scene<GlobalData> for MainScene {
             self.edges.append(&mut line.get_edges());
             */
 
-            self.emitter.position = state.renderer.cameras.get(0)?.from_window_to_screen_coordinates(state.window.cursor_position.into());
+            self.emitter.position = state.renderer.cameras.get(0)?.from_window_to_screen_coordinates(state.window.cursor_position.as_vec2());
 
             let response = self.emitter.generate(&self.edges);
             state.renderer.set_target_texture(Some(self.light_texture_id));
@@ -350,7 +350,7 @@ fn main() {
 }
 
 fn main_internal() -> Result<()> {
-    ApplicationContext::<GlobalData>::new("Light", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(2))?
+    ApplicationContext::<GlobalData>::new("Light", WindowStyle::Window { size: IVec2::new(1280, 720) }, Some(2))?
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene");
 

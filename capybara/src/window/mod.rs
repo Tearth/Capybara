@@ -1,4 +1,4 @@
-use glam::Vec2;
+use glam::IVec2;
 
 #[cfg(windows)]
 pub mod winapi;
@@ -17,26 +17,26 @@ pub type WindowContext = web::WindowContext;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum WindowStyle {
-    Window { size: Coordinates },
+    Window { size: IVec2 },
     Borderless,
     Fullscreen,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum InputEvent {
-    WindowSizeChange { size: Coordinates },
-    MouseMove { position: Coordinates, modifiers: Modifiers },
-    MouseEnter { position: Coordinates, modifiers: Modifiers },
+    WindowSizeChange { size: IVec2 },
+    MouseMove { position: IVec2, modifiers: Modifiers },
+    MouseEnter { position: IVec2, modifiers: Modifiers },
     MouseLeave,
-    MouseButtonPress { button: MouseButton, position: Coordinates, modifiers: Modifiers },
-    MouseButtonRelease { button: MouseButton, position: Coordinates, modifiers: Modifiers },
+    MouseButtonPress { button: MouseButton, position: IVec2, modifiers: Modifiers },
+    MouseButtonRelease { button: MouseButton, position: IVec2, modifiers: Modifiers },
     MouseWheelRotated { direction: MouseWheelDirection, modifiers: Modifiers },
     KeyPress { key: Key, repeat: bool, modifiers: Modifiers },
     KeyRelease { key: Key, modifiers: Modifiers },
     CharPress { character: char, repeat: bool, modifiers: Modifiers },
-    TouchStart { id: u64, position: Coordinates },
-    TouchMove { id: u64, position: Coordinates },
-    TouchEnd { id: u64, position: Coordinates },
+    TouchStart { id: u64, position: IVec2 },
+    TouchMove { id: u64, position: IVec2 },
+    TouchEnd { id: u64, position: IVec2 },
     WindowClose,
     Unknown,
 }
@@ -149,12 +149,6 @@ pub enum MouseWheelDirection {
     Unknown,
 }
 
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
-pub struct Coordinates {
-    pub x: i32,
-    pub y: i32,
-}
-
 #[derive(Debug, Default)]
 pub struct MemoryInfo {
     pub private: usize,
@@ -164,23 +158,5 @@ pub struct MemoryInfo {
 impl Modifiers {
     pub fn new(control: bool, alt: bool, shift: bool) -> Self {
         Self { control, alt, shift }
-    }
-}
-
-impl Coordinates {
-    pub fn new(x: i32, y: i32) -> Self {
-        Self { x, y }
-    }
-}
-
-impl From<Coordinates> for Vec2 {
-    fn from(coordinates: Coordinates) -> Self {
-        Vec2::new(coordinates.x as f32, coordinates.y as f32)
-    }
-}
-
-impl From<Vec2> for Coordinates {
-    fn from(vec: Vec2) -> Self {
-        Coordinates::new(vec.x as i32, vec.y as i32)
     }
 }

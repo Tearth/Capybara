@@ -14,6 +14,7 @@ use capybara::egui::RichText;
 use capybara::egui::SidePanel;
 use capybara::fast_gpu;
 use capybara::fastrand;
+use capybara::glam::IVec2;
 use capybara::glam::Vec2;
 use capybara::glam::Vec4;
 use capybara::rapier2d::prelude::*;
@@ -21,7 +22,6 @@ use capybara::renderer::sprite::Sprite;
 use capybara::renderer::sprite::TextureId;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
-use capybara::window::Coordinates;
 use capybara::window::InputEvent;
 use capybara::window::Key;
 use capybara::window::WindowStyle;
@@ -232,7 +232,7 @@ fn main() {
 }
 
 fn main_internal() -> Result<()> {
-    ApplicationContext::<GlobalData>::new("Physics", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(4))?
+    ApplicationContext::<GlobalData>::new("Physics", WindowStyle::Window { size: IVec2::new(1280, 720) }, Some(4))?
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene");
 

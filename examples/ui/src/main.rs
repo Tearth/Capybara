@@ -8,9 +8,9 @@ use capybara::egui::FullOutput;
 use capybara::egui::RawInput;
 use capybara::egui::ScrollArea;
 use capybara::fast_gpu;
+use capybara::glam::IVec2;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
-use capybara::window::Coordinates;
 use capybara::window::InputEvent;
 use capybara::window::WindowStyle;
 use test::ColorTest;
@@ -80,7 +80,7 @@ fn main() {
 }
 
 fn main_internal() -> Result<()> {
-    ApplicationContext::<GlobalData>::new("UI", WindowStyle::Window { size: Coordinates::new(1280, 720) }, Some(4))?
+    ApplicationContext::<GlobalData>::new("UI", WindowStyle::Window { size: IVec2::new(1280, 720) }, Some(4))?
         .with_scene("MainScene", Box::<MainScene>::default())
         .run("MainScene");
 

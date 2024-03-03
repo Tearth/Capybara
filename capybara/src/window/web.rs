@@ -30,9 +30,9 @@ pub struct WindowContext {
     pub canvas: HtmlCanvasElement,
     pub webgl_context: WebGl2RenderingContext,
 
-    pub size: Coordinates,
+    pub size: IVec2,
     pub cursor_visible: bool,
-    pub cursor_position: Coordinates,
+    pub cursor_position: IVec2,
     pub cursor_in_window: bool,
     pub mouse_state: Vec<bool>,
     pub keyboard_state: Vec<bool>,
@@ -81,7 +81,7 @@ impl WindowContext {
         let document = window.document().ok_or_else(|| anyhow!("Document not found"))?;
         let canvas = document.get_element_by_id("canvas").ok_or_else(|| anyhow!("Canvas not found"))?;
         let canvas = canvas.dyn_into::<HtmlCanvasElement>().map_err(|_| anyhow!("HtmlCanvasElement not found"))?;
-        let last_canvas_size = Coordinates::new(canvas.scroll_width(), canvas.scroll_height());
+        let last_canvas_size = IVec2::new(canvas.scroll_width(), canvas.scroll_height());
 
         info!("WebGL context initialization");
 
@@ -110,7 +110,7 @@ impl WindowContext {
 
             size: last_canvas_size,
             cursor_visible: true,
-            cursor_position: Coordinates::default(),
+            cursor_position: IVec2::default(),
             cursor_in_window: false,
             mouse_state: vec![false; MouseButton::Unknown as usize],
             keyboard_state: vec![false; Key::Unknown as usize],
@@ -187,7 +187,7 @@ impl WindowContext {
         self.resize_callback = Closure::<dyn FnMut()>::new(move || {
             let mut app = app.borrow_mut();
             let canvas = &app.window.canvas;
-            let size = Coordinates::new(canvas.scroll_width(), canvas.scroll_height());
+            let size = IVec2::new(canvas.scroll_width(), canvas.scroll_height());
 
             canvas.set_width(size.x as u32);
             canvas.set_height(size.y as u32);
@@ -209,7 +209,7 @@ impl WindowContext {
     {
         self.mousemove_callback = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
             let mut app = app.borrow_mut();
-            let position = Coordinates::new(event.offset_x(), event.offset_y());
+            let position = IVec2::new(event.offset_x(), event.offset_y());
             let modifiers = app.window.get_modifiers();
 
             app.window.event_queue.push_back(InputEvent::MouseMove { position, modifiers });
@@ -228,7 +228,7 @@ impl WindowContext {
     {
         self.mouseenter_callback = Closure::<dyn FnMut(_)>::new(move |event: MouseEvent| {
             let mut app = app.borrow_mut();
-            let position = Coordinates::new(event.offset_x(), event.offset_y());
+            let position = IVec2::new(event.offset_x(), event.offset_y());
             let modifiers = app.window.get_modifiers();
 
             app.window.event_queue.push_back(InputEvent::MouseEnter { position, modifiers });
@@ -435,7 +435,7 @@ impl WindowContext {
                     None => error_continue!("Failed to retrieve touch data"),
                 };
                 let id = touch.identifier() as u64;
-                let position = Coordinates::new(touch.page_x(), touch.page_y());
+                let position = IVec2::new(touch.page_x(), touch.page_y());
 
                 app.window.event_queue.push_back(InputEvent::TouchStart { id, position });
             }
@@ -460,7 +460,7 @@ impl WindowContext {
                     None => error_continue!("Failed to retrieve touch data"),
                 };
                 let id = touch.identifier() as u64;
-                let position = Coordinates::new(touch.page_x(), touch.page_y());
+                let position = IVec2::new(touch.page_x(), touch.page_y());
 
                 app.window.event_queue.push_back(InputEvent::TouchMove { id, position });
             }
@@ -485,7 +485,7 @@ impl WindowContext {
                     None => error_continue!("Failed to retrieve touch data"),
                 };
                 let id = touch.identifier() as u64;
-                let position = Coordinates::new(touch.page_x(), touch.page_y());
+                let position = IVec2::new(touch.page_x(), touch.page_y());
 
                 app.window.event_queue.push_back(InputEvent::TouchEnd { id, position });
             }
@@ -510,7 +510,7 @@ impl WindowContext {
                     None => error_continue!("Failed to retrieve touch data"),
                 };
                 let id = touch.identifier() as u64;
-                let position = Coordinates::new(touch.page_x(), touch.page_y());
+                let position = IVec2::new(touch.page_x(), touch.page_y());
 
                 app.window.event_queue.push_back(InputEvent::TouchEnd { id, position });
             }

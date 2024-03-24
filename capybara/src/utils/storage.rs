@@ -1,4 +1,3 @@
-use crate::error_return;
 use anyhow::anyhow;
 use anyhow::bail;
 use anyhow::Result;
@@ -51,6 +50,10 @@ impl<T> Storage<T> {
         }
     }
 
+    pub fn get_unchecked(&self, id: usize) -> &T {
+        unsafe { self.data[id].as_ref().unwrap_unchecked() }
+    }
+
     pub fn get_id(&self, name: &str) -> Result<usize> {
         match self.name_to_id_hashmap.get(name) {
             Some(id) => Ok(*id),
@@ -72,6 +75,10 @@ impl<T> Storage<T> {
         }
     }
 
+    pub fn get_unchecked_mut(&mut self, id: usize) -> &mut T {
+        unsafe { self.data[id].as_mut().unwrap_unchecked() }
+    }
+
     pub fn get_by_name_mut(&mut self, name: &str) -> Result<&mut T> {
         match self.name_to_id_hashmap.get_mut(name) {
             Some(id) => Ok(self.data[*id].as_mut().ok_or_else(|| anyhow!("Storage item {} not found", id))?),
@@ -79,32 +86,36 @@ impl<T> Storage<T> {
         }
     }
 
-    pub fn remove(&mut self, id: usize) {
+    pub fn remove(&mut self, id: usize) -> Option<T> {
         if id >= self.data.len() || self.data[id].is_none() {
-            error_return!("Storage item {} not found", id);
+            return None;
         }
 
-        self.data[id] = None;
+        let item = self.data[id].take();
         self.removed_ids.push_back(id);
 
         if let Some(name) = self.id_to_name_hashmap.get(&id) {
             self.name_to_id_hashmap.remove(name);
             self.id_to_name_hashmap.remove(&id);
         }
+
+        item
     }
 
-    pub fn remove_by_name(&mut self, name: &str) {
+    pub fn remove_by_name(&mut self, name: &str) -> Option<T> {
         if !self.name_to_id_hashmap.contains_key(name) {
-            error_return!("Name doesn't exist");
+            return None;
         }
 
         let id = self.name_to_id_hashmap[name];
 
-        self.data[id] = None;
+        let item = self.data[id].take();
         self.removed_ids.push_back(id);
 
         self.name_to_id_hashmap.remove(name);
         self.id_to_name_hashmap.remove(&id);
+
+        item
     }
 
     pub fn iter(&self) -> impl Iterator<Item = &T> {
@@ -121,6 +132,15 @@ impl<T> Storage<T> {
 
     pub fn iter_enumerate_mut(&mut self) -> impl Iterator<Item = (usize, &mut T)> {
         self.data.iter_mut().enumerate().filter(|(_, p)| p.is_some()).map(|(i, p)| (i, p.as_mut().unwrap()))
+    }
+
+    pub fn get_next_id(&self, id: Option<usize>) -> Option<usize> {
+        let from = match id {
+            Some(id) => id + 1,
+            None => 0,
+        };
+
+        (from..self.data.len()).find(|&i| self.data[i].is_some())
     }
 
     pub fn len(&self) -> usize {

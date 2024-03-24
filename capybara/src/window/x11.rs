@@ -31,9 +31,9 @@ pub struct WindowContext {
     pub glx_context: Option<GLXContext>,
     pub glx_extensions: Option<GlxExtensions>,
 
-    pub size: Coordinates,
+    pub size: IVec2,
     pub cursor_visible: bool,
-    pub cursor_position: Coordinates,
+    pub cursor_position: IVec2,
     pub cursor_in_window: bool,
     pub mouse_state: Vec<bool>,
     pub keyboard_state: Vec<bool>,
@@ -188,9 +188,9 @@ impl WindowContext {
                 glx_context: None,
                 glx_extensions: None,
 
-                size: Coordinates::new(1, 1),
+                size: IVec2::new(1, 1),
                 cursor_visible: true,
-                cursor_position: Coordinates::default(),
+                cursor_position: IVec2::default(),
                 cursor_in_window: false,
                 mouse_state: vec![false; MouseButton::Unknown as usize],
                 keyboard_state: vec![false; Key::Unknown as usize],
@@ -336,7 +336,7 @@ impl WindowContext {
                 match event.type_ {
                     ConfigureNotify => {
                         if event.configure.width != self.size.x || event.configure.height != self.size.y {
-                            let size = Coordinates::new(event.configure.width, event.configure.height);
+                            let size = IVec2::new(event.configure.width, event.configure.height);
                             self.event_queue.push_back(InputEvent::WindowSizeChange { size });
                             self.size = size;
                         }
@@ -430,7 +430,7 @@ impl WindowContext {
                         }
                     }
                     MotionNotify => {
-                        let position = Coordinates::new(event.motion.x, event.motion.y);
+                        let position = IVec2::new(event.motion.x, event.motion.y);
                         let modifiers = self.get_modifiers();
 
                         self.event_queue.push_back(InputEvent::MouseMove { position, modifiers });

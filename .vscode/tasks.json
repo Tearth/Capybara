@@ -44,7 +44,7 @@
         {
             "label": "build linux debug",
             "type": "shell",
-            "command": "cargo build --target=x86_64-unknown-linux-musl",
+            "command": "cross build --target=x86_64-unknown-linux-gnu",
             "group": {
                 "kind": "build"
             },
@@ -52,7 +52,7 @@
         {
             "label": "build linux release",
             "type": "shell",
-            "command": "cargo build --release --target=x86_64-unknown-linux-musl",
+            "command": "cross build --release --target=x86_64-unknown-linux-gnu",
             "group": {
                 "kind": "build"
             },

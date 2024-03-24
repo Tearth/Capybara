@@ -484,18 +484,18 @@ impl WindowContext {
                                 error!("Failed to track mouse event, code {}", errhandlingapi::GetLastError());
                             }
 
-                            let coordinates = IVec2::new(x, y);
+                            let position = IVec2::new(x, y);
                             let modifiers = self.get_modifiers();
 
-                            self.event_queue.push_back(InputEvent::MouseEnter { position: coordinates, modifiers });
+                            self.event_queue.push_back(InputEvent::MouseEnter { position, modifiers });
                             self.cursor_in_window = true;
                         }
 
-                        let coordinates = IVec2::new(x, y);
+                        let position = IVec2::new(x, y);
                         let modifiers = self.get_modifiers();
 
-                        self.event_queue.push_back(InputEvent::MouseMove { position: coordinates, modifiers });
-                        self.cursor_position = coordinates;
+                        self.event_queue.push_back(InputEvent::MouseMove { position, modifiers });
+                        self.cursor_position = position;
                     }
                     WM_LBUTTONDOWN | WM_RBUTTONDOWN | WM_MBUTTONDOWN => {
                         let button = match event.message {

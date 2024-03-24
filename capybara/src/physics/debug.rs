@@ -42,12 +42,52 @@ impl PhysicsContext {
                     shape.rotation = rotation;
                     context.draw_shape(&shape);
                 }
+                ShapeType::Compound => {
+                    let compound = collider.shape().as_compound().unwrap();
+                    for (shape_position, shape) in compound.shapes() {
+                        match shape.shape_type() {
+                            ShapeType::Cuboid => {
+                                let cuboid = shape.as_cuboid().unwrap();
+                                let half_size = Vec2::from(cuboid.half_extents) * pixels_per_meter;
+                                let mut shape = Shape::new_frame(-half_size, half_size, self.debug.collider_thickness, color);
+
+                                let position_after_rotation = Vec2::new(
+                                    shape_position.translation.x * rotation.cos() - shape_position.translation.y * rotation.sin(),
+                                    shape_position.translation.x * rotation.sin() + shape_position.translation.y * rotation.cos(),
+                                );
+                                shape.position = position + position_after_rotation * pixels_per_meter;
+                                shape.rotation = rotation;
+
+                                context.draw_shape(&shape);
+                            }
+                            ShapeType::ConvexPolygon => {
+                                let convex = shape.as_convex_polygon().unwrap();
+
+                                for i in 0..convex.points().len() - 1 {
+                                    context.draw_shape(&Shape::new_line(
+                                        (convex.points()[i] * pixels_per_meter).into(),
+                                        (convex.points()[i + 1] * pixels_per_meter).into(),
+                                        self.debug.collider_thickness,
+                                        color,
+                                    ));
+                                }
+
+                                context.draw_shape(&Shape::new_line(
+                                    (convex.points()[convex.points().len() - 1] * pixels_per_meter).into(),
+                                    (convex.points()[0] * pixels_per_meter).into(),
+                                    self.debug.collider_thickness,
+                                    color,
+                                ));
+                            }
+                            _ => {}
+                        }
+                    }
+                }
                 _ => {}
             }
         }
 
         for (_, rigidbody) in self.rigidbodies.iter() {
-            let position = Vec2::from(rigidbody.position().translation) * pixels_per_meter;
             let mass_center_position = Vec2::from(rigidbody.center_of_mass().xy()) * pixels_per_meter;
             let velocity = Vec2::from(rigidbody.linvel().xy()) / self.integration_parameters.dt;
 
@@ -58,7 +98,12 @@ impl PhysicsContext {
                 self.debug.mass_center_color,
                 self.debug.mass_center_color,
             ));
-            context.draw_shape(&Shape::new_line(position, position + velocity, self.debug.force_thickness, self.debug.force_color));
+            context.draw_shape(&Shape::new_line(
+                mass_center_position,
+                mass_center_position + velocity,
+                self.debug.force_thickness,
+                self.debug.force_color,
+            ));
         }
 
         if let TryLockResult::Ok(contacts) = self.events.contacts.try_write() {

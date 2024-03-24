@@ -5,6 +5,7 @@ use anyhow::Result;
 use glam::Vec2;
 use glow::Context;
 use glow::HasContext;
+use log::debug;
 use log::info;
 use rustc_hash::FxHashMap;
 use std::rc::Rc;
@@ -94,7 +95,8 @@ impl Texture {
 
     pub fn update(&self, position: Vec2, size: Vec2, data: &[u8]) {
         unsafe {
-            info!("Updating texture {} ({}x{}, {} bytes)", self.name, size.x, size.y, data.len());
+            // debug! instead of info! because it was too chatty
+            debug!("Updating texture {} ({}x{}, {} bytes)", self.name, size.x, size.y, data.len());
 
             self.gl.bind_texture(glow::TEXTURE_2D, Some(self.inner));
             self.gl.tex_sub_image_2d(

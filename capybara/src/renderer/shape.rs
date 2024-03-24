@@ -102,7 +102,7 @@ impl Shape {
     }
 
     pub fn new_frame(left_bottom: Vec2, right_top: Vec2, thickness: f32, color: Vec4) -> Self {
-        let size = right_top - left_bottom + Vec2::ONE;
+        let size = right_top - left_bottom;
         let uv_thickness = thickness / size;
         let color = color.to_rgb_packed();
 

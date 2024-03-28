@@ -7,6 +7,7 @@ edition = "2021"
 audio = ["dep:kira"]
 network = ["dep:futures-channel", "dep:futures-util", "dep:tokio", "dep:tokio-tungstenite", "dep:url"]
 physics = ["dep:nalgebra", "dep:rapier2d"]
+powder = []
 utils = ["dep:noise", "dep:pathfinding"]
 
 [dependencies]

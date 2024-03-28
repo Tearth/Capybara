@@ -28,6 +28,9 @@ pub mod audio;
 #[cfg(feature = "physics")]
 pub mod physics;
 
+#[cfg(feature = "powder")]
+pub mod powder;
+
 #[cfg(feature = "network")]
 pub mod network;
 

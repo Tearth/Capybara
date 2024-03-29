@@ -9,6 +9,7 @@ use egui::TextureHandle;
 use egui::Vec2;
 
 pub mod context;
+pub mod debug;
 pub mod widgets;
 
 pub trait ImageAtlas {

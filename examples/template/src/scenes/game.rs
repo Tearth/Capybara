@@ -1,11 +1,10 @@
 use super::GlobalData;
 use crate::ui::components;
 use crate::ui::state::WidgetState;
-use crate::utils::console::Console;
-use crate::utils::debug::DebugCollector;
 use capybara::anyhow::Result;
 use capybara::app::ApplicationState;
 use capybara::egui::Align2;
+use capybara::egui::Color32;
 use capybara::egui::FullOutput;
 use capybara::egui::RawInput;
 use capybara::egui::Vec2;
@@ -13,7 +12,11 @@ use capybara::egui::Window;
 use capybara::glam::Vec4;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
+use capybara::ui::debug::DebugWindow;
+use capybara::ui::debug::ProfilerPlotDefinition;
 use capybara::utils::color::Vec4Utils;
+use capybara::utils::debug::DebugCollector;
+use capybara::utils::debug::DebugConsole;
 use capybara::utils::profiler::Profiler;
 use capybara::window::InputEvent;
 use capybara::window::Key;
@@ -25,14 +28,21 @@ pub struct GameScene {
     exit_menu_visible: bool,
 
     debug_enabled: bool,
-    debug_console: Console,
-    debug_profiler: Profiler,
+    debug_window: DebugWindow,
+    debug_console: DebugConsole,
     debug_collector: DebugCollector,
+    debug_profiler: Profiler,
 }
 
 impl Scene<GlobalData> for GameScene {
     fn activation(&mut self, state: ApplicationState<GlobalData>) -> Result<()> {
         self.exit_menu_visible = false;
+        self.debug_window.plot_definitions = vec![
+            ProfilerPlotDefinition { name: String::from("input"), label: String::from("Input average"), color: Color32::RED },
+            ProfilerPlotDefinition { name: String::from("fixed"), label: String::from("Fixed average"), color: Color32::GREEN },
+            ProfilerPlotDefinition { name: String::from("frame"), label: String::from("Frame average"), color: Color32::LIGHT_BLUE },
+            ProfilerPlotDefinition { name: String::from("ui"), label: String::from("UI average"), color: Color32::YELLOW },
+        ];
 
         state.renderer.set_clear_color(Vec4::new_rgb(40, 80, 30, 255));
         Ok(())
@@ -70,7 +80,7 @@ impl Scene<GlobalData> for GameScene {
         self.debug_profiler.start("frame");
 
         if self.debug_enabled {
-            self.debug_collector.collect(&state, delta);
+            self.debug_collector.collect(&state.window, &state.renderer, delta);
             self.process_console();
         }
         self.debug_profiler.stop("frame");
@@ -111,7 +121,7 @@ impl Scene<GlobalData> for GameScene {
             }
 
             if self.debug_enabled {
-                components::debug_window(context, &mut self.debug_console, &self.debug_profiler, &mut self.debug_collector);
+                self.debug_window.show(context, &mut self.debug_console, &self.debug_profiler, &mut self.debug_collector);
             }
         });
 

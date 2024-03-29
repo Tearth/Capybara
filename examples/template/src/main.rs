@@ -14,7 +14,6 @@ use scenes::GlobalData;
 
 pub mod scenes;
 pub mod ui;
-pub mod utils;
 
 fast_gpu!();
 

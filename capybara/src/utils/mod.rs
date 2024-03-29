@@ -1,4 +1,5 @@
 pub mod color;
+pub mod debug;
 pub mod json;
 pub mod math;
 pub mod profiler;

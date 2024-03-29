@@ -1,8 +1,7 @@
-use crate::scenes::GlobalData;
-use capybara::app::ApplicationState;
-use capybara::glam::Vec2;
-use capybara::instant::Instant;
-use capybara::renderer::context::RendererStatistics;
+use crate::glam::Vec2;
+use crate::instant::Instant;
+use crate::renderer::context::{RendererContext, RendererStatistics};
+use crate::window::WindowContext;
 use std::cmp;
 use std::collections::VecDeque;
 
@@ -41,6 +40,15 @@ pub struct DebugCollectorData {
     pub renderer: RendererStatistics,
 }
 
+#[derive(Default)]
+pub struct DebugConsole {
+    pub input_content: String,
+    pub output_content: String,
+    pub commands: VecDeque<String>,
+
+    changed: bool,
+}
+
 impl DebugCollector {
     pub fn new() -> Self {
         Self {
@@ -64,19 +72,19 @@ impl DebugCollector {
         }
     }
 
-    pub fn collect(&mut self, state: &ApplicationState<GlobalData>, delta: f32) {
+    pub fn collect(&mut self, window: &WindowContext, renderer: &RendererContext, delta: f32) {
         if !self.enabled {
             return;
         }
 
-        self.fps_average = state.renderer.fps;
+        self.fps_average = renderer.fps;
         self.delta_history.push_back(delta);
 
         if self.delta_history.len() > self.delta_history_capacity {
             self.delta_history.pop_front();
         }
 
-        let memory_usage = state.window.get_memory_usage();
+        let memory_usage = window.get_memory_usage();
         self.private_memory_history.push_back(memory_usage.private);
         self.reserved_memory_history.push_back(memory_usage.reserved);
 
@@ -92,11 +100,11 @@ impl DebugCollector {
         self.reserved_memory_peak = cmp::max(self.reserved_memory_peak, memory_usage.reserved);
 
         if self.hardware_info.is_none() {
-            self.hardware_info = Some(state.renderer.get_hardware_info());
+            self.hardware_info = Some(renderer.get_hardware_info());
         }
 
-        self.resolution = state.renderer.viewport_size;
-        self.renderer = state.renderer.statistics;
+        self.resolution = renderer.viewport_size;
+        self.renderer = renderer.statistics;
     }
 
     pub fn get_data(&mut self) -> DebugCollectorData {
@@ -147,5 +155,37 @@ impl DebugCollector {
 impl Default for DebugCollector {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl DebugConsole {
+    pub fn apply_input(&mut self) {
+        if !self.output_content.is_empty() {
+            self.output_content += "\n";
+        }
+
+        let command = self.input_content.trim();
+        self.commands.push_back(command.to_string());
+
+        self.output_content += ">>> ";
+        self.output_content += &command;
+        self.input_content.clear();
+        self.changed = true;
+    }
+
+    pub fn apply_output(&mut self, content: &str) {
+        self.output_content += "\n";
+        self.output_content += content.trim();
+    }
+
+    pub fn is_changed(&mut self) -> bool {
+        let original_value = self.changed;
+        self.changed = false;
+
+        original_value
+    }
+
+    pub fn poll_command(&mut self) -> Option<String> {
+        self.commands.pop_front()
     }
 }

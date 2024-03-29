@@ -24,20 +24,24 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
     let top_particle_borrowed = top_particle.as_ref().map(|p| p.borrow());
     let top_type = top_particle_borrowed.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
     let top_state = top_particle_borrowed.as_ref().map(|p| p.state).unwrap_or(ParticleState::Unknown);
-    let top_definition = &definitions[top_type];
 
     let bottom_particle = simulation.get_particle(bottom_position);
-    let bottom_particle_borrowed = top_particle.as_ref().map(|p| p.borrow());
+    let bottom_particle_borrowed = bottom_particle.as_ref().map(|p| p.borrow());
     let bottom_type = bottom_particle_borrowed.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
     let bottom_state = bottom_particle_borrowed.as_ref().map(|p| p.state).unwrap_or(ParticleState::Unknown);
     let bottom_velocity = bottom_particle_borrowed.as_ref().map(|p| p.velocity).unwrap_or(Vec2::ZERO);
-    let bottom_definition = &definitions[bottom_type];
+    let mut apply_gravity = true;
 
-    if bottom_particle.is_some() {
+    if top_particle.is_some() {
+        let top_definition = &definitions[top_type];
         if top_state == ParticleState::Fluid && center_definition.density < top_definition.density {
             center_velocity -= simulation.gravity * delta;
             center_velocity = center_velocity.max(Vec2::ZERO);
-        } else if bottom_state == ParticleState::Fluid && center_definition.density > bottom_definition.density {
+            apply_gravity = false;
+        }
+    } else if bottom_particle.is_some() {
+        let bottom_definition = &definitions[bottom_type];
+        if bottom_state == ParticleState::Fluid && center_definition.density > bottom_definition.density {
             center_velocity += simulation.gravity * delta;
             center_velocity = center_velocity.min(Vec2::ZERO);
         } else if bottom_state == ParticleState::Powder {
@@ -46,7 +50,11 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
         } else {
             center_velocity = Vec2::ZERO;
         }
-    } else {
+
+        apply_gravity = false;
+    }
+
+    if apply_gravity {
         center_velocity += simulation.gravity * delta;
     }
 

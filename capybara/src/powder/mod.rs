@@ -5,8 +5,8 @@ use glam::Vec4;
 pub mod canvas;
 pub mod chunk;
 pub mod features;
+pub mod physics;
 pub mod simulation;
-pub mod structures;
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct ParticleIndex {
@@ -19,6 +19,7 @@ pub struct ParticleIndex {
 pub struct ParticleData {
     pub r#type: usize,
     pub state: ParticleState,
+    pub structure: bool,
     pub position: IVec2,
     pub offset: Vec2,
     pub velocity: Vec2,

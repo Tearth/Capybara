@@ -23,9 +23,11 @@ use capybara::egui::TextStyle;
 use capybara::fast_gpu;
 use capybara::glam::IVec2;
 use capybara::glam::Vec4;
+use capybara::powder::physics;
 use capybara::powder::simulation::PowderSimulation;
 use capybara::powder::ParticleDefinition;
 use capybara::powder::ParticleState;
+use capybara::rustc_hash::FxHashSet;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
 use capybara::ui::debug::DebugWindow;
@@ -130,7 +132,18 @@ impl Scene<GlobalData> for MainScene {
             InputEvent::MouseButtonPress { button, position: _, modifiers: _ } => {
                 if button == MouseButton::Left {
                     if self.rigidbody_mode {
-                        // self.simulation.make_rigidbody(state.physics, &self.selector);
+                        let mut last_position = None;
+                        let mut points = FxHashSet::default();
+
+                        while let Some(position) = self.selector.get_next_selected_particle(last_position) {
+                            if let Some(particle) = self.simulation.get_particle(position) {
+                                points.insert(particle.borrow().position);
+                            }
+
+                            last_position = Some(position);
+                        }
+
+                        self.simulation.create_structure(state.physics, self.selector.position, &mut points);
                     }
                 }
             }

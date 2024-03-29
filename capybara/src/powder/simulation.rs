@@ -236,6 +236,21 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         self.get_chunk_mut(position).unwrap_or_else(|| panic!("Chunk not found")).set_particle_color(position, color);
     }
 
+    pub fn create_structure(&mut self, physics: &mut PhysicsContext, position: IVec2, points: &mut FxHashSet<IVec2>) {
+        for point in points.iter() {
+            if let Some(particle) = self.get_particle(*point) {
+                particle.borrow_mut().structure = true;
+            }
+        }
+
+        let structure = physics::create_structure::<PARTICLE_SIZE, PIXELS_PER_METER>(physics, position, points);
+        self.structures.push(structure);
+
+        // let rigidbody_handle = physics::create_structure::<PARTICLE_SIZE, PIXELS_PER_METER>(physics, position, &mut points);
+        // let particle_indices = points.iter().map(|p| (StructureData::Position(*p), *p)).collect::<Vec<(StructureData, IVec2)>>();
+        // Structure { rigidbody_handle, particle_indices, temporary_positions: Vec::new(), center: position.as_vec2() }
+    }
+
     pub fn displace_fluid(&mut self, position: IVec2, forbidden: &FxHashSet<IVec2>) {
         let particle_center = self.get_particle(position).expect("Particle is not a fluid").clone();
         let particle_center = particle_center.borrow_mut();
@@ -368,8 +383,10 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
                     let neighbour_particle = self.get_particle(position + IVec2::new(0, 1));
                     if let Some(neighbour_particle) = neighbour_particle {
                         let temporary_particle = neighbour_particle;
-                        self.add_particle(position, temporary_particle);
-                        self.structures[s].temporary_positions.push(position);
+                        if !self.particle_exists(position) {
+                            self.add_particle(position, temporary_particle);
+                            self.structures[s].temporary_positions.push(position);
+                        }
                     }
                 }
             }

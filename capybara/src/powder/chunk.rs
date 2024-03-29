@@ -33,14 +33,22 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             physics.colliders.remove(handle, &mut physics.island_manager, &mut physics.rigidbodies, false);
         }
 
-        let mut points = FxHashSet::default();
-        for particle in self.solid.iter() {
-            points.insert(particle.borrow().position);
+        if !self.solid.is_empty() {
+            let mut points = FxHashSet::default();
+            for particle in self.solid.iter() {
+                let particle = particle.borrow();
+
+                if !particle.structure {
+                    points.insert(particle.position);
+                }
+            }
+
+            if let Some(collider) = physics::create_collider::<PARTICLE_SIZE, PIXELS_PER_METER>(&mut points) {
+                let handle = physics.colliders.insert(collider);
+                self.solid_collider = Some(handle);
+            }
         }
 
-        let handle = physics.colliders.insert(structures::create_collider::<PARTICLE_SIZE, PIXELS_PER_METER>(points));
-
-        self.solid_collider = Some(handle);
         self.dirty = false;
     }
 

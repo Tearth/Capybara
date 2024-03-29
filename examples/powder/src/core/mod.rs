@@ -1,5 +1,6 @@
 use capybara::glam::Vec2;
 
+pub mod persistence;
 pub mod selector;
 
 pub const PARTICLE_SIZE: i32 = 4;

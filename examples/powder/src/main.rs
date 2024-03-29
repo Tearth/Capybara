@@ -251,6 +251,7 @@ impl Scene<GlobalData> for MainScene {
                             self.rigidbody_mode = false;
                         }
                     }
+                    drop(definitions);
 
                     ui.add_space(20.0);
 
@@ -264,11 +265,11 @@ impl Scene<GlobalData> for MainScene {
                     ui.add_space(20.0);
 
                     if ui.add(Button::new("Load").min_size(size)).clicked() {
-                        // self.simulation.load("saves/test.lvl", state.renderer, state.physics, &self.database);
+                        persistence::load("saves/test.lvl", &mut self.simulation, state.renderer, state.physics);
                     }
 
                     if ui.add(Button::new("Save").min_size(size)).clicked() {
-                        // self.simulation.save("saves/test.lvl");
+                        persistence::save("saves/test.lvl", &mut self.simulation);
                     }
                 });
             });

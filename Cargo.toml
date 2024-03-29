@@ -8,6 +8,7 @@ members = [
     "examples/light",
     "examples/particles",
     "examples/physics",
+    "examples/powder",
     "examples/template",
     "examples/ui",
     

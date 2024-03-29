@@ -6,6 +6,7 @@ pub mod canvas;
 pub mod chunk;
 pub mod features;
 pub mod simulation;
+pub mod structures;
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct ParticleIndex {

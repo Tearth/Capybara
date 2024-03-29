@@ -2,14 +2,19 @@ use super::canvas::Canvas;
 use super::*;
 use crate::glam::IVec2;
 use crate::glam::Vec4;
+use crate::physics::context::PhysicsContext;
 use crate::renderer::context::RendererContext;
 use crate::utils::storage::Storage;
+use rapier2d::geometry::ColliderHandle;
+use rustc_hash::FxHashSet;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-pub struct Chunk<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32> {
+pub struct Chunk<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> {
     pub initialized: bool,
+    pub dirty: bool,
     pub canvas: Canvas<CHUNK_SIZE, PARTICLE_SIZE>,
+    pub solid_collider: Option<ColliderHandle>,
 
     pub particles: Vec<ParticleIndex>,
     pub solid: Storage<Rc<RefCell<ParticleData>>>,
@@ -17,10 +22,26 @@ pub struct Chunk<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32> {
     pub fluid: Storage<Rc<RefCell<ParticleData>>>,
 }
 
-impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32> Chunk<CHUNK_SIZE, PARTICLE_SIZE> {
+impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
     pub fn initialize(&mut self, renderer: &mut RendererContext, chunk_position: IVec2) {
         self.canvas.initialize(renderer, chunk_position);
         self.initialized = true;
+    }
+
+    pub fn update(&mut self, physics: &mut PhysicsContext) {
+        if let Some(handle) = self.solid_collider.take() {
+            physics.colliders.remove(handle, &mut physics.island_manager, &mut physics.rigidbodies, false);
+        }
+
+        let mut points = FxHashSet::default();
+        for particle in self.solid.iter() {
+            points.insert(particle.borrow().position);
+        }
+
+        let handle = physics.colliders.insert(structures::create_collider::<PARTICLE_SIZE, PIXELS_PER_METER>(points));
+
+        self.solid_collider = Some(handle);
+        self.dirty = false;
     }
 
     pub fn draw(&mut self, renderer: &mut RendererContext) {
@@ -38,7 +59,10 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32> Chunk<CHUNK_SIZE, PARTICLE
         particle.borrow_mut().position = position;
 
         let id = match particle.borrow().state {
-            ParticleState::Solid => self.solid.store(particle.clone()),
+            ParticleState::Solid => {
+                self.dirty = true;
+                self.solid.store(particle.clone())
+            }
             ParticleState::Powder => self.powder.store(particle.clone()),
             ParticleState::Fluid => self.fluid.store(particle.clone()),
             _ => panic!("Invalid particle state ({:?})", particle.borrow().state),
@@ -59,7 +83,10 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32> Chunk<CHUNK_SIZE, PARTICLE
         };
 
         let particle = match state {
-            ParticleState::Solid => self.solid.remove(id),
+            ParticleState::Solid => {
+                self.dirty = true;
+                self.solid.remove(id)
+            }
             ParticleState::Powder => self.powder.remove(id),
             ParticleState::Fluid => self.fluid.remove(id),
             _ => return None,
@@ -102,11 +129,13 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32> Chunk<CHUNK_SIZE, PARTICLE
     }
 }
 
-impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32> Default for Chunk<CHUNK_SIZE, PARTICLE_SIZE> {
+impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> Default for Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
     fn default() -> Self {
         Self {
             initialized: false,
+            dirty: false,
             canvas: Default::default(),
+            solid_collider: None,
             particles: [ParticleIndex::default()].repeat((CHUNK_SIZE * CHUNK_SIZE) as usize),
             solid: Default::default(),
             powder: Default::default(),

@@ -195,7 +195,7 @@ impl Scene<GlobalData> for MainScene {
         state.physics.draw_debug(state.renderer, 50.0);
 
         if self.debug_enabled {
-            self.debug_collector.collect(&state.window, &state.renderer, delta);
+            self.debug_collector.collect(state.window, state.renderer, delta);
             self.process_console();
         }
         self.debug_profiler.stop("frame");

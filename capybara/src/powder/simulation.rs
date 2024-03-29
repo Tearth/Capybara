@@ -16,10 +16,9 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::RwLock;
 
-#[derive(Default)]
 pub struct PowderSimulation<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> {
     pub definitions: Rc<RwLock<Vec<ParticleDefinition>>>,
-    pub chunks: FxHashMap<IVec2, Chunk<CHUNK_SIZE, PARTICLE_SIZE>>,
+    pub chunks: FxHashMap<IVec2, Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>,
     pub structures: Vec<Structure>,
 
     pub gravity: Vec2,
@@ -41,7 +40,7 @@ pub enum StructureData {
 }
 
 impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
-    pub fn logic(&mut self, renderer: &mut RendererContext, _physics: &mut PhysicsContext, delta: f32) {
+    pub fn logic(&mut self, renderer: &mut RendererContext, physics: &mut PhysicsContext, delta: f32) {
         self.process_solid();
         self.process_powder(delta);
         self.process_fluid(delta);
@@ -49,6 +48,10 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         for (chunk_position, chunk) in &mut self.chunks {
             if !chunk.initialized {
                 chunk.initialize(renderer, *chunk_position);
+            }
+
+            if chunk.dirty {
+                chunk.update(physics);
             }
         }
     }
@@ -165,11 +168,11 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         }
     }
 
-    pub fn get_chunk(&self, position: IVec2) -> Option<&Chunk<CHUNK_SIZE, PARTICLE_SIZE>> {
+    pub fn get_chunk(&self, position: IVec2) -> Option<&Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>> {
         self.chunks.get(&(self.get_chunk_key(position)))
     }
 
-    pub fn get_chunk_mut(&mut self, position: IVec2) -> Option<&mut Chunk<CHUNK_SIZE, PARTICLE_SIZE>> {
+    pub fn get_chunk_mut(&mut self, position: IVec2) -> Option<&mut Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>> {
         self.chunks.get_mut(&(self.get_chunk_key(position)))
     }
 
@@ -406,6 +409,20 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
 
     pub fn is_position_valid(&self, position: IVec2) -> bool {
         self.get_chunk(position).is_some()
+    }
+}
+
+impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> Default
+    for PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>
+{
+    fn default() -> Self {
+        Self {
+            definitions: Default::default(),
+            chunks: Default::default(),
+            structures: Default::default(),
+            gravity: Vec2::new(0.0, -160.0),
+            particles_count: Default::default(),
+        }
     }
 }
 

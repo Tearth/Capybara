@@ -29,7 +29,7 @@ pub mod audio;
 #[cfg(feature = "physics")]
 pub mod physics;
 
-#[cfg(feature = "powder")]
+#[cfg(all(feature = "powder", feature = "physics"))]
 pub mod powder;
 
 #[cfg(feature = "network")]

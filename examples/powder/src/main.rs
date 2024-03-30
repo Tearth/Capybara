@@ -143,7 +143,7 @@ impl Scene<GlobalData> for MainScene {
                             last_position = Some(position);
                         }
 
-                        self.simulation.create_structure(state.physics, self.selector.position, &mut points);
+                        self.simulation.create_structure(state.physics, &mut points);
                     }
                 }
             }

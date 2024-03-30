@@ -1,5 +1,6 @@
-use super::simulation::Structure;
-use super::simulation::StructureData;
+use super::simulation::PowderSimulation;
+use super::structures::StructureData;
+use super::ParticleState;
 use crate::physics::context::PhysicsContext;
 use glam::IVec2;
 use glam::Vec2;
@@ -10,27 +11,43 @@ use rapier2d::geometry::ColliderBuilder;
 use rapier2d::geometry::SharedShape;
 use rustc_hash::FxHashSet;
 
-pub fn create_structure<const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>(
-    physics: &mut PhysicsContext,
-    position: IVec2,
-    mut points: &mut FxHashSet<IVec2>,
-) -> Structure {
-    let particle_indices = points.iter().map(|p| (StructureData::Position(*p), *p)).collect::<Vec<(StructureData, IVec2)>>();
-    let rigidbody_handle = self::create_rigidbody::<PARTICLE_SIZE, PIXELS_PER_METER>(physics, position, &mut points);
-    let rigidbody = physics.rigidbodies.get(rigidbody_handle).unwrap();
-    let translation = Vec2::from(rigidbody.position().translation);
-    let center = translation * PIXELS_PER_METER as f32;
+impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
+    pub fn apply_forces(&mut self, physics: &mut PhysicsContext) {
+        for s in 0..self.structures.len() {
+            let rigidbody = physics.rigidbodies.get_mut(self.structures[s].rigidbody_handle).unwrap();
 
-    Structure { rigidbody_handle, particle_indices, temporary_positions: Vec::new(), center }
+            for p in 0..self.structures[s].particle_indices.len() {
+                if let StructureData::Position(position) = self.structures[s].particle_indices[p].0 {
+                    let mut hpressure = Vec2::ZERO;
+                    let particle = self.get_particle(position).unwrap();
+                    let particle = particle.as_ref().borrow();
+
+                    for neighbour_offset in [IVec2::new(1, 0), IVec2::new(-1, 0), IVec2::new(0, 1), IVec2::new(0, -1)] {
+                        let neighbour_position = particle.position + neighbour_offset;
+                        let neighbour_particle = self.get_particle(neighbour_position);
+                        let neighbour_particle_state =
+                            neighbour_particle.clone().map(|p| p.as_ref().borrow().state).unwrap_or(ParticleState::Unknown);
+                        let neighbour_particle_hpressure = neighbour_particle.clone().map(|p| p.as_ref().borrow().hpressure).unwrap_or(0.0);
+
+                        if neighbour_particle_state == ParticleState::Fluid {
+                            hpressure += -neighbour_offset.as_vec2() * neighbour_particle_hpressure;
+                        }
+                    }
+
+                    if hpressure.length() > 1.0 {
+                        let position = particle.position.as_vec2() * PARTICLE_SIZE as f32 + PARTICLE_SIZE as f32 / 2.0;
+                        rigidbody.apply_impulse_at_point((hpressure * 0.08).into(), (position / PIXELS_PER_METER as f32).into(), true);
+                    }
+                }
+            }
+        }
+    }
 }
 
 pub fn create_rigidbody<const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>(
     physics: &mut PhysicsContext,
-    position: IVec2,
     mut points: &mut FxHashSet<IVec2>,
 ) -> RigidBodyHandle {
-    let particle_size = PARTICLE_SIZE as f32 / PIXELS_PER_METER as f32;
-
     let rigidbody = RigidBodyBuilder::dynamic().build();
     let collider = self::create_collider::<PARTICLE_SIZE, PIXELS_PER_METER>(&mut points).unwrap();
     let rigidbody_handle = physics.rigidbodies.insert(rigidbody);

@@ -1,6 +1,6 @@
+use super::chunk::ParticleData;
 use super::physics;
 use super::simulation::PowderSimulation;
-use super::ParticleData;
 use super::ParticleState;
 use crate::physics::context::PhysicsContext;
 use glam::IVec2;

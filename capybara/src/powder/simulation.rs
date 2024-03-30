@@ -1,4 +1,5 @@
 use self::chunk::Chunk;
+use self::chunk::ParticleData;
 use self::features::gravity;
 use self::features::liquidity;
 use self::features::velocity;

@@ -1,5 +1,5 @@
+use crate::powder::chunk::{ParticleData, ParticleState};
 use crate::powder::simulation::PowderSimulation;
-use crate::powder::{ParticleData, ParticleState};
 use glam::{IVec2, Vec2};
 use std::cell::RefCell;
 use std::rc::Rc;

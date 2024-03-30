@@ -1,7 +1,7 @@
+use crate::powder::chunk::ParticleData;
+use crate::powder::chunk::ParticleState;
 use crate::powder::simulation::PowderSimulation;
-use crate::powder::ParticleData;
 use crate::powder::ParticleDefinition;
-use crate::powder::ParticleState;
 use glam::IVec2;
 use glam::Vec2;
 use std::cell::RefCell;

@@ -10,6 +10,34 @@ use rustc_hash::FxHashSet;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
+pub struct ParticleIndex {
+    pub id: usize,
+    pub present: bool,
+    pub state: ParticleState,
+}
+
+#[derive(Copy, Clone, Debug, Default)]
+pub struct ParticleData {
+    pub r#type: usize,
+    pub state: ParticleState,
+    pub structure: bool,
+    pub position: IVec2,
+    pub offset: Vec2,
+    pub velocity: Vec2,
+    pub color: Vec4,
+    pub hpressure: f32,
+}
+
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
+pub enum ParticleState {
+    #[default]
+    Unknown,
+    Solid,
+    Powder,
+    Fluid,
+}
+
 pub struct Chunk<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> {
     pub initialized: bool,
     pub dirty: bool,

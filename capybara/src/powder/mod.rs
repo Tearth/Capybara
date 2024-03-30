@@ -1,3 +1,4 @@
+use self::chunk::ParticleState;
 use crate::glam::IVec2;
 use glam::Vec2;
 use glam::Vec4;
@@ -8,34 +9,6 @@ pub mod features;
 pub mod physics;
 pub mod simulation;
 pub mod structures;
-
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
-pub struct ParticleIndex {
-    pub id: usize,
-    pub present: bool,
-    pub state: ParticleState,
-}
-
-#[derive(Copy, Clone, Debug, Default)]
-pub struct ParticleData {
-    pub r#type: usize,
-    pub state: ParticleState,
-    pub structure: bool,
-    pub position: IVec2,
-    pub offset: Vec2,
-    pub velocity: Vec2,
-    pub color: Vec4,
-    pub hpressure: f32,
-}
-
-#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
-pub enum ParticleState {
-    #[default]
-    Unknown,
-    Solid,
-    Powder,
-    Fluid,
-}
 
 #[derive(Clone, Debug, Default)]
 pub struct ParticleDefinition {

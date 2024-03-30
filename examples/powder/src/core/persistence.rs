@@ -8,10 +8,7 @@ use capybara::powder::chunk::ParticleData;
 use capybara::powder::chunk::ParticleState;
 use capybara::powder::simulation::PowderSimulation;
 use capybara::renderer::context::RendererContext;
-use std::cell::RefCell;
 use std::fs::File;
-use std::mem;
-use std::rc::Rc;
 
 pub fn load(
     path: &str,
@@ -32,10 +29,8 @@ pub fn load(
         if r#type != usize::MAX {
             let definitions = simulation.definitions.clone();
             let definition = &definitions.read().unwrap()[r#type];
-            simulation.add_particle(
-                position,
-                Rc::new(RefCell::new(ParticleData { r#type, state: definition.state, color: definition.color, hpressure, ..Default::default() })),
-            );
+            simulation
+                .add_particle(position, ParticleData { r#type, state: definition.state, color: definition.color, hpressure, ..Default::default() });
         }
 
         particles_count -= 1;
@@ -46,7 +41,7 @@ pub fn save(path: &str, simulation: &mut PowderSimulation<CHUNK_SIZE, PARTICLE_S
     let mut file = File::create(path).unwrap();
     file.write_u32::<LittleEndian>(simulation.particles_count);
 
-    for (_, chunk) in &simulation.chunks {
+    for chunk in simulation.chunks.values() {
         for particle in &chunk.particles {
             if particle.present {
                 let particle = match particle.state {
@@ -55,11 +50,9 @@ pub fn save(path: &str, simulation: &mut PowderSimulation<CHUNK_SIZE, PARTICLE_S
                     ParticleState::Fluid => chunk.fluid.get(particle.id),
                     _ => panic!("Invalid particle state ({:?})", particle.state),
                 }
-                .unwrap()
-                .borrow();
+                .unwrap();
 
                 let particle = simulation.get_particle(particle.position).unwrap();
-                let particle = particle.borrow();
                 file.write_i32::<LittleEndian>(particle.position.x).unwrap();
                 file.write_i32::<LittleEndian>(particle.position.y).unwrap();
                 file.write_u32::<LittleEndian>(particle.r#type as u32).unwrap();

@@ -2,15 +2,13 @@ use crate::powder::chunk::ParticleData;
 use crate::powder::simulation::PowderSimulation;
 use crate::powder::ParticleDefinition;
 use glam::IVec2;
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::mem;
 
 pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>(
     simulation: &mut PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>,
     definitions: &[ParticleDefinition],
-    center_particle: Rc<RefCell<ParticleData>>,
+    center_particle: &mut ParticleData,
 ) {
-    let mut center_particle = center_particle.borrow_mut();
     let definition = &definitions[center_particle.r#type];
 
     let center_position = center_particle.position;
@@ -21,20 +19,17 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
     let center_type = center_particle.r#type;
     let mut center_hpressure = center_particle.hpressure;
 
-    let left_particle = simulation.get_particle(left_position);
-    let mut left_particle_borrowed = left_particle.as_ref().map(|p| p.borrow_mut());
-    let mut left_type = left_particle_borrowed.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
-    let mut left_hpressure = left_particle_borrowed.as_ref().map(|p| p.hpressure).unwrap_or(0.0);
+    let mut left_particle: Option<&mut ParticleData> = unsafe { mem::transmute(simulation.get_particle_mut(left_position)) };
+    let mut left_type = left_particle.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
+    let mut left_hpressure = left_particle.as_ref().map(|p| p.hpressure).unwrap_or(0.0);
 
-    let right_particle = simulation.get_particle(right_position);
-    let right_particle_borrowed = right_particle.as_ref().map(|p| p.borrow_mut());
-    let mut right_type = right_particle_borrowed.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
-    let mut right_hpressure = right_particle_borrowed.as_ref().map(|p| p.hpressure).unwrap_or(0.0);
+    let mut right_particle: Option<&mut ParticleData> = unsafe { mem::transmute(simulation.get_particle_mut(right_position)) };
+    let mut right_type = right_particle.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
+    let mut right_hpressure = right_particle.as_ref().map(|p| p.hpressure).unwrap_or(0.0);
 
-    let top_particle = simulation.get_particle(top_position);
-    let top_particle_borrowed = top_particle.as_ref().map(|p| p.borrow_mut());
-    let mut top_type = top_particle_borrowed.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
-    let mut top_hpressure = top_particle_borrowed.as_ref().map(|p| p.hpressure).unwrap_or(0.0);
+    let mut top_particle: Option<&mut ParticleData> = unsafe { mem::transmute(simulation.get_particle_mut(top_position)) };
+    let mut top_type = top_particle.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
+    let mut top_hpressure = top_particle.as_ref().map(|p| p.hpressure).unwrap_or(0.0);
 
     // ----------------------------------------------------------------
     // Inflate particle right and left by averagin hydrostatic pressure
@@ -67,14 +62,14 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
         };
 
         if left_type == usize::MAX {
-            simulation.add_particle(left_position, Rc::new(RefCell::new(particle)));
+            simulation.add_particle(left_position, particle);
             left_type = center_type;
             left_hpressure = average_hpressure;
         } else if left_type == center_type {
             left_hpressure = average_hpressure;
         }
         if right_type == usize::MAX {
-            simulation.add_particle(right_position, Rc::new(RefCell::new(particle)));
+            simulation.add_particle(right_position, particle);
             right_type = center_type;
             right_hpressure = average_hpressure;
         } else if left_type == center_type {
@@ -114,13 +109,7 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
 
         simulation.add_particle(
             top_position,
-            Rc::new(RefCell::new(ParticleData {
-                r#type: center_type,
-                state: definition.state,
-                color: definition.color,
-                hpressure: top_hpressure,
-                ..Default::default()
-            })),
+            ParticleData { r#type: center_type, state: definition.state, color: definition.color, hpressure: top_hpressure, ..Default::default() },
         );
         top_type = center_type;
     }
@@ -136,7 +125,7 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
     simulation.set_particle_color(center_position, center_color);
 
     if left_type == center_type {
-        if let Some(particle) = &mut left_particle_borrowed {
+        if let Some(particle) = &mut left_particle {
             let left_hpressure_ratio = f32::min(1.0, left_hpressure / definition.hpressure_gradient_length);
             let left_color = definition.color * (1.0 - left_hpressure_ratio) + definition.hpressure_gradient_end * left_hpressure_ratio;
 
@@ -146,7 +135,7 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
     }
 
     if right_type == center_type {
-        if let Some(mut particle) = right_particle_borrowed {
+        if let Some(particle) = &mut right_particle {
             let right_hpressure_ratio = f32::min(1.0, right_hpressure / definition.hpressure_gradient_length);
             let right_color = definition.color * (1.0 - right_hpressure_ratio) + definition.hpressure_gradient_end * right_hpressure_ratio;
 
@@ -156,7 +145,7 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
     }
 
     if top_type == center_type {
-        if let Some(mut particle) = top_particle_borrowed {
+        if let Some(particle) = &mut top_particle {
             let top_hpressure_ratio = f32::min(1.0, top_hpressure / definition.hpressure_gradient_length);
             let top_color = definition.color * (1.0 - top_hpressure_ratio) + definition.hpressure_gradient_end * top_hpressure_ratio;
 

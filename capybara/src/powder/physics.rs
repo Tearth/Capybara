@@ -22,14 +22,12 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
                 if let StructureData::Position(position) = structure.particle_indices[p].0 {
                     let mut hpressure = Vec2::ZERO;
                     let particle = self.get_particle(position).unwrap();
-                    let particle = particle.as_ref().borrow();
 
                     for neighbour_offset in [IVec2::new(1, 0), IVec2::new(-1, 0), IVec2::new(0, 1), IVec2::new(0, -1)] {
                         let neighbour_position = particle.position + neighbour_offset;
                         let neighbour_particle = self.get_particle(neighbour_position);
-                        let neighbour_particle_state =
-                            neighbour_particle.clone().map(|p| p.as_ref().borrow().state).unwrap_or(ParticleState::Unknown);
-                        let neighbour_particle_hpressure = neighbour_particle.clone().map(|p| p.as_ref().borrow().hpressure).unwrap_or(0.0);
+                        let neighbour_particle_state = neighbour_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
+                        let neighbour_particle_hpressure = neighbour_particle.map(|p| p.hpressure).unwrap_or(0.0);
 
                         if neighbour_particle_state == ParticleState::Fluid {
                             hpressure += -neighbour_offset.as_vec2() * neighbour_particle_hpressure;
@@ -50,10 +48,10 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
 
 pub fn create_rigidbody<const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>(
     physics: &mut PhysicsContext,
-    mut points: &mut FxHashSet<IVec2>,
+    points: &mut FxHashSet<IVec2>,
 ) -> RigidBodyHandle {
     let rigidbody = RigidBodyBuilder::dynamic().build();
-    let collider = self::create_collider::<PARTICLE_SIZE, PIXELS_PER_METER>(&mut points).unwrap();
+    let collider = self::create_collider::<PARTICLE_SIZE, PIXELS_PER_METER>(points).unwrap();
     let rigidbody_handle = physics.rigidbodies.insert(rigidbody);
     physics.colliders.insert_with_parent(collider, rigidbody_handle, &mut physics.rigidbodies);
 

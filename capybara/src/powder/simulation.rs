@@ -15,6 +15,7 @@ use crate::rustc_hash::FxHashMap;
 use crate::rustc_hash::FxHashSet;
 use crate::utils::storage::Storage;
 use std::cell::RefCell;
+use std::mem;
 use std::rc::Rc;
 use std::sync::RwLock;
 
@@ -59,11 +60,9 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         for key in self.chunks.keys().cloned().collect::<Vec<_>>() {
             let mut last_id = None;
             while let Some(id) = self.chunks[&key].powder.get_next_id(last_id) {
-                let particle = self.chunks[&key].powder.get_unchecked(id).clone();
-                let particle_borrow = particle.as_ref().borrow();
-                drop(particle_borrow);
+                let particle: &mut ParticleData = unsafe { mem::transmute(self.chunks.get_mut(&key).unwrap().powder.get_unchecked_mut(id)) };
 
-                gravity::simulate(self, &definitions, particle.clone(), delta);
+                gravity::simulate(self, &definitions, particle, delta);
                 velocity::simulate(self, particle, delta);
                 last_id = Some(id);
             }
@@ -77,11 +76,9 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         for key in self.chunks.keys().cloned().collect::<Vec<_>>() {
             let mut last_id = None;
             while let Some(id) = self.chunks[&key].fluid.get_next_id(last_id) {
-                let particle = self.chunks[&key].fluid.get_unchecked(id).clone();
-                let particle_borrow = particle.as_ref().borrow();
-                drop(particle_borrow);
+                let particle: &mut ParticleData = unsafe { mem::transmute(self.chunks.get_mut(&key).unwrap().fluid.get_unchecked_mut(id)) };
 
-                gravity::simulate(self, &definitions, particle.clone(), delta);
+                gravity::simulate(self, &definitions, particle, delta);
                 velocity::simulate(self, particle, delta);
                 last_id = Some(id);
             }
@@ -92,10 +89,9 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             loop {
                 let mut last_id = None;
                 while let Some(id) = self.chunks[&key].fluid.get_next_id(last_id) {
-                    let center_particle = self.chunks[&key].fluid.get_unchecked(id).clone();
-                    let center_particle_borrow = center_particle.as_ref().borrow();
-                    let definition = &definitions[center_particle_borrow.r#type];
-                    drop(center_particle_borrow);
+                    let center_particle: &mut ParticleData =
+                        unsafe { mem::transmute(self.chunks.get_mut(&key).unwrap().fluid.get_unchecked_mut(id)) };
+                    let definition = &definitions[center_particle.r#type];
 
                     if current_substep < definition.fluidity {
                         liquidity::simulate(self, &definitions, center_particle);
@@ -117,8 +113,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
     }
 
     pub fn displace_fluid(&mut self, position: IVec2, forbidden: &FxHashSet<IVec2>) {
-        let particle_center = self.get_particle(position).expect("Particle is not a fluid").clone();
-        let particle_center = particle_center.borrow_mut();
+        let particle_center = self.get_particle(position).expect("Particle is not a fluid");
 
         let particle_type = particle_center.r#type;
         let mut available_neighbours = Vec::new();
@@ -132,7 +127,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             }
 
             if let Some(particle_neighbour) = particle_neighbour {
-                if particle_center.r#type == particle_neighbour.as_ref().borrow().r#type {
+                if particle_center.r#type == particle_neighbour.r#type {
                     available_neighbours.push((neighbour_position, false));
                 }
             } else {
@@ -147,16 +142,16 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
                 if empty {
                     self.add_particle(
                         neighbour_position,
-                        Rc::new(RefCell::new(ParticleData {
+                        ParticleData {
                             r#type: particle_type,
                             state: ParticleState::Fluid,
                             color: Vec4::new(0.0, 0.0, 0.0, 1.0),
                             hpressure: average_hpressure,
                             ..Default::default()
-                        })),
+                        },
                     );
                 } else {
-                    self.get_particle(neighbour_position).unwrap().borrow_mut().hpressure += average_hpressure;
+                    self.get_particle_mut(neighbour_position).unwrap().hpressure += average_hpressure;
                 }
             }
         }
@@ -225,7 +220,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         chunk_position
     }
 
-    pub fn add_particle(&mut self, position: IVec2, particle: Rc<RefCell<ParticleData>>) {
+    pub fn add_particle(&mut self, position: IVec2, particle: ParticleData) {
         if self.get_chunk_mut(position).is_none() {
             self.add_chunk(self.get_chunk_key(position));
         }
@@ -234,7 +229,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         self.particles_count += 1;
     }
 
-    pub fn remove_particle(&mut self, position: IVec2) -> Option<Rc<RefCell<ParticleData>>> {
+    pub fn remove_particle(&mut self, position: IVec2) -> Option<ParticleData> {
         if let Some(particle) = self.get_chunk_mut(position).unwrap_or_else(|| panic!("Chunk not found")).remove_particle(position) {
             self.particles_count -= 1;
             Some(particle)
@@ -264,8 +259,12 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         }
     }
 
-    pub fn get_particle(&self, position: IVec2) -> Option<Rc<RefCell<ParticleData>>> {
+    pub fn get_particle(&self, position: IVec2) -> Option<&ParticleData> {
         self.get_chunk(position).and_then(|p| p.get_particle(position))
+    }
+
+    pub fn get_particle_mut(&mut self, position: IVec2) -> Option<&mut ParticleData> {
+        self.get_chunk_mut(position).and_then(|p| p.get_particle_mut(position))
     }
 
     pub fn set_particle_color(&mut self, position: IVec2, color: Vec4) {

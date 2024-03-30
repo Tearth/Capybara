@@ -1,22 +1,18 @@
 use crate::powder::chunk::{ParticleData, ParticleState};
 use crate::powder::simulation::PowderSimulation;
 use glam::{IVec2, Vec2};
-use std::cell::RefCell;
-use std::rc::Rc;
 
 pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>(
     simulation: &mut PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>,
-    particle: Rc<RefCell<ParticleData>>,
+    particle: &mut ParticleData,
     delta: f32,
 ) {
-    let particle_borrow = particle.borrow_mut();
     // let definition = database.get_unchecked(particle.r#type);
-    let state = particle_borrow.state;
-    let mut position = particle_borrow.position;
-    let mut offset = particle_borrow.offset;
-    let mut velocity = particle_borrow.velocity;
+    let state = particle.state;
+    let mut position = particle.position;
+    let mut offset = particle.offset;
+    let mut velocity = particle.velocity;
     let mut velocity_budget = velocity * delta;
-    drop(particle_borrow);
 
     while velocity_budget.length() > 0.0 {
         let step = if velocity_budget.x.abs() > velocity_budget.y.abs() {
@@ -45,9 +41,9 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
             if simulation.is_position_valid(position_update) {
                 let blocking_particle = simulation.get_particle(position_update);
                 let (update, swap) = if let Some(blocking_particle) = blocking_particle {
-                    if state == ParticleState::Powder && blocking_particle.as_ref().borrow().state == ParticleState::Fluid {
+                    if state == ParticleState::Powder && blocking_particle.state == ParticleState::Fluid {
                         (Some(position_update), true)
-                    } else {
+                    } else if state == ParticleState::Powder {
                         let neighbour_positions = if position_delta == IVec2::new(1, 0) || position_delta == IVec2::new(-1, 0) {
                             [IVec2::new(0, 1), IVec2::new(0, -1)]
                         } else if position_delta == IVec2::new(0, 1) || position_delta == IVec2::new(0, -1) {
@@ -62,16 +58,10 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
                         let first_neighbour = simulation.get_particle(first_neighbour_position);
                         let second_neighbour = simulation.get_particle(second_neighbour_position);
 
-                        let first_neighbour_slot_available = if let Some(first_neighbour) = first_neighbour.clone() {
-                            first_neighbour.as_ref().borrow().state != ParticleState::Fluid
-                        } else {
-                            false
-                        };
-                        let second_neighbour_slot_available = if let Some(second_neighbour) = second_neighbour.clone() {
-                            second_neighbour.as_ref().borrow().state != ParticleState::Fluid
-                        } else {
-                            false
-                        };
+                        let first_neighbour_slot_available =
+                            if let Some(first_neighbour) = first_neighbour { first_neighbour.state != ParticleState::Fluid } else { false };
+                        let second_neighbour_slot_available =
+                            if let Some(second_neighbour) = second_neighbour { second_neighbour.state != ParticleState::Fluid } else { false };
 
                         if first_neighbour_slot_available && !second_neighbour_slot_available {
                             (Some(second_neighbour_position), second_neighbour.is_some())
@@ -86,6 +76,8 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
                         } else {
                             (None, false)
                         }
+                    } else {
+                        (None, false)
                     }
                 } else {
                     (Some(position_update), false)
@@ -115,7 +107,7 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
             }
         }
 
-        let mut particle = particle.borrow_mut();
+        let particle = simulation.get_particle_mut(position).unwrap();
         particle.position = position;
         particle.offset = offset;
         particle.velocity = velocity;

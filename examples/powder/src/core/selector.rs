@@ -8,8 +8,6 @@ use capybara::powder::simulation::PowderSimulation;
 use capybara::powder::ParticleDefinition;
 use capybara::renderer::context::RendererContext;
 use capybara::renderer::shape::Shape;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 #[derive(Default)]
 pub struct Selector {
@@ -66,7 +64,7 @@ impl Selector {
                 let particle = particles[i];
 
                 if !simulation.particle_exists(particle.position) {
-                    simulation.add_particle(particle.position, Rc::new(RefCell::new(particle)));
+                    simulation.add_particle(particle.position, particle);
                 }
 
                 particles.remove(i);

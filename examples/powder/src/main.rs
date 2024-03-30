@@ -24,7 +24,6 @@ use capybara::fast_gpu;
 use capybara::glam::IVec2;
 use capybara::glam::Vec4;
 use capybara::powder::chunk::ParticleState;
-use capybara::powder::physics;
 use capybara::powder::simulation::PowderSimulation;
 use capybara::powder::ParticleDefinition;
 use capybara::rustc_hash::FxHashSet;
@@ -137,7 +136,7 @@ impl Scene<GlobalData> for MainScene {
 
                         while let Some(position) = self.selector.get_next_selected_particle(last_position) {
                             if let Some(particle) = self.simulation.get_particle(position) {
-                                points.insert(particle.borrow().position);
+                                points.insert(particle.position);
                             }
 
                             last_position = Some(position);
@@ -240,7 +239,6 @@ impl Scene<GlobalData> for MainScene {
                                 if self.simulation.is_position_valid(selector_position) {
                                     let particle = self.simulation.get_particle(selector_position);
                                     if let Some(particle) = particle {
-                                        let particle = particle.as_ref().borrow();
                                         ui.add(Label::new(format!("velocity: {:.2} {:.2}", particle.velocity.x, particle.velocity.y)));
                                         ui.add(Label::new(format!("offset: {:.2} {:.2}", particle.offset.x, particle.offset.y)));
                                         ui.add(Label::new(format!("hpressure: {:.2}", particle.hpressure)));

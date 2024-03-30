@@ -1,5 +1,4 @@
 use self::chunk::ParticleState;
-use crate::glam::IVec2;
 use glam::Vec2;
 use glam::Vec4;
 

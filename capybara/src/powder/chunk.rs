@@ -7,8 +7,6 @@ use crate::renderer::context::RendererContext;
 use crate::utils::storage::Storage;
 use rapier2d::geometry::ColliderHandle;
 use rustc_hash::FxHashSet;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct ParticleIndex {
@@ -45,9 +43,9 @@ pub struct Chunk<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_P
     pub solid_collider: Option<ColliderHandle>,
 
     pub particles: Vec<ParticleIndex>,
-    pub solid: Storage<Rc<RefCell<ParticleData>>>,
-    pub powder: Storage<Rc<RefCell<ParticleData>>>,
-    pub fluid: Storage<Rc<RefCell<ParticleData>>>,
+    pub solid: Storage<ParticleData>,
+    pub powder: Storage<ParticleData>,
+    pub fluid: Storage<ParticleData>,
 }
 
 impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
@@ -64,8 +62,6 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         if !self.solid.is_empty() {
             let mut points = FxHashSet::default();
             for particle in self.solid.iter() {
-                let particle = particle.borrow();
-
                 if !particle.structure {
                     points.insert(particle.position);
                 }
@@ -85,31 +81,31 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         self.canvas.draw(renderer);
     }
 
-    pub fn add_particle(&mut self, position: IVec2, particle: Rc<RefCell<ParticleData>>) -> usize {
+    pub fn add_particle(&mut self, position: IVec2, mut particle: ParticleData) -> usize {
         let index = self.position_to_index(position);
 
         if self.particles[index].present {
             panic!("Particle already exists");
         }
 
-        particle.borrow_mut().position = position;
+        particle.position = position;
 
-        let id = match particle.borrow().state {
+        let id = match particle.state {
             ParticleState::Solid => {
                 self.dirty = true;
-                self.solid.store(particle.clone())
+                self.solid.store(particle)
             }
-            ParticleState::Powder => self.powder.store(particle.clone()),
-            ParticleState::Fluid => self.fluid.store(particle.clone()),
-            _ => panic!("Invalid particle state ({:?})", particle.borrow().state),
+            ParticleState::Powder => self.powder.store(particle),
+            ParticleState::Fluid => self.fluid.store(particle),
+            _ => panic!("Invalid particle state ({:?})", particle.state),
         };
-        self.particles[index] = ParticleIndex { id, present: true, state: particle.borrow().state };
-        self.canvas.set_particle(position, particle.borrow().color);
+        self.particles[index] = ParticleIndex { id, present: true, state: particle.state };
+        self.canvas.set_particle(position, particle.color);
 
         id
     }
 
-    pub fn remove_particle(&mut self, position: IVec2) -> Option<Rc<RefCell<ParticleData>>> {
+    pub fn remove_particle(&mut self, position: IVec2) -> Option<ParticleData> {
         let index = self.position_to_index(position);
 
         let (id, state) = if self.particles[index].present {
@@ -136,15 +132,31 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         particle
     }
 
-    pub fn get_particle(&self, position: IVec2) -> Option<Rc<RefCell<ParticleData>>> {
+    pub fn get_particle(&self, position: IVec2) -> Option<&ParticleData> {
         let index = self.position_to_index(position);
         let particle = self.particles[index];
 
         if particle.present {
             match particle.state {
-                ParticleState::Solid => Some(self.solid.get_unchecked(particle.id).clone()),
-                ParticleState::Powder => Some(self.powder.get_unchecked(particle.id).clone()),
-                ParticleState::Fluid => Some(self.fluid.get_unchecked(particle.id).clone()),
+                ParticleState::Solid => Some(self.solid.get_unchecked(particle.id)),
+                ParticleState::Powder => Some(self.powder.get_unchecked(particle.id)),
+                ParticleState::Fluid => Some(self.fluid.get_unchecked(particle.id)),
+                _ => None,
+            }
+        } else {
+            None
+        }
+    }
+
+    pub fn get_particle_mut(&mut self, position: IVec2) -> Option<&mut ParticleData> {
+        let index = self.position_to_index(position);
+        let particle = self.particles[index];
+
+        if particle.present {
+            match particle.state {
+                ParticleState::Solid => Some(self.solid.get_unchecked_mut(particle.id)),
+                ParticleState::Powder => Some(self.powder.get_unchecked_mut(particle.id)),
+                ParticleState::Fluid => Some(self.fluid.get_unchecked_mut(particle.id)),
                 _ => None,
             }
         } else {

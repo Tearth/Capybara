@@ -13,6 +13,7 @@ use crate::physics::context::PhysicsContext;
 use crate::renderer::context::RendererContext;
 use crate::rustc_hash::FxHashMap;
 use crate::rustc_hash::FxHashSet;
+use crate::utils::storage::Storage;
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::RwLock;
@@ -20,7 +21,7 @@ use std::sync::RwLock;
 pub struct PowderSimulation<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> {
     pub definitions: Rc<RwLock<Vec<ParticleDefinition>>>,
     pub chunks: FxHashMap<IVec2, Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>,
-    pub structures: Vec<Structure>,
+    pub structures: Storage<Rc<RefCell<Structure>>>,
 
     pub gravity: Vec2,
     pub particles_count: u32,
@@ -164,9 +165,9 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
     }
 
     pub fn reset(&mut self, renderer: &mut RendererContext, physics: &mut PhysicsContext) {
-        for structure in &self.structures {
+        for structure in self.structures.iter() {
             physics.rigidbodies.remove(
-                structure.rigidbody_handle,
+                structure.borrow().rigidbody_handle,
                 &mut physics.island_manager,
                 &mut physics.colliders,
                 &mut physics.impulse_joints,

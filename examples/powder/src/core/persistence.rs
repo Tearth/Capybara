@@ -38,10 +38,11 @@ pub fn load(
 }
 
 pub fn save(path: &str, simulation: &mut PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>) {
-    let mut file = File::create(path).unwrap();
+    /*let mut file = File::create(path).unwrap();
     file.write_u32::<LittleEndian>(simulation.particles_count);
 
     for chunk in simulation.chunks.values() {
+        let chunk = chunk.read().unwrap();
         for particle in &chunk.particles {
             if particle.present {
                 let particle = match particle.state {
@@ -59,5 +60,5 @@ pub fn save(path: &str, simulation: &mut PowderSimulation<CHUNK_SIZE, PARTICLE_S
                 file.write_f32::<LittleEndian>(particle.hpressure).unwrap();
             }
         }
-    }
+    }*/
 }

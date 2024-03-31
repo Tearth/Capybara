@@ -21,11 +21,16 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             for p in 0..structure.particle_indices.len() {
                 if let StructureData::Position(position) = structure.particle_indices[p].0 {
                     let mut hpressure = Vec2::ZERO;
-                    let particle = self.get_particle(position).unwrap();
+                    let chunk = self.get_chunk(position).unwrap();
+                    let chunk = chunk.read().unwrap();
+                    let particle = chunk.get_particle(position).unwrap();
 
                     for neighbour_offset in [IVec2::new(1, 0), IVec2::new(-1, 0), IVec2::new(0, 1), IVec2::new(0, -1)] {
                         let neighbour_position = particle.position + neighbour_offset;
-                        let neighbour_particle = self.get_particle(neighbour_position);
+                        let neighbour_chunk = self.get_chunk(neighbour_position).unwrap();
+                        let neighbour_chunk = neighbour_chunk.read().unwrap();
+
+                        let neighbour_particle = neighbour_chunk.get_particle(neighbour_position);
                         let neighbour_particle_state = neighbour_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
                         let neighbour_particle_hpressure = neighbour_particle.map(|p| p.hpressure).unwrap_or(0.0);
 

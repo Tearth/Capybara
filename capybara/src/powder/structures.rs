@@ -28,7 +28,10 @@ pub enum StructureData {
 impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
     pub fn create_structure(&mut self, physics: &mut PhysicsContext, points: &mut FxHashSet<IVec2>) {
         for point in points.iter() {
-            if let Some(particle) = self.get_particle_mut(*point) {
+            let chunk = self.get_chunk(*point).unwrap();
+            let mut chunk = chunk.write().unwrap();
+
+            if let Some(particle) = chunk.get_particle_mut(*point) {
                 particle.structure = true;
             }
         }
@@ -90,7 +93,10 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
                 );
                 let position = (position + offset_after_rotation).as_ivec2();
 
-                let blocking_particle = self.get_particle(position);
+                let chunk = self.get_chunk(position).unwrap();
+                let mut chunk = chunk.write().unwrap();
+
+                let blocking_particle = chunk.get_particle(position);
                 let blocking_particle_state = blocking_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
 
                 if blocking_particle.is_none() || blocking_particle_state == ParticleState::Fluid {
@@ -98,12 +104,16 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
                         self.displace_fluid(position, &forbidden_for_fluid);
                     }
 
-                    self.add_particle(position, *particle);
+                    chunk.add_particle(position, *particle);
                     structure.particle_indices.push((StructureData::Position(position), *original_position));
+                    drop(chunk);
 
                     for neighbour_offset in [IVec2::new(1, 0), IVec2::new(-1, 0), IVec2::new(0, 1), IVec2::new(0, -1)] {
                         let neighbour_position = position + neighbour_offset;
-                        let neighbour_particle = self.get_particle(neighbour_position);
+                        let neighbour_chunk = self.get_chunk(neighbour_position).unwrap();
+                        let neighbour_chunk = neighbour_chunk.read().unwrap();
+
+                        let neighbour_particle = neighbour_chunk.get_particle(neighbour_position);
                         let neighbour_particle_state = neighbour_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
 
                         if neighbour_particle.is_none() || neighbour_particle_state == ParticleState::Fluid {
@@ -122,21 +132,28 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
 
             for (key, filled_sides) in &potential_holes {
                 if *filled_sides == 4 {
-                    let position = IVec2::new(key & 0xffff, key >> 16);
-                    if let Some(particle) = self.get_particle(position) {
+                    /*let position = IVec2::new(key & 0xffff, key >> 16);
+                    let chunk = self.get_chunk(position).unwrap();
+                    let chunk = chunk.read().unwrap();
+
+                    if let Some(particle) = chunk.get_particle(position) {
                         if particle.state == ParticleState::Fluid {
                             self.displace_fluid(position, &forbidden_for_fluid);
                         }
                     }
+                    drop(chunk);
 
-                    let neighbour_particle = self.get_particle(position + IVec2::new(0, 1));
+                    let chunk = self.get_chunk(position + IVec2::new(0, 1)).unwrap();
+                    let chunk = chunk.read().unwrap();
+
+                    let neighbour_particle = chunk.get_particle(position + IVec2::new(0, 1));
                     if let Some(neighbour_particle) = neighbour_particle {
                         let temporary_particle = neighbour_particle;
                         if !self.particle_exists(position) {
                             self.add_particle(position, *temporary_particle);
                             structure.temporary_positions.push(position);
                         }
-                    }
+                    }*/
                 }
             }
 

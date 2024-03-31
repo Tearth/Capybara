@@ -1,9 +1,14 @@
-use crate::powder::chunk::{ParticleData, ParticleState};
-use crate::powder::simulation::PowderSimulation;
-use glam::{IVec2, Vec2};
+use super::*;
+use crate::powder::chunk::Chunk;
+use crate::powder::chunk::ParticleData;
+use crate::powder::chunk::ParticleState;
+use glam::IVec2;
+use glam::Vec2;
+use std::mem;
+use std::sync::RwLockWriteGuard;
 
 pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>(
-    simulation: &mut PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>,
+    chunks: &mut [RwLockWriteGuard<Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>],
     particle: &mut ParticleData,
     delta: f32,
 ) {
@@ -38,12 +43,12 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
         let position_update = position + position_delta;
 
         if position != position_update {
-            if simulation.is_position_valid(position_update) {
-                let blocking_particle = simulation.get_particle(position_update);
+            if is_position_valid(chunks, position_update) {
+                let blocking_particle = get_particle(chunks, position_update);
                 let (update, swap) = if let Some(blocking_particle) = blocking_particle {
                     if state == ParticleState::Powder && blocking_particle.state == ParticleState::Fluid {
                         (Some(position_update), true)
-                    } else if state == ParticleState::Powder {
+                    } else {
                         let neighbour_positions = if position_delta == IVec2::new(1, 0) || position_delta == IVec2::new(-1, 0) {
                             [IVec2::new(0, 1), IVec2::new(0, -1)]
                         } else if position_delta == IVec2::new(0, 1) || position_delta == IVec2::new(0, -1) {
@@ -55,8 +60,8 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
                         let first_neighbour_position = position_update + neighbour_positions[0];
                         let second_neighbour_position = position_update + neighbour_positions[1];
 
-                        let first_neighbour = simulation.get_particle(first_neighbour_position);
-                        let second_neighbour = simulation.get_particle(second_neighbour_position);
+                        let first_neighbour: Option<&ParticleData> = unsafe { mem::transmute(get_particle(chunks, first_neighbour_position)) };
+                        let second_neighbour: Option<&ParticleData> = unsafe { mem::transmute(get_particle(chunks, second_neighbour_position)) };
 
                         let first_neighbour_slot_available =
                             if let Some(first_neighbour) = first_neighbour { first_neighbour.state != ParticleState::Fluid } else { false };
@@ -76,8 +81,6 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
                         } else {
                             (None, false)
                         }
-                    } else {
-                        (None, false)
                     }
                 } else {
                     (Some(position_update), false)
@@ -89,10 +92,15 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
                         // let target_density = database.get_unchecked(simulation.get_particle_by_index(index_update).1.unwrap().r#type).density;
                         // let density_difference = (target_density - source_density).abs();
 
-                        simulation.swap_particles(position, position_update);
+                        let particle1 = remove_particle(chunks, position).unwrap();
+                        let particle2 = remove_particle(chunks, position_update).unwrap();
+                        add_particle(chunks, position_update, particle1);
+                        add_particle(chunks, position, particle2);
+
                         velocity /= 1.9;
                     } else {
-                        simulation.move_particle(position, position_update);
+                        let particle = remove_particle(chunks, position).unwrap();
+                        add_particle(chunks, position_update, particle);
                     }
 
                     position = position_update;
@@ -102,12 +110,12 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
                     offset = Vec2::ZERO;
                 }
             } else {
-                simulation.remove_particle(position);
+                remove_particle(chunks, position);
                 break;
             }
         }
 
-        let particle = simulation.get_particle_mut(position).unwrap();
+        let particle = get_particle_mut(chunks, position).unwrap();
         particle.position = position;
         particle.offset = offset;
         particle.velocity = velocity;

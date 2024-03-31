@@ -135,10 +135,12 @@ impl Scene<GlobalData> for MainScene {
                         let mut points = FxHashSet::default();
 
                         while let Some(position) = self.selector.get_next_selected_particle(last_position) {
-                            if let Some(particle) = self.simulation.get_particle(position) {
-                                points.insert(particle.position);
+                            if let Some(chunk) = self.simulation.get_chunk(position) {
+                                let chunk = chunk.read().unwrap();
+                                if let Some(particle) = chunk.get_particle(position) {
+                                    points.insert(particle.position);
+                                }
                             }
-
                             last_position = Some(position);
                         }
 
@@ -237,11 +239,14 @@ impl Scene<GlobalData> for MainScene {
                                 ui.add(Label::new(RichText::new(format!("position: {:.2} {:.2}", selector_position.x, selector_position.y))));
 
                                 if self.simulation.is_position_valid(selector_position) {
-                                    let particle = self.simulation.get_particle(selector_position);
-                                    if let Some(particle) = particle {
-                                        ui.add(Label::new(format!("velocity: {:.2} {:.2}", particle.velocity.x, particle.velocity.y)));
-                                        ui.add(Label::new(format!("offset: {:.2} {:.2}", particle.offset.x, particle.offset.y)));
-                                        ui.add(Label::new(format!("hpressure: {:.2}", particle.hpressure)));
+                                    if let Some(chunk) = self.simulation.get_chunk(selector_position) {
+                                        let chunk = chunk.read().unwrap();
+                                        let particle = chunk.get_particle(selector_position);
+                                        if let Some(particle) = particle {
+                                            ui.add(Label::new(format!("velocity: {:.2} {:.2}", particle.velocity.x, particle.velocity.y)));
+                                            ui.add(Label::new(format!("offset: {:.2} {:.2}", particle.offset.x, particle.offset.y)));
+                                            ui.add(Label::new(format!("hpressure: {:.2}", particle.hpressure)));
+                                        }
                                     }
                                 }
                             });

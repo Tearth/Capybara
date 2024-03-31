@@ -41,6 +41,7 @@ pub struct Chunk<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_P
     pub dirty: bool,
     pub canvas: Canvas<CHUNK_SIZE, PARTICLE_SIZE>,
     pub solid_collider: Option<ColliderHandle>,
+    pub position: IVec2,
 
     pub particles: Vec<ParticleIndex>,
     pub solid: Storage<ParticleData>,
@@ -51,6 +52,7 @@ pub struct Chunk<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_P
 impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
     pub fn initialize(&mut self, renderer: &mut RendererContext, chunk_position: IVec2) {
         self.canvas.initialize(renderer, chunk_position);
+        self.position = chunk_position;
         self.initialized = true;
     }
 
@@ -184,6 +186,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             dirty: false,
             canvas: Default::default(),
             solid_collider: None,
+            position: Default::default(),
             particles: [ParticleIndex::default()].repeat((CHUNK_SIZE * CHUNK_SIZE) as usize),
             solid: Default::default(),
             powder: Default::default(),

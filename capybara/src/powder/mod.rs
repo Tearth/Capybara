@@ -5,6 +5,7 @@ use glam::Vec4;
 pub mod canvas;
 pub mod chunk;
 pub mod features;
+pub mod local;
 pub mod physics;
 pub mod simulation;
 pub mod structures;

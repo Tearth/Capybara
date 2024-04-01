@@ -194,3 +194,16 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         }
     }
 }
+
+pub fn get_chunk_key(position: IVec2) -> IVec2 {
+    let mut chunk_position = IVec2::new(position.x >> 6, position.y >> 6);
+
+    if position.x < 0 {
+        chunk_position.x -= 1;
+    }
+    if position.y < 0 {
+        chunk_position.y -= 1;
+    }
+
+    chunk_position
+}

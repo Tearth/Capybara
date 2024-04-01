@@ -3,6 +3,7 @@ use self::chunk::ParticleData;
 use self::features::gravity;
 use self::features::liquidity;
 use self::features::velocity;
+use self::local::LocalChunks;
 use self::structures::Structure;
 use super::*;
 use crate::error_return;
@@ -61,39 +62,13 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
 
         for key in self.chunks.keys().cloned().collect::<Vec<_>>() {
             let mut last_id = None;
-            let mut chunks = Vec::new();
+            let mut local = LocalChunks::new(self, key);
 
-            chunks.push(self.chunks[&key].write().unwrap());
-            if let Some(chunk) = self.chunks.get(&(key + IVec2::new(0, -1))) {
-                chunks.push(chunk.write().unwrap());
-            }
-            if let Some(chunk) = self.chunks.get(&(key + IVec2::new(0, 1))) {
-                chunks.push(chunk.write().unwrap());
-            }
-            if let Some(chunk) = self.chunks.get(&(key + IVec2::new(1, 0))) {
-                chunks.push(chunk.write().unwrap());
-            }
-            if let Some(chunk) = self.chunks.get(&(key + IVec2::new(-1, 0))) {
-                chunks.push(chunk.write().unwrap());
-            }
-            if let Some(chunk) = self.chunks.get(&(key + IVec2::new(1, -1))) {
-                chunks.push(chunk.write().unwrap());
-            }
-            if let Some(chunk) = self.chunks.get(&(key + IVec2::new(-1, -1))) {
-                chunks.push(chunk.write().unwrap());
-            }
-            if let Some(chunk) = self.chunks.get(&(key + IVec2::new(1, 1))) {
-                chunks.push(chunk.write().unwrap());
-            }
-            if let Some(chunk) = self.chunks.get(&(key + IVec2::new(-1, 1))) {
-                chunks.push(chunk.write().unwrap());
-            }
+            while let Some(id) = local.chunks[0].powder.get_next_id(last_id) {
+                let particle: &mut ParticleData = unsafe { mem::transmute(local.chunks[0].powder.get_unchecked_mut(id)) };
 
-            while let Some(id) = chunks[0].powder.get_next_id(last_id) {
-                let particle: &mut ParticleData = unsafe { mem::transmute(chunks[0].powder.get_unchecked_mut(id)) };
-
-                gravity::simulate(&mut chunks, &definitions, particle, self.gravity, delta);
-                velocity::simulate(&mut chunks, particle, delta);
+                gravity::simulate(&mut local, &definitions, particle, self.gravity, delta);
+                velocity::simulate(&mut local, particle, delta);
                 last_id = Some(id);
             }
         }
@@ -105,39 +80,13 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
 
         for key in self.chunks.keys().cloned().collect::<Vec<_>>() {
             let mut last_id = None;
-            let mut chunks = Vec::new();
+            let mut local = LocalChunks::new(self, key);
 
-            chunks.push(self.chunks[&key].write().unwrap());
-            if let Some(chunk) = self.chunks.get(&(key + IVec2::new(0, -1))) {
-                chunks.push(chunk.write().unwrap());
-            }
-            if let Some(chunk) = self.chunks.get(&(key + IVec2::new(0, 1))) {
-                chunks.push(chunk.write().unwrap());
-            }
-            if let Some(chunk) = self.chunks.get(&(key + IVec2::new(1, 0))) {
-                chunks.push(chunk.write().unwrap());
-            }
-            if let Some(chunk) = self.chunks.get(&(key + IVec2::new(-1, 0))) {
-                chunks.push(chunk.write().unwrap());
-            }
-            if let Some(chunk) = self.chunks.get(&(key + IVec2::new(1, -1))) {
-                chunks.push(chunk.write().unwrap());
-            }
-            if let Some(chunk) = self.chunks.get(&(key + IVec2::new(-1, -1))) {
-                chunks.push(chunk.write().unwrap());
-            }
-            if let Some(chunk) = self.chunks.get(&(key + IVec2::new(1, 1))) {
-                chunks.push(chunk.write().unwrap());
-            }
-            if let Some(chunk) = self.chunks.get(&(key + IVec2::new(-1, 1))) {
-                chunks.push(chunk.write().unwrap());
-            }
+            while let Some(id) = local.chunks[0].fluid.get_next_id(last_id) {
+                let particle: &mut ParticleData = unsafe { mem::transmute(local.chunks[0].fluid.get_unchecked_mut(id)) };
 
-            while let Some(id) = chunks[0].fluid.get_next_id(last_id) {
-                let particle: &mut ParticleData = unsafe { mem::transmute(chunks[0].fluid.get_unchecked_mut(id)) };
-
-                gravity::simulate(&mut chunks, &definitions, particle, self.gravity, delta);
-                velocity::simulate(&mut chunks, particle, delta);
+                gravity::simulate(&mut local, &definitions, particle, self.gravity, delta);
+                velocity::simulate(&mut local, particle, delta);
                 last_id = Some(id);
             }
 
@@ -146,12 +95,12 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
 
             loop {
                 let mut last_id = None;
-                while let Some(id) = chunks[0].fluid.get_next_id(last_id) {
-                    let center_particle: &mut ParticleData = unsafe { mem::transmute(chunks[0].fluid.get_unchecked_mut(id)) };
+                while let Some(id) = local.chunks[0].fluid.get_next_id(last_id) {
+                    let center_particle: &mut ParticleData = unsafe { mem::transmute(local.chunks[0].fluid.get_unchecked_mut(id)) };
                     let definition = &definitions[center_particle.r#type];
 
                     if current_substep < definition.fluidity {
-                        liquidity::simulate(&mut chunks, &definitions, center_particle);
+                        liquidity::simulate(&mut local, &definitions, center_particle);
                         processed_particles += 1;
                     }
 
@@ -261,29 +210,16 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
     }
 
     pub fn get_chunk(&self, position: IVec2) -> Option<Arc<RwLock<Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>>> {
-        self.chunks.get(&(self.get_chunk_key(position))).cloned()
+        self.chunks.get(&(chunk::get_chunk_key(position))).cloned()
     }
 
     pub fn get_chunk_mut(&mut self, position: IVec2) -> Option<Arc<RwLock<Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>>> {
-        self.chunks.get_mut(&(self.get_chunk_key(position))).cloned()
-    }
-
-    fn get_chunk_key(&self, position: IVec2) -> IVec2 {
-        let mut chunk_position = IVec2::new(position.x >> 6, position.y >> 6);
-
-        if position.x < 0 {
-            chunk_position.x -= 1;
-        }
-        if position.y < 0 {
-            chunk_position.y -= 1;
-        }
-
-        chunk_position
+        self.chunks.get_mut(&(chunk::get_chunk_key(position))).cloned()
     }
 
     pub fn add_particle(&mut self, position: IVec2, particle: ParticleData) {
         if self.get_chunk_mut(position).is_none() {
-            self.add_chunk(self.get_chunk_key(position));
+            self.add_chunk(chunk::get_chunk_key(position));
         }
 
         let chunk = self.get_chunk_mut(position).unwrap_or_else(|| panic!("Chunk not found"));

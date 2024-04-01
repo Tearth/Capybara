@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["canvas","chunk","features","local","physics","simulation","structures"],"struct":["ParticleDefinition"]};

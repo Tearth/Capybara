@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["CHUNK_SIZE","GRAVITY_DEFAULT","PARTICLE_SIZE","PIXELS_PER_METER"],"mod":["persistence","selector"]};

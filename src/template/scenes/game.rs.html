@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples\template\src\scenes\game.rs`."><title>game.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="template" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0 (aedd173a2 2024-03-17)" data-channel="1.77.0" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `examples\template\src\scenes\game.rs`."><title>game.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="template" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.1 (7cf61ebde 2024-03-27)" data-channel="1.77.1" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../template/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -136,14 +136,23 @@
 <a href="#134" id="134">134</a>
 <a href="#135" id="135">135</a>
 <a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::GlobalData;
 <span class="kw">use </span><span class="kw">crate</span>::ui::components;
 <span class="kw">use </span><span class="kw">crate</span>::ui::state::WidgetState;
-<span class="kw">use </span><span class="kw">crate</span>::utils::console::Console;
-<span class="kw">use </span><span class="kw">crate</span>::utils::debug::DebugCollector;
 <span class="kw">use </span>capybara::anyhow::Result;
 <span class="kw">use </span>capybara::app::ApplicationState;
 <span class="kw">use </span>capybara::egui::Align2;
+<span class="kw">use </span>capybara::egui::Color32;
 <span class="kw">use </span>capybara::egui::FullOutput;
 <span class="kw">use </span>capybara::egui::RawInput;
 <span class="kw">use </span>capybara::egui::Vec2;
@@ -151,7 +160,11 @@
 <span class="kw">use </span>capybara::glam::Vec4;
 <span class="kw">use </span>capybara::scene::FrameCommand;
 <span class="kw">use </span>capybara::scene::Scene;
+<span class="kw">use </span>capybara::ui::debug::DebugWindow;
+<span class="kw">use </span>capybara::ui::debug::ProfilerPlotDefinition;
 <span class="kw">use </span>capybara::utils::color::Vec4Utils;
+<span class="kw">use </span>capybara::utils::debug::DebugCollector;
+<span class="kw">use </span>capybara::utils::debug::DebugConsole;
 <span class="kw">use </span>capybara::utils::profiler::Profiler;
 <span class="kw">use </span>capybara::window::InputEvent;
 <span class="kw">use </span>capybara::window::Key;
@@ -163,14 +176,21 @@
     exit_menu_visible: bool,
 
     debug_enabled: bool,
-    debug_console: Console,
-    debug_profiler: Profiler,
+    debug_window: DebugWindow,
+    debug_console: DebugConsole,
     debug_collector: DebugCollector,
+    debug_profiler: Profiler,
 }
 
 <span class="kw">impl </span>Scene&lt;GlobalData&gt; <span class="kw">for </span>GameScene {
     <span class="kw">fn </span>activation(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="self">self</span>.exit_menu_visible = <span class="bool-val">false</span>;
+        <span class="self">self</span>.debug_window.plot_definitions = <span class="macro">vec!</span>[
+            ProfilerPlotDefinition { name: String::from(<span class="string">"input"</span>), label: String::from(<span class="string">"Input average"</span>), color: Color32::RED },
+            ProfilerPlotDefinition { name: String::from(<span class="string">"fixed"</span>), label: String::from(<span class="string">"Fixed average"</span>), color: Color32::GREEN },
+            ProfilerPlotDefinition { name: String::from(<span class="string">"frame"</span>), label: String::from(<span class="string">"Frame average"</span>), color: Color32::LIGHT_BLUE },
+            ProfilerPlotDefinition { name: String::from(<span class="string">"ui"</span>), label: String::from(<span class="string">"UI average"</span>), color: Color32::YELLOW },
+        ];
 
         state.renderer.set_clear_color(Vec4::new_rgb(<span class="number">40</span>, <span class="number">80</span>, <span class="number">30</span>, <span class="number">255</span>));
         <span class="prelude-val">Ok</span>(())
@@ -208,7 +228,7 @@
         <span class="self">self</span>.debug_profiler.start(<span class="string">"frame"</span>);
 
         <span class="kw">if </span><span class="self">self</span>.debug_enabled {
-            <span class="self">self</span>.debug_collector.collect(<span class="kw-2">&amp;</span>state, delta);
+            <span class="self">self</span>.debug_collector.collect(<span class="kw-2">&amp;</span>state.window, <span class="kw-2">&amp;</span>state.renderer, delta);
             <span class="self">self</span>.process_console();
         }
         <span class="self">self</span>.debug_profiler.stop(<span class="string">"frame"</span>);
@@ -249,7 +269,7 @@
             }
 
             <span class="kw">if </span><span class="self">self</span>.debug_enabled {
-                components::debug_window(context, <span class="kw-2">&amp;mut </span><span class="self">self</span>.debug_console, <span class="kw-2">&amp;</span><span class="self">self</span>.debug_profiler, <span class="kw-2">&amp;mut </span><span class="self">self</span>.debug_collector);
+                <span class="self">self</span>.debug_window.show(context, <span class="kw-2">&amp;mut </span><span class="self">self</span>.debug_console, <span class="kw-2">&amp;</span><span class="self">self</span>.debug_profiler, <span class="kw-2">&amp;mut </span><span class="self">self</span>.debug_collector);
             }
         });
 

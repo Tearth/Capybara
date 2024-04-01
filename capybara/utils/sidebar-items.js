@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["color","json","math","profiler","rand","settings","storage","string"]};
+window.SIDEBAR_ITEMS = {"mod":["color","debug","json","math","profiler","rand","settings","storage","string"]};

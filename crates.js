@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["benchmark","capybara","ldtk","light","particles","physics","simple_base","simple_client","simple_server","snake_base","snake_client","snake_hub","snake_worker","template","ui"];
+window.ALL_CRATES = ["benchmark","capybara","ldtk","light","particles","physics","powder","simple_base","simple_client","simple_server","snake_base","snake_client","snake_hub","snake_worker","template","ui"];

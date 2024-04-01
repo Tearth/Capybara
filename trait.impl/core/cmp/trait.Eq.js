@@ -1,3 +1,4 @@
 (function() {var implementors = {
-"ui":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.77.0/core/cmp/trait.Eq.html\" title=\"trait core::cmp::Eq\">Eq</a> for <a class=\"struct\" href=\"ui/test/struct.Gradient.html\" title=\"struct ui::test::Gradient\">Gradient</a>"]]
+"capybara":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.77.1/core/cmp/trait.Eq.html\" title=\"trait core::cmp::Eq\">Eq</a> for <a class=\"enum\" href=\"capybara/powder/chunk/enum.ParticleState.html\" title=\"enum capybara::powder::chunk::ParticleState\">ParticleState</a>"]],
+"ui":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.77.1/core/cmp/trait.Eq.html\" title=\"trait core::cmp::Eq\">Eq</a> for <a class=\"struct\" href=\"ui/test/struct.Gradient.html\" title=\"struct ui::test::Gradient\">Gradient</a>"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

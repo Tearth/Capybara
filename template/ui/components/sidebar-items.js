@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["button","debug","frame"]};
+window.SIDEBAR_ITEMS = {"mod":["button","frame"]};

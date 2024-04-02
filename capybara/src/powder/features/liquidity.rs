@@ -1,11 +1,11 @@
 use crate::powder::chunk::ParticleData;
-use crate::powder::local::LocalChunks;
+use crate::powder::local::LocalChunksGuards;
 use crate::powder::ParticleDefinition;
 use glam::IVec2;
 use std::mem;
 
 pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>(
-    local: &mut LocalChunks<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>,
+    local: &mut LocalChunksGuards<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>,
     definitions: &[ParticleDefinition],
     center_particle: &mut ParticleData,
 ) {

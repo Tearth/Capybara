@@ -3,7 +3,8 @@ use self::chunk::ParticleData;
 use self::features::gravity;
 use self::features::liquidity;
 use self::features::velocity;
-use self::local::LocalChunks;
+use self::local::LocalChunksArcs;
+use self::local::LocalChunksGuards;
 use self::structures::Structure;
 use super::*;
 use crate::error_return;
@@ -22,11 +23,16 @@ use std::sync::Arc;
 use std::sync::RwLock;
 
 pub struct PowderSimulation<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> {
-    pub definitions: Rc<RwLock<Vec<ParticleDefinition>>>,
+    pub definitions: Arc<RwLock<Vec<ParticleDefinition>>>,
     pub chunks: FxHashMap<IVec2, Arc<RwLock<Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>>>,
     pub structures: Storage<Rc<RefCell<Structure>>>,
 
     pub gravity: Vec2,
+}
+
+#[derive(Copy, Clone)]
+pub struct ProcessData {
+    gravity: Vec2,
 }
 
 impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
@@ -54,38 +60,102 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         }
     }
 
+    pub fn process<D, F>(&mut self, data: D, mut f: F)
+    where
+        D: Copy + Send + Sync,
+        F: FnMut(Arc<RwLock<LocalChunksArcs<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>>, Arc<RwLock<Vec<ParticleDefinition>>>, D)
+            + Copy
+            + Send
+            + Sync,
+    {
+        let mut chunks_left_to_process = self.chunks.keys().cloned().collect::<Vec<_>>();
+        let offsets = [
+            IVec2::new(-1, -1),
+            IVec2::new(0, -1),
+            IVec2::new(1, -1),
+            IVec2::new(1, 0),
+            IVec2::new(1, 1),
+            IVec2::new(0, 1),
+            IVec2::new(-1, 1),
+            IVec2::new(-1, 0),
+            //
+            IVec2::new(-2, -2),
+            IVec2::new(-1, -2),
+            IVec2::new(0, -2),
+            IVec2::new(1, -2),
+            IVec2::new(2, -2),
+            IVec2::new(2, -1),
+            IVec2::new(2, 0),
+            IVec2::new(2, 1),
+            IVec2::new(2, 2),
+            IVec2::new(1, 2),
+            IVec2::new(0, 2),
+            IVec2::new(-1, 2),
+            IVec2::new(-2, 2),
+            IVec2::new(-2, 1),
+            IVec2::new(-2, 0),
+            IVec2::new(-2, -1),
+        ];
+
+        while !chunks_left_to_process.is_empty() {
+            let mut chunks_to_process = Vec::new();
+            let mut chunks_available = chunks_left_to_process.clone();
+
+            while !chunks_available.is_empty() {
+                if let Some(chunk) = chunks_available.pop() {
+                    chunks_to_process.push(Arc::new(RwLock::new(LocalChunksArcs::new(self, chunk))));
+                    chunks_left_to_process.remove(chunks_left_to_process.iter().position(|p| *p == chunk).unwrap());
+                    for offset in &offsets {
+                        if let Some(index) = chunks_available.iter().position(|p| *p == chunk + *offset) {
+                            chunks_available.remove(index);
+                        }
+                    }
+                }
+            }
+
+            rayon::scope(|scope| {
+                for local in chunks_to_process {
+                    let local = local.clone();
+                    let definitions = self.definitions.clone();
+
+                    scope.spawn(move |_| {
+                        f(local, definitions, data);
+                    });
+                }
+            });
+        }
+    }
+
     pub fn process_solid(&mut self) {}
 
     pub fn process_powder(&mut self, delta: f32) {
-        let definitions = self.definitions.clone();
-        let definitions = definitions.read().unwrap();
-
-        for key in self.chunks.keys().cloned().collect::<Vec<_>>() {
+        self.process(ProcessData { gravity: self.gravity }, |local, definitions, data| {
             let mut last_id = None;
-            let mut local = LocalChunks::new(self, key);
+            let local = local.write().unwrap();
+            let mut local = LocalChunksGuards::new(&local);
+            let definitions = definitions.read().unwrap();
 
             while let Some(id) = local.chunks[0].powder.get_next_id(last_id) {
                 let particle: &mut ParticleData = unsafe { mem::transmute(local.chunks[0].powder.get_unchecked_mut(id)) };
 
-                gravity::simulate(&mut local, &definitions, particle, self.gravity, delta);
+                gravity::simulate(&mut local, &definitions, particle, data.gravity, delta);
                 velocity::simulate(&mut local, particle, delta);
                 last_id = Some(id);
             }
-        }
+        });
     }
 
     pub fn process_fluid(&mut self, delta: f32) {
-        let definitions = self.definitions.clone();
-        let definitions = definitions.read().unwrap();
-
-        for key in self.chunks.keys().cloned().collect::<Vec<_>>() {
+        self.process(ProcessData { gravity: self.gravity }, |local, definitions, data| {
             let mut last_id = None;
-            let mut local = LocalChunks::new(self, key);
+            let local = local.write().unwrap();
+            let mut local = LocalChunksGuards::new(&local);
+            let definitions = definitions.read().unwrap();
 
             while let Some(id) = local.chunks[0].fluid.get_next_id(last_id) {
                 let particle: &mut ParticleData = unsafe { mem::transmute(local.chunks[0].fluid.get_unchecked_mut(id)) };
 
-                gravity::simulate(&mut local, &definitions, particle, self.gravity, delta);
+                gravity::simulate(&mut local, &definitions, particle, data.gravity, delta);
                 velocity::simulate(&mut local, particle, delta);
                 last_id = Some(id);
             }
@@ -115,7 +185,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
                 current_substep += 1;
                 processed_particles = 0;
             }
-        }
+        });
     }
 
     pub fn displace_fluid(&mut self, position: IVec2, forbidden: &FxHashSet<IVec2>) {

@@ -1,42 +1,54 @@
+use super::chunk;
 use super::chunk::Chunk;
 use super::chunk::ParticleData;
-use super::chunk::{self};
 use super::simulation::PowderSimulation;
 use glam::IVec2;
 use glam::Vec4;
+use std::sync::Arc;
+use std::sync::RwLock;
 use std::sync::RwLockWriteGuard;
 
-pub struct LocalChunks<'a, const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> {
+pub struct LocalChunksArcs<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> {
+    pub chunks: Vec<Arc<RwLock<Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>>>,
+}
+
+pub struct LocalChunksGuards<'a, const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> {
     pub chunks: Vec<RwLockWriteGuard<'a, Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>>,
 }
 
-impl<'a, const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> LocalChunks<'a, CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
-    pub fn new(simulation: &'a PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>, chunk_position: IVec2) -> Self {
+impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> LocalChunksArcs<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
+    pub fn new(simulation: &PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>, chunk_position: IVec2) -> Self {
+        let mut chunks = Vec::new();
+        let offsets = [
+            IVec2::new(0, -1),
+            IVec2::new(0, 1),
+            IVec2::new(-1, 0),
+            IVec2::new(1, 0),
+            IVec2::new(-1, -1),
+            IVec2::new(1, -1),
+            IVec2::new(1, 1),
+            IVec2::new(-1, 1),
+        ];
+
+        chunks.push(simulation.chunks[&chunk_position].clone());
+
+        for offset in offsets {
+            if let Some(chunk) = simulation.chunks.get(&(chunk_position + offset)) {
+                chunks.push(chunk.clone());
+            }
+        }
+
+        Self { chunks }
+    }
+}
+
+impl<'a, const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>
+    LocalChunksGuards<'a, CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>
+{
+    pub fn new(simulation: &'a LocalChunksArcs<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>) -> Self {
         let mut chunks = Vec::new();
 
-        chunks.push(simulation.chunks[&chunk_position].write().unwrap());
-        if let Some(chunk) = simulation.chunks.get(&(chunk_position + IVec2::new(0, -1))) {
-            chunks.push(chunk.write().unwrap());
-        }
-        if let Some(chunk) = simulation.chunks.get(&(chunk_position + IVec2::new(0, 1))) {
-            chunks.push(chunk.write().unwrap());
-        }
-        if let Some(chunk) = simulation.chunks.get(&(chunk_position + IVec2::new(1, 0))) {
-            chunks.push(chunk.write().unwrap());
-        }
-        if let Some(chunk) = simulation.chunks.get(&(chunk_position + IVec2::new(-1, 0))) {
-            chunks.push(chunk.write().unwrap());
-        }
-        if let Some(chunk) = simulation.chunks.get(&(chunk_position + IVec2::new(1, -1))) {
-            chunks.push(chunk.write().unwrap());
-        }
-        if let Some(chunk) = simulation.chunks.get(&(chunk_position + IVec2::new(-1, -1))) {
-            chunks.push(chunk.write().unwrap());
-        }
-        if let Some(chunk) = simulation.chunks.get(&(chunk_position + IVec2::new(1, 1))) {
-            chunks.push(chunk.write().unwrap());
-        }
-        if let Some(chunk) = simulation.chunks.get(&(chunk_position + IVec2::new(-1, 1))) {
+        for chunk in &simulation.chunks {
             chunks.push(chunk.write().unwrap());
         }
 

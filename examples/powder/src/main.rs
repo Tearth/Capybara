@@ -40,6 +40,7 @@ use capybara::window::MouseButton;
 use capybara::window::MouseWheelDirection;
 use capybara::window::WindowStyle;
 use std::rc::Rc;
+use std::sync::Arc;
 use std::sync::RwLock;
 
 pub mod core;
@@ -91,7 +92,7 @@ impl Scene<GlobalData> for MainScene {
             ParticleDefinition { name: "Wood".to_string(), state: ParticleState::Solid, color: Vec4::new(0.7, 0.4, 0.15, 1.0), ..Default::default() },
         ];
 
-        self.simulation.definitions = Rc::new(RwLock::new(definitions));
+        self.simulation.definitions = Arc::new(RwLock::new(definitions));
         self.simulation.reset(state.renderer, state.physics);
 
         self.debug_window.plot_definitions = vec![

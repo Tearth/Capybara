@@ -61,16 +61,22 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
                         let first_neighbour: Option<&ParticleData> = unsafe { mem::transmute(local.get_particle(first_neighbour_position)) };
                         let second_neighbour: Option<&ParticleData> = unsafe { mem::transmute(local.get_particle(second_neighbour_position)) };
 
-                        let first_neighbour_slot_available =
-                            if let Some(first_neighbour) = first_neighbour { first_neighbour.state != ParticleState::Fluid } else { false };
-                        let second_neighbour_slot_available =
-                            if let Some(second_neighbour) = second_neighbour { second_neighbour.state != ParticleState::Fluid } else { false };
+                        let first_neighbour_slot_available = if let Some(first_neighbour) = first_neighbour {
+                            state != ParticleState::Fluid && first_neighbour.state == ParticleState::Fluid
+                        } else {
+                            true
+                        };
+                        let second_neighbour_slot_available = if let Some(second_neighbour) = second_neighbour {
+                            state != ParticleState::Fluid && second_neighbour.state == ParticleState::Fluid
+                        } else {
+                            true
+                        };
 
-                        if first_neighbour_slot_available && !second_neighbour_slot_available {
+                        if !first_neighbour_slot_available && second_neighbour_slot_available {
                             (Some(second_neighbour_position), second_neighbour.is_some())
-                        } else if !first_neighbour_slot_available && second_neighbour_slot_available {
+                        } else if first_neighbour_slot_available && !second_neighbour_slot_available {
                             (Some(first_neighbour_position), first_neighbour.is_some())
-                        } else if !first_neighbour_slot_available && !second_neighbour_slot_available {
+                        } else if first_neighbour_slot_available && second_neighbour_slot_available {
                             if fastrand::usize(0..2) == 0 {
                                 (Some(first_neighbour_position), first_neighbour.is_some())
                             } else {

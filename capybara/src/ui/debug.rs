@@ -48,6 +48,7 @@ impl DebugWindow {
             .resizable(false)
             .collapsible(false)
             .title_bar(false)
+            .constrain(false)
             .default_width(700.0)
             .show(context, |ui| {
                 ui.style_mut().visuals.widgets.noninteractive.fg_stroke = Stroke::new(1.0, Color32::from_rgb(255, 255, 255));

@@ -43,7 +43,7 @@ pub struct ProcessData {
 }
 
 impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
-    pub fn logic(&mut self, renderer: &mut RendererContext, physics: &mut PhysicsContext, delta: f32) {
+    pub fn logic(&mut self, renderer: &mut RendererContext, physics: &mut PhysicsContext, force_all_chunks: bool, delta: f32) {
         for (chunk_position, chunk) in &mut self.chunks {
             let mut chunk = chunk.write().unwrap();
 
@@ -56,7 +56,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             }
         }
 
-        let chunks_to_process = self.chunks.iter().filter(|p| p.1.read().unwrap().active).map(|p| *p.0).collect::<Vec<_>>();
+        let chunks_to_process = self.chunks.iter().filter(|p| force_all_chunks || p.1.read().unwrap().active).map(|p| *p.0).collect::<Vec<_>>();
         for chunk in &mut self.chunks.values_mut() {
             chunk.write().unwrap().active = false;
         }

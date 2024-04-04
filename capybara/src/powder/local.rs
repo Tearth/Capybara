@@ -98,15 +98,14 @@ impl<'a, const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER
         None
     }
 
-    pub fn set_particle_color(&mut self, position: IVec2, color: Vec4) -> Option<ParticleData> {
+    pub fn set_particle_color(&mut self, position: IVec2, color: Vec4) {
         let chunk_position = chunk::get_chunk_key(position);
         for chunk in self.chunks.iter_mut() {
             if chunk.position == chunk_position {
                 chunk.set_particle_color(position, color);
+                return;
             }
         }
-
-        None
     }
 
     pub fn is_position_valid(&self, position: IVec2) -> bool {

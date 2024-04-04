@@ -59,6 +59,7 @@ struct MainScene {
 
     pub rigidbody_mode: bool,
     pub initialized: bool,
+    pub force_all_chunks: bool,
 
     pub debug_enabled: bool,
     pub debug_window: DebugWindow,
@@ -204,13 +205,14 @@ impl Scene<GlobalData> for MainScene {
             }
         }
 
-        self.simulation.logic(state.renderer, state.physics, delta);
+        self.simulation.logic(state.renderer, state.physics, self.force_all_chunks, delta);
         self.simulation.draw(state.renderer);
-        self.simulation.draw_debug(state.renderer);
         self.selector.draw(state.renderer);
-        state.physics.draw_debug(state.renderer, 50.0);
 
         if self.debug_enabled {
+            self.simulation.draw_debug(state.renderer);
+            state.physics.draw_debug(state.renderer, 50.0);
+
             self.debug_collector.collect(state.window, state.renderer, delta);
             self.process_console();
         }
@@ -289,6 +291,10 @@ impl Scene<GlobalData> for MainScene {
                     if ui.add(Button::new("Save").min_size(size)).clicked() {
                         persistence::save("saves/test.lvl", &mut self.simulation);
                     }
+
+                    ui.add_space(20.0);
+
+                    ui.checkbox(&mut self.force_all_chunks, "Force all");
                 });
             });
 

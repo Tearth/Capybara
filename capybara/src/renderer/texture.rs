@@ -198,10 +198,13 @@ impl Texture {
 
 impl Drop for Texture {
     fn drop(&mut self) {
+        // Temporary fix for debugger issues after driver update
+        /*
         unsafe {
             info!("Releasing texture {}", self.name);
-            self.gl.delete_texture(self.inner);
+            // self.gl.delete_texture(self.inner);
         }
+        */
     }
 }
 

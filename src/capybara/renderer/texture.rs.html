@@ -212,6 +212,9 @@
 <a href="#210" id="210">210</a>
 <a href="#211" id="211">211</a>
 <a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::context::RendererContext;
 <span class="kw">use </span><span class="kw">crate</span>::assets::RawTexture;
 <span class="kw">use </span>anyhow::Error;
@@ -412,11 +415,14 @@
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>Texture {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">unsafe </span>{
-            <span class="macro">info!</span>(<span class="string">"Releasing texture {}"</span>, <span class="self">self</span>.name);
-            <span class="self">self</span>.gl.delete_texture(<span class="self">self</span>.inner);
+        <span class="comment">// Temporary fix for debugger issues after driver update
+        /*
+        unsafe {
+            info!("Releasing texture {}", self.name);
+            // self.gl.delete_texture(self.inner);
         }
-    }
+        */
+    </span>}
 }
 
 <span class="kw">impl </span>AtlasEntity {

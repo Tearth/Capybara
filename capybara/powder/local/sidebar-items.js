@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["LocalChunks"]};
+window.SIDEBAR_ITEMS = {"struct":["LocalChunksArcs","LocalChunksGuards"]};

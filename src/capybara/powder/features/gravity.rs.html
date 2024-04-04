@@ -59,16 +59,28 @@
 <a href="#57" id="57">57</a>
 <a href="#58" id="58">58</a>
 <a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
+<a href="#65" id="65">65</a>
+<a href="#66" id="66">66</a>
+<a href="#67" id="67">67</a>
+<a href="#68" id="68">68</a>
+<a href="#69" id="69">69</a>
+<a href="#70" id="70">70</a>
+<a href="#71" id="71">71</a>
+<a href="#72" id="72">72</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::powder::chunk::ParticleData;
 <span class="kw">use </span><span class="kw">crate</span>::powder::chunk::ParticleState;
-<span class="kw">use </span><span class="kw">crate</span>::powder::local::LocalChunks;
+<span class="kw">use </span><span class="kw">crate</span>::powder::local::LocalChunksGuards;
 <span class="kw">use </span><span class="kw">crate</span>::powder::ParticleDefinition;
 <span class="kw">use </span>glam::IVec2;
 <span class="kw">use </span>glam::Vec2;
-<span class="kw">use </span>std::mem;
 
 <span class="kw">pub fn </span>simulate&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt;(
-    local: <span class="kw-2">&amp;mut </span>LocalChunks&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;,
+    local: <span class="kw-2">&amp;mut </span>LocalChunksGuards&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;,
     definitions: <span class="kw-2">&amp;</span>[ParticleDefinition],
     center_particle: <span class="kw-2">&amp;mut </span>ParticleData,
     gravity: Vec2,
@@ -80,42 +92,56 @@
     <span class="kw">let </span>top_position = center_particle.position + IVec2::new(<span class="number">0</span>, <span class="number">1</span>);
     <span class="kw">let </span>bottom_position = center_particle.position - IVec2::new(<span class="number">0</span>, <span class="number">1</span>);
 
-    <span class="kw">let </span>top_particle: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ParticleData&gt; = <span class="kw">unsafe </span>{ mem::transmute(local.get_particle(top_position)) };
+    <span class="kw">let </span>top_particle: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ParticleData&gt; = local.get_particle(top_position);
     <span class="kw">let </span>top_type = top_particle.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
     <span class="kw">let </span>top_state = top_particle.as_ref().map(|p| p.state).unwrap_or(ParticleState::Unknown);
 
-    <span class="kw">let </span>bottom_particle: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ParticleData&gt; = <span class="kw">unsafe </span>{ mem::transmute(local.get_particle(bottom_position)) };
+    <span class="kw">let </span>bottom_particle: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ParticleData&gt; = local.get_particle(bottom_position);
     <span class="kw">let </span>bottom_type = bottom_particle.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
     <span class="kw">let </span>bottom_state = bottom_particle.as_ref().map(|p| p.state).unwrap_or(ParticleState::Unknown);
-    <span class="kw">let </span>bottom_velocity = bottom_particle.as_ref().map(|p| p.velocity).unwrap_or(Vec2::ZERO);
-    <span class="kw">let </span><span class="kw-2">mut </span>apply_gravity = <span class="bool-val">true</span>;
 
     <span class="kw">if </span>top_particle.is_some() {
         <span class="kw">let </span>top_definition = <span class="kw-2">&amp;</span>definitions[top_type];
         <span class="kw">if </span>top_state == ParticleState::Fluid &amp;&amp; center_definition.density &lt; top_definition.density {
             center_velocity -= gravity * delta;
             center_velocity = center_velocity.max(Vec2::ZERO);
-            apply_gravity = <span class="bool-val">false</span>;
+            center_particle.velocity = center_velocity;
         }
-    } <span class="kw">else if </span>bottom_particle.is_some() {
+    }
+
+    <span class="kw">if </span>bottom_particle.is_some() {
         <span class="kw">let </span>bottom_definition = <span class="kw-2">&amp;</span>definitions[bottom_type];
         <span class="kw">if </span>bottom_state == ParticleState::Fluid &amp;&amp; center_definition.density &gt; bottom_definition.density {
             center_velocity += gravity * delta;
             center_velocity = center_velocity.min(Vec2::ZERO);
-        } <span class="kw">else if </span>bottom_state == ParticleState::Powder {
-            center_velocity += gravity * delta;
-            center_velocity = center_velocity.max(bottom_velocity + gravity);
+            center_particle.velocity = center_velocity;
         } <span class="kw">else </span>{
-            center_velocity = Vec2::ZERO;
+            <span class="kw">let </span>left_neighbour: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ParticleData&gt; = local.get_particle(center_particle.position + IVec2::new(-<span class="number">1</span>, -<span class="number">1</span>));
+            <span class="kw">let </span>right_neighbour: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ParticleData&gt; = local.get_particle(center_particle.position + IVec2::new(<span class="number">1</span>, -<span class="number">1</span>));
+
+            <span class="kw">let </span>bottom_velocity = bottom_particle.as_ref().map(|p| p.velocity).unwrap_or(Vec2::ZERO);
+            <span class="kw">let </span>left_neighbour_velocity = left_neighbour.map(|p| p.velocity).unwrap_or(Vec2::MAX);
+            <span class="kw">let </span>right_neighbour_velocity = right_neighbour.map(|p| p.velocity).unwrap_or(Vec2::MAX);
+            <span class="kw">let </span>max = bottom_velocity.max(left_neighbour_velocity).max(right_neighbour_velocity);
+
+            center_velocity += gravity * delta;
+
+            <span class="kw">if </span>max.x.abs() &lt; center_velocity.x.abs() {
+                center_velocity = max;
+            }
+            <span class="kw">if </span>max.y.abs() &lt; center_velocity.y.abs() {
+                center_velocity = max;
+            }
+
+            center_particle.velocity = center_velocity;
         }
-
-        apply_gravity = <span class="bool-val">false</span>;
-    }
-
-    <span class="kw">if </span>apply_gravity {
+    } <span class="kw">else </span>{
         center_velocity += gravity * delta;
+        center_particle.velocity = center_velocity;
     }
 
-    center_particle.velocity = center_velocity;
+    <span class="kw">if </span>center_velocity != Vec2::ZERO {
+        local.mark_chunk_as_active(center_particle.position);
+    }
 }
 </code></pre></div></section></main></body></html>

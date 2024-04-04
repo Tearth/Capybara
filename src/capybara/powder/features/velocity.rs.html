@@ -121,15 +121,21 @@
 <a href="#119" id="119">119</a>
 <a href="#120" id="120">120</a>
 <a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::powder::chunk::ParticleData;
 <span class="kw">use </span><span class="kw">crate</span>::powder::chunk::ParticleState;
-<span class="kw">use </span><span class="kw">crate</span>::powder::local::LocalChunks;
+<span class="kw">use </span><span class="kw">crate</span>::powder::local::LocalChunksGuards;
 <span class="kw">use </span>glam::IVec2;
 <span class="kw">use </span>glam::Vec2;
 <span class="kw">use </span>std::mem;
 
 <span class="kw">pub fn </span>simulate&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt;(
-    local: <span class="kw-2">&amp;mut </span>LocalChunks&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;,
+    local: <span class="kw-2">&amp;mut </span>LocalChunksGuards&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;,
     particle: <span class="kw-2">&amp;mut </span>ParticleData,
     delta: f32,
 ) {
@@ -184,16 +190,22 @@
                         <span class="kw">let </span>first_neighbour: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ParticleData&gt; = <span class="kw">unsafe </span>{ mem::transmute(local.get_particle(first_neighbour_position)) };
                         <span class="kw">let </span>second_neighbour: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ParticleData&gt; = <span class="kw">unsafe </span>{ mem::transmute(local.get_particle(second_neighbour_position)) };
 
-                        <span class="kw">let </span>first_neighbour_slot_available =
-                            <span class="kw">if let </span><span class="prelude-val">Some</span>(first_neighbour) = first_neighbour { first_neighbour.state != ParticleState::Fluid } <span class="kw">else </span>{ <span class="bool-val">false </span>};
-                        <span class="kw">let </span>second_neighbour_slot_available =
-                            <span class="kw">if let </span><span class="prelude-val">Some</span>(second_neighbour) = second_neighbour { second_neighbour.state != ParticleState::Fluid } <span class="kw">else </span>{ <span class="bool-val">false </span>};
+                        <span class="kw">let </span>first_neighbour_slot_available = <span class="kw">if let </span><span class="prelude-val">Some</span>(first_neighbour) = first_neighbour {
+                            state != ParticleState::Fluid &amp;&amp; first_neighbour.state == ParticleState::Fluid
+                        } <span class="kw">else </span>{
+                            <span class="bool-val">true
+                        </span>};
+                        <span class="kw">let </span>second_neighbour_slot_available = <span class="kw">if let </span><span class="prelude-val">Some</span>(second_neighbour) = second_neighbour {
+                            state != ParticleState::Fluid &amp;&amp; second_neighbour.state == ParticleState::Fluid
+                        } <span class="kw">else </span>{
+                            <span class="bool-val">true
+                        </span>};
 
-                        <span class="kw">if </span>first_neighbour_slot_available &amp;&amp; !second_neighbour_slot_available {
+                        <span class="kw">if </span>!first_neighbour_slot_available &amp;&amp; second_neighbour_slot_available {
                             (<span class="prelude-val">Some</span>(second_neighbour_position), second_neighbour.is_some())
-                        } <span class="kw">else if </span>!first_neighbour_slot_available &amp;&amp; second_neighbour_slot_available {
+                        } <span class="kw">else if </span>first_neighbour_slot_available &amp;&amp; !second_neighbour_slot_available {
                             (<span class="prelude-val">Some</span>(first_neighbour_position), first_neighbour.is_some())
-                        } <span class="kw">else if </span>!first_neighbour_slot_available &amp;&amp; !second_neighbour_slot_available {
+                        } <span class="kw">else if </span>first_neighbour_slot_available &amp;&amp; second_neighbour_slot_available {
                             <span class="kw">if </span>fastrand::usize(<span class="number">0</span>..<span class="number">2</span>) == <span class="number">0 </span>{
                                 (<span class="prelude-val">Some</span>(first_neighbour_position), first_neighbour.is_some())
                             } <span class="kw">else </span>{

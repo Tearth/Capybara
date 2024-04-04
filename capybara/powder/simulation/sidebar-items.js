@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["PowderSimulation"]};
+window.SIDEBAR_ITEMS = {"struct":["PowderSimulation","PowderSimulationDebugSettings","ProcessData"]};

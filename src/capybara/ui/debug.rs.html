@@ -244,6 +244,7 @@
 <a href="#242" id="242">242</a>
 <a href="#243" id="243">243</a>
 <a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::egui::Align;
 <span class="kw">use </span><span class="kw">crate</span>::egui::Color32;
 <span class="kw">use </span><span class="kw">crate</span>::egui::Context;
@@ -294,6 +295,7 @@
             .resizable(<span class="bool-val">false</span>)
             .collapsible(<span class="bool-val">false</span>)
             .title_bar(<span class="bool-val">false</span>)
+            .constrain(<span class="bool-val">false</span>)
             .default_width(<span class="number">700.0</span>)
             .show(context, |ui| {
                 ui.style_mut().visuals.widgets.noninteractive.fg_stroke = Stroke::new(<span class="number">1.0</span>, Color32::from_rgb(<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>));

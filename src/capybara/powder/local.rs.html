@@ -110,45 +110,78 @@
 <a href="#108" id="108">108</a>
 <a href="#109" id="109">109</a>
 <a href="#110" id="110">110</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::chunk::Chunk;
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::chunk;
+<span class="kw">use </span><span class="kw">super</span>::chunk::Chunk;
 <span class="kw">use </span><span class="kw">super</span>::chunk::ParticleData;
-<span class="kw">use </span><span class="kw">super</span>::chunk::{<span class="self">self</span>};
 <span class="kw">use </span><span class="kw">super</span>::simulation::PowderSimulation;
 <span class="kw">use </span>glam::IVec2;
 <span class="kw">use </span>glam::Vec4;
+<span class="kw">use </span>std::sync::Arc;
+<span class="kw">use </span>std::sync::RwLock;
 <span class="kw">use </span>std::sync::RwLockWriteGuard;
 
-<span class="kw">pub struct </span>LocalChunks&lt;<span class="lifetime">'a</span>, <span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt; {
+<span class="kw">pub struct </span>LocalChunksArcs&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt; {
+    <span class="kw">pub </span>chunks: Vec&lt;Arc&lt;RwLock&lt;Chunk&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;&gt;&gt;&gt;,
+}
+
+<span class="kw">pub struct </span>LocalChunksGuards&lt;<span class="lifetime">'a</span>, <span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt; {
     <span class="kw">pub </span>chunks: Vec&lt;RwLockWriteGuard&lt;<span class="lifetime">'a</span>, Chunk&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, <span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt; LocalChunks&lt;<span class="lifetime">'a</span>, CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt; {
-    <span class="kw">pub fn </span>new(simulation: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>PowderSimulation&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;, chunk_position: IVec2) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt; LocalChunksArcs&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt; {
+    <span class="kw">pub fn </span>new(simulation: <span class="kw-2">&amp;</span>PowderSimulation&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;, chunk_position: IVec2) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>chunks = Vec::new();
+        <span class="kw">let </span>offsets = [
+            IVec2::new(<span class="number">0</span>, -<span class="number">1</span>),
+            IVec2::new(<span class="number">0</span>, <span class="number">1</span>),
+            IVec2::new(-<span class="number">1</span>, <span class="number">0</span>),
+            IVec2::new(<span class="number">1</span>, <span class="number">0</span>),
+            IVec2::new(-<span class="number">1</span>, -<span class="number">1</span>),
+            IVec2::new(<span class="number">1</span>, -<span class="number">1</span>),
+            IVec2::new(<span class="number">1</span>, <span class="number">1</span>),
+            IVec2::new(-<span class="number">1</span>, <span class="number">1</span>),
+        ];
+
+        chunks.push(simulation.chunks[<span class="kw-2">&amp;</span>chunk_position].clone());
+
+        <span class="kw">for </span>offset <span class="kw">in </span>offsets {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(chunk) = simulation.chunks.get(<span class="kw-2">&amp;</span>(chunk_position + offset)) {
+                chunks.push(chunk.clone());
+            }
+        }
+
+        <span class="self">Self </span>{ chunks }
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, <span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt;
+    LocalChunksGuards&lt;<span class="lifetime">'a</span>, CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;
+{
+    <span class="kw">pub fn </span>new(simulation: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>LocalChunksArcs&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>chunks = Vec::new();
 
-        chunks.push(simulation.chunks[<span class="kw-2">&amp;</span>chunk_position].write().unwrap());
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(chunk) = simulation.chunks.get(<span class="kw-2">&amp;</span>(chunk_position + IVec2::new(<span class="number">0</span>, -<span class="number">1</span>))) {
-            chunks.push(chunk.write().unwrap());
-        }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(chunk) = simulation.chunks.get(<span class="kw-2">&amp;</span>(chunk_position + IVec2::new(<span class="number">0</span>, <span class="number">1</span>))) {
-            chunks.push(chunk.write().unwrap());
-        }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(chunk) = simulation.chunks.get(<span class="kw-2">&amp;</span>(chunk_position + IVec2::new(<span class="number">1</span>, <span class="number">0</span>))) {
-            chunks.push(chunk.write().unwrap());
-        }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(chunk) = simulation.chunks.get(<span class="kw-2">&amp;</span>(chunk_position + IVec2::new(-<span class="number">1</span>, <span class="number">0</span>))) {
-            chunks.push(chunk.write().unwrap());
-        }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(chunk) = simulation.chunks.get(<span class="kw-2">&amp;</span>(chunk_position + IVec2::new(<span class="number">1</span>, -<span class="number">1</span>))) {
-            chunks.push(chunk.write().unwrap());
-        }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(chunk) = simulation.chunks.get(<span class="kw-2">&amp;</span>(chunk_position + IVec2::new(-<span class="number">1</span>, -<span class="number">1</span>))) {
-            chunks.push(chunk.write().unwrap());
-        }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(chunk) = simulation.chunks.get(<span class="kw-2">&amp;</span>(chunk_position + IVec2::new(<span class="number">1</span>, <span class="number">1</span>))) {
-            chunks.push(chunk.write().unwrap());
-        }
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(chunk) = simulation.chunks.get(<span class="kw-2">&amp;</span>(chunk_position + IVec2::new(-<span class="number">1</span>, <span class="number">1</span>))) {
+        <span class="kw">for </span>chunk <span class="kw">in </span><span class="kw-2">&amp;</span>simulation.chunks {
             chunks.push(chunk.write().unwrap());
         }
 
@@ -198,16 +231,15 @@
         <span class="prelude-val">None
     </span>}
 
-    <span class="kw">pub fn </span>set_particle_color(<span class="kw-2">&amp;mut </span><span class="self">self</span>, position: IVec2, color: Vec4) -&gt; <span class="prelude-ty">Option</span>&lt;ParticleData&gt; {
+    <span class="kw">pub fn </span>set_particle_color(<span class="kw-2">&amp;mut </span><span class="self">self</span>, position: IVec2, color: Vec4) {
         <span class="kw">let </span>chunk_position = chunk::get_chunk_key(position);
         <span class="kw">for </span>chunk <span class="kw">in </span><span class="self">self</span>.chunks.iter_mut() {
             <span class="kw">if </span>chunk.position == chunk_position {
                 chunk.set_particle_color(position, color);
+                <span class="kw">return</span>;
             }
         }
-
-        <span class="prelude-val">None
-    </span>}
+    }
 
     <span class="kw">pub fn </span>is_position_valid(<span class="kw-2">&amp;</span><span class="self">self</span>, position: IVec2) -&gt; bool {
         <span class="kw">let </span>chunk_position = chunk::get_chunk_key(position);
@@ -219,5 +251,15 @@
 
         <span class="bool-val">false
     </span>}
+
+    <span class="kw">pub fn </span>mark_chunk_as_active(<span class="kw-2">&amp;mut </span><span class="self">self</span>, position: IVec2) {
+        <span class="kw">let </span>chunk_position = chunk::get_chunk_key(position);
+        <span class="kw">for </span>chunk <span class="kw">in </span><span class="self">self</span>.chunks.iter_mut() {
+            <span class="kw">if </span>chunk.position == chunk_position {
+                chunk.active = <span class="bool-val">true</span>;
+                <span class="kw">return</span>;
+            }
+        }
+    }
 }
 </code></pre></div></section></main></body></html>

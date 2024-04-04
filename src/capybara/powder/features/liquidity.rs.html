@@ -156,14 +156,32 @@
 <a href="#154" id="154">154</a>
 <a href="#155" id="155">155</a>
 <a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::powder::chunk::ParticleData;
-<span class="kw">use </span><span class="kw">crate</span>::powder::local::LocalChunks;
+<span class="kw">use </span><span class="kw">crate</span>::powder::local::LocalChunksGuards;
 <span class="kw">use </span><span class="kw">crate</span>::powder::ParticleDefinition;
 <span class="kw">use </span>glam::IVec2;
 <span class="kw">use </span>std::mem;
 
 <span class="kw">pub fn </span>simulate&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt;(
-    local: <span class="kw-2">&amp;mut </span>LocalChunks&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;,
+    local: <span class="kw-2">&amp;mut </span>LocalChunksGuards&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;,
     definitions: <span class="kw-2">&amp;</span>[ParticleDefinition],
     center_particle: <span class="kw-2">&amp;mut </span>ParticleData,
 ) {
@@ -276,8 +294,14 @@
     // Update particles with results
     // -----------------------------
 
-    </span><span class="kw">let </span>center_hpressure_ratio = f32::min(<span class="number">1.0</span>, center_hpressure / definition.hpressure_gradient_length);
+    </span><span class="kw">const </span>HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK: f32 = <span class="number">0.001</span>;
+    <span class="kw">let </span>center_hpressure_ratio = f32::min(<span class="number">1.0</span>, center_hpressure / definition.hpressure_gradient_length);
     <span class="kw">let </span>center_color = definition.color * (<span class="number">1.0 </span>- center_hpressure_ratio) + definition.hpressure_gradient_end * center_hpressure_ratio;
+
+    <span class="kw">if </span>(center_particle.hpressure - center_hpressure).abs() &gt; HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
+        local.mark_chunk_as_active(center_position);
+        local.mark_chunk_as_active(center_position + IVec2::new(<span class="number">0</span>, -<span class="number">1</span>));
+    }
 
     center_particle.hpressure = center_hpressure;
     local.set_particle_color(center_position, center_color);
@@ -286,6 +310,10 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(particle) = <span class="kw-2">&amp;mut </span>left_particle {
             <span class="kw">let </span>left_hpressure_ratio = f32::min(<span class="number">1.0</span>, left_hpressure / definition.hpressure_gradient_length);
             <span class="kw">let </span>left_color = definition.color * (<span class="number">1.0 </span>- left_hpressure_ratio) + definition.hpressure_gradient_end * left_hpressure_ratio;
+
+            <span class="kw">if </span>(particle.hpressure - left_hpressure).abs() &gt; HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
+                local.mark_chunk_as_active(left_position);
+            }
 
             particle.hpressure = left_hpressure;
             local.set_particle_color(left_position, left_color);
@@ -297,6 +325,10 @@
             <span class="kw">let </span>right_hpressure_ratio = f32::min(<span class="number">1.0</span>, right_hpressure / definition.hpressure_gradient_length);
             <span class="kw">let </span>right_color = definition.color * (<span class="number">1.0 </span>- right_hpressure_ratio) + definition.hpressure_gradient_end * right_hpressure_ratio;
 
+            <span class="kw">if </span>(particle.hpressure - right_hpressure).abs() &gt; HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
+                local.mark_chunk_as_active(right_position);
+            }
+
             particle.hpressure = right_hpressure;
             local.set_particle_color(right_position, right_color);
         }
@@ -306,6 +338,10 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(particle) = <span class="kw-2">&amp;mut </span>top_particle {
             <span class="kw">let </span>top_hpressure_ratio = f32::min(<span class="number">1.0</span>, top_hpressure / definition.hpressure_gradient_length);
             <span class="kw">let </span>top_color = definition.color * (<span class="number">1.0 </span>- top_hpressure_ratio) + definition.hpressure_gradient_end * top_hpressure_ratio;
+
+            <span class="kw">if </span>(particle.hpressure - top_hpressure).abs() &gt; HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
+                local.mark_chunk_as_active(top_position);
+            }
 
             particle.hpressure = top_hpressure;
             local.set_particle_color(top_position, top_color);

@@ -37,13 +37,14 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         }
 
         let particle_indices = points.iter().map(|p| (StructureData::Position(*p), *p)).collect::<Vec<(StructureData, IVec2)>>();
-        let rigidbody_handle = physics::create_rigidbody::<PARTICLE_SIZE, PIXELS_PER_METER>(physics, points);
-        let rigidbody = physics.rigidbodies.get(rigidbody_handle).unwrap();
-        let translation = Vec2::from(rigidbody.position().translation);
-        let center = translation * PIXELS_PER_METER as f32;
+        if let Some(rigidbody_handle) = physics::create_rigidbody::<PARTICLE_SIZE, PIXELS_PER_METER>(physics, points) {
+            let rigidbody = physics.rigidbodies.get(rigidbody_handle).unwrap();
+            let translation = Vec2::from(rigidbody.position().translation);
+            let center = translation * PIXELS_PER_METER as f32;
 
-        let structure = Structure { rigidbody_handle, particle_indices, temporary_positions: Vec::new(), center };
-        self.structures.store(Rc::new(RefCell::new(structure)));
+            let structure = Structure { rigidbody_handle, particle_indices, temporary_positions: Vec::new(), center };
+            self.structures.store(Rc::new(RefCell::new(structure)));
+        }
 
         // let rigidbody_handle = physics::create_structure::<PARTICLE_SIZE, PIXELS_PER_METER>(physics, position, &mut points);
         // let particle_indices = points.iter().map(|p| (StructureData::Position(*p), *p)).collect::<Vec<(StructureData, IVec2)>>();
@@ -93,37 +94,43 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
                 );
                 let position = (position + offset_after_rotation).as_ivec2();
 
-                let chunk = self.get_chunk(position).unwrap();
-                let mut chunk = chunk.write().unwrap();
+                if let Some(chunk) = self.get_chunk(position) {
+                    let mut chunk = chunk.write().unwrap();
+                    let blocking_particle = chunk.get_particle(position);
+                    let blocking_particle_state = blocking_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
 
-                let blocking_particle = chunk.get_particle(position);
-                let blocking_particle_state = blocking_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
+                    if blocking_particle.is_none() || blocking_particle_state == ParticleState::Fluid {
+                        if blocking_particle.is_some() {
+                            drop(chunk);
+                            self.displace_fluid(position, &forbidden_for_fluid);
+                        } else {
+                            drop(chunk);
+                        }
 
-                if blocking_particle.is_none() || blocking_particle_state == ParticleState::Fluid {
-                    if blocking_particle.is_some() {
-                        self.displace_fluid(position, &forbidden_for_fluid);
-                    }
+                        self.add_particle(position, *particle);
 
-                    chunk.add_particle(position, *particle);
-                    structure.particle_indices.push((StructureData::Position(position), *original_position));
-                    drop(chunk);
+                        structure.particle_indices.push((StructureData::Position(position), *original_position));
 
-                    for neighbour_offset in [IVec2::new(1, 0), IVec2::new(-1, 0), IVec2::new(0, 1), IVec2::new(0, -1)] {
-                        let neighbour_position = position + neighbour_offset;
-                        let neighbour_chunk = self.get_chunk(neighbour_position).unwrap();
-                        let neighbour_chunk = neighbour_chunk.read().unwrap();
+                        for neighbour_offset in [IVec2::new(1, 0), IVec2::new(-1, 0), IVec2::new(0, 1), IVec2::new(0, -1)] {
+                            let neighbour_position = position + neighbour_offset;
+                            if let Some(neighbour_chunk) = self.get_chunk(neighbour_position) {
+                                let neighbour_chunk = neighbour_chunk.read().unwrap();
 
-                        let neighbour_particle = neighbour_chunk.get_particle(neighbour_position);
-                        let neighbour_particle_state = neighbour_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
+                                let neighbour_particle = neighbour_chunk.get_particle(neighbour_position);
+                                let neighbour_particle_state = neighbour_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
 
-                        if neighbour_particle.is_none() || neighbour_particle_state == ParticleState::Fluid {
-                            let key = neighbour_position.x | (neighbour_position.y << 16);
-                            if let Some(data) = potential_holes.get_mut(&key) {
-                                *data += 1;
-                            } else {
-                                potential_holes.insert(key, 1);
+                                if neighbour_particle.is_none() || neighbour_particle_state == ParticleState::Fluid {
+                                    let key = neighbour_position.x | (neighbour_position.y << 16);
+                                    if let Some(data) = potential_holes.get_mut(&key) {
+                                        *data += 1;
+                                    } else {
+                                        potential_holes.insert(key, 1);
+                                    }
+                                }
                             }
                         }
+                    } else {
+                        structure.particle_indices.push((StructureData::Particle(*particle), *original_position));
                     }
                 } else {
                     structure.particle_indices.push((StructureData::Particle(*particle), *original_position));
@@ -138,19 +145,23 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
 
                     if let Some(particle) = chunk.get_particle(position) {
                         if particle.state == ParticleState::Fluid {
+                            drop(chunk);
                             self.displace_fluid(position, &forbidden_for_fluid);
+                        } else {
+                            drop(chunk);
                         }
                     }
-                    drop(chunk);
 
                     let chunk = self.get_chunk(position + IVec2::new(0, 1)).unwrap();
                     let chunk = chunk.read().unwrap();
 
                     let neighbour_particle = chunk.get_particle(position + IVec2::new(0, 1));
-                    if let Some(neighbour_particle) = neighbour_particle {
+                    if let Some(neighbour_particle) = neighbour_particle.cloned() {
                         let temporary_particle = neighbour_particle;
+                        drop(chunk);
+
                         if !self.particle_exists(position) {
-                            self.add_particle(position, *temporary_particle);
+                            self.add_particle(position, temporary_particle);
                             structure.temporary_positions.push(position);
                         }
                     }*/

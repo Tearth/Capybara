@@ -120,8 +120,9 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
         }
     }
 
-    let particle = local.get_particle_mut(position).unwrap();
-    particle.position = position;
-    particle.offset = offset;
-    particle.velocity = velocity;
+    if let Some(particle) = local.get_particle_mut(position) {
+        particle.position = position;
+        particle.offset = offset;
+        particle.velocity = velocity;
+    }
 }

@@ -227,10 +227,14 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         let particle_center = chunk.get_particle(position).expect("Particle is not a fluid");
 
         let particle_type = particle_center.r#type;
+        let particle_hpressure = particle_center.hpressure;
         let mut available_neighbours = Vec::new();
+        drop(chunk);
 
         for neighbour_offset in [IVec2::new(1, 0), IVec2::new(-1, 0), IVec2::new(0, 1), IVec2::new(0, -1)] {
-            let neighbour_position = particle_center.position + neighbour_offset;
+            let neighbour_position = position + neighbour_offset;
+            let chunk = self.get_chunk(neighbour_position).unwrap();
+            let chunk = chunk.write().unwrap();
             let particle_neighbour = chunk.get_particle(neighbour_position);
 
             if forbidden.contains(&neighbour_position) {
@@ -238,7 +242,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             }
 
             if let Some(particle_neighbour) = particle_neighbour {
-                if particle_center.r#type == particle_neighbour.r#type {
+                if particle_type == particle_neighbour.r#type {
                     available_neighbours.push((neighbour_position, false));
                 }
             } else {
@@ -246,14 +250,14 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             }
         }
 
-        let average_hpressure = particle_center.hpressure / available_neighbours.len() as f32;
+        let average_hpressure = particle_hpressure / available_neighbours.len() as f32;
 
         if !available_neighbours.is_empty() {
             for (neighbour_position, empty) in available_neighbours {
                 let neighbour_chunk = self.get_chunk(neighbour_position).unwrap();
                 let mut neighbour_chunk = neighbour_chunk.write().unwrap();
                 if empty {
-                    self.add_particle(
+                    neighbour_chunk.add_particle(
                         neighbour_position,
                         ParticleData {
                             r#type: particle_type,
@@ -342,7 +346,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         let chunk = self.get_chunk(position);
 
         if let Some(chunk) = chunk {
-            chunk.write().unwrap().particle_exists(position)
+            chunk.read().unwrap().particle_exists(position)
         } else {
             false
         }

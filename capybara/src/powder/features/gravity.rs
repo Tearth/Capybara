@@ -25,34 +25,48 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
     let bottom_particle: Option<&ParticleData> = local.get_particle(bottom_position);
     let bottom_type = bottom_particle.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
     let bottom_state = bottom_particle.as_ref().map(|p| p.state).unwrap_or(ParticleState::Unknown);
-    let bottom_velocity = bottom_particle.as_ref().map(|p| p.velocity).unwrap_or(Vec2::ZERO);
-    let mut apply_gravity = true;
 
     if top_particle.is_some() {
         let top_definition = &definitions[top_type];
         if top_state == ParticleState::Fluid && center_definition.density < top_definition.density {
             center_velocity -= gravity * delta;
             center_velocity = center_velocity.max(Vec2::ZERO);
-            apply_gravity = false;
+            center_particle.velocity = center_velocity;
         }
-    } else if bottom_particle.is_some() {
+    }
+
+    if bottom_particle.is_some() {
         let bottom_definition = &definitions[bottom_type];
         if bottom_state == ParticleState::Fluid && center_definition.density > bottom_definition.density {
             center_velocity += gravity * delta;
             center_velocity = center_velocity.min(Vec2::ZERO);
-        } else if bottom_state == ParticleState::Powder {
-            center_velocity += gravity * delta;
-            center_velocity = center_velocity.max(bottom_velocity + gravity);
+            center_particle.velocity = center_velocity;
         } else {
-            center_velocity = Vec2::ZERO;
+            let left_neighbour: Option<&ParticleData> = local.get_particle(center_particle.position + IVec2::new(-1, -1));
+            let right_neighbour: Option<&ParticleData> = local.get_particle(center_particle.position + IVec2::new(1, -1));
+
+            let bottom_velocity = bottom_particle.as_ref().map(|p| p.velocity).unwrap_or(Vec2::ZERO);
+            let left_neighbour_velocity = left_neighbour.map(|p| p.velocity).unwrap_or(Vec2::MAX);
+            let right_neighbour_velocity = right_neighbour.map(|p| p.velocity).unwrap_or(Vec2::MAX);
+            let max = bottom_velocity.max(left_neighbour_velocity).max(right_neighbour_velocity);
+
+            center_velocity += gravity * delta;
+
+            if max.x.abs() < center_velocity.x.abs() {
+                center_velocity = max;
+            }
+            if max.y.abs() < center_velocity.y.abs() {
+                center_velocity = max;
+            }
+
+            center_particle.velocity = center_velocity;
         }
-
-        apply_gravity = false;
-    }
-
-    if apply_gravity {
+    } else {
         center_velocity += gravity * delta;
+        center_particle.velocity = center_velocity;
     }
 
-    center_particle.velocity = center_velocity;
+    if center_velocity != Vec2::ZERO {
+        local.mark_chunk_as_active(center_particle.position);
+    }
 }

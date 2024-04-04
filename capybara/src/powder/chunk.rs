@@ -1,12 +1,29 @@
+use self::simulation::PowderSimulationDebugSettings;
+
 use super::canvas::Canvas;
 use super::*;
 use crate::glam::IVec2;
 use crate::glam::Vec4;
 use crate::physics::context::PhysicsContext;
 use crate::renderer::context::RendererContext;
+use crate::renderer::shape::Shape;
 use crate::utils::storage::Storage;
 use rapier2d::geometry::ColliderHandle;
 use rustc_hash::FxHashSet;
+
+pub struct Chunk<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> {
+    pub initialized: bool,
+    pub active: bool,
+    pub dirty: bool,
+    pub canvas: Canvas<CHUNK_SIZE, PARTICLE_SIZE>,
+    pub solid_collider: Option<ColliderHandle>,
+    pub position: IVec2,
+
+    pub particles: Vec<ParticleIndex>,
+    pub solid: Storage<ParticleData>,
+    pub powder: Storage<ParticleData>,
+    pub fluid: Storage<ParticleData>,
+}
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct ParticleIndex {
@@ -34,19 +51,6 @@ pub enum ParticleState {
     Solid,
     Powder,
     Fluid,
-}
-
-pub struct Chunk<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> {
-    pub initialized: bool,
-    pub dirty: bool,
-    pub canvas: Canvas<CHUNK_SIZE, PARTICLE_SIZE>,
-    pub solid_collider: Option<ColliderHandle>,
-    pub position: IVec2,
-
-    pub particles: Vec<ParticleIndex>,
-    pub solid: Storage<ParticleData>,
-    pub powder: Storage<ParticleData>,
-    pub fluid: Storage<ParticleData>,
 }
 
 impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
@@ -83,6 +87,15 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         self.canvas.draw(renderer);
     }
 
+    pub fn draw_debug(&mut self, renderer: &mut RendererContext, settings: &PowderSimulationDebugSettings) {
+        let size = Vec2::ONE * CHUNK_SIZE as f32 * PARTICLE_SIZE as f32;
+        let left_bottom = self.position.as_vec2() * size;
+        let right_top = (self.position + IVec2::ONE).as_vec2() * size;
+        let color = if self.active { settings.chunk_active_color } else { settings.chunk_inactive_color };
+
+        renderer.draw_shape(&Shape::new_frame(left_bottom, right_top, 1.0, color));
+    }
+
     pub fn add_particle(&mut self, position: IVec2, mut particle: ParticleData) -> usize {
         let index = self.position_to_index(position);
 
@@ -101,6 +114,8 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             ParticleState::Fluid => self.fluid.store(particle),
             _ => panic!("Invalid particle state ({:?})", particle.state),
         };
+
+        self.active = true;
         self.particles[index] = ParticleIndex { id, present: true, state: particle.state };
         self.canvas.set_particle(position, particle.color);
 
@@ -125,6 +140,8 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             ParticleState::Fluid => self.fluid.remove(id),
             _ => return None,
         };
+
+        self.active = true;
         self.particles[index].present = false;
 
         if particle.is_some() {
@@ -183,6 +200,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
     fn default() -> Self {
         Self {
             initialized: false,
+            active: false,
             dirty: false,
             canvas: Default::default(),
             solid_collider: None,

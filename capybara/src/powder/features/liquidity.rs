@@ -118,8 +118,14 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
     // Update particles with results
     // -----------------------------
 
+    const HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK: f32 = 0.001;
     let center_hpressure_ratio = f32::min(1.0, center_hpressure / definition.hpressure_gradient_length);
     let center_color = definition.color * (1.0 - center_hpressure_ratio) + definition.hpressure_gradient_end * center_hpressure_ratio;
+
+    if (center_particle.hpressure - center_hpressure).abs() > HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
+        local.mark_chunk_as_active(center_position);
+        local.mark_chunk_as_active(center_position + IVec2::new(0, -1));
+    }
 
     center_particle.hpressure = center_hpressure;
     local.set_particle_color(center_position, center_color);
@@ -128,6 +134,10 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
         if let Some(particle) = &mut left_particle {
             let left_hpressure_ratio = f32::min(1.0, left_hpressure / definition.hpressure_gradient_length);
             let left_color = definition.color * (1.0 - left_hpressure_ratio) + definition.hpressure_gradient_end * left_hpressure_ratio;
+
+            if (particle.hpressure - left_hpressure).abs() > HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
+                local.mark_chunk_as_active(left_position);
+            }
 
             particle.hpressure = left_hpressure;
             local.set_particle_color(left_position, left_color);
@@ -139,6 +149,10 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
             let right_hpressure_ratio = f32::min(1.0, right_hpressure / definition.hpressure_gradient_length);
             let right_color = definition.color * (1.0 - right_hpressure_ratio) + definition.hpressure_gradient_end * right_hpressure_ratio;
 
+            if (particle.hpressure - right_hpressure).abs() > HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
+                local.mark_chunk_as_active(right_position);
+            }
+
             particle.hpressure = right_hpressure;
             local.set_particle_color(right_position, right_color);
         }
@@ -148,6 +162,10 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
         if let Some(particle) = &mut top_particle {
             let top_hpressure_ratio = f32::min(1.0, top_hpressure / definition.hpressure_gradient_length);
             let top_color = definition.color * (1.0 - top_hpressure_ratio) + definition.hpressure_gradient_end * top_hpressure_ratio;
+
+            if (particle.hpressure - top_hpressure).abs() > HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
+                local.mark_chunk_as_active(top_position);
+            }
 
             particle.hpressure = top_hpressure;
             local.set_particle_color(top_position, top_color);

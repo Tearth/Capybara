@@ -206,6 +206,7 @@ impl Scene<GlobalData> for MainScene {
 
         self.simulation.logic(state.renderer, state.physics, delta);
         self.simulation.draw(state.renderer);
+        self.simulation.draw_debug(state.renderer);
         self.selector.draw(state.renderer);
         state.physics.draw_debug(state.renderer, 50.0);
 

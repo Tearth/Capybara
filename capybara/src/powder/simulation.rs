@@ -28,6 +28,13 @@ pub struct PowderSimulation<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, con
     pub chunks: FxHashMap<IVec2, Arc<RwLock<Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>>>,
     pub structures: Storage<Rc<RefCell<Structure>>>,
     pub gravity: Vec2,
+
+    pub debug: PowderSimulationDebugSettings,
+}
+
+pub struct PowderSimulationDebugSettings {
+    pub chunk_active_color: Vec4,
+    pub chunk_inactive_color: Vec4,
 }
 
 #[derive(Copy, Clone)]
@@ -49,9 +56,14 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             }
         }
 
-        self.process_solid();
-        self.process_powder(delta);
-        self.process_fluid(delta);
+        let chunks_to_process = self.chunks.iter().filter(|p| p.1.read().unwrap().active).map(|p| *p.0).collect::<Vec<_>>();
+        for chunk in &mut self.chunks.values_mut() {
+            chunk.write().unwrap().active = false;
+        }
+
+        self.process_solid(&chunks_to_process);
+        self.process_powder(&chunks_to_process, delta);
+        self.process_fluid(&chunks_to_process, delta);
     }
 
     pub fn draw(&mut self, renderer: &mut RendererContext) {
@@ -60,12 +72,17 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         }
     }
 
-    pub fn process<D, F>(&mut self, data: D, multithreaded: bool, mut f: F)
+    pub fn draw_debug(&mut self, renderer: &mut RendererContext) {
+        for chunk in &mut self.chunks.values_mut() {
+            chunk.write().unwrap().draw_debug(renderer, &self.debug);
+        }
+    }
+
+    pub fn process<D, F>(&mut self, data: D, multithreaded: bool, chunks_to_process: &[IVec2], mut f: F)
     where
         D: Copy + Send + Sync,
         F: FnMut(LocalChunksGuards<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>, RwLockReadGuard<Vec<ParticleDefinition>>, D) + Copy + Send + Sync,
     {
-        let mut chunks_left_to_process = self.chunks.keys().cloned().collect::<Vec<_>>();
         let offsets = [
             // Inner
             IVec2::new(-1, -1),
@@ -95,14 +112,15 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             IVec2::new(-2, -1),
         ];
 
-        while !chunks_left_to_process.is_empty() {
-            let mut chunks_to_process = Vec::new();
-            let mut chunks_available = chunks_left_to_process.clone();
+        let mut chunks_to_process = chunks_to_process.to_vec();
+        while !chunks_to_process.is_empty() {
+            let mut chunks_to_process_now = Vec::new();
+            let mut chunks_available = chunks_to_process.clone();
 
             while !chunks_available.is_empty() {
                 if let Some(chunk) = chunks_available.pop() {
-                    chunks_to_process.push(Arc::new(RwLock::new(LocalChunksArcs::new(self, chunk))));
-                    chunks_left_to_process.remove(chunks_left_to_process.iter().position(|p| *p == chunk).unwrap());
+                    chunks_to_process_now.push(Arc::new(RwLock::new(LocalChunksArcs::new(self, chunk))));
+                    chunks_to_process.remove(chunks_to_process.iter().position(|p| *p == chunk).unwrap());
                     for offset in &offsets {
                         if let Some(index) = chunks_available.iter().position(|p| *p == chunk + *offset) {
                             chunks_available.remove(index);
@@ -120,13 +138,13 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
                 f(local, definitions, data);
             };
 
-            if !multithreaded || chunks_to_process.len() == 1 {
-                for local in chunks_to_process {
+            if !multithreaded || chunks_to_process_now.len() == 1 {
+                for local in chunks_to_process_now {
                     runner(local, self.definitions.clone());
                 }
             } else {
                 rayon::scope(|scope| {
-                    for local in chunks_to_process {
+                    for local in chunks_to_process_now {
                         let local = local.clone();
                         let definitions = self.definitions.clone();
 
@@ -139,10 +157,10 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         }
     }
 
-    pub fn process_solid(&mut self) {}
+    pub fn process_solid(&mut self, _chunks_to_process: &[IVec2]) {}
 
-    pub fn process_powder(&mut self, delta: f32) {
-        self.process(ProcessData { gravity: self.gravity }, true, |mut local, definitions, data| {
+    pub fn process_powder(&mut self, chunks_to_process: &[IVec2], delta: f32) {
+        self.process(ProcessData { gravity: self.gravity }, true, chunks_to_process, |mut local, definitions, data| {
             let mut last_id = None;
             while let Some(id) = local.chunks[0].powder.get_next_id(last_id) {
                 let particle: &mut ParticleData = unsafe { mem::transmute(local.chunks[0].powder.get_unchecked_mut(id)) };
@@ -154,8 +172,8 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         });
     }
 
-    pub fn process_fluid(&mut self, delta: f32) {
-        self.process(ProcessData { gravity: self.gravity }, true, |mut local, definitions, data| {
+    pub fn process_fluid(&mut self, chunks_to_process: &[IVec2], delta: f32) {
+        self.process(ProcessData { gravity: self.gravity }, true, chunks_to_process, |mut local, definitions, data| {
             let mut last_id = None;
             while let Some(id) = local.chunks[0].fluid.get_next_id(last_id) {
                 let particle: &mut ParticleData = unsafe { mem::transmute(local.chunks[0].fluid.get_unchecked_mut(id)) };
@@ -169,7 +187,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         let substep = Arc::new(RwLock::new(0));
         loop {
             let done = Arc::new(RwLock::new(true));
-            self.process(ProcessData { gravity: self.gravity }, true, |mut local, definitions, _data| {
+            self.process(ProcessData { gravity: self.gravity }, true, chunks_to_process, |mut local, definitions, _data| {
                 let mut last_id = None;
                 let mut needs_more_substeps = false;
                 let current_substep = *substep.read().unwrap();
@@ -339,7 +357,17 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
     for PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>
 {
     fn default() -> Self {
-        Self { definitions: Default::default(), chunks: Default::default(), structures: Default::default(), gravity: Vec2::new(0.0, -160.0) }
+        Self {
+            definitions: Default::default(),
+            chunks: Default::default(),
+            structures: Default::default(),
+            gravity: Vec2::new(0.0, -160.0),
+
+            debug: PowderSimulationDebugSettings {
+                chunk_active_color: Vec4::new(0.0, 1.0, 0.0, 1.0),
+                chunk_inactive_color: Vec4::new(1.0, 0.0, 0.0, 1.0),
+            },
+        }
     }
 }
 

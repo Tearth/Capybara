@@ -119,4 +119,14 @@ impl<'a, const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER
 
         false
     }
+
+    pub fn mark_chunk_as_active(&mut self, position: IVec2) {
+        let chunk_position = chunk::get_chunk_key(position);
+        for chunk in self.chunks.iter_mut() {
+            if chunk.position == chunk_position {
+                chunk.active = true;
+                return;
+            }
+        }
+    }
 }

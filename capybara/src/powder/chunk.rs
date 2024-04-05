@@ -156,12 +156,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         let particle = self.particles[index];
 
         if particle.present {
-            match particle.state {
-                ParticleState::Solid => Some(self.solid.get_unchecked(particle.id)),
-                ParticleState::Powder => Some(self.powder.get_unchecked(particle.id)),
-                ParticleState::Fluid => Some(self.fluid.get_unchecked(particle.id)),
-                _ => None,
-            }
+            Some(self.get_storage(particle.state).get_unchecked(particle.id))
         } else {
             None
         }
@@ -172,14 +167,27 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         let particle = self.particles[index];
 
         if particle.present {
-            match particle.state {
-                ParticleState::Solid => Some(self.solid.get_unchecked_mut(particle.id)),
-                ParticleState::Powder => Some(self.powder.get_unchecked_mut(particle.id)),
-                ParticleState::Fluid => Some(self.fluid.get_unchecked_mut(particle.id)),
-                _ => None,
-            }
+            Some(self.get_storage_mut(particle.state).get_unchecked_mut(particle.id))
         } else {
             None
+        }
+    }
+
+    pub fn get_storage(&self, state: ParticleState) -> &Storage<ParticleData> {
+        match state {
+            ParticleState::Solid => &self.solid,
+            ParticleState::Powder => &self.powder,
+            ParticleState::Fluid => &self.fluid,
+            ParticleState::Unknown => panic!("Invalid storage"),
+        }
+    }
+
+    pub fn get_storage_mut(&mut self, state: ParticleState) -> &mut Storage<ParticleData> {
+        match state {
+            ParticleState::Solid => &mut self.solid,
+            ParticleState::Powder => &mut self.powder,
+            ParticleState::Fluid => &mut self.fluid,
+            ParticleState::Unknown => panic!("Invalid storage"),
         }
     }
 

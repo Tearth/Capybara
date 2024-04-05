@@ -28,7 +28,7 @@ pub fn load(
 
         if r#type != usize::MAX {
             let definitions = simulation.definitions.clone();
-            let definition = &definitions.read().unwrap()[r#type];
+            let definition = &definitions.read()[r#type];
             simulation
                 .add_particle(position, ParticleData { r#type, state: definition.state, color: definition.color, hpressure, ..Default::default() });
         }

@@ -1,16 +1,17 @@
-use crate::powder::chunk::ParticleData;
 use crate::powder::chunk::ParticleState;
 use crate::powder::local::LocalChunksGuards;
 use glam::IVec2;
 use glam::Vec2;
-use std::mem;
 
 pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>(
     local: &mut LocalChunksGuards<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>,
-    particle: &mut ParticleData,
+    particle_id: usize,
+    state: ParticleState,
     delta: f32,
 ) {
     // let definition = database.get_unchecked(particle.r#type);
+    let particle = local.chunks[0].get_storage(state).get_unchecked(particle_id);
+
     let state = particle.state;
     let mut position = particle.position;
     let mut offset = particle.offset;
@@ -58,8 +59,8 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
                         let first_neighbour_position = position_update + neighbour_positions[0];
                         let second_neighbour_position = position_update + neighbour_positions[1];
 
-                        let first_neighbour: Option<&ParticleData> = unsafe { mem::transmute(local.get_particle(first_neighbour_position)) };
-                        let second_neighbour: Option<&ParticleData> = unsafe { mem::transmute(local.get_particle(second_neighbour_position)) };
+                        let first_neighbour = local.get_particle(first_neighbour_position);
+                        let second_neighbour = local.get_particle(second_neighbour_position);
 
                         let first_neighbour_slot_available = if let Some(first_neighbour) = first_neighbour {
                             state != ParticleState::Fluid && first_neighbour.state == ParticleState::Fluid

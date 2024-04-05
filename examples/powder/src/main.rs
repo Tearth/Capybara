@@ -23,6 +23,7 @@ use capybara::egui::TextStyle;
 use capybara::fast_gpu;
 use capybara::glam::IVec2;
 use capybara::glam::Vec4;
+use capybara::parking_lot::RwLock;
 use capybara::powder::chunk::ParticleState;
 use capybara::powder::simulation::PowderSimulation;
 use capybara::powder::ParticleDefinition;
@@ -39,9 +40,7 @@ use capybara::window::Key;
 use capybara::window::MouseButton;
 use capybara::window::MouseWheelDirection;
 use capybara::window::WindowStyle;
-use std::rc::Rc;
 use std::sync::Arc;
-use std::sync::RwLock;
 
 pub mod core;
 
@@ -138,7 +137,7 @@ impl Scene<GlobalData> for MainScene {
 
                         while let Some(position) = self.selector.get_next_selected_particle(last_position) {
                             if let Some(chunk) = self.simulation.get_chunk(position) {
-                                let chunk = chunk.read().unwrap();
+                                let chunk = chunk.read();
                                 if let Some(particle) = chunk.get_particle(position) {
                                     points.insert(particle.position);
                                 }
@@ -244,7 +243,7 @@ impl Scene<GlobalData> for MainScene {
 
                                 if self.simulation.is_position_valid(selector_position) {
                                     if let Some(chunk) = self.simulation.get_chunk(selector_position) {
-                                        let chunk = chunk.read().unwrap();
+                                        let chunk = chunk.read();
                                         let particle = chunk.get_particle(selector_position);
                                         if let Some(particle) = particle {
                                             ui.add(Label::new(format!("velocity: {:.2} {:.2}", particle.velocity.x, particle.velocity.y)));
@@ -260,7 +259,7 @@ impl Scene<GlobalData> for MainScene {
 
                 SidePanel::right("panel-right").frame(Frame::none()).resizable(false).show_separator_line(false).show(context, |ui| {
                     let size = egui::Vec2::new(100.0, 0.0);
-                    let definitions = self.simulation.definitions.read().unwrap();
+                    let definitions = self.simulation.definitions.read();
 
                     for (r#type, definition) in definitions.iter().enumerate() {
                         let selected = self.selector.particle_type == r#type;

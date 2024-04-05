@@ -23,6 +23,7 @@ kira = { version = "0.8.7", default-features = false, features = ["cpal", "ogg",
 log = { version = "0.4.20" }
 nalgebra = { version = "0.32.3", features = ["convert-glam024"], optional = true }
 noise = { version = "0.8.2", optional = true }
+parking_lot = { version = "0.12.1" }
 pathfinding = { version = "4.8.2", optional = true }
 png = { version = "0.17.11" }
 quick-xml = { version = "0.31.0" }

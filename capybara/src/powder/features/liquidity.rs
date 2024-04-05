@@ -2,13 +2,13 @@ use crate::powder::chunk::ParticleData;
 use crate::powder::local::LocalChunksGuards;
 use crate::powder::ParticleDefinition;
 use glam::IVec2;
-use std::mem;
 
 pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>(
     local: &mut LocalChunksGuards<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>,
     definitions: &[ParticleDefinition],
-    center_particle: &mut ParticleData,
+    particle_id: usize,
 ) {
+    let center_particle = local.chunks[0].fluid.get_unchecked(particle_id);
     let definition = &definitions[center_particle.r#type];
 
     let center_position = center_particle.position;
@@ -19,15 +19,15 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
     let center_type = center_particle.r#type;
     let mut center_hpressure = center_particle.hpressure;
 
-    let mut left_particle: Option<&mut ParticleData> = unsafe { mem::transmute(local.get_particle_mut(left_position)) };
+    let left_particle = local.get_particle(left_position);
     let mut left_type = left_particle.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
     let mut left_hpressure = left_particle.as_ref().map(|p| p.hpressure).unwrap_or(0.0);
 
-    let mut right_particle: Option<&mut ParticleData> = unsafe { mem::transmute(local.get_particle_mut(right_position)) };
+    let right_particle = local.get_particle(right_position);
     let mut right_type = right_particle.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
     let mut right_hpressure = right_particle.as_ref().map(|p| p.hpressure).unwrap_or(0.0);
 
-    let mut top_particle: Option<&mut ParticleData> = unsafe { mem::transmute(local.get_particle_mut(top_position)) };
+    let top_particle = local.get_particle(top_position);
     let mut top_type = top_particle.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
     let mut top_hpressure = top_particle.as_ref().map(|p| p.hpressure).unwrap_or(0.0);
 
@@ -68,11 +68,12 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
         } else if left_type == center_type {
             left_hpressure = average_hpressure;
         }
+
         if right_type == usize::MAX {
             local.add_particle(right_position, particle);
             right_type = center_type;
             right_hpressure = average_hpressure;
-        } else if left_type == center_type {
+        } else if right_type == center_type {
             right_hpressure = average_hpressure;
         }
 
@@ -119,55 +120,61 @@ pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PE
     // -----------------------------
 
     const HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK: f32 = 0.001;
+
+    let center_particle = local.chunks[0].fluid.get_unchecked_mut(particle_id);
+    let particle_hpressure = center_particle.hpressure;
     let center_hpressure_ratio = f32::min(1.0, center_hpressure / definition.hpressure_gradient_length);
     let center_color = definition.color * (1.0 - center_hpressure_ratio) + definition.hpressure_gradient_end * center_hpressure_ratio;
 
-    if (center_particle.hpressure - center_hpressure).abs() > HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
+    center_particle.hpressure = center_hpressure;
+
+    if (particle_hpressure - center_hpressure).abs() > HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
         local.mark_chunk_as_active(center_position);
         local.mark_chunk_as_active(center_position + IVec2::new(0, -1));
     }
-
-    center_particle.hpressure = center_hpressure;
     local.set_particle_color(center_position, center_color);
 
     if left_type == center_type {
-        if let Some(particle) = &mut left_particle {
+        if let Some(particle) = local.get_particle_mut(left_position) {
+            let particle_hpressure = particle.hpressure;
             let left_hpressure_ratio = f32::min(1.0, left_hpressure / definition.hpressure_gradient_length);
             let left_color = definition.color * (1.0 - left_hpressure_ratio) + definition.hpressure_gradient_end * left_hpressure_ratio;
 
-            if (particle.hpressure - left_hpressure).abs() > HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
+            particle.hpressure = left_hpressure;
+
+            if (particle_hpressure - left_hpressure).abs() > HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
                 local.mark_chunk_as_active(left_position);
             }
-
-            particle.hpressure = left_hpressure;
             local.set_particle_color(left_position, left_color);
         }
     }
 
     if right_type == center_type {
-        if let Some(particle) = &mut right_particle {
+        if let Some(particle) = local.get_particle_mut(right_position) {
+            let particle_hpressure = particle.hpressure;
             let right_hpressure_ratio = f32::min(1.0, right_hpressure / definition.hpressure_gradient_length);
             let right_color = definition.color * (1.0 - right_hpressure_ratio) + definition.hpressure_gradient_end * right_hpressure_ratio;
 
-            if (particle.hpressure - right_hpressure).abs() > HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
+            particle.hpressure = right_hpressure;
+
+            if (particle_hpressure - right_hpressure).abs() > HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
                 local.mark_chunk_as_active(right_position);
             }
-
-            particle.hpressure = right_hpressure;
             local.set_particle_color(right_position, right_color);
         }
     }
 
     if top_type == center_type {
-        if let Some(particle) = &mut top_particle {
+        if let Some(particle) = local.get_particle_mut(top_position) {
+            let particle_hpressure = particle.hpressure;
             let top_hpressure_ratio = f32::min(1.0, top_hpressure / definition.hpressure_gradient_length);
             let top_color = definition.color * (1.0 - top_hpressure_ratio) + definition.hpressure_gradient_end * top_hpressure_ratio;
 
-            if (particle.hpressure - top_hpressure).abs() > HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
+            particle.hpressure = top_hpressure;
+
+            if (particle_hpressure - top_hpressure).abs() > HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
                 local.mark_chunk_as_active(top_position);
             }
-
-            particle.hpressure = top_hpressure;
             local.set_particle_color(top_position, top_color);
         }
     }

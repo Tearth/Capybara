@@ -29,7 +29,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
     pub fn create_structure(&mut self, physics: &mut PhysicsContext, points: &mut FxHashSet<IVec2>) {
         for point in points.iter() {
             let chunk = self.get_chunk(*point).unwrap();
-            let mut chunk = chunk.write().unwrap();
+            let mut chunk = chunk.write();
 
             if let Some(particle) = chunk.get_particle_mut(*point) {
                 particle.structure = true;
@@ -45,10 +45,6 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             let structure = Structure { rigidbody_handle, particle_indices, temporary_positions: Vec::new(), center };
             self.structures.store(Rc::new(RefCell::new(structure)));
         }
-
-        // let rigidbody_handle = physics::create_structure::<PARTICLE_SIZE, PIXELS_PER_METER>(physics, position, &mut points);
-        // let particle_indices = points.iter().map(|p| (StructureData::Position(*p), *p)).collect::<Vec<(StructureData, IVec2)>>();
-        // Structure { rigidbody_handle, particle_indices, temporary_positions: Vec::new(), center: position.as_vec2() }
     }
 
     pub fn update_structures(&mut self, physics: &mut PhysicsContext) {
@@ -95,7 +91,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
                 let position = (position + offset_after_rotation).as_ivec2();
 
                 if let Some(chunk) = self.get_chunk(position) {
-                    let mut chunk = chunk.write().unwrap();
+                    let chunk = chunk.write();
                     let blocking_particle = chunk.get_particle(position);
                     let blocking_particle_state = blocking_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
 
@@ -114,7 +110,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
                         for neighbour_offset in [IVec2::new(1, 0), IVec2::new(-1, 0), IVec2::new(0, 1), IVec2::new(0, -1)] {
                             let neighbour_position = position + neighbour_offset;
                             if let Some(neighbour_chunk) = self.get_chunk(neighbour_position) {
-                                let neighbour_chunk = neighbour_chunk.read().unwrap();
+                                let neighbour_chunk = neighbour_chunk.read();
 
                                 let neighbour_particle = neighbour_chunk.get_particle(neighbour_position);
                                 let neighbour_particle_state = neighbour_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);

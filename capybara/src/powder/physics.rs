@@ -21,14 +21,10 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             for p in 0..structure.particle_indices.len() {
                 if let StructureData::Position(position) = structure.particle_indices[p].0 {
                     let mut hpressure = Vec2::ZERO;
-                    let chunk = self.get_chunk(position).unwrap();
-                    let chunk = chunk.read().unwrap();
-                    let particle = chunk.get_particle(position).unwrap();
-
                     for neighbour_offset in [IVec2::new(1, 0), IVec2::new(-1, 0), IVec2::new(0, 1), IVec2::new(0, -1)] {
-                        let neighbour_position = particle.position + neighbour_offset;
+                        let neighbour_position = position + neighbour_offset;
                         if let Some(neighbour_chunk) = self.get_chunk(neighbour_position) {
-                            let neighbour_chunk = neighbour_chunk.read().unwrap();
+                            let neighbour_chunk = neighbour_chunk.read();
 
                             let neighbour_particle = neighbour_chunk.get_particle(neighbour_position);
                             let neighbour_particle_state = neighbour_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
@@ -41,7 +37,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
                     }
 
                     if hpressure.length() > 1.0 {
-                        let position = particle.position.as_vec2() * PARTICLE_SIZE as f32 + PARTICLE_SIZE as f32 / 2.0;
+                        let position = position.as_vec2() * PARTICLE_SIZE as f32 + PARTICLE_SIZE as f32 / 2.0;
                         rigidbody.apply_impulse_at_point((hpressure * 0.03).into(), (position / PIXELS_PER_METER as f32).into(), true);
                     }
                 }
@@ -56,8 +52,8 @@ pub fn create_rigidbody<const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>(
     physics: &mut PhysicsContext,
     points: &mut FxHashSet<IVec2>,
 ) -> Option<RigidBodyHandle> {
-    let rigidbody = RigidBodyBuilder::dynamic().build();
     if let Some(collider) = self::create_collider::<PARTICLE_SIZE, PIXELS_PER_METER>(points) {
+        let rigidbody = RigidBodyBuilder::dynamic().build();
         let rigidbody_handle = physics.rigidbodies.insert(rigidbody);
         physics.colliders.insert_with_parent(collider, rigidbody_handle, &mut physics.rigidbodies);
 

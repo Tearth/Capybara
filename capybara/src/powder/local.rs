@@ -4,9 +4,9 @@ use super::chunk::ParticleData;
 use super::simulation::PowderSimulation;
 use glam::IVec2;
 use glam::Vec4;
+use parking_lot::RwLock;
+use parking_lot::RwLockWriteGuard;
 use std::sync::Arc;
-use std::sync::RwLock;
-use std::sync::RwLockWriteGuard;
 
 pub struct LocalChunksArcs<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> {
     pub chunks: Vec<Arc<RwLock<Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>>>,
@@ -45,11 +45,11 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
 impl<'a, const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>
     LocalChunksGuards<'a, CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>
 {
-    pub fn new(simulation: &'a LocalChunksArcs<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>) -> Self {
+    pub fn new(arcs: &'a LocalChunksArcs<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>) -> Self {
         let mut chunks = Vec::new();
 
-        for chunk in &simulation.chunks {
-            chunks.push(chunk.write().unwrap());
+        for chunk in &arcs.chunks {
+            chunks.push(chunk.write());
         }
 
         Self { chunks }

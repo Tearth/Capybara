@@ -42,6 +42,7 @@ pub use fastrand;
 pub use glam;
 pub use instant;
 pub use log;
+pub use parking_lot;
 pub use rustc_hash;
 
 #[cfg(feature = "audio")]

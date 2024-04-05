@@ -101,7 +101,7 @@ impl Scene<GlobalData> for MenuScene {
 
     fn ui(&mut self, mut state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
         let mut command = None;
-        let output = state.ui.inner.clone().read().unwrap().run(input, |context| {
+        let output = state.ui.inner.clone().read().run(input, |context| {
             TopBottomPanel::new(TopBottomSide::Top, Id::new("top_menu_panel"))
                 .exact_height(200.0)
                 .frame(Frame::none())

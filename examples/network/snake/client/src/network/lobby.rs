@@ -26,11 +26,11 @@ pub struct ServerData {
 
 impl LobbyNetworkContext {
     pub fn process(&mut self, now: Instant) {
-        if matches!(*self.hub_websocket.status.read().unwrap(), ConnectionStatus::Disconnected | ConnectionStatus::Error) {
+        if matches!(*self.hub_websocket.status.read(), ConnectionStatus::Disconnected | ConnectionStatus::Error) {
             self.hub_websocket.connect(HUB_ENDPOINT);
         }
 
-        if *self.hub_websocket.status.read().unwrap() == ConnectionStatus::Connected {
+        if *self.hub_websocket.status.read() == ConnectionStatus::Connected {
             if self.hub_websocket.has_connected() {
                 self.hub_websocket.send_packet(Packet::from_object(PACKET_PLAYER_NAME_REQUEST, &PacketPlayerNameRequest {}));
                 self.hub_websocket.send_packet(Packet::from_object(PACKET_SERVER_LIST_REQUEST, &PacketServerListRequest {}));
@@ -75,7 +75,7 @@ impl LobbyNetworkContext {
         if let Some(last_ping_timestamp) = self.last_ping_timestamp {
             if (now - last_ping_timestamp).as_millis() >= SERVER_PING_INTERVAL as u128 {
                 for server in &mut self.servers {
-                    if *server.websocket.status.read().unwrap() == ConnectionStatus::Connected {
+                    if *server.websocket.status.read() == ConnectionStatus::Connected {
                         server.websocket.send_ping();
                     } else {
                         info!("Server {} is disconnected, restarting connection", server.name);

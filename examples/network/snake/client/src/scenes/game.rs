@@ -109,7 +109,7 @@ impl Scene<GlobalData> for GameScene {
         self.debug_profiler.stop("input");
 
         let mut command = None;
-        let output = state.ui.inner.read().unwrap().run(input, |context| {
+        let output = state.ui.inner.read().run(input, |context| {
             let center = context.screen_rect().center();
 
             if self.exit_menu_visible {
@@ -147,7 +147,7 @@ impl Scene<GlobalData> for GameScene {
                 .resizable(false)
                 .show(context, |ui| {
                     ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
-                        let text = format!("{}, ping {} ms", self.network.server_name, self.network.server_websocket.ping.read().unwrap());
+                        let text = format!("{}, ping {} ms", self.network.server_name, self.network.server_websocket.ping.read());
 
                         ui.add_space(5.0);
                         ui.label(RichText::new(text).heading().color(Color32::from_rgb(255, 255, 255)));

@@ -50,12 +50,12 @@ pub struct InputHistory {
 
 impl GameNetworkContext {
     pub fn process(&mut self, now: Instant) {
-        if matches!(*self.server_websocket.status.read().unwrap(), ConnectionStatus::Disconnected | ConnectionStatus::Error) {
+        if matches!(*self.server_websocket.status.read(), ConnectionStatus::Disconnected | ConnectionStatus::Error) {
             info!("Server {} is disconnected, restarting connection", self.server_name);
             self.server_websocket.connect(&self.server_endpoint);
         }
 
-        if *self.server_websocket.status.read().unwrap() == ConnectionStatus::Connected {
+        if *self.server_websocket.status.read() == ConnectionStatus::Connected {
             if self.server_websocket.has_connected() {
                 info!("Connected to the server");
 
@@ -138,7 +138,7 @@ impl GameNetworkContext {
 
         if let Some(last_ping_timestamp) = self.last_ping_timestamp {
             if (now - last_ping_timestamp).as_millis() >= SERVER_PING_INTERVAL as u128 {
-                if *self.server_websocket.status.read().unwrap() == ConnectionStatus::Connected {
+                if *self.server_websocket.status.read() == ConnectionStatus::Connected {
                     self.server_websocket.send_ping();
                 }
 

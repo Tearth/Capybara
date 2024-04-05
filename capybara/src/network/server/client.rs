@@ -10,9 +10,9 @@ use instant::Instant;
 use instant::SystemTime;
 use log::error;
 use log::info;
+use parking_lot::RwLock;
 use std::net::SocketAddr;
 use std::sync::Arc;
-use std::sync::RwLock;
 use tokio::net::TcpStream;
 use tokio::select;
 use tokio_tungstenite::tungstenite::Message;
@@ -92,7 +92,7 @@ impl WebSocketConnectedClient {
                                         Err(err) => error_continue!("Failed to obtain current time ({})", err),
                                     };
 
-                                    *ping.write().unwrap() = (now - timestamp) as u32;
+                                    *ping.write() = (now - timestamp) as u32;
                                 }
                                 _ => {
                                     if let Err(err) = packet_event.unbounded_send((id, packet)) {

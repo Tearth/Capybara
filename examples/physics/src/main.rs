@@ -191,15 +191,15 @@ impl Scene<GlobalData> for MainScene {
     }
 
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
-        let output = state.ui.inner.read().unwrap().run(input, |context| {
+        let output = state.ui.inner.read().run(input, |context| {
             SidePanel::new(Side::Left, Id::new("side_panel")).exact_width(120.0).resizable(false).show(context, |ui| {
                 if self.initialized {
                     let font = FontId { size: 24.0, family: FontFamily::Monospace };
                     let color = Color32::from_rgb(255, 255, 255);
                     let label = format!("FPS: {}", state.renderer.fps);
 
-                    let collisions = state.physics.events.collisions.read().unwrap();
-                    let contacts = state.physics.events.contacts.read().unwrap();
+                    let collisions = state.physics.events.collisions.read();
+                    let contacts = state.physics.events.contacts.read();
 
                     ui.label(RichText::new(label).font(font.clone()).heading().color(color));
 

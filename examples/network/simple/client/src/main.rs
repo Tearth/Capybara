@@ -71,7 +71,7 @@ impl Scene<GlobalData> for MainScene {
 
     fn input(&mut self, state: ApplicationState<GlobalData>, event: InputEvent) -> Result<()> {
         if let InputEvent::WindowSizeChange { size } = event {
-            if *self.client.status.read().unwrap() == ConnectionStatus::Connected {
+            if *self.client.status.read() == ConnectionStatus::Connected {
                 self.client.send_packet(Packet::from_object(PACKET_SET_VIEWPORT, &PacketSetViewport { size: size.as_vec2() }));
             }
         } else if let InputEvent::KeyPress { key: Key::Escape, repeat: _, modifiers: _ } = event {
@@ -102,7 +102,7 @@ impl Scene<GlobalData> for MainScene {
 
         let now = Instant::now();
 
-        if *self.client.status.read().unwrap() == ConnectionStatus::Connected {
+        if *self.client.status.read() == ConnectionStatus::Connected {
             if self.client.has_connected() {
                 let size = state.renderer.viewport_size;
                 self.client.send_packet(Packet::from_object(PACKET_SET_VIEWPORT, &PacketSetViewport { size }));
@@ -166,7 +166,7 @@ impl Scene<GlobalData> for MainScene {
     }
 
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
-        let output = state.ui.inner.read().unwrap().run(input, |context| {
+        let output = state.ui.inner.read().run(input, |context| {
             SidePanel::new(Side::Left, Id::new("side_panel")).exact_width(160.0).resizable(false).show(context, |ui| {
                 if self.initialized {
                     let font = FontId { size: 24.0, family: FontFamily::Monospace };
@@ -179,7 +179,7 @@ impl Scene<GlobalData> for MainScene {
                     let label = format!("Delta: {:.2}", delta_average * 1000.0);
                     ui.label(RichText::new(label).font(font.clone()).heading().color(color));
 
-                    let label = format!("Ping: {} ms", *self.client.ping.read().unwrap());
+                    let label = format!("Ping: {} ms", *self.client.ping.read());
                     ui.label(RichText::new(label).font(font.clone()).heading().color(color));
 
                     let tick_average = self.tick_history.iter().sum::<f32>() / self.tick_history.len() as f32;
@@ -192,7 +192,7 @@ impl Scene<GlobalData> for MainScene {
                     ui.add_space(10.0);
                     ui.label(RichText::new("Objects count:").font(font.clone()).heading().color(color));
                     if ui.add(Slider::new(&mut self.objects_count, 0..=10000).text_color(color).logarithmic(true)).changed() {
-                        if *self.client.status.read().unwrap() == ConnectionStatus::Connected {
+                        if *self.client.status.read() == ConnectionStatus::Connected {
                             self.client.send_packet(Packet::from_object(PACKET_SET_COUNT, &PacketSetCount { count: self.objects_count }));
                         }
                     }

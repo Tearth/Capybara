@@ -40,9 +40,9 @@ use glow::HasContext;
 use instant::Instant;
 use log::error;
 use log::info;
+use parking_lot::RwLock;
 use rustc_hash::FxHashMap;
 use std::sync::Arc;
-use std::sync::RwLock;
 
 pub struct UiContext {
     pub inner: Arc<RwLock<egui::Context>>,
@@ -100,7 +100,7 @@ impl UiContext {
                 }
             }
 
-            let handle = self.inner.write().unwrap().load_texture(raw.name.clone(), image, TextureOptions::default());
+            let handle = self.inner.write().load_texture(raw.name.clone(), image, TextureOptions::default());
             self.handles.insert(raw.name.clone(), handle);
         }
 
@@ -123,7 +123,7 @@ impl UiContext {
             fonts.families.insert(family, vec![font.name.clone()]);
         }
 
-        self.inner.write().unwrap().set_fonts(fonts);
+        self.inner.write().set_fonts(fonts);
     }
 
     pub fn collect_event(&mut self, event: &InputEvent) {
@@ -261,7 +261,7 @@ impl UiContext {
             };
         }
 
-        for mesh in self.inner.read().unwrap().tessellate(output.shapes, 1.0) {
+        for mesh in self.inner.read().tessellate(output.shapes, 1.0) {
             if let Primitive::Mesh(data) = mesh.primitive {
                 let mut vertices = Vec::default();
                 for vertex in data.vertices {

@@ -31,7 +31,7 @@ impl WorkersManager {
     pub fn send_pings(&mut self) {
         for worker in &mut self.workers {
             if worker.definition.enabled {
-                if *worker.websocket.status.read().unwrap() != ConnectionStatus::Connected {
+                if *worker.websocket.status.read() != ConnectionStatus::Connected {
                     error!("Worker {} is disconnected, restarting connection", worker.definition.name);
 
                     worker.websocket = WebSocketClient::default();

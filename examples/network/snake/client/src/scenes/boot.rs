@@ -37,7 +37,7 @@ impl Scene<GlobalData> for BootScene {
         if state.global.assets.load("./data/boot.zip") == AssetsLoadingStatus::Finished {
             state.ui.instantiate_assets(&state.global.assets, None);
 
-            let mut style = (*state.ui.inner.read().unwrap().style()).clone();
+            let mut style = (*state.ui.inner.read().style()).clone();
             style.text_styles = [
                 (TextStyle::Heading, (FontId { size: 32.0, family: FontFamily::Name("Kenney Pixel".into()) })),
                 (TextStyle::Body, (FontId { size: 20.0, family: FontFamily::Name("Kenney Pixel".into()) })),
@@ -46,7 +46,7 @@ impl Scene<GlobalData> for BootScene {
             ]
             .into();
             style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(1.0, Color32::from_rgb(30, 50, 20));
-            state.ui.inner.read().unwrap().set_style(style);
+            state.ui.inner.read().set_style(style);
 
             return Ok(Some(FrameCommand::ChangeScene { name: "LoadingScene".to_string() }));
         }
@@ -55,7 +55,7 @@ impl Scene<GlobalData> for BootScene {
     }
 
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
-        Ok((state.ui.inner.read().unwrap().run(input, |_| {}), None))
+        Ok((state.ui.inner.read().run(input, |_| {}), None))
     }
 
     fn reset(&self) -> Box<dyn Scene<GlobalData>> {

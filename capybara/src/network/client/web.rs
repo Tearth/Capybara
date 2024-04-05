@@ -5,10 +5,10 @@ use instant::SystemTime;
 use js_sys::Uint8Array;
 use log::error;
 use log::info;
+use parking_lot::RwLock;
 use std::collections::VecDeque;
 use std::rc::Rc;
 use std::sync::Arc;
-use std::sync::RwLock;
 use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsCast;
 use web_sys::BinaryType;
@@ -48,7 +48,7 @@ impl WebSocketClient {
 
     pub fn connect(&mut self, url: &str) {
         info!("Connecting to {}", url);
-        *self.status.write().unwrap() = ConnectionStatus::Connecting;
+        *self.status.write() = ConnectionStatus::Connecting;
 
         let websocket = match WebSocket::new(url) {
             Ok(websocket) => websocket,
@@ -68,7 +68,7 @@ impl WebSocketClient {
         let status = self.status.clone();
         self.onopen_callback = Closure::<dyn FnMut()>::new(move || {
             info!("Connection established");
-            *status.write().unwrap() = ConnectionStatus::Connected;
+            *status.write() = ConnectionStatus::Connected;
         });
 
         match &self.websocket {
@@ -84,7 +84,7 @@ impl WebSocketClient {
         let status = self.status.clone();
         self.onclose_callback = Closure::<dyn FnMut()>::new(move || {
             info!("Connection closed");
-            *status.write().unwrap() = ConnectionStatus::Disconnected;
+            *status.write() = ConnectionStatus::Disconnected;
         });
 
         match &self.websocket {
@@ -126,10 +126,10 @@ impl WebSocketClient {
                             Err(_) => error_return!("Failed to obtain current time"),
                         };
 
-                        *ping.write().unwrap() = (now - timestamp) as u32;
+                        *ping.write() = (now - timestamp) as u32;
                     }
                     _ => {
-                        received_packets.write().unwrap().push_back(packet);
+                        received_packets.write().push_back(packet);
                     }
                 }
             }
@@ -190,11 +190,11 @@ impl WebSocketClient {
     }
 
     pub fn poll_packet(&mut self) -> Option<Packet> {
-        self.received_packets.write().unwrap().pop_front()
+        self.received_packets.write().pop_front()
     }
 
     pub fn has_connected(&mut self) -> bool {
-        let status = *self.status.read().unwrap();
+        let status = *self.status.read();
         let has_connected = self.status_last_state != status && status == ConnectionStatus::Connected;
         self.status_last_state = status;
 
@@ -202,7 +202,7 @@ impl WebSocketClient {
     }
 
     pub fn has_disconnected(&mut self) -> bool {
-        let status = *self.status.read().unwrap();
+        let status = *self.status.read();
         let has_disconnected = self.status_last_state != status && status == ConnectionStatus::Disconnected;
         self.status_last_state = status;
 

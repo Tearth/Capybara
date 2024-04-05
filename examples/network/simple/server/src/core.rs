@@ -6,11 +6,11 @@ use capybara::network::packet::Packet;
 use capybara::network::server::client::WebSocketConnectedClient;
 use capybara::network::server::client::WebSocketConnectedClientSlim;
 use capybara::network::server::listener::WebSocketListener;
+use capybara::parking_lot::RwLock;
 use futures_channel::mpsc;
 use futures_util::StreamExt;
 use simple_base::*;
 use std::sync::Arc;
-use std::sync::RwLock;
 use std::time::Duration;
 use tokio::select;
 use tokio::time;
@@ -51,28 +51,28 @@ impl Core {
                     error_continue!("Failed to run client runtime ({})", err);
                 }
 
-                room.write().unwrap().initialize_client(client.to_slim());
-                clients.write().unwrap().insert(client.id, client);
+                room.write().initialize_client(client.to_slim());
+                clients.write().insert(client.id, client);
             }
         };
         let read_frames = async {
             while let Some((id, frame)) = packet_event_rx.next().await {
-                queue.write().unwrap().push(QueuePacket::new(id, frame));
+                queue.write().push(QueuePacket::new(id, frame));
             }
         };
         let process_disconnection = async {
             while let Some(id) = disconnection_event_rx.next().await {
-                clients.write().unwrap().remove(&id);
+                clients.write().remove(&id);
             }
         };
         let tick = async {
             let mut interval = time::interval(Duration::from_millis(TICK));
             loop {
-                let clients = clients.read().unwrap().iter().map(|p| (p.1.to_slim())).collect::<Vec<WebSocketConnectedClientSlim>>();
-                let packets = queue.write().unwrap().clone();
+                let clients = clients.read().iter().map(|p| (p.1.to_slim())).collect::<Vec<WebSocketConnectedClientSlim>>();
+                let packets = queue.write().clone();
 
-                queue.write().unwrap().clear();
-                room.write().unwrap().tick(clients, packets);
+                queue.write().clear();
+                room.write().tick(clients, packets);
 
                 interval.tick().await;
             }

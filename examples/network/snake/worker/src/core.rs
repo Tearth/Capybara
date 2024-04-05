@@ -9,6 +9,7 @@ use capybara::instant::Instant;
 use capybara::network::packet::Packet;
 use capybara::network::server::client::WebSocketConnectedClient;
 use capybara::network::server::listener::WebSocketListener;
+use capybara::parking_lot::RwLock;
 use chrono::SecondsFormat;
 use chrono::Utc;
 use futures_channel::mpsc;
@@ -20,7 +21,6 @@ use std::collections::VecDeque;
 use std::fs;
 use std::panic;
 use std::sync::Arc;
-use std::sync::RwLock;
 use std::time::Duration;
 use tokio::io::AsyncReadExt;
 use tokio::join;
@@ -72,11 +72,11 @@ impl Core {
         let rooms = self.rooms.clone();
         let config = self.config.clone();
 
-        let endpoint = config.read().unwrap().data.endpoint.clone();
+        let endpoint = config.read().data.endpoint.clone();
         let listen = listener.listen(&endpoint, listener_tx);
 
         // Only one server in the template
-        rooms.write().unwrap().push(Arc::default());
+        rooms.write().push(Arc::default());
 
         let accept_clients = async {
             while let Some(mut client) = listener_rx.next().await {
@@ -84,46 +84,46 @@ impl Core {
                     error_continue!("Failed to run client runtime ({})", err);
                 }
 
-                clients.write().unwrap().insert(client.id, client);
+                clients.write().insert(client.id, client);
             }
         };
         let read_frames = async {
             while let Some((id, frame)) = packet_event_rx.next().await {
                 match frame.get_id() {
                     Some(PACKET_SERVER_TIME_REQUEST) => {
-                        if let Some(client) = clients.read().unwrap().get(&id) {
+                        if let Some(client) = clients.read().get(&id) {
                             client.send_packet(Packet::from_object(PACKET_SERVER_TIME_RESPONSE, &PacketServerTimeResponse { time: Instant::now() }));
                         } else {
                             error_continue!("Cannot reply with server time, client {} does not exists", id);
                         }
                     }
                     Some(PACKET_JOIN_ROOM_REQUEST) => {
-                        if let Some(client) = clients.read().unwrap().get(&id) {
-                            rooms.write().unwrap()[0].write().unwrap().add_player(client.id);
+                        if let Some(client) = clients.read().get(&id) {
+                            rooms.write()[0].write().add_player(client.id);
                             client.send_packet(Packet::from_object(
                                 PACKET_JOIN_ROOM_RESPONSE,
-                                &PacketJoinRoomResponse { player_id: id, tick: config.read().unwrap().data.worker_tick },
+                                &PacketJoinRoomResponse { player_id: id, tick: config.read().data.worker_tick },
                             ));
                         } else {
                             error_continue!("Cannot reply for room join request, client {} does not exists", id);
                         }
                     }
                     Some(_) => {
-                        queue_incoming.write().unwrap().push(QueuePacket::new(id, frame));
+                        queue_incoming.write().push(QueuePacket::new(id, frame));
                     }
                     None => error_continue!("Invalid frame ID ({:?})", frame.get_id()),
                 }
             }
         };
         let process_clients = async {
-            let client_ping_interval = config.read().unwrap().data.client_ping_interval;
+            let client_ping_interval = config.read().data.client_ping_interval;
             let mut interval = time::interval(Duration::from_millis(client_ping_interval as u64));
 
             loop {
-                for client in clients.read().unwrap().iter() {
+                for client in clients.read().iter() {
                     client.1.send_ping();
 
-                    let client_ping_interval = config.read().unwrap().data.client_ping_interval;
+                    let client_ping_interval = config.read().data.client_ping_interval;
                     if interval.period().as_millis() != client_ping_interval as u128 {
                         interval = time::interval(Duration::from_millis(client_ping_interval as u64));
                         info!("Client ping interval changed to {} ms", client_ping_interval);
@@ -135,8 +135,8 @@ impl Core {
         };
         let process_disconnection = async {
             while let Some(id) = disconnection_event_rx.next().await {
-                rooms.write().unwrap()[0].write().unwrap().remove_player(id);
-                clients.write().unwrap().remove(&id);
+                rooms.write()[0].write().remove_player(id);
+                clients.write().remove(&id);
             }
         };
         let process_terminal = async {
@@ -158,7 +158,7 @@ impl Core {
             }
         };
         let tick = async {
-            let worker_tick = config.read().unwrap().data.worker_tick;
+            let worker_tick = config.read().data.worker_tick;
             let mut interval = time::interval(Duration::from_millis(worker_tick as u64));
 
             loop {
@@ -167,25 +167,25 @@ impl Core {
                 let mut packets_to_remove = VecDeque::default();
                 let mut handles = Vec::default();
 
-                let worker_tick = config.read().unwrap().data.worker_tick;
-                let delay_base = config.read().unwrap().data.packet_delay_base as i32;
-                let delay_variation = config.read().unwrap().data.packet_delay_variation as i32;
+                let worker_tick = config.read().data.worker_tick;
+                let delay_base = config.read().data.packet_delay_base as i32;
+                let delay_variation = config.read().data.packet_delay_variation as i32;
 
                 // Prepare a list of packets ready to process (if delay_base + variation = 0 then take everything from the queue)
-                for (index, queue_packet) in queue_incoming.read().unwrap().iter().enumerate() {
+                for (index, queue_packet) in queue_incoming.read().iter().enumerate() {
                     let variation = fastrand::i32(-delay_variation..=delay_variation);
                     if queue_packet.timestamp + Duration::from_millis((delay_base + variation) as u64) <= now {
-                        packets.write().unwrap().push(queue_packet.clone());
+                        packets.write().push(queue_packet.clone());
                         packets_to_remove.push_front(index);
                     }
                 }
 
                 // Remove processed packets from the queue
                 while let Some(index) = packets_to_remove.pop_front() {
-                    queue_incoming.write().unwrap().remove(index);
+                    queue_incoming.write().remove(index);
                 }
 
-                for room in rooms.write().unwrap().iter_mut() {
+                for room in rooms.write().iter_mut() {
                     let room = room.clone();
                     let packets = packets.clone();
                     let clients = clients.clone();
@@ -193,18 +193,18 @@ impl Core {
                     let config = config.clone();
 
                     handles.push(tokio::spawn(async move {
-                        let packets = room.write().unwrap().tick(&packets.read().unwrap(), &config.read().unwrap());
+                        let packets = room.write().tick(&packets.read(), &config.read());
 
                         if delay_base == 0 && delay_variation == 0 {
                             for packet in packets {
-                                if let Some(client) = clients.read().unwrap().get(&packet.client_id) {
+                                if let Some(client) = clients.read().get(&packet.client_id) {
                                     client.send_packet(packet.inner.clone());
                                 } else {
                                     error_continue!("Cannot send the frame, client {} does not exists", packet.client_id);
                                 }
                             }
                         } else {
-                            queue_outgoing.write().unwrap().extend_from_slice(&packets);
+                            queue_outgoing.write().extend_from_slice(&packets);
                         }
                     }));
                 }
@@ -216,10 +216,10 @@ impl Core {
                 }
 
                 // Send packets (if delay_base + variation = 0 then take everything from the queue)
-                for (index, queue_packet) in queue_outgoing.read().unwrap().iter().enumerate() {
+                for (index, queue_packet) in queue_outgoing.read().iter().enumerate() {
                     let variation = fastrand::i32(-delay_variation..=delay_variation);
                     if queue_packet.timestamp + Duration::from_millis((delay_base + variation) as u64) <= now {
-                        if let Some(client) = clients.read().unwrap().get(&queue_packet.client_id) {
+                        if let Some(client) = clients.read().get(&queue_packet.client_id) {
                             client.send_packet(queue_packet.inner.clone());
                         } else {
                             error!("Cannot send the frame, client {} does not exists", queue_packet.client_id);
@@ -231,11 +231,11 @@ impl Core {
 
                 // Remove sent packets from the queue
                 for index in &packets_to_remove {
-                    queue_outgoing.write().unwrap().remove(*index);
+                    queue_outgoing.write().remove(*index);
                 }
 
                 if interval.period().as_millis() != worker_tick as u128 {
-                    for client in clients.read().unwrap().values() {
+                    for client in clients.read().values() {
                         client.send_packet(Packet::from_object(PACKET_SET_TICK_INTERVAL, &PacketSetTickInterval { tick: worker_tick }));
                     }
 

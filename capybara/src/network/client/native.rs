@@ -7,9 +7,9 @@ use futures_channel::mpsc::UnboundedSender;
 use futures_util::StreamExt;
 use instant::SystemTime;
 use log::info;
+use parking_lot::RwLock;
 use std::collections::VecDeque;
 use std::sync::Arc;
-use std::sync::RwLock;
 use std::thread;
 use tokio::runtime::Runtime;
 use tokio_tungstenite::tungstenite::Message;
@@ -34,7 +34,7 @@ impl WebSocketClient {
         let status = self.status.clone();
         let ping = self.ping.clone();
 
-        *status.write().unwrap() = ConnectionStatus::Connecting;
+        *status.write() = ConnectionStatus::Connecting;
 
         let received_packets = self.received_packets.clone();
         let (outgoing_packets_tx, mut outgoing_packets_rx) = mpsc::unbounded();
@@ -51,7 +51,7 @@ impl WebSocketClient {
             let runtime = match Runtime::new() {
                 Ok(runtime) => runtime,
                 Err(err) => {
-                    *status.write().unwrap() = ConnectionStatus::Error;
+                    *status.write() = ConnectionStatus::Error;
                     error_return!("Failed to create network runtime ({})", err);
                 }
             };
@@ -62,7 +62,7 @@ impl WebSocketClient {
                 let url = match Url::parse(&url) {
                     Ok(url) => url,
                     Err(err) => {
-                        *status.write().unwrap() = ConnectionStatus::Error;
+                        *status.write() = ConnectionStatus::Error;
                         error_return!("Failed to parse server URL ({})", err)
                     }
                 };
@@ -70,7 +70,7 @@ impl WebSocketClient {
                 let websocket = match tokio_tungstenite::connect_async(url).await {
                     Ok((websocket, _)) => websocket,
                     Err(err) => {
-                        *status.write().unwrap() = ConnectionStatus::Error;
+                        *status.write() = ConnectionStatus::Error;
                         error_return!("Failed to establish connection with the server ({})", err)
                     }
                 };
@@ -98,10 +98,10 @@ impl WebSocketClient {
                                         Err(err) => error_continue!("Failed to obtain current time ({})", err),
                                     };
 
-                                    *ping.write().unwrap() = (now - timestamp) as u32;
+                                    *ping.write() = (now - timestamp) as u32;
                                 }
                                 _ => {
-                                    received_packets.write().unwrap().push_back(packet);
+                                    received_packets.write().push_back(packet);
                                 }
                             }
                         }
@@ -117,7 +117,7 @@ impl WebSocketClient {
                 };
                 let process_disconnection = disconnection_rx.next();
 
-                *status.write().unwrap() = ConnectionStatus::Connected;
+                *status.write() = ConnectionStatus::Connected;
 
                 tokio::select! {
                     _ = websocket_rx_to_sink => (),
@@ -126,7 +126,7 @@ impl WebSocketClient {
                     _ = process_disconnection => ()
                 };
 
-                *status.write().unwrap() = ConnectionStatus::Disconnected;
+                *status.write() = ConnectionStatus::Disconnected;
             });
 
             info!("Connection closed, network runtime completed");
@@ -165,11 +165,11 @@ impl WebSocketClient {
     }
 
     pub fn poll_packet(&mut self) -> Option<Packet> {
-        self.received_packets.write().unwrap().pop_front()
+        self.received_packets.write().pop_front()
     }
 
     pub fn has_connected(&mut self) -> bool {
-        let connected = *self.status.read().unwrap();
+        let connected = *self.status.read();
         let has_connected = self.connected_last_state != connected && connected == ConnectionStatus::Connected;
         self.connected_last_state = connected;
 
@@ -177,7 +177,7 @@ impl WebSocketClient {
     }
 
     pub fn has_disconnected(&mut self) -> bool {
-        let connected = *self.status.read().unwrap();
+        let connected = *self.status.read();
         let has_disconnected = self.connected_last_state != connected && connected == ConnectionStatus::Disconnected;
         self.connected_last_state = connected;
 

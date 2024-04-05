@@ -80,7 +80,7 @@ impl Scene<GlobalData> for GameScene {
         self.debug_profiler.start("frame");
 
         if self.debug_enabled {
-            self.debug_collector.collect(&state.window, &state.renderer, delta);
+            self.debug_collector.collect(state.window, state.renderer, delta);
             self.process_console();
         }
         self.debug_profiler.stop("frame");
@@ -93,7 +93,7 @@ impl Scene<GlobalData> for GameScene {
         self.debug_profiler.stop("input");
 
         let mut command = None;
-        let output = state.ui.inner.read().unwrap().run(input, |context| {
+        let output = state.ui.inner.read().run(input, |context| {
             let center = context.screen_rect().center();
 
             if self.exit_menu_visible {

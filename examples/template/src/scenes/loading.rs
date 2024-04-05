@@ -77,7 +77,7 @@ impl Scene<GlobalData> for LoadingScene {
     }
 
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
-        let output = state.ui.inner.read().unwrap().run(input, |context| {
+        let output = state.ui.inner.read().run(input, |context| {
             let center = context.screen_rect().center();
             Window::new("Loading")
                 .frame(Frame::none())

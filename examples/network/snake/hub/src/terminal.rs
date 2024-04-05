@@ -29,7 +29,7 @@ fn process_config(tokens: &[&str], core: &mut Core) {
 
 fn process_config_show(_tokens: &[&str], core: &Core) {
     let mut data = Vec::default();
-    let config = core.config.read().unwrap();
+    let config = core.config.read();
 
     data.push(format!(" - endpoint: {}", config.data.endpoint));
     data.push(format!(" - lobby tick: {} ms", config.data.lobby_tick));
@@ -38,7 +38,7 @@ fn process_config_show(_tokens: &[&str], core: &Core) {
     data.push(format!(" - packet delay variation: {} ms", config.data.packet_delay_variation));
     data.push(" - workers:".to_string());
 
-    for worker in &core.config.read().unwrap().data.workers {
+    for worker in &core.config.read().data.workers {
         data.push(format!(
             "   - {} {} ({}), {}, {}",
             worker.id,
@@ -57,7 +57,7 @@ fn process_config_show(_tokens: &[&str], core: &Core) {
 
 fn process_config_reload(_tokens: &[&str], core: &mut Core) {
     println!("Reloading configuration file");
-    core.config.write().unwrap().reload();
+    core.config.write().reload();
     println!("Configuration reloaded");
 }
 
@@ -75,12 +75,12 @@ fn process_clients(tokens: &[&str], core: &Core) {
 
 fn process_clients_list(_tokens: &[&str], core: &Core) {
     let mut data = Vec::default();
-    let clients = core.clients.read().unwrap();
+    let clients = core.clients.read();
 
     for client in clients.iter() {
         let id = client.1.id;
         let address = client.1.address;
-        let ping = client.1.ping.read().unwrap();
+        let ping = client.1.ping.read();
         let online_time = (Instant::now() - client.1.join_time).as_secs() / 60;
 
         data.push(format!("{}, {}, ping {}, online {} minutes", id, address, ping, online_time));
@@ -115,12 +115,12 @@ fn process_workers(tokens: &[&str], core: &Core) {
 
 fn process_workers_status(_tokens: &[&str], core: &Core) {
     let mut output = Vec::default();
-    let manager = core.workers.read().unwrap();
+    let manager = core.workers.read();
 
     for worker in &manager.workers {
         let enabled = if worker.definition.enabled { "enabled" } else { "disabled" };
-        if *worker.websocket.status.read().unwrap() == ConnectionStatus::Connected {
-            let ping = *worker.websocket.ping.read().unwrap();
+        if *worker.websocket.status.read() == ConnectionStatus::Connected {
+            let ping = *worker.websocket.ping.read();
             output.push(format!(
                 "{}, {} ({}) - {}, connected, ping {} ms",
                 worker.definition.id, worker.definition.name, worker.definition.flag, enabled, ping

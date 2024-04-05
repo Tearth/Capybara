@@ -27,7 +27,7 @@ impl Lobby {
                     let mut data = Vec::default();
 
                     for worker in workers {
-                        if worker.definition.enabled && *worker.websocket.status.read().unwrap() == ConnectionStatus::Connected {
+                        if worker.definition.enabled && *worker.websocket.status.read() == ConnectionStatus::Connected {
                             data.push(PacketServerListResponse {
                                 name: worker.definition.name.as_bytes_array(),
                                 flag: worker.definition.flag.as_bytes_array(),

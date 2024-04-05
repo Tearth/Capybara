@@ -116,7 +116,7 @@ impl Scene<GlobalData> for MainScene {
     }
 
     fn ui(&mut self, state: ApplicationState<GlobalData>, input: RawInput) -> Result<(FullOutput, Option<FrameCommand>)> {
-        let output = state.ui.inner.read().unwrap().run(input, |context| {
+        let output = state.ui.inner.read().run(input, |context| {
             SidePanel::new(Side::Left, Id::new("side_panel")).resizable(false).show(context, |ui| {
                 if self.initialized {
                     let font = FontId { size: 24.0, family: FontFamily::Monospace };

@@ -10,6 +10,7 @@ use capybara::instant::Instant;
 use capybara::network::packet::Packet;
 use capybara::network::server::client::WebSocketConnectedClient;
 use capybara::network::server::listener::WebSocketListener;
+use capybara::parking_lot::RwLock;
 use chrono::SecondsFormat;
 use chrono::Utc;
 use futures_channel::mpsc;
@@ -18,7 +19,6 @@ use log::info;
 use std::collections::VecDeque;
 use std::fs;
 use std::sync::Arc;
-use std::sync::RwLock;
 use std::time::Duration;
 use tokio::io::AsyncReadExt;
 use tokio::select;
@@ -72,7 +72,7 @@ impl Core {
         let workers = self.workers.clone();
         let config = self.config.clone();
 
-        let endpoint = config.read().unwrap().data.endpoint.clone();
+        let endpoint = config.read().data.endpoint.clone();
         let listen = listener.listen(&endpoint, listener_tx);
 
         let accept_clients = async {
@@ -81,32 +81,32 @@ impl Core {
                     error_continue!("Failed to run client runtime ({})", err);
                 }
 
-                clients.write().unwrap().insert(client.id, client);
+                clients.write().insert(client.id, client);
             }
         };
         let read_frames = async {
             while let Some((id, frame)) = packet_event_rx.next().await {
-                queue_incoming.write().unwrap().push(QueuePacket::new(id, frame));
+                queue_incoming.write().push(QueuePacket::new(id, frame));
             }
         };
         let process_disconnection = async {
             while let Some(id) = disconnection_event_rx.next().await {
-                clients.write().unwrap().remove(&id);
+                clients.write().remove(&id);
             }
         };
         let process_workers = async {
-            let worker_status_interval = config.read().unwrap().data.worker_status_interval;
+            let worker_status_interval = config.read().data.worker_status_interval;
             let mut interval = time::interval(Duration::from_millis(worker_status_interval as u64));
 
             loop {
-                let worker_statu_interval = config.read().unwrap().data.worker_status_interval;
+                let worker_statu_interval = config.read().data.worker_status_interval;
 
                 if interval.period().as_millis() != worker_statu_interval as u128 {
                     interval = time::interval(Duration::from_millis(worker_statu_interval as u64));
                     info!("Worker status interval changed to {} ms", worker_statu_interval);
                 }
 
-                workers.write().unwrap().send_pings();
+                workers.write().send_pings();
                 interval.tick().await;
             }
         };
@@ -129,7 +129,7 @@ impl Core {
             }
         };
         let tick = async {
-            let lobby_tick = config.read().unwrap().data.lobby_tick;
+            let lobby_tick = config.read().data.lobby_tick;
             let mut interval = time::interval(Duration::from_millis(lobby_tick as u64));
 
             loop {
@@ -137,12 +137,12 @@ impl Core {
                 let mut packets = Vec::default();
                 let mut packets_to_remove = VecDeque::default();
 
-                let lobby_tick = config.read().unwrap().data.lobby_tick;
-                let delay_base = config.read().unwrap().data.packet_delay_base as i32;
-                let delay_variation = config.read().unwrap().data.packet_delay_variation as i32;
+                let lobby_tick = config.read().data.lobby_tick;
+                let delay_base = config.read().data.packet_delay_base as i32;
+                let delay_variation = config.read().data.packet_delay_variation as i32;
 
                 // Prepare a list of packets ready to process (if delay_base + variation = 0 then take everything from the queue)
-                for (index, queue_packet) in queue_incoming.read().unwrap().iter().enumerate() {
+                for (index, queue_packet) in queue_incoming.read().iter().enumerate() {
                     let variation = fastrand::i32(-delay_variation..=delay_variation);
                     if queue_packet.timestamp + Duration::from_millis((delay_base + variation) as u64) <= now {
                         packets.push(queue_packet.clone());
@@ -152,17 +152,17 @@ impl Core {
 
                 // Remove processed packets from the queue
                 while let Some(index) = packets_to_remove.pop_front() {
-                    queue_incoming.write().unwrap().remove(index);
+                    queue_incoming.write().remove(index);
                 }
 
-                let outgoing_packets = lobby.write().unwrap().tick(&workers.read().unwrap().workers, &packets);
-                queue_outgoing.write().unwrap().extend_from_slice(&outgoing_packets);
+                let outgoing_packets = lobby.write().tick(&workers.read().workers, &packets);
+                queue_outgoing.write().extend_from_slice(&outgoing_packets);
 
                 // Send packets (if delay_base + variation = 0 then take everything from the queue)
-                for (index, queue_packet) in queue_outgoing.read().unwrap().iter().enumerate() {
+                for (index, queue_packet) in queue_outgoing.read().iter().enumerate() {
                     let variation = fastrand::i32(-delay_variation..=delay_variation);
                     if queue_packet.timestamp + Duration::from_millis((delay_base + variation) as u64) <= now {
-                        if let Some(client) = clients.read().unwrap().get(&queue_packet.client_id) {
+                        if let Some(client) = clients.read().get(&queue_packet.client_id) {
                             client.send_packet(queue_packet.inner.clone());
                         }
 
@@ -172,7 +172,7 @@ impl Core {
 
                 // Remove sent packets from the queue
                 for index in &packets_to_remove {
-                    queue_outgoing.write().unwrap().remove(*index);
+                    queue_outgoing.write().remove(*index);
                 }
 
                 if interval.period().as_millis() != lobby_tick as u128 {

@@ -178,7 +178,7 @@ impl Scene<GlobalData> for MainScene {
         if !self.initialized && state.global.assets.load("./data/data0.zip") == AssetsLoadingStatus::Finished {
             state.ui.instantiate_assets(&state.global.assets, None);
 
-            let mut style = (*state.ui.inner.read().unwrap().style()).clone();
+            let mut style = (*state.ui.inner.read().style()).clone();
             style.text_styles = [
                 (TextStyle::Heading, (FontId { size: 32.0, family: FontFamily::Monospace })),
                 (TextStyle::Body, (FontId { size: 20.0, family: FontFamily::Monospace })),
@@ -187,7 +187,7 @@ impl Scene<GlobalData> for MainScene {
             ]
             .into();
             style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(1.0, Color32::from_rgb(240, 240, 240));
-            state.ui.inner.read().unwrap().set_style(style);
+            state.ui.inner.read().set_style(style);
 
             self.initialized = true;
         }
@@ -225,7 +225,7 @@ impl Scene<GlobalData> for MainScene {
         self.debug_profiler.stop("input");
 
         let output =
-            state.ui.inner.read().unwrap().run(input, |context| {
+            state.ui.inner.read().run(input, |context| {
                 if self.debug_enabled {
                     self.debug_window.show(context, &mut self.debug_console, &self.debug_profiler, &mut self.debug_collector);
                 }

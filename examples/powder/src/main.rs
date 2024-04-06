@@ -27,6 +27,7 @@ use capybara::parking_lot::RwLock;
 use capybara::powder::chunk::ParticleState;
 use capybara::powder::simulation::PowderSimulation;
 use capybara::powder::ParticleDefinition;
+use capybara::rustc_hash::FxHashMap;
 use capybara::rustc_hash::FxHashSet;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
@@ -77,19 +78,34 @@ impl Scene<GlobalData> for MainScene {
                 density: 3.0,
                 ..Default::default()
             },
-            ParticleDefinition { name: "Stone".to_string(), state: ParticleState::Solid, color: Vec4::new(0.3, 0.3, 0.3, 1.0), ..Default::default() },
+            ParticleDefinition {
+                name: "Stone".to_string(),
+                state: ParticleState::Solid,
+                color: Vec4::new(0.3, 0.3, 0.3, 1.0),
+                mass: 4.0,
+                ..Default::default()
+            },
             ParticleDefinition {
                 name: "Water".to_string(),
                 state: ParticleState::Fluid,
                 color: Vec4::new(0.0, 0.0, 1.0, 1.0),
+                mass: 0.0,
                 density: 1.0,
+                displacement: 0.6,
+                drag: 0.5,
                 compressibility: 0.1,
                 fluidity: 4,
                 extensibility: 0.80,
                 hpressure_gradient_length: 10.0,
                 hpressure_gradient_end: Vec4::new(0.0, 0.0, 0.3, 1.0),
             },
-            ParticleDefinition { name: "Wood".to_string(), state: ParticleState::Solid, color: Vec4::new(0.7, 0.4, 0.15, 1.0), ..Default::default() },
+            ParticleDefinition {
+                name: "Wood".to_string(),
+                state: ParticleState::Solid,
+                color: Vec4::new(0.7, 0.4, 0.15, 1.0),
+                mass: 0.5,
+                ..Default::default()
+            },
         ];
 
         self.simulation.definitions = Arc::new(RwLock::new(definitions));
@@ -133,13 +149,16 @@ impl Scene<GlobalData> for MainScene {
                 if button == MouseButton::Left {
                     if self.rigidbody_mode {
                         let mut last_position = None;
-                        let mut points = FxHashSet::default();
+                        let mut points = FxHashMap::default();
 
                         while let Some(position) = self.selector.get_next_selected_particle(last_position) {
                             if let Some(chunk) = self.simulation.get_chunk(position) {
                                 let chunk = chunk.read();
                                 if let Some(particle) = chunk.get_particle(position) {
-                                    points.insert(particle.position);
+                                    if !particle.structure {
+                                        let definition = &self.simulation.definitions.read()[particle.r#type];
+                                        points.insert(particle.position, definition.mass);
+                                    }
                                 }
                             }
                             last_position = Some(position);

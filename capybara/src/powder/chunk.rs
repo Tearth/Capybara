@@ -1,5 +1,4 @@
 use self::simulation::PowderSimulationDebugSettings;
-
 use super::canvas::Canvas;
 use super::*;
 use crate::glam::IVec2;
@@ -9,7 +8,7 @@ use crate::renderer::context::RendererContext;
 use crate::renderer::shape::Shape;
 use crate::utils::storage::Storage;
 use rapier2d::geometry::ColliderHandle;
-use rustc_hash::FxHashSet;
+use rustc_hash::FxHashMap;
 
 pub struct Chunk<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> {
     pub initialized: bool,
@@ -66,10 +65,10 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         }
 
         if !self.solid.is_empty() {
-            let mut points = FxHashSet::default();
+            let mut points = FxHashMap::default();
             for particle in self.solid.iter() {
                 if !particle.structure {
-                    points.insert(particle.position);
+                    points.insert(particle.position, 0.0);
                 }
             }
 

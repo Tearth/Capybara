@@ -50,10 +50,6 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             if !chunk.initialized {
                 chunk.initialize(renderer, *chunk_position);
             }
-
-            if chunk.dirty {
-                chunk.update(physics);
-            }
         }
 
         let chunks_to_process = self.chunks.iter().filter(|p| force_all_chunks || p.1.read().active).map(|p| *p.0).collect::<Vec<_>>();
@@ -64,6 +60,14 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         self.process_solid(&chunks_to_process);
         self.process_powder(&chunks_to_process, delta);
         self.process_fluid(&chunks_to_process, delta);
+
+        for chunk in &mut self.chunks.values() {
+            let mut chunk = chunk.write();
+
+            if chunk.dirty {
+                chunk.update(physics);
+            }
+        }
     }
 
     pub fn draw(&mut self, renderer: &mut RendererContext) {

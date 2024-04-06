@@ -14,8 +14,8 @@ use std::rc::Rc;
 #[derive(Clone, Default)]
 pub struct Structure {
     pub rigidbody_handle: RigidBodyHandle,
-    pub particle_indices: Vec<(StructureData, IVec2)>,
-    pub temporary_positions: Vec<IVec2>,
+    pub particles: Vec<(StructureData, IVec2)>,
+    pub fillings: Vec<IVec2>,
     pub center: Vec2,
 }
 
@@ -26,23 +26,33 @@ pub enum StructureData {
 }
 
 impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
-    pub fn create_structure(&mut self, physics: &mut PhysicsContext, points: &mut FxHashSet<IVec2>) {
-        for point in points.iter() {
+    pub fn create_structure(&mut self, physics: &mut PhysicsContext, points: &mut FxHashMap<IVec2, f32>) {
+        let mut chunks_to_update = FxHashSet::default();
+
+        for point in points.keys() {
             let chunk = self.get_chunk(*point).unwrap();
             let mut chunk = chunk.write();
+            chunks_to_update.insert(chunk.position);
 
             if let Some(particle) = chunk.get_particle_mut(*point) {
                 particle.structure = true;
             }
         }
 
-        let particle_indices = points.iter().map(|p| (StructureData::Position(*p), *p)).collect::<Vec<(StructureData, IVec2)>>();
+        for chunk_position in &chunks_to_update {
+            let chunk = self.chunks.get(chunk_position).unwrap();
+            let mut chunk = chunk.write();
+
+            chunk.update(physics);
+        }
+
+        let particles = points.iter().map(|(p, _)| (StructureData::Position(*p), *p)).collect::<Vec<(StructureData, IVec2)>>();
         if let Some(rigidbody_handle) = physics::create_rigidbody::<PARTICLE_SIZE, PIXELS_PER_METER>(physics, points) {
             let rigidbody = physics.rigidbodies.get(rigidbody_handle).unwrap();
             let translation = Vec2::from(rigidbody.position().translation);
             let center = translation * PIXELS_PER_METER as f32;
 
-            let structure = Structure { rigidbody_handle, particle_indices, temporary_positions: Vec::new(), center };
+            let structure = Structure { rigidbody_handle, particles, fillings: Vec::new(), center };
             self.structures.store(Rc::new(RefCell::new(structure)));
         }
     }
@@ -57,29 +67,30 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             let mut forbidden_for_fluid = FxHashSet::default();
 
             let rigidbody = physics.rigidbodies.get(structure.rigidbody_handle).unwrap();
-            let position =
-                Vec2::new(rigidbody.position().translation.x, rigidbody.position().translation.y) * PIXELS_PER_METER as f32 / PARTICLE_SIZE as f32;
+            let position = Vec2::from(rigidbody.position().translation) * PIXELS_PER_METER as f32 / PARTICLE_SIZE as f32;
             let rotation = rigidbody.rotation().angle();
 
-            for p in 0..structure.particle_indices.len() {
-                match structure.particle_indices[p].clone().0 {
+            for p in 0..structure.particles.len() {
+                match structure.particles[p].clone().0 {
                     StructureData::Position(position) => {
-                        forbidden_for_fluid.insert(position);
-                        particles_to_move.push((self.remove_particle(position).unwrap(), structure.particle_indices[p].1));
+                        if let Some(particle) = self.remove_particle(position) {
+                            forbidden_for_fluid.insert(position);
+                            particles_to_move.push((particle, structure.particles[p].1));
+                        }
                     }
                     StructureData::Particle(particle) => {
                         forbidden_for_fluid.insert(particle.position);
-                        particles_to_move.push((particle, structure.particle_indices[p].1));
+                        particles_to_move.push((particle, structure.particles[p].1));
                     }
                 }
             }
 
-            for p in 0..structure.temporary_positions.len() {
-                self.remove_particle(structure.temporary_positions[p]).unwrap();
+            for p in 0..structure.fillings.len() {
+                self.remove_particle(structure.fillings[p]);
             }
 
-            structure.particle_indices.clear();
-            structure.temporary_positions.clear();
+            structure.particles.clear();
+            structure.fillings.clear();
             let mut potential_holes = FxHashMap::default();
 
             for (particle, original_position) in &mut particles_to_move {
@@ -94,18 +105,16 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
                     let chunk = chunk.write();
                     let blocking_particle = chunk.get_particle(position);
                     let blocking_particle_state = blocking_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
+                    drop(chunk);
 
-                    if blocking_particle.is_none() || blocking_particle_state == ParticleState::Fluid {
-                        if blocking_particle.is_some() {
-                            drop(chunk);
+                    if blocking_particle_state == ParticleState::Unknown || blocking_particle_state == ParticleState::Fluid {
+                        if blocking_particle_state == ParticleState::Fluid {
                             self.displace_fluid(position, &forbidden_for_fluid);
-                        } else {
-                            drop(chunk);
                         }
 
                         self.add_particle(position, *particle);
 
-                        structure.particle_indices.push((StructureData::Position(position), *original_position));
+                        structure.particles.push((StructureData::Position(position), *original_position));
 
                         for neighbour_offset in [IVec2::new(1, 0), IVec2::new(-1, 0), IVec2::new(0, 1), IVec2::new(0, -1)] {
                             let neighbour_position = position + neighbour_offset;
@@ -126,30 +135,29 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
                             }
                         }
                     } else {
-                        structure.particle_indices.push((StructureData::Particle(*particle), *original_position));
+                        structure.particles.push((StructureData::Particle(*particle), *original_position));
                     }
                 } else {
-                    structure.particle_indices.push((StructureData::Particle(*particle), *original_position));
+                    structure.particles.push((StructureData::Particle(*particle), *original_position));
                 }
             }
 
             for (key, filled_sides) in &potential_holes {
                 if *filled_sides == 4 {
-                    /*let position = IVec2::new(key & 0xffff, key >> 16);
+                    let position = IVec2::new(key & 0xffff, key >> 16);
                     let chunk = self.get_chunk(position).unwrap();
-                    let chunk = chunk.read().unwrap();
+                    let chunk = chunk.read();
 
-                    if let Some(particle) = chunk.get_particle(position) {
-                        if particle.state == ParticleState::Fluid {
-                            drop(chunk);
-                            self.displace_fluid(position, &forbidden_for_fluid);
-                        } else {
-                            drop(chunk);
-                        }
+                    let particle = chunk.get_particle(position);
+                    let particle_state = particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
+                    drop(chunk);
+
+                    if particle_state == ParticleState::Fluid {
+                        self.displace_fluid(position, &forbidden_for_fluid);
                     }
 
                     let chunk = self.get_chunk(position + IVec2::new(0, 1)).unwrap();
-                    let chunk = chunk.read().unwrap();
+                    let chunk = chunk.read();
 
                     let neighbour_particle = chunk.get_particle(position + IVec2::new(0, 1));
                     if let Some(neighbour_particle) = neighbour_particle.cloned() {
@@ -158,9 +166,9 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
 
                         if !self.particle_exists(position) {
                             self.add_particle(position, temporary_particle);
-                            structure.temporary_positions.push(position);
+                            structure.fillings.push(position);
                         }
-                    }*/
+                    }
                 }
             }
 

@@ -21,7 +21,10 @@ pub struct ParticleDefinition {
     /// Base color of the particle before applying any modifiers
     pub color: Vec4,
 
+    pub mass: f32,
     pub density: f32,
+    pub displacement: f32,
+    pub drag: f32,
 
     /// How much hydrostatic pressure can the particle hold compared to the one above without inflating (applies only to fluids) - larger
     /// value means it can hold bigger hydrostatic pressure in the equilibrium state

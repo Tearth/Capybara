@@ -42,7 +42,8 @@ impl PowderSimulation {
 
                     drag_average /= neighbours_count as f32;
 
-                    let position = (position.as_vec2() * self.particle_size as f32 + self.particle_size as f32 / 2.0) / self.pixels_per_meter as f32;
+                    let position = position.as_vec2() + Vec2::new(0.5, 0.5);
+                    let position = self::position_to_physics_position(position, self.particle_size, self.pixels_per_meter);
                     let drag = f32::max(1.0, rigidbody.velocity_at_point(&position.into()).magnitude() * drag_average);
                     rigidbody.apply_impulse_at_point((force * drag).into(), position.into(), true);
                 }
@@ -59,8 +60,8 @@ pub fn create_rigidbody(
     particle_size: i32,
     pixels_per_meter: i32,
 ) -> Option<RigidBodyHandle> {
-    if let Some(collider) = self::create_collider(points, particle_size, pixels_per_meter) {
-        let rigidbody = RigidBodyBuilder::dynamic().build();
+    if let Some((collider, center)) = self::create_collider(points, particle_size, pixels_per_meter) {
+        let rigidbody = RigidBodyBuilder::dynamic().translation(center.into()).build();
         let rigidbody_handle = physics.rigidbodies.insert(rigidbody);
         physics.colliders.insert_with_parent(collider, rigidbody_handle, &mut physics.rigidbodies);
 
@@ -70,9 +71,11 @@ pub fn create_rigidbody(
     }
 }
 
-pub fn create_collider(points: &mut FxHashMap<IVec2, f32>, particle_size: i32, pixels_per_meter: i32) -> Option<Collider> {
+pub fn create_collider(points: &mut FxHashMap<IVec2, f32>, particle_size: i32, pixels_per_meter: i32) -> Option<(Collider, Vec2)> {
     let mut areas = Vec::new();
     let mut shapes = Vec::new();
+    let mut min = IVec2::MAX;
+    let mut max = IVec2::MIN;
 
     while let Some(origin) = points.keys().cloned().next() {
         let origin_mass = points[&origin];
@@ -129,6 +132,9 @@ pub fn create_collider(points: &mut FxHashMap<IVec2, f32>, particle_size: i32, p
         let size = right_top - left_bottom + IVec2::ONE;
         let mass = (size.x * size.y) as f32 * origin_mass;
 
+        min = min.min(left_bottom);
+        max = max.max(right_top);
+
         areas.push((left_bottom, size, mass));
     }
 
@@ -137,16 +143,26 @@ pub fn create_collider(points: &mut FxHashMap<IVec2, f32>, particle_size: i32, p
     }
 
     let mut total_mass = 0.0;
-    let particle_size = particle_size as f32 / pixels_per_meter as f32;
+    let particle_physics_size = particle_size as f32 / pixels_per_meter as f32;
+    let center = (min.as_vec2() + max.as_vec2() + Vec2::ONE) * particle_physics_size / 2.0;
 
     for (position, size, mass) in areas {
-        let half = size.as_vec2() * particle_size / 2.0;
+        let half = size.as_vec2() * particle_physics_size / 2.0;
         let cuboid = SharedShape::cuboid(half.x, half.y);
-        let offset = (position.as_vec2() + size.as_vec2() / 2.0) * particle_size;
+        let offset = position.as_vec2() + size.as_vec2() / 2.0;
+        let offset = self::position_to_physics_position(offset, particle_size, pixels_per_meter) - center;
         shapes.push((offset.into(), cuboid));
 
         total_mass += mass;
     }
 
-    Some(ColliderBuilder::compound(shapes).mass(total_mass).build())
+    Some((ColliderBuilder::compound(shapes).mass(total_mass).build(), center))
+}
+
+pub fn position_to_physics_position(position: Vec2, particle_size: i32, pixels_per_meter: i32) -> Vec2 {
+    position * (particle_size as f32 / pixels_per_meter as f32)
+}
+
+pub fn physics_position_to_position(position: Vec2, particle_size: i32, pixels_per_meter: i32) -> Vec2 {
+    position / (particle_size as f32 / pixels_per_meter as f32)
 }

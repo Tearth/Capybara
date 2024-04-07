@@ -14,9 +14,8 @@ use std::rc::Rc;
 #[derive(Clone, Default)]
 pub struct Structure {
     pub rigidbody_handle: RigidBodyHandle,
-    pub particles: Vec<(StructureData, IVec2)>,
+    pub particles: Vec<(StructureData, Vec2)>,
     pub fillings: Vec<IVec2>,
-    pub center: Vec2,
 }
 
 #[derive(Clone)]
@@ -46,13 +45,16 @@ impl PowderSimulation {
             chunk.update(physics);
         }
 
-        let particles = points.iter().map(|(p, _)| (StructureData::Position(*p), *p)).collect::<Vec<(StructureData, IVec2)>>();
-        if let Some(rigidbody_handle) = physics::create_rigidbody(physics, points, self.particle_size, self.pixels_per_meter) {
+        if let Some(rigidbody_handle) = physics::create_rigidbody(physics, &mut points.clone(), self.particle_size, self.pixels_per_meter) {
             let rigidbody = physics.rigidbodies.get(rigidbody_handle).unwrap();
             let translation = Vec2::from(rigidbody.position().translation);
-            let center = translation * self.pixels_per_meter as f32;
+            let center = physics::physics_position_to_position(translation, self.particle_size, self.pixels_per_meter);
+            let particles = points
+                .iter()
+                .map(|(p, _)| (StructureData::Position(*p), (*p).as_vec2() + Vec2::new(0.5, 0.5) - center))
+                .collect::<Vec<(StructureData, Vec2)>>();
 
-            let structure = Structure { rigidbody_handle, particles, fillings: Vec::new(), center };
+            let structure = Structure { rigidbody_handle, particles, fillings: Vec::new() };
             self.structures.store(Rc::new(RefCell::new(structure)));
         }
     }
@@ -67,7 +69,7 @@ impl PowderSimulation {
             let mut forbidden_for_fluid = FxHashSet::default();
 
             let rigidbody = physics.rigidbodies.get(structure.rigidbody_handle).unwrap();
-            let position = Vec2::from(rigidbody.position().translation) * self.pixels_per_meter as f32 / self.particle_size as f32;
+            let position = physics::physics_position_to_position(rigidbody.position().translation.into(), self.particle_size, self.pixels_per_meter);
             let rotation = rigidbody.rotation().angle();
 
             for p in 0..structure.particles.len() {
@@ -94,7 +96,7 @@ impl PowderSimulation {
             let mut potential_holes = FxHashMap::default();
 
             for (particle, original_position) in &mut particles_to_move {
-                let offset = original_position.as_vec2() - structure.center;
+                let offset = *original_position;
                 let offset_after_rotation = Vec2::new(
                     offset.x * rotation.cos() - offset.y * rotation.sin(), // fmt
                     offset.x * rotation.sin() + offset.y * rotation.cos(),

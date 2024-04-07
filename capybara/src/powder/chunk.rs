@@ -96,7 +96,9 @@ impl Chunk {
                 }
             }
 
-            if let Some(collider) = physics::create_collider(&mut points, self.particle_size, self.pixels_per_meter) {
+            if let Some((mut collider, center)) = physics::create_collider(&mut points, self.particle_size, self.pixels_per_meter) {
+                collider.set_translation(center.into());
+
                 let handle = physics.colliders.insert(collider);
                 self.solid_collider = Some(handle);
             }

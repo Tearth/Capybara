@@ -254,20 +254,21 @@ impl PowderSimulation {
 
         for neighbour_offset in [IVec2::new(1, 0), IVec2::new(-1, 0), IVec2::new(0, 1), IVec2::new(0, -1)] {
             let neighbour_position = position + neighbour_offset;
-            let chunk = self.get_chunk(neighbour_position).unwrap();
-            let chunk = chunk.write();
-            let particle_neighbour = chunk.get_particle(neighbour_position);
+            if let Some(chunk) = self.get_chunk(neighbour_position) {
+                let chunk = chunk.write();
+                let particle_neighbour = chunk.get_particle(neighbour_position);
 
-            if forbidden.contains(&neighbour_position) {
-                continue;
-            }
-
-            if let Some(particle_neighbour) = particle_neighbour {
-                if particle_type == particle_neighbour.r#type {
-                    available_neighbours.push((neighbour_position, false));
+                if forbidden.contains(&neighbour_position) {
+                    continue;
                 }
-            } else {
-                available_neighbours.push((neighbour_position, true));
+
+                if let Some(particle_neighbour) = particle_neighbour {
+                    if particle_type == particle_neighbour.r#type {
+                        available_neighbours.push((neighbour_position, false));
+                    }
+                } else {
+                    available_neighbours.push((neighbour_position, true));
+                }
             }
         }
 

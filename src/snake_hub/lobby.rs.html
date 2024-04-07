@@ -82,7 +82,7 @@
                     <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::default();
 
                     <span class="kw">for </span>worker <span class="kw">in </span>workers {
-                        <span class="kw">if </span>worker.definition.enabled &amp;&amp; <span class="kw-2">*</span>worker.websocket.status.read().unwrap() == ConnectionStatus::Connected {
+                        <span class="kw">if </span>worker.definition.enabled &amp;&amp; <span class="kw-2">*</span>worker.websocket.status.read() == ConnectionStatus::Connected {
                             data.push(PacketServerListResponse {
                                 name: worker.definition.name.as_bytes_array(),
                                 flag: worker.definition.flag.as_bytes_array(),

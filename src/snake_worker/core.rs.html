@@ -306,6 +306,7 @@
 <span class="kw">use </span>capybara::network::packet::Packet;
 <span class="kw">use </span>capybara::network::server::client::WebSocketConnectedClient;
 <span class="kw">use </span>capybara::network::server::listener::WebSocketListener;
+<span class="kw">use </span>capybara::parking_lot::RwLock;
 <span class="kw">use </span>chrono::SecondsFormat;
 <span class="kw">use </span>chrono::Utc;
 <span class="kw">use </span>futures_channel::mpsc;
@@ -317,7 +318,6 @@
 <span class="kw">use </span>std::fs;
 <span class="kw">use </span>std::panic;
 <span class="kw">use </span>std::sync::Arc;
-<span class="kw">use </span>std::sync::RwLock;
 <span class="kw">use </span>std::time::Duration;
 <span class="kw">use </span>tokio::io::AsyncReadExt;
 <span class="kw">use </span>tokio::join;
@@ -369,11 +369,11 @@
         <span class="kw">let </span>rooms = <span class="self">self</span>.rooms.clone();
         <span class="kw">let </span>config = <span class="self">self</span>.config.clone();
 
-        <span class="kw">let </span>endpoint = config.read().unwrap().data.endpoint.clone();
+        <span class="kw">let </span>endpoint = config.read().data.endpoint.clone();
         <span class="kw">let </span>listen = listener.listen(<span class="kw-2">&amp;</span>endpoint, listener_tx);
 
         <span class="comment">// Only one server in the template
-        </span>rooms.write().unwrap().push(Arc::default());
+        </span>rooms.write().push(Arc::default());
 
         <span class="kw">let </span>accept_clients = <span class="kw">async </span>{
             <span class="kw">while let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>client) = listener_rx.next().<span class="kw">await </span>{
@@ -381,46 +381,46 @@
                     <span class="macro">error_continue!</span>(<span class="string">"Failed to run client runtime ({})"</span>, err);
                 }
 
-                clients.write().unwrap().insert(client.id, client);
+                clients.write().insert(client.id, client);
             }
         };
         <span class="kw">let </span>read_frames = <span class="kw">async </span>{
             <span class="kw">while let </span><span class="prelude-val">Some</span>((id, frame)) = packet_event_rx.next().<span class="kw">await </span>{
                 <span class="kw">match </span>frame.get_id() {
                     <span class="prelude-val">Some</span>(PACKET_SERVER_TIME_REQUEST) =&gt; {
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(client) = clients.read().unwrap().get(<span class="kw-2">&amp;</span>id) {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(client) = clients.read().get(<span class="kw-2">&amp;</span>id) {
                             client.send_packet(Packet::from_object(PACKET_SERVER_TIME_RESPONSE, <span class="kw-2">&amp;</span>PacketServerTimeResponse { time: Instant::now() }));
                         } <span class="kw">else </span>{
                             <span class="macro">error_continue!</span>(<span class="string">"Cannot reply with server time, client {} does not exists"</span>, id);
                         }
                     }
                     <span class="prelude-val">Some</span>(PACKET_JOIN_ROOM_REQUEST) =&gt; {
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(client) = clients.read().unwrap().get(<span class="kw-2">&amp;</span>id) {
-                            rooms.write().unwrap()[<span class="number">0</span>].write().unwrap().add_player(client.id);
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(client) = clients.read().get(<span class="kw-2">&amp;</span>id) {
+                            rooms.write()[<span class="number">0</span>].write().add_player(client.id);
                             client.send_packet(Packet::from_object(
                                 PACKET_JOIN_ROOM_RESPONSE,
-                                <span class="kw-2">&amp;</span>PacketJoinRoomResponse { player_id: id, tick: config.read().unwrap().data.worker_tick },
+                                <span class="kw-2">&amp;</span>PacketJoinRoomResponse { player_id: id, tick: config.read().data.worker_tick },
                             ));
                         } <span class="kw">else </span>{
                             <span class="macro">error_continue!</span>(<span class="string">"Cannot reply for room join request, client {} does not exists"</span>, id);
                         }
                     }
                     <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; {
-                        queue_incoming.write().unwrap().push(QueuePacket::new(id, frame));
+                        queue_incoming.write().push(QueuePacket::new(id, frame));
                     }
                     <span class="prelude-val">None </span>=&gt; <span class="macro">error_continue!</span>(<span class="string">"Invalid frame ID ({:?})"</span>, frame.get_id()),
                 }
             }
         };
         <span class="kw">let </span>process_clients = <span class="kw">async </span>{
-            <span class="kw">let </span>client_ping_interval = config.read().unwrap().data.client_ping_interval;
+            <span class="kw">let </span>client_ping_interval = config.read().data.client_ping_interval;
             <span class="kw">let </span><span class="kw-2">mut </span>interval = time::interval(Duration::from_millis(client_ping_interval <span class="kw">as </span>u64));
 
             <span class="kw">loop </span>{
-                <span class="kw">for </span>client <span class="kw">in </span>clients.read().unwrap().iter() {
+                <span class="kw">for </span>client <span class="kw">in </span>clients.read().iter() {
                     client.<span class="number">1</span>.send_ping();
 
-                    <span class="kw">let </span>client_ping_interval = config.read().unwrap().data.client_ping_interval;
+                    <span class="kw">let </span>client_ping_interval = config.read().data.client_ping_interval;
                     <span class="kw">if </span>interval.period().as_millis() != client_ping_interval <span class="kw">as </span>u128 {
                         interval = time::interval(Duration::from_millis(client_ping_interval <span class="kw">as </span>u64));
                         <span class="macro">info!</span>(<span class="string">"Client ping interval changed to {} ms"</span>, client_ping_interval);
@@ -432,8 +432,8 @@
         };
         <span class="kw">let </span>process_disconnection = <span class="kw">async </span>{
             <span class="kw">while let </span><span class="prelude-val">Some</span>(id) = disconnection_event_rx.next().<span class="kw">await </span>{
-                rooms.write().unwrap()[<span class="number">0</span>].write().unwrap().remove_player(id);
-                clients.write().unwrap().remove(<span class="kw-2">&amp;</span>id);
+                rooms.write()[<span class="number">0</span>].write().remove_player(id);
+                clients.write().remove(<span class="kw-2">&amp;</span>id);
             }
         };
         <span class="kw">let </span>process_terminal = <span class="kw">async </span>{
@@ -455,7 +455,7 @@
             }
         };
         <span class="kw">let </span>tick = <span class="kw">async </span>{
-            <span class="kw">let </span>worker_tick = config.read().unwrap().data.worker_tick;
+            <span class="kw">let </span>worker_tick = config.read().data.worker_tick;
             <span class="kw">let </span><span class="kw-2">mut </span>interval = time::interval(Duration::from_millis(worker_tick <span class="kw">as </span>u64));
 
             <span class="kw">loop </span>{
@@ -464,25 +464,25 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>packets_to_remove = VecDeque::default();
                 <span class="kw">let </span><span class="kw-2">mut </span>handles = Vec::default();
 
-                <span class="kw">let </span>worker_tick = config.read().unwrap().data.worker_tick;
-                <span class="kw">let </span>delay_base = config.read().unwrap().data.packet_delay_base <span class="kw">as </span>i32;
-                <span class="kw">let </span>delay_variation = config.read().unwrap().data.packet_delay_variation <span class="kw">as </span>i32;
+                <span class="kw">let </span>worker_tick = config.read().data.worker_tick;
+                <span class="kw">let </span>delay_base = config.read().data.packet_delay_base <span class="kw">as </span>i32;
+                <span class="kw">let </span>delay_variation = config.read().data.packet_delay_variation <span class="kw">as </span>i32;
 
                 <span class="comment">// Prepare a list of packets ready to process (if delay_base + variation = 0 then take everything from the queue)
-                </span><span class="kw">for </span>(index, queue_packet) <span class="kw">in </span>queue_incoming.read().unwrap().iter().enumerate() {
+                </span><span class="kw">for </span>(index, queue_packet) <span class="kw">in </span>queue_incoming.read().iter().enumerate() {
                     <span class="kw">let </span>variation = fastrand::i32(-delay_variation..=delay_variation);
                     <span class="kw">if </span>queue_packet.timestamp + Duration::from_millis((delay_base + variation) <span class="kw">as </span>u64) &lt;= now {
-                        packets.write().unwrap().push(queue_packet.clone());
+                        packets.write().push(queue_packet.clone());
                         packets_to_remove.push_front(index);
                     }
                 }
 
                 <span class="comment">// Remove processed packets from the queue
                 </span><span class="kw">while let </span><span class="prelude-val">Some</span>(index) = packets_to_remove.pop_front() {
-                    queue_incoming.write().unwrap().remove(index);
+                    queue_incoming.write().remove(index);
                 }
 
-                <span class="kw">for </span>room <span class="kw">in </span>rooms.write().unwrap().iter_mut() {
+                <span class="kw">for </span>room <span class="kw">in </span>rooms.write().iter_mut() {
                     <span class="kw">let </span>room = room.clone();
                     <span class="kw">let </span>packets = packets.clone();
                     <span class="kw">let </span>clients = clients.clone();
@@ -490,18 +490,18 @@
                     <span class="kw">let </span>config = config.clone();
 
                     handles.push(tokio::spawn(<span class="kw">async move </span>{
-                        <span class="kw">let </span>packets = room.write().unwrap().tick(<span class="kw-2">&amp;</span>packets.read().unwrap(), <span class="kw-2">&amp;</span>config.read().unwrap());
+                        <span class="kw">let </span>packets = room.write().tick(<span class="kw-2">&amp;</span>packets.read(), <span class="kw-2">&amp;</span>config.read());
 
                         <span class="kw">if </span>delay_base == <span class="number">0 </span>&amp;&amp; delay_variation == <span class="number">0 </span>{
                             <span class="kw">for </span>packet <span class="kw">in </span>packets {
-                                <span class="kw">if let </span><span class="prelude-val">Some</span>(client) = clients.read().unwrap().get(<span class="kw-2">&amp;</span>packet.client_id) {
+                                <span class="kw">if let </span><span class="prelude-val">Some</span>(client) = clients.read().get(<span class="kw-2">&amp;</span>packet.client_id) {
                                     client.send_packet(packet.inner.clone());
                                 } <span class="kw">else </span>{
                                     <span class="macro">error_continue!</span>(<span class="string">"Cannot send the frame, client {} does not exists"</span>, packet.client_id);
                                 }
                             }
                         } <span class="kw">else </span>{
-                            queue_outgoing.write().unwrap().extend_from_slice(<span class="kw-2">&amp;</span>packets);
+                            queue_outgoing.write().extend_from_slice(<span class="kw-2">&amp;</span>packets);
                         }
                     }));
                 }
@@ -513,10 +513,10 @@
                 }
 
                 <span class="comment">// Send packets (if delay_base + variation = 0 then take everything from the queue)
-                </span><span class="kw">for </span>(index, queue_packet) <span class="kw">in </span>queue_outgoing.read().unwrap().iter().enumerate() {
+                </span><span class="kw">for </span>(index, queue_packet) <span class="kw">in </span>queue_outgoing.read().iter().enumerate() {
                     <span class="kw">let </span>variation = fastrand::i32(-delay_variation..=delay_variation);
                     <span class="kw">if </span>queue_packet.timestamp + Duration::from_millis((delay_base + variation) <span class="kw">as </span>u64) &lt;= now {
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(client) = clients.read().unwrap().get(<span class="kw-2">&amp;</span>queue_packet.client_id) {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(client) = clients.read().get(<span class="kw-2">&amp;</span>queue_packet.client_id) {
                             client.send_packet(queue_packet.inner.clone());
                         } <span class="kw">else </span>{
                             <span class="macro">error!</span>(<span class="string">"Cannot send the frame, client {} does not exists"</span>, queue_packet.client_id);
@@ -528,11 +528,11 @@
 
                 <span class="comment">// Remove sent packets from the queue
                 </span><span class="kw">for </span>index <span class="kw">in </span><span class="kw-2">&amp;</span>packets_to_remove {
-                    queue_outgoing.write().unwrap().remove(<span class="kw-2">*</span>index);
+                    queue_outgoing.write().remove(<span class="kw-2">*</span>index);
                 }
 
                 <span class="kw">if </span>interval.period().as_millis() != worker_tick <span class="kw">as </span>u128 {
-                    <span class="kw">for </span>client <span class="kw">in </span>clients.read().unwrap().values() {
+                    <span class="kw">for </span>client <span class="kw">in </span>clients.read().values() {
                         client.send_packet(Packet::from_object(PACKET_SET_TICK_INTERVAL, <span class="kw-2">&amp;</span>PacketSetTickInterval { tick: worker_tick }));
                     }
 

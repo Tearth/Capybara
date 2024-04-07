@@ -124,23 +124,16 @@
 <a href="#122" id="122">122</a>
 <a href="#123" id="123">123</a>
 <a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::powder::chunk::ParticleData;
-<span class="kw">use </span><span class="kw">crate</span>::powder::chunk::ParticleState;
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::powder::chunk::ParticleState;
 <span class="kw">use </span><span class="kw">crate</span>::powder::local::LocalChunksGuards;
 <span class="kw">use </span>glam::IVec2;
 <span class="kw">use </span>glam::Vec2;
-<span class="kw">use </span>std::mem;
 
-<span class="kw">pub fn </span>simulate&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt;(
-    local: <span class="kw-2">&amp;mut </span>LocalChunksGuards&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;,
-    particle: <span class="kw-2">&amp;mut </span>ParticleData,
-    delta: f32,
-) {
+<span class="kw">pub fn </span>simulate(local: <span class="kw-2">&amp;mut </span>LocalChunksGuards, particle_id: usize, state: ParticleState, delta: f32) {
     <span class="comment">// let definition = database.get_unchecked(particle.r#type);
-    </span><span class="kw">let </span>state = particle.state;
+    </span><span class="kw">let </span>particle = local.chunks[<span class="number">0</span>].get_storage(state).get_unchecked(particle_id);
+
+    <span class="kw">let </span>state = particle.state;
     <span class="kw">let </span><span class="kw-2">mut </span>position = particle.position;
     <span class="kw">let </span><span class="kw-2">mut </span>offset = particle.offset;
     <span class="kw">let </span><span class="kw-2">mut </span>velocity = particle.velocity;
@@ -187,8 +180,8 @@
                         <span class="kw">let </span>first_neighbour_position = position_update + neighbour_positions[<span class="number">0</span>];
                         <span class="kw">let </span>second_neighbour_position = position_update + neighbour_positions[<span class="number">1</span>];
 
-                        <span class="kw">let </span>first_neighbour: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ParticleData&gt; = <span class="kw">unsafe </span>{ mem::transmute(local.get_particle(first_neighbour_position)) };
-                        <span class="kw">let </span>second_neighbour: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ParticleData&gt; = <span class="kw">unsafe </span>{ mem::transmute(local.get_particle(second_neighbour_position)) };
+                        <span class="kw">let </span>first_neighbour = local.get_particle(first_neighbour_position);
+                        <span class="kw">let </span>second_neighbour = local.get_particle(second_neighbour_position);
 
                         <span class="kw">let </span>first_neighbour_slot_available = <span class="kw">if let </span><span class="prelude-val">Some</span>(first_neighbour) = first_neighbour {
                             state != ParticleState::Fluid &amp;&amp; first_neighbour.state == ParticleState::Fluid
@@ -249,9 +242,10 @@
         }
     }
 
-    <span class="kw">let </span>particle = local.get_particle_mut(position).unwrap();
-    particle.position = position;
-    particle.offset = offset;
-    particle.velocity = velocity;
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(particle) = local.get_particle_mut(position) {
+        particle.position = position;
+        particle.offset = offset;
+        particle.velocity = velocity;
+    }
 }
 </code></pre></div></section></main></body></html>

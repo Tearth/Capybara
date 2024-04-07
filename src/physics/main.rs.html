@@ -433,15 +433,15 @@
     }
 
     <span class="kw">fn </span>ui(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;, input: RawInput) -&gt; <span class="prelude-ty">Result</span>&lt;(FullOutput, <span class="prelude-ty">Option</span>&lt;FrameCommand&gt;)&gt; {
-        <span class="kw">let </span>output = state.ui.inner.read().unwrap().run(input, |context| {
+        <span class="kw">let </span>output = state.ui.inner.read().run(input, |context| {
             SidePanel::new(Side::Left, Id::new(<span class="string">"side_panel"</span>)).exact_width(<span class="number">120.0</span>).resizable(<span class="bool-val">false</span>).show(context, |ui| {
                 <span class="kw">if </span><span class="self">self</span>.initialized {
                     <span class="kw">let </span>font = FontId { size: <span class="number">24.0</span>, family: FontFamily::Monospace };
                     <span class="kw">let </span>color = Color32::from_rgb(<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>);
                     <span class="kw">let </span>label = <span class="macro">format!</span>(<span class="string">"FPS: {}"</span>, state.renderer.fps);
 
-                    <span class="kw">let </span>collisions = state.physics.events.collisions.read().unwrap();
-                    <span class="kw">let </span>contacts = state.physics.events.contacts.read().unwrap();
+                    <span class="kw">let </span>collisions = state.physics.events.collisions.read();
+                    <span class="kw">let </span>contacts = state.physics.events.contacts.read();
 
                     ui.label(RichText::new(label).font(font.clone()).heading().color(color));
 

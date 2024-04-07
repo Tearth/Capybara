@@ -132,15 +132,11 @@
 <a href="#130" id="130">130</a>
 <a href="#131" id="131">131</a>
 <a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::context::PhysicsContext;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::context::RendererContext;
 <span class="kw">use </span><span class="kw">crate</span>::renderer::shape::Shape;
 <span class="kw">use </span>glam::Vec2;
 <span class="kw">use </span>rapier2d::prelude::ShapeType;
-<span class="kw">use </span>std::sync::TryLockResult;
 
 <span class="kw">impl </span>PhysicsContext {
     <span class="kw">pub fn </span>draw_debug(<span class="kw-2">&amp;</span><span class="self">self</span>, context: <span class="kw-2">&amp;mut </span>RendererContext, pixels_per_meter: f32) {
@@ -243,28 +239,26 @@
             ));
         }
 
-        <span class="kw">if let </span>TryLockResult::Ok(contacts) = <span class="self">self</span>.events.contacts.try_write() {
-            <span class="kw">for </span>contact <span class="kw">in </span>contacts.iter() {
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(collider) = <span class="self">self</span>.colliders.get(contact.pair.collider1) {
-                    <span class="kw">for </span>point <span class="kw">in </span>contact.pair.manifolds.iter().flat_map(|p| p.contacts()) {
-                        <span class="kw">let </span>collider_position = Vec2::from(collider.position().translation) * pixels_per_meter;
-                        <span class="kw">let </span>contact_local_position = Vec2::from(point.local_p1) * pixels_per_meter;
+        <span class="kw">for </span>contact <span class="kw">in </span><span class="self">self</span>.events.contacts.read().iter() {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(collider) = <span class="self">self</span>.colliders.get(contact.pair.collider1) {
+                <span class="kw">for </span>point <span class="kw">in </span>contact.pair.manifolds.iter().flat_map(|p| p.contacts()) {
+                    <span class="kw">let </span>collider_position = Vec2::from(collider.position().translation) * pixels_per_meter;
+                    <span class="kw">let </span>contact_local_position = Vec2::from(point.local_p1) * pixels_per_meter;
 
-                        <span class="kw">let </span>sin = collider.rotation().angle().sin();
-                        <span class="kw">let </span>cos = collider.rotation().angle().cos();
-                        <span class="kw">let </span>position = Vec2::new(
-                            contact_local_position.x * cos - contact_local_position.y * sin,
-                            contact_local_position.y * cos + contact_local_position.x * sin,
-                        ) + collider_position;
+                    <span class="kw">let </span>sin = collider.rotation().angle().sin();
+                    <span class="kw">let </span>cos = collider.rotation().angle().cos();
+                    <span class="kw">let </span>position = Vec2::new(
+                        contact_local_position.x * cos - contact_local_position.y * sin,
+                        contact_local_position.y * cos + contact_local_position.x * sin,
+                    ) + collider_position;
 
-                        context.draw_shape(<span class="kw-2">&amp;</span>Shape::new_disc(
-                            position,
-                            <span class="self">self</span>.debug.contact_radius,
-                            <span class="prelude-val">None</span>,
-                            <span class="self">self</span>.debug.contact_color,
-                            <span class="self">self</span>.debug.contact_color,
-                        ));
-                    }
+                    context.draw_shape(<span class="kw-2">&amp;</span>Shape::new_disc(
+                        position,
+                        <span class="self">self</span>.debug.contact_radius,
+                        <span class="prelude-val">None</span>,
+                        <span class="self">self</span>.debug.contact_color,
+                        <span class="self">self</span>.debug.contact_color,
+                    ));
                 }
             }
         }

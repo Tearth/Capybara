@@ -166,7 +166,7 @@
         <span class="self">self</span>.shape = <span class="prelude-val">None</span>;
     }
 
-    <span class="kw">pub fn </span>fill_selection(<span class="kw-2">&amp;</span><span class="self">self</span>, simulation: <span class="kw-2">&amp;mut </span>PowderSimulation&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;) {
+    <span class="kw">pub fn </span>fill_selection(<span class="kw-2">&amp;</span><span class="self">self</span>, simulation: <span class="kw-2">&amp;mut </span>PowderSimulation) {
         <span class="kw">let </span><span class="kw-2">mut </span>last_position = <span class="prelude-val">None</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>particles = Vec::new();
 
@@ -197,7 +197,7 @@
         }
     }
 
-    <span class="kw">pub fn </span>clear_selection(<span class="kw-2">&amp;mut </span><span class="self">self</span>, simulation: <span class="kw-2">&amp;mut </span>PowderSimulation&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;) {
+    <span class="kw">pub fn </span>clear_selection(<span class="kw-2">&amp;mut </span><span class="self">self</span>, simulation: <span class="kw-2">&amp;mut </span>PowderSimulation) {
         <span class="kw">let </span><span class="kw-2">mut </span>last_position = <span class="prelude-val">None</span>;
 
         <span class="kw">while let </span><span class="prelude-val">Some</span>(position) = <span class="self">self</span>.get_next_selected_particle(last_position) {

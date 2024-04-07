@@ -54,19 +54,8 @@
 <a href="#52" id="52">52</a>
 <a href="#53" id="53">53</a>
 <a href="#54" id="54">54</a>
-<a href="#55" id="55">55</a>
-<a href="#56" id="56">56</a>
-<a href="#57" id="57">57</a>
-<a href="#58" id="58">58</a>
-<a href="#59" id="59">59</a>
-<a href="#60" id="60">60</a>
-<a href="#61" id="61">61</a>
-<a href="#62" id="62">62</a>
-<a href="#63" id="63">63</a>
-<a href="#64" id="64">64</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>rapier2d::prelude::<span class="kw-2">*</span>;
-<span class="kw">use </span>std::sync::RwLock;
-<span class="kw">use </span>std::sync::TryLockResult;
+</pre></div><pre class="rust"><code><span class="kw">use </span>parking_lot::RwLock;
+<span class="kw">use </span>rapier2d::prelude::<span class="kw-2">*</span>;
 
 <span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>EventCollector {
@@ -86,21 +75,14 @@
 
 <span class="kw">impl </span>EventCollector {
     <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">if let </span>TryLockResult::Ok(<span class="kw-2">mut </span>collisions) = <span class="self">self</span>.collisions.try_write() {
-            collisions.clear();
-        }
-
-        <span class="kw">if let </span>TryLockResult::Ok(<span class="kw-2">mut </span>contacts) = <span class="self">self</span>.contacts.try_write() {
-            contacts.clear();
-        }
+        <span class="self">self</span>.collisions.write().clear();
+        <span class="self">self</span>.contacts.write().clear();
     }
 }
 
 <span class="kw">impl </span>EventHandler <span class="kw">for </span>EventCollector {
     <span class="kw">fn </span>handle_collision_event(<span class="kw-2">&amp;</span><span class="self">self</span>, _bodies: <span class="kw-2">&amp;</span>RigidBodySet, _colliders: <span class="kw-2">&amp;</span>ColliderSet, event: CollisionEvent, contact_pair: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ContactPair&gt;) {
-        <span class="kw">if let </span>TryLockResult::Ok(<span class="kw-2">mut </span>collisions) = <span class="self">self</span>.collisions.try_write() {
-            collisions.push(CollisionData::new(event, contact_pair.cloned()));
-        }
+        <span class="self">self</span>.collisions.write().push(CollisionData::new(event, contact_pair.cloned()));
     }
 
     <span class="kw">fn </span>handle_contact_force_event(
@@ -111,9 +93,7 @@
         contact_pair: <span class="kw-2">&amp;</span>ContactPair,
         total_force_magnitude: Real,
     ) {
-        <span class="kw">if let </span>TryLockResult::Ok(<span class="kw-2">mut </span>contacts) = <span class="self">self</span>.contacts.try_write() {
-            contacts.push(ContactData::new(total_force_magnitude, contact_pair.clone()));
-        }
+        <span class="self">self</span>.contacts.write().push(ContactData::new(total_force_magnitude, contact_pair.clone()));
     }
 }
 

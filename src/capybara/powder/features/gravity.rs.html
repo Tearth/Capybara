@@ -79,24 +79,27 @@
 <span class="kw">use </span>glam::IVec2;
 <span class="kw">use </span>glam::Vec2;
 
-<span class="kw">pub fn </span>simulate&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt;(
-    local: <span class="kw-2">&amp;mut </span>LocalChunksGuards&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;,
+<span class="kw">pub fn </span>simulate(
+    local: <span class="kw-2">&amp;mut </span>LocalChunksGuards,
     definitions: <span class="kw-2">&amp;</span>[ParticleDefinition],
-    center_particle: <span class="kw-2">&amp;mut </span>ParticleData,
+    particle_id: usize,
+    state: ParticleState,
     gravity: Vec2,
     delta: f32,
 ) {
+    <span class="kw">let </span>center_particle = local.chunks[<span class="number">0</span>].get_storage(state).get_unchecked(particle_id);
     <span class="kw">let </span>center_definition = <span class="kw-2">&amp;</span>definitions[center_particle.r#type];
+    <span class="kw">let </span>center_position = center_particle.position;
     <span class="kw">let </span><span class="kw-2">mut </span>center_velocity = center_particle.velocity;
 
     <span class="kw">let </span>top_position = center_particle.position + IVec2::new(<span class="number">0</span>, <span class="number">1</span>);
     <span class="kw">let </span>bottom_position = center_particle.position - IVec2::new(<span class="number">0</span>, <span class="number">1</span>);
 
-    <span class="kw">let </span>top_particle: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ParticleData&gt; = local.get_particle(top_position);
+    <span class="kw">let </span>top_particle = local.get_particle(top_position);
     <span class="kw">let </span>top_type = top_particle.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
     <span class="kw">let </span>top_state = top_particle.as_ref().map(|p| p.state).unwrap_or(ParticleState::Unknown);
 
-    <span class="kw">let </span>bottom_particle: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ParticleData&gt; = local.get_particle(bottom_position);
+    <span class="kw">let </span>bottom_particle = local.get_particle(bottom_position);
     <span class="kw">let </span>bottom_type = bottom_particle.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
     <span class="kw">let </span>bottom_state = bottom_particle.as_ref().map(|p| p.state).unwrap_or(ParticleState::Unknown);
 
@@ -105,7 +108,6 @@
         <span class="kw">if </span>top_state == ParticleState::Fluid &amp;&amp; center_definition.density &lt; top_definition.density {
             center_velocity -= gravity * delta;
             center_velocity = center_velocity.max(Vec2::ZERO);
-            center_particle.velocity = center_velocity;
         }
     }
 
@@ -114,7 +116,6 @@
         <span class="kw">if </span>bottom_state == ParticleState::Fluid &amp;&amp; center_definition.density &gt; bottom_definition.density {
             center_velocity += gravity * delta;
             center_velocity = center_velocity.min(Vec2::ZERO);
-            center_particle.velocity = center_velocity;
         } <span class="kw">else </span>{
             <span class="kw">let </span>left_neighbour: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ParticleData&gt; = local.get_particle(center_particle.position + IVec2::new(-<span class="number">1</span>, -<span class="number">1</span>));
             <span class="kw">let </span>right_neighbour: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ParticleData&gt; = local.get_particle(center_particle.position + IVec2::new(<span class="number">1</span>, -<span class="number">1</span>));
@@ -132,16 +133,15 @@
             <span class="kw">if </span>max.y.abs() &lt; center_velocity.y.abs() {
                 center_velocity = max;
             }
-
-            center_particle.velocity = center_velocity;
         }
     } <span class="kw">else </span>{
         center_velocity += gravity * delta;
-        center_particle.velocity = center_velocity;
     }
 
+    local.chunks[<span class="number">0</span>].get_storage_mut(state).get_unchecked_mut(particle_id).velocity = center_velocity;
+
     <span class="kw">if </span>center_velocity != Vec2::ZERO {
-        local.mark_chunk_as_active(center_particle.position);
+        local.mark_chunk_as_active(center_position);
     }
 }
 </code></pre></div></section></main></body></html>

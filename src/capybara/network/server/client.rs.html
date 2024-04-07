@@ -215,9 +215,9 @@
 <span class="kw">use </span>instant::SystemTime;
 <span class="kw">use </span>log::error;
 <span class="kw">use </span>log::info;
+<span class="kw">use </span>parking_lot::RwLock;
 <span class="kw">use </span>std::net::SocketAddr;
 <span class="kw">use </span>std::sync::Arc;
-<span class="kw">use </span>std::sync::RwLock;
 <span class="kw">use </span>tokio::net::TcpStream;
 <span class="kw">use </span>tokio::select;
 <span class="kw">use </span>tokio_tungstenite::tungstenite::Message;
@@ -297,7 +297,7 @@
                                         <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_continue!</span>(<span class="string">"Failed to obtain current time ({})"</span>, err),
                                     };
 
-                                    <span class="kw-2">*</span>ping.write().unwrap() = (now - timestamp) <span class="kw">as </span>u32;
+                                    <span class="kw-2">*</span>ping.write() = (now - timestamp) <span class="kw">as </span>u32;
                                 }
                                 <span class="kw">_ </span>=&gt; {
                                     <span class="kw">if let </span><span class="prelude-val">Err</span>(err) = packet_event.unbounded_send((id, packet)) {

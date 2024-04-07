@@ -129,28 +129,26 @@
 <a href="#127" id="127">127</a>
 <a href="#128" id="128">128</a>
 <a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::chunk;
 <span class="kw">use </span><span class="kw">super</span>::chunk::Chunk;
 <span class="kw">use </span><span class="kw">super</span>::chunk::ParticleData;
 <span class="kw">use </span><span class="kw">super</span>::simulation::PowderSimulation;
 <span class="kw">use </span>glam::IVec2;
 <span class="kw">use </span>glam::Vec4;
+<span class="kw">use </span>parking_lot::RwLock;
+<span class="kw">use </span>parking_lot::RwLockWriteGuard;
 <span class="kw">use </span>std::sync::Arc;
-<span class="kw">use </span>std::sync::RwLock;
-<span class="kw">use </span>std::sync::RwLockWriteGuard;
 
-<span class="kw">pub struct </span>LocalChunksArcs&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt; {
-    <span class="kw">pub </span>chunks: Vec&lt;Arc&lt;RwLock&lt;Chunk&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;&gt;&gt;&gt;,
+<span class="kw">pub struct </span>LocalChunksArcs {
+    <span class="kw">pub </span>chunks: Vec&lt;Arc&lt;RwLock&lt;Chunk&gt;&gt;&gt;,
 }
 
-<span class="kw">pub struct </span>LocalChunksGuards&lt;<span class="lifetime">'a</span>, <span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt; {
-    <span class="kw">pub </span>chunks: Vec&lt;RwLockWriteGuard&lt;<span class="lifetime">'a</span>, Chunk&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;&gt;&gt;,
+<span class="kw">pub struct </span>LocalChunksGuards&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>chunks: Vec&lt;RwLockWriteGuard&lt;<span class="lifetime">'a</span>, Chunk&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt; LocalChunksArcs&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt; {
-    <span class="kw">pub fn </span>new(simulation: <span class="kw-2">&amp;</span>PowderSimulation&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;, chunk_position: IVec2) -&gt; <span class="self">Self </span>{
+<span class="kw">impl </span>LocalChunksArcs {
+    <span class="kw">pub fn </span>new(simulation: <span class="kw-2">&amp;</span>PowderSimulation, chunk_position: IVec2) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>chunks = Vec::new();
         <span class="kw">let </span>offsets = [
             IVec2::new(<span class="number">0</span>, -<span class="number">1</span>),
@@ -175,14 +173,12 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, <span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt;
-    LocalChunksGuards&lt;<span class="lifetime">'a</span>, CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;
-{
-    <span class="kw">pub fn </span>new(simulation: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>LocalChunksArcs&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; LocalChunksGuards&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub fn </span>new(arcs: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>LocalChunksArcs) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>chunks = Vec::new();
 
-        <span class="kw">for </span>chunk <span class="kw">in </span><span class="kw-2">&amp;</span>simulation.chunks {
-            chunks.push(chunk.write().unwrap());
+        <span class="kw">for </span>chunk <span class="kw">in </span><span class="kw-2">&amp;</span>arcs.chunks {
+            chunks.push(chunk.write());
         }
 
         <span class="self">Self </span>{ chunks }

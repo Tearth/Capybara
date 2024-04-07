@@ -294,7 +294,7 @@
 
     <span class="kw">fn </span>input(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;, event: InputEvent) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">if let </span>InputEvent::WindowSizeChange { size } = event {
-            <span class="kw">if </span><span class="kw-2">*</span><span class="self">self</span>.client.status.read().unwrap() == ConnectionStatus::Connected {
+            <span class="kw">if </span><span class="kw-2">*</span><span class="self">self</span>.client.status.read() == ConnectionStatus::Connected {
                 <span class="self">self</span>.client.send_packet(Packet::from_object(PACKET_SET_VIEWPORT, <span class="kw-2">&amp;</span>PacketSetViewport { size: size.as_vec2() }));
             }
         } <span class="kw">else if let </span>InputEvent::KeyPress { key: Key::Escape, repeat: <span class="kw">_</span>, modifiers: <span class="kw">_ </span>} = event {
@@ -325,7 +325,7 @@
 
         <span class="kw">let </span>now = Instant::now();
 
-        <span class="kw">if </span><span class="kw-2">*</span><span class="self">self</span>.client.status.read().unwrap() == ConnectionStatus::Connected {
+        <span class="kw">if </span><span class="kw-2">*</span><span class="self">self</span>.client.status.read() == ConnectionStatus::Connected {
             <span class="kw">if </span><span class="self">self</span>.client.has_connected() {
                 <span class="kw">let </span>size = state.renderer.viewport_size;
                 <span class="self">self</span>.client.send_packet(Packet::from_object(PACKET_SET_VIEWPORT, <span class="kw-2">&amp;</span>PacketSetViewport { size }));
@@ -389,7 +389,7 @@
     }
 
     <span class="kw">fn </span>ui(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;, input: RawInput) -&gt; <span class="prelude-ty">Result</span>&lt;(FullOutput, <span class="prelude-ty">Option</span>&lt;FrameCommand&gt;)&gt; {
-        <span class="kw">let </span>output = state.ui.inner.read().unwrap().run(input, |context| {
+        <span class="kw">let </span>output = state.ui.inner.read().run(input, |context| {
             SidePanel::new(Side::Left, Id::new(<span class="string">"side_panel"</span>)).exact_width(<span class="number">160.0</span>).resizable(<span class="bool-val">false</span>).show(context, |ui| {
                 <span class="kw">if </span><span class="self">self</span>.initialized {
                     <span class="kw">let </span>font = FontId { size: <span class="number">24.0</span>, family: FontFamily::Monospace };
@@ -402,7 +402,7 @@
                     <span class="kw">let </span>label = <span class="macro">format!</span>(<span class="string">"Delta: {:.2}"</span>, delta_average * <span class="number">1000.0</span>);
                     ui.label(RichText::new(label).font(font.clone()).heading().color(color));
 
-                    <span class="kw">let </span>label = <span class="macro">format!</span>(<span class="string">"Ping: {} ms"</span>, <span class="kw-2">*</span><span class="self">self</span>.client.ping.read().unwrap());
+                    <span class="kw">let </span>label = <span class="macro">format!</span>(<span class="string">"Ping: {} ms"</span>, <span class="kw-2">*</span><span class="self">self</span>.client.ping.read());
                     ui.label(RichText::new(label).font(font.clone()).heading().color(color));
 
                     <span class="kw">let </span>tick_average = <span class="self">self</span>.tick_history.iter().sum::&lt;f32&gt;() / <span class="self">self</span>.tick_history.len() <span class="kw">as </span>f32;
@@ -415,7 +415,7 @@
                     ui.add_space(<span class="number">10.0</span>);
                     ui.label(RichText::new(<span class="string">"Objects count:"</span>).font(font.clone()).heading().color(color));
                     <span class="kw">if </span>ui.add(Slider::new(<span class="kw-2">&amp;mut </span><span class="self">self</span>.objects_count, <span class="number">0</span>..=<span class="number">10000</span>).text_color(color).logarithmic(<span class="bool-val">true</span>)).changed() {
-                        <span class="kw">if </span><span class="kw-2">*</span><span class="self">self</span>.client.status.read().unwrap() == ConnectionStatus::Connected {
+                        <span class="kw">if </span><span class="kw-2">*</span><span class="self">self</span>.client.status.read() == ConnectionStatus::Connected {
                             <span class="self">self</span>.client.send_packet(Packet::from_object(PACKET_SET_COUNT, <span class="kw-2">&amp;</span>PacketSetCount { count: <span class="self">self</span>.objects_count }));
                         }
                     }

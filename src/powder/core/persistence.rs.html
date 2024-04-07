@@ -59,11 +59,6 @@
 <a href="#57" id="57">57</a>
 <a href="#58" id="58">58</a>
 <a href="#59" id="59">59</a>
-<a href="#60" id="60">60</a>
-<a href="#61" id="61">61</a>
-<a href="#62" id="62">62</a>
-<a href="#63" id="63">63</a>
-<a href="#64" id="64">64</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>byteorder::LittleEndian;
 <span class="kw">use </span>byteorder::ReadBytesExt;
@@ -76,12 +71,7 @@
 <span class="kw">use </span>capybara::renderer::context::RendererContext;
 <span class="kw">use </span>std::fs::File;
 
-<span class="kw">pub fn </span>load(
-    path: <span class="kw-2">&amp;</span>str,
-    simulation: <span class="kw-2">&amp;mut </span>PowderSimulation&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;,
-    renderer: <span class="kw-2">&amp;mut </span>RendererContext,
-    physics: <span class="kw-2">&amp;mut </span>PhysicsContext,
-) {
+<span class="kw">pub fn </span>load(path: <span class="kw-2">&amp;</span>str, simulation: <span class="kw-2">&amp;mut </span>PowderSimulation, renderer: <span class="kw-2">&amp;mut </span>RendererContext, physics: <span class="kw-2">&amp;mut </span>PhysicsContext) {
     <span class="kw">let </span><span class="kw-2">mut </span>file = File::open(path).unwrap();
     <span class="kw">let </span><span class="kw-2">mut </span>particles_count = file.read_u32::&lt;LittleEndian&gt;().unwrap();
 
@@ -94,7 +84,7 @@
 
         <span class="kw">if </span>r#type != usize::MAX {
             <span class="kw">let </span>definitions = simulation.definitions.clone();
-            <span class="kw">let </span>definition = <span class="kw-2">&amp;</span>definitions.read().unwrap()[r#type];
+            <span class="kw">let </span>definition = <span class="kw-2">&amp;</span>definitions.read()[r#type];
             simulation
                 .add_particle(position, ParticleData { r#type, state: definition.state, color: definition.color, hpressure, ..Default::default() });
         }
@@ -103,7 +93,7 @@
     }
 }
 
-<span class="kw">pub fn </span>save(path: <span class="kw-2">&amp;</span>str, simulation: <span class="kw-2">&amp;mut </span>PowderSimulation&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;) {
+<span class="kw">pub fn </span>save(path: <span class="kw-2">&amp;</span>str, simulation: <span class="kw-2">&amp;mut </span>PowderSimulation) {
     <span class="comment">/*let mut file = File::create(path).unwrap();
     file.write_u32::&lt;LittleEndian&gt;(simulation.particles_count);
 

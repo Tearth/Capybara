@@ -115,6 +115,59 @@
 <a href="#113" id="113">113</a>
 <a href="#114" id="114">114</a>
 <a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::simulation::PowderSimulation;
 <span class="kw">use </span><span class="kw">super</span>::structures::StructureData;
 <span class="kw">use </span><span class="kw">super</span>::ParticleState;
@@ -126,40 +179,43 @@
 <span class="kw">use </span>rapier2d::geometry::Collider;
 <span class="kw">use </span>rapier2d::geometry::ColliderBuilder;
 <span class="kw">use </span>rapier2d::geometry::SharedShape;
-<span class="kw">use </span>rustc_hash::FxHashSet;
+<span class="kw">use </span>rustc_hash::FxHashMap;
 
-<span class="kw">impl</span>&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt; PowderSimulation&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt; {
+<span class="kw">impl </span>PowderSimulation {
     <span class="kw">pub fn </span>apply_forces(<span class="kw-2">&amp;mut </span><span class="self">self</span>, physics: <span class="kw-2">&amp;mut </span>PhysicsContext) {
         <span class="kw">let </span><span class="kw-2">mut </span>last_id = <span class="prelude-val">None</span>;
         <span class="kw">while let </span><span class="prelude-val">Some</span>(id) = <span class="self">self</span>.structures.get_next_id(last_id) {
             <span class="kw">let </span>structure = <span class="self">self</span>.structures.get_unchecked(id).borrow();
             <span class="kw">let </span>rigidbody = physics.rigidbodies.get_mut(structure.rigidbody_handle).unwrap();
 
-            <span class="kw">for </span>p <span class="kw">in </span><span class="number">0</span>..structure.particle_indices.len() {
-                <span class="kw">if let </span>StructureData::Position(position) = structure.particle_indices[p].<span class="number">0 </span>{
-                    <span class="kw">let </span><span class="kw-2">mut </span>hpressure = Vec2::ZERO;
-                    <span class="kw">let </span>chunk = <span class="self">self</span>.get_chunk(position).unwrap();
-                    <span class="kw">let </span>chunk = chunk.read().unwrap();
-                    <span class="kw">let </span>particle = chunk.get_particle(position).unwrap();
+            <span class="kw">for </span>p <span class="kw">in </span><span class="number">0</span>..structure.particles.len() {
+                <span class="kw">if let </span>StructureData::Position(position) = structure.particles[p].<span class="number">0 </span>{
+                    <span class="kw">let </span><span class="kw-2">mut </span>force = Vec2::ZERO;
+                    <span class="kw">let </span><span class="kw-2">mut </span>drag_average = <span class="number">0.0</span>;
+                    <span class="kw">let </span><span class="kw-2">mut </span>neighbours_count = <span class="number">0</span>;
 
                     <span class="kw">for </span>neighbour_offset <span class="kw">in </span>[IVec2::new(<span class="number">1</span>, <span class="number">0</span>), IVec2::new(-<span class="number">1</span>, <span class="number">0</span>), IVec2::new(<span class="number">0</span>, <span class="number">1</span>), IVec2::new(<span class="number">0</span>, -<span class="number">1</span>)] {
-                        <span class="kw">let </span>neighbour_position = particle.position + neighbour_offset;
-                        <span class="kw">let </span>neighbour_chunk = <span class="self">self</span>.get_chunk(neighbour_position).unwrap();
-                        <span class="kw">let </span>neighbour_chunk = neighbour_chunk.read().unwrap();
+                        <span class="kw">let </span>neighbour_position = position + neighbour_offset;
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(neighbour_chunk) = <span class="self">self</span>.get_chunk(neighbour_position) {
+                            <span class="kw">let </span>neighbour_chunk = neighbour_chunk.read();
 
-                        <span class="kw">let </span>neighbour_particle = neighbour_chunk.get_particle(neighbour_position);
-                        <span class="kw">let </span>neighbour_particle_state = neighbour_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
-                        <span class="kw">let </span>neighbour_particle_hpressure = neighbour_particle.map(|p| p.hpressure).unwrap_or(<span class="number">0.0</span>);
-
-                        <span class="kw">if </span>neighbour_particle_state == ParticleState::Fluid {
-                            hpressure += -neighbour_offset.as_vec2() * neighbour_particle_hpressure;
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(neighbour_particle) = neighbour_chunk.get_particle(neighbour_position) {
+                                <span class="kw">let </span>neighbour_definition = <span class="kw-2">&amp;</span><span class="self">self</span>.definitions.read()[neighbour_particle.r#type];
+                                <span class="kw">if </span>neighbour_particle.state == ParticleState::Fluid {
+                                    force += -neighbour_offset.as_vec2() * neighbour_particle.hpressure * neighbour_definition.displacement;
+                                    drag_average += neighbour_definition.drag;
+                                    neighbours_count += <span class="number">1</span>;
+                                }
+                            }
                         }
                     }
 
-                    <span class="kw">if </span>hpressure.length() &gt; <span class="number">1.0 </span>{
-                        <span class="kw">let </span>position = particle.position.as_vec2() * PARTICLE_SIZE <span class="kw">as </span>f32 + PARTICLE_SIZE <span class="kw">as </span>f32 / <span class="number">2.0</span>;
-                        rigidbody.apply_impulse_at_point((hpressure * <span class="number">0.08</span>).into(), (position / PIXELS_PER_METER <span class="kw">as </span>f32).into(), <span class="bool-val">true</span>);
-                    }
+                    drag_average /= neighbours_count <span class="kw">as </span>f32;
+
+                    <span class="kw">let </span>position = position.as_vec2() + Vec2::new(<span class="number">0.5</span>, <span class="number">0.5</span>);
+                    <span class="kw">let </span>position = <span class="self">self</span>::position_to_physics_position(position, <span class="self">self</span>.particle_size, <span class="self">self</span>.pixels_per_meter);
+                    <span class="kw">let </span>drag = f32::max(<span class="number">1.0</span>, rigidbody.velocity_at_point(<span class="kw-2">&amp;</span>position.into()).magnitude() * drag_average);
+                    rigidbody.apply_impulse_at_point((force * drag).into(), position.into(), <span class="bool-val">true</span>);
                 }
             }
 
@@ -168,66 +224,116 @@
     }
 }
 
-<span class="kw">pub fn </span>create_rigidbody&lt;<span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt;(
+<span class="kw">pub fn </span>create_rigidbody(
     physics: <span class="kw-2">&amp;mut </span>PhysicsContext,
-    points: <span class="kw-2">&amp;mut </span>FxHashSet&lt;IVec2&gt;,
-) -&gt; RigidBodyHandle {
-    <span class="kw">let </span>rigidbody = RigidBodyBuilder::dynamic().build();
-    <span class="kw">let </span>collider = <span class="self">self</span>::create_collider::&lt;PARTICLE_SIZE, PIXELS_PER_METER&gt;(points).unwrap();
-    <span class="kw">let </span>rigidbody_handle = physics.rigidbodies.insert(rigidbody);
-    physics.colliders.insert_with_parent(collider, rigidbody_handle, <span class="kw-2">&amp;mut </span>physics.rigidbodies);
+    points: <span class="kw-2">&amp;mut </span>FxHashMap&lt;IVec2, f32&gt;,
+    particle_size: i32,
+    pixels_per_meter: i32,
+) -&gt; <span class="prelude-ty">Option</span>&lt;RigidBodyHandle&gt; {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>((collider, center)) = <span class="self">self</span>::create_collider(points, particle_size, pixels_per_meter) {
+        <span class="kw">let </span>rigidbody = RigidBodyBuilder::dynamic().translation(center.into()).build();
+        <span class="kw">let </span>rigidbody_handle = physics.rigidbodies.insert(rigidbody);
+        physics.colliders.insert_with_parent(collider, rigidbody_handle, <span class="kw-2">&amp;mut </span>physics.rigidbodies);
 
-    rigidbody_handle
+        <span class="prelude-val">Some</span>(rigidbody_handle)
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="kw">pub fn </span>create_collider&lt;<span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt;(points: <span class="kw-2">&amp;mut </span>FxHashSet&lt;IVec2&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Collider&gt; {
+<span class="kw">pub fn </span>create_collider(points: <span class="kw-2">&amp;mut </span>FxHashMap&lt;IVec2, f32&gt;, particle_size: i32, pixels_per_meter: i32) -&gt; <span class="prelude-ty">Option</span>&lt;(Collider, Vec2)&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>areas = Vec::new();
     <span class="kw">let </span><span class="kw-2">mut </span>shapes = Vec::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>min = IVec2::MAX;
+    <span class="kw">let </span><span class="kw-2">mut </span>max = IVec2::MIN;
 
-    <span class="kw">while let </span><span class="prelude-val">Some</span>(origin) = points.iter().cloned().next() {
-        <span class="kw">let </span><span class="kw-2">mut </span>size = IVec2::new(<span class="number">1</span>, <span class="number">1</span>);
-        <span class="kw">loop </span>{
-            <span class="kw">if </span>points.contains(<span class="kw-2">&amp;</span>IVec2::new(origin.x + size.x, origin.y)) {
-                size.x += <span class="number">1</span>;
-            } <span class="kw">else </span>{
-                <span class="kw">break</span>;
-            }
-        }
+    <span class="kw">while let </span><span class="prelude-val">Some</span>(origin) = points.keys().cloned().next() {
+        <span class="kw">let </span>origin_mass = points[<span class="kw-2">&amp;</span>origin];
+        <span class="kw">let </span><span class="kw-2">mut </span>left_bottom = origin;
+        <span class="kw">let </span><span class="kw-2">mut </span>right_top = origin;
 
-        <span class="lifetime">'outer</span>: <span class="kw">loop </span>{
-            <span class="kw">for </span>x <span class="kw">in </span>origin.x..origin.x + size.x {
-                <span class="kw">for </span>y <span class="kw">in </span>origin.y..origin.y + size.y + <span class="number">1 </span>{
-                    <span class="kw">if </span>!points.contains(<span class="kw-2">&amp;</span>IVec2::new(x, y)) {
-                        <span class="kw">break </span><span class="lifetime">'outer</span>;
+        <span class="kw">fn </span>is_valid(left_bottom: IVec2, right_top: IVec2, origin_mass: f32, points: <span class="kw-2">&amp;</span>FxHashMap&lt;IVec2, f32&gt;) -&gt; bool {
+            <span class="kw">for </span>x <span class="kw">in </span>left_bottom.x..=right_top.x {
+                <span class="kw">for </span>y <span class="kw">in </span>left_bottom.y..=right_top.y {
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(mass) = points.get(<span class="kw-2">&amp;</span>IVec2::new(x, y)) {
+                        <span class="kw">if </span><span class="kw-2">*</span>mass != origin_mass {
+                            <span class="kw">return </span><span class="bool-val">false</span>;
+                        }
+                    } <span class="kw">else </span>{
+                        <span class="kw">return </span><span class="bool-val">false</span>;
                     }
                 }
             }
 
-            size.y += <span class="number">1</span>;
+            <span class="bool-val">true
+        </span>}
+
+        <span class="kw">loop </span>{
+            <span class="kw">let </span><span class="kw-2">mut </span>changed = <span class="bool-val">false</span>;
+
+            <span class="kw">if </span>is_valid(left_bottom + IVec2::new(-<span class="number">1</span>, <span class="number">0</span>), right_top, origin_mass, points) {
+                left_bottom += IVec2::new(-<span class="number">1</span>, <span class="number">0</span>);
+                changed = <span class="bool-val">true</span>;
+            }
+            <span class="kw">if </span>is_valid(left_bottom + IVec2::new(<span class="number">0</span>, -<span class="number">1</span>), right_top, origin_mass, points) {
+                left_bottom += IVec2::new(<span class="number">0</span>, -<span class="number">1</span>);
+                changed = <span class="bool-val">true</span>;
+            }
+            <span class="kw">if </span>is_valid(left_bottom, right_top + IVec2::new(<span class="number">1</span>, <span class="number">0</span>), origin_mass, points) {
+                right_top += IVec2::new(<span class="number">1</span>, <span class="number">0</span>);
+                changed = <span class="bool-val">true</span>;
+            }
+            <span class="kw">if </span>is_valid(left_bottom, right_top + IVec2::new(<span class="number">0</span>, <span class="number">1</span>), origin_mass, points) {
+                right_top += IVec2::new(<span class="number">0</span>, <span class="number">1</span>);
+                changed = <span class="bool-val">true</span>;
+            }
+
+            <span class="kw">if </span>!changed {
+                <span class="kw">break</span>;
+            }
         }
 
-        <span class="kw">for </span>x <span class="kw">in </span>origin.x..origin.x + size.x {
-            <span class="kw">for </span>y <span class="kw">in </span>origin.y..origin.y + size.y {
+        <span class="kw">for </span>x <span class="kw">in </span>left_bottom.x..=right_top.x {
+            <span class="kw">for </span>y <span class="kw">in </span>left_bottom.y..=right_top.y {
                 points.remove(<span class="kw-2">&amp;</span>IVec2::new(x, y));
             }
         }
 
-        areas.push((origin, size));
+        <span class="kw">let </span>size = right_top - left_bottom + IVec2::ONE;
+        <span class="kw">let </span>mass = (size.x * size.y) <span class="kw">as </span>f32 * origin_mass;
+
+        min = min.min(left_bottom);
+        max = max.max(right_top);
+
+        areas.push((left_bottom, size, mass));
     }
 
     <span class="kw">if </span>areas.is_empty() {
         <span class="kw">return </span><span class="prelude-val">None</span>;
     }
 
-    <span class="kw">let </span>particle_size = PARTICLE_SIZE <span class="kw">as </span>f32 / PIXELS_PER_METER <span class="kw">as </span>f32;
+    <span class="kw">let </span><span class="kw-2">mut </span>total_mass = <span class="number">0.0</span>;
+    <span class="kw">let </span>particle_physics_size = particle_size <span class="kw">as </span>f32 / pixels_per_meter <span class="kw">as </span>f32;
+    <span class="kw">let </span>center = (min.as_vec2() + max.as_vec2() + Vec2::ONE) * particle_physics_size / <span class="number">2.0</span>;
 
-    <span class="kw">for </span>(position, size) <span class="kw">in </span>areas {
-        <span class="kw">let </span>half = size.as_vec2() * particle_size / <span class="number">2.0</span>;
+    <span class="kw">for </span>(position, size, mass) <span class="kw">in </span>areas {
+        <span class="kw">let </span>half = size.as_vec2() * particle_physics_size / <span class="number">2.0</span>;
         <span class="kw">let </span>cuboid = SharedShape::cuboid(half.x, half.y);
-        <span class="kw">let </span>offset = (position.as_vec2() + size.as_vec2() / <span class="number">2.0</span>) * particle_size;
+        <span class="kw">let </span>offset = position.as_vec2() + size.as_vec2() / <span class="number">2.0</span>;
+        <span class="kw">let </span>offset = <span class="self">self</span>::position_to_physics_position(offset, particle_size, pixels_per_meter) - center;
         shapes.push((offset.into(), cuboid));
+
+        total_mass += mass;
     }
 
-    <span class="prelude-val">Some</span>(ColliderBuilder::compound(shapes).build())
+    <span class="prelude-val">Some</span>((ColliderBuilder::compound(shapes).mass(total_mass).build(), center))
+}
+
+<span class="kw">pub fn </span>position_to_physics_position(position: Vec2, particle_size: i32, pixels_per_meter: i32) -&gt; Vec2 {
+    position * (particle_size <span class="kw">as </span>f32 / pixels_per_meter <span class="kw">as </span>f32)
+}
+
+<span class="kw">pub fn </span>physics_position_to_position(position: Vec2, particle_size: i32, pixels_per_meter: i32) -&gt; Vec2 {
+    position / (particle_size <span class="kw">as </span>f32 / pixels_per_meter <span class="kw">as </span>f32)
 }
 </code></pre></div></section></main></body></html>

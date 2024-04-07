@@ -103,7 +103,7 @@
         <span class="kw">if </span>state.global.assets.load(<span class="string">"./data/boot.zip"</span>) == AssetsLoadingStatus::Finished {
             state.ui.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>);
 
-            <span class="kw">let </span><span class="kw-2">mut </span>style = (<span class="kw-2">*</span>state.ui.inner.read().unwrap().style()).clone();
+            <span class="kw">let </span><span class="kw-2">mut </span>style = (<span class="kw-2">*</span>state.ui.inner.read().style()).clone();
             style.text_styles = [
                 (TextStyle::Heading, (FontId { size: <span class="number">32.0</span>, family: FontFamily::Name(<span class="string">"Kenney Pixel"</span>.into()) })),
                 (TextStyle::Body, (FontId { size: <span class="number">20.0</span>, family: FontFamily::Name(<span class="string">"Kenney Pixel"</span>.into()) })),
@@ -112,7 +112,7 @@
             ]
             .into();
             style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(<span class="number">1.0</span>, Color32::from_rgb(<span class="number">30</span>, <span class="number">50</span>, <span class="number">20</span>));
-            state.ui.inner.read().unwrap().set_style(style);
+            state.ui.inner.read().set_style(style);
 
             <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(FrameCommand::ChangeScene { name: <span class="string">"LoadingScene"</span>.to_string() }));
         }
@@ -121,7 +121,7 @@
     }
 
     <span class="kw">fn </span>ui(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;, input: RawInput) -&gt; <span class="prelude-ty">Result</span>&lt;(FullOutput, <span class="prelude-ty">Option</span>&lt;FrameCommand&gt;)&gt; {
-        <span class="prelude-val">Ok</span>((state.ui.inner.read().unwrap().run(input, |<span class="kw">_</span>| {}), <span class="prelude-val">None</span>))
+        <span class="prelude-val">Ok</span>((state.ui.inner.read().run(input, |<span class="kw">_</span>| {}), <span class="prelude-val">None</span>))
     }
 
     <span class="kw">fn </span>reset(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Box&lt;<span class="kw">dyn </span>Scene&lt;GlobalData&gt;&gt; {

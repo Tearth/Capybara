@@ -185,7 +185,7 @@
     }
 
     <span class="kw">fn </span>ui(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ApplicationState&lt;GlobalData&gt;, input: RawInput) -&gt; <span class="prelude-ty">Result</span>&lt;(FullOutput, <span class="prelude-ty">Option</span>&lt;FrameCommand&gt;)&gt; {
-        <span class="kw">let </span>output = state.ui.inner.read().unwrap().run(input, |context| {
+        <span class="kw">let </span>output = state.ui.inner.read().run(input, |context| {
             <span class="kw">let </span>center = context.screen_rect().center();
             Window::new(<span class="string">"Loading"</span>)
                 .frame(Frame::none())

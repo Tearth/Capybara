@@ -195,9 +195,9 @@
 <span class="kw">use </span>futures_util::StreamExt;
 <span class="kw">use </span>instant::SystemTime;
 <span class="kw">use </span>log::info;
+<span class="kw">use </span>parking_lot::RwLock;
 <span class="kw">use </span>std::collections::VecDeque;
 <span class="kw">use </span>std::sync::Arc;
-<span class="kw">use </span>std::sync::RwLock;
 <span class="kw">use </span>std::thread;
 <span class="kw">use </span>tokio::runtime::Runtime;
 <span class="kw">use </span>tokio_tungstenite::tungstenite::Message;
@@ -222,7 +222,7 @@
         <span class="kw">let </span>status = <span class="self">self</span>.status.clone();
         <span class="kw">let </span>ping = <span class="self">self</span>.ping.clone();
 
-        <span class="kw-2">*</span>status.write().unwrap() = ConnectionStatus::Connecting;
+        <span class="kw-2">*</span>status.write() = ConnectionStatus::Connecting;
 
         <span class="kw">let </span>received_packets = <span class="self">self</span>.received_packets.clone();
         <span class="kw">let </span>(outgoing_packets_tx, <span class="kw-2">mut </span>outgoing_packets_rx) = mpsc::unbounded();
@@ -239,7 +239,7 @@
             <span class="kw">let </span>runtime = <span class="kw">match </span>Runtime::new() {
                 <span class="prelude-val">Ok</span>(runtime) =&gt; runtime,
                 <span class="prelude-val">Err</span>(err) =&gt; {
-                    <span class="kw-2">*</span>status.write().unwrap() = ConnectionStatus::Error;
+                    <span class="kw-2">*</span>status.write() = ConnectionStatus::Error;
                     <span class="macro">error_return!</span>(<span class="string">"Failed to create network runtime ({})"</span>, err);
                 }
             };
@@ -250,7 +250,7 @@
                 <span class="kw">let </span>url = <span class="kw">match </span>Url::parse(<span class="kw-2">&amp;</span>url) {
                     <span class="prelude-val">Ok</span>(url) =&gt; url,
                     <span class="prelude-val">Err</span>(err) =&gt; {
-                        <span class="kw-2">*</span>status.write().unwrap() = ConnectionStatus::Error;
+                        <span class="kw-2">*</span>status.write() = ConnectionStatus::Error;
                         <span class="macro">error_return!</span>(<span class="string">"Failed to parse server URL ({})"</span>, err)
                     }
                 };
@@ -258,7 +258,7 @@
                 <span class="kw">let </span>websocket = <span class="kw">match </span>tokio_tungstenite::connect_async(url).<span class="kw">await </span>{
                     <span class="prelude-val">Ok</span>((websocket, <span class="kw">_</span>)) =&gt; websocket,
                     <span class="prelude-val">Err</span>(err) =&gt; {
-                        <span class="kw-2">*</span>status.write().unwrap() = ConnectionStatus::Error;
+                        <span class="kw-2">*</span>status.write() = ConnectionStatus::Error;
                         <span class="macro">error_return!</span>(<span class="string">"Failed to establish connection with the server ({})"</span>, err)
                     }
                 };
@@ -286,10 +286,10 @@
                                         <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">error_continue!</span>(<span class="string">"Failed to obtain current time ({})"</span>, err),
                                     };
 
-                                    <span class="kw-2">*</span>ping.write().unwrap() = (now - timestamp) <span class="kw">as </span>u32;
+                                    <span class="kw-2">*</span>ping.write() = (now - timestamp) <span class="kw">as </span>u32;
                                 }
                                 <span class="kw">_ </span>=&gt; {
-                                    received_packets.write().unwrap().push_back(packet);
+                                    received_packets.write().push_back(packet);
                                 }
                             }
                         }
@@ -305,7 +305,7 @@
                 };
                 <span class="kw">let </span>process_disconnection = disconnection_rx.next();
 
-                <span class="kw-2">*</span>status.write().unwrap() = ConnectionStatus::Connected;
+                <span class="kw-2">*</span>status.write() = ConnectionStatus::Connected;
 
                 <span class="macro">tokio::select! </span>{
                     <span class="kw">_ </span>= websocket_rx_to_sink =&gt; (),
@@ -314,7 +314,7 @@
                     <span class="kw">_ </span>= process_disconnection =&gt; ()
                 };
 
-                <span class="kw-2">*</span>status.write().unwrap() = ConnectionStatus::Disconnected;
+                <span class="kw-2">*</span>status.write() = ConnectionStatus::Disconnected;
             });
 
             <span class="macro">info!</span>(<span class="string">"Connection closed, network runtime completed"</span>);
@@ -353,11 +353,11 @@
     }
 
     <span class="kw">pub fn </span>poll_packet(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Packet&gt; {
-        <span class="self">self</span>.received_packets.write().unwrap().pop_front()
+        <span class="self">self</span>.received_packets.write().pop_front()
     }
 
     <span class="kw">pub fn </span>has_connected(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; bool {
-        <span class="kw">let </span>connected = <span class="kw-2">*</span><span class="self">self</span>.status.read().unwrap();
+        <span class="kw">let </span>connected = <span class="kw-2">*</span><span class="self">self</span>.status.read();
         <span class="kw">let </span>has_connected = <span class="self">self</span>.connected_last_state != connected &amp;&amp; connected == ConnectionStatus::Connected;
         <span class="self">self</span>.connected_last_state = connected;
 
@@ -365,7 +365,7 @@
     }
 
     <span class="kw">pub fn </span>has_disconnected(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; bool {
-        <span class="kw">let </span>connected = <span class="kw-2">*</span><span class="self">self</span>.status.read().unwrap();
+        <span class="kw">let </span>connected = <span class="kw-2">*</span><span class="self">self</span>.status.read();
         <span class="kw">let </span>has_disconnected = <span class="self">self</span>.connected_last_state != connected &amp;&amp; connected == ConnectionStatus::Disconnected;
         <span class="self">self</span>.connected_last_state = connected;
 

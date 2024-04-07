@@ -163,6 +163,23 @@
 <a href="#161" id="161">161</a>
 <a href="#162" id="162">162</a>
 <a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::chunk::ParticleData;
 <span class="kw">use </span><span class="kw">super</span>::physics;
 <span class="kw">use </span><span class="kw">super</span>::simulation::PowderSimulation;
@@ -179,9 +196,8 @@
 <span class="attr">#[derive(Clone, Default)]
 </span><span class="kw">pub struct </span>Structure {
     <span class="kw">pub </span>rigidbody_handle: RigidBodyHandle,
-    <span class="kw">pub </span>particle_indices: Vec&lt;(StructureData, IVec2)&gt;,
-    <span class="kw">pub </span>temporary_positions: Vec&lt;IVec2&gt;,
-    <span class="kw">pub </span>center: Vec2,
+    <span class="kw">pub </span>particles: Vec&lt;(StructureData, Vec2)&gt;,
+    <span class="kw">pub </span>fillings: Vec&lt;IVec2&gt;,
 }
 
 <span class="attr">#[derive(Clone)]
@@ -190,30 +206,40 @@
     Particle(ParticleData),
 }
 
-<span class="kw">impl</span>&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt; PowderSimulation&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt; {
-    <span class="kw">pub fn </span>create_structure(<span class="kw-2">&amp;mut </span><span class="self">self</span>, physics: <span class="kw-2">&amp;mut </span>PhysicsContext, points: <span class="kw-2">&amp;mut </span>FxHashSet&lt;IVec2&gt;) {
-        <span class="kw">for </span>point <span class="kw">in </span>points.iter() {
+<span class="kw">impl </span>PowderSimulation {
+    <span class="kw">pub fn </span>create_structure(<span class="kw-2">&amp;mut </span><span class="self">self</span>, physics: <span class="kw-2">&amp;mut </span>PhysicsContext, points: <span class="kw-2">&amp;mut </span>FxHashMap&lt;IVec2, f32&gt;) {
+        <span class="kw">let </span><span class="kw-2">mut </span>chunks_to_update = FxHashSet::default();
+
+        <span class="kw">for </span>point <span class="kw">in </span>points.keys() {
             <span class="kw">let </span>chunk = <span class="self">self</span>.get_chunk(<span class="kw-2">*</span>point).unwrap();
-            <span class="kw">let </span><span class="kw-2">mut </span>chunk = chunk.write().unwrap();
+            <span class="kw">let </span><span class="kw-2">mut </span>chunk = chunk.write();
+            chunks_to_update.insert(chunk.position);
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(particle) = chunk.get_particle_mut(<span class="kw-2">*</span>point) {
                 particle.structure = <span class="bool-val">true</span>;
             }
         }
 
-        <span class="kw">let </span>particle_indices = points.iter().map(|p| (StructureData::Position(<span class="kw-2">*</span>p), <span class="kw-2">*</span>p)).collect::&lt;Vec&lt;(StructureData, IVec2)&gt;&gt;();
-        <span class="kw">let </span>rigidbody_handle = physics::create_rigidbody::&lt;PARTICLE_SIZE, PIXELS_PER_METER&gt;(physics, points);
-        <span class="kw">let </span>rigidbody = physics.rigidbodies.get(rigidbody_handle).unwrap();
-        <span class="kw">let </span>translation = Vec2::from(rigidbody.position().translation);
-        <span class="kw">let </span>center = translation * PIXELS_PER_METER <span class="kw">as </span>f32;
+        <span class="kw">for </span>chunk_position <span class="kw">in </span><span class="kw-2">&amp;</span>chunks_to_update {
+            <span class="kw">let </span>chunk = <span class="self">self</span>.chunks.get(chunk_position).unwrap();
+            <span class="kw">let </span><span class="kw-2">mut </span>chunk = chunk.write();
 
-        <span class="kw">let </span>structure = Structure { rigidbody_handle, particle_indices, temporary_positions: Vec::new(), center };
-        <span class="self">self</span>.structures.store(Rc::new(RefCell::new(structure)));
+            chunk.update(physics);
+        }
 
-        <span class="comment">// let rigidbody_handle = physics::create_structure::&lt;PARTICLE_SIZE, PIXELS_PER_METER&gt;(physics, position, &amp;mut points);
-        // let particle_indices = points.iter().map(|p| (StructureData::Position(*p), *p)).collect::&lt;Vec&lt;(StructureData, IVec2)&gt;&gt;();
-        // Structure { rigidbody_handle, particle_indices, temporary_positions: Vec::new(), center: position.as_vec2() }
-    </span>}
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(rigidbody_handle) = physics::create_rigidbody(physics, <span class="kw-2">&amp;mut </span>points.clone(), <span class="self">self</span>.particle_size, <span class="self">self</span>.pixels_per_meter) {
+            <span class="kw">let </span>rigidbody = physics.rigidbodies.get(rigidbody_handle).unwrap();
+            <span class="kw">let </span>translation = Vec2::from(rigidbody.position().translation);
+            <span class="kw">let </span>center = physics::physics_position_to_position(translation, <span class="self">self</span>.particle_size, <span class="self">self</span>.pixels_per_meter);
+            <span class="kw">let </span>particles = points
+                .iter()
+                .map(|(p, <span class="kw">_</span>)| (StructureData::Position(<span class="kw-2">*</span>p), (<span class="kw-2">*</span>p).as_vec2() + Vec2::new(<span class="number">0.5</span>, <span class="number">0.5</span>) - center))
+                .collect::&lt;Vec&lt;(StructureData, Vec2)&gt;&gt;();
+
+            <span class="kw">let </span>structure = Structure { rigidbody_handle, particles, fillings: Vec::new() };
+            <span class="self">self</span>.structures.store(Rc::new(RefCell::new(structure)));
+        }
+    }
 
     <span class="kw">pub fn </span>update_structures(<span class="kw-2">&amp;mut </span><span class="self">self</span>, physics: <span class="kw-2">&amp;mut </span>PhysicsContext) {
         <span class="kw">let </span><span class="kw-2">mut </span>last_id = <span class="prelude-val">None</span>;
@@ -225,101 +251,109 @@
             <span class="kw">let </span><span class="kw-2">mut </span>forbidden_for_fluid = FxHashSet::default();
 
             <span class="kw">let </span>rigidbody = physics.rigidbodies.get(structure.rigidbody_handle).unwrap();
-            <span class="kw">let </span>position =
-                Vec2::new(rigidbody.position().translation.x, rigidbody.position().translation.y) * PIXELS_PER_METER <span class="kw">as </span>f32 / PARTICLE_SIZE <span class="kw">as </span>f32;
+            <span class="kw">let </span>position = physics::physics_position_to_position(rigidbody.position().translation.into(), <span class="self">self</span>.particle_size, <span class="self">self</span>.pixels_per_meter);
             <span class="kw">let </span>rotation = rigidbody.rotation().angle();
 
-            <span class="kw">for </span>p <span class="kw">in </span><span class="number">0</span>..structure.particle_indices.len() {
-                <span class="kw">match </span>structure.particle_indices[p].clone().<span class="number">0 </span>{
+            <span class="kw">for </span>p <span class="kw">in </span><span class="number">0</span>..structure.particles.len() {
+                <span class="kw">match </span>structure.particles[p].clone().<span class="number">0 </span>{
                     StructureData::Position(position) =&gt; {
-                        forbidden_for_fluid.insert(position);
-                        particles_to_move.push((<span class="self">self</span>.remove_particle(position).unwrap(), structure.particle_indices[p].<span class="number">1</span>));
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(particle) = <span class="self">self</span>.remove_particle(position) {
+                            forbidden_for_fluid.insert(position);
+                            particles_to_move.push((particle, structure.particles[p].<span class="number">1</span>));
+                        }
                     }
                     StructureData::Particle(particle) =&gt; {
                         forbidden_for_fluid.insert(particle.position);
-                        particles_to_move.push((particle, structure.particle_indices[p].<span class="number">1</span>));
+                        particles_to_move.push((particle, structure.particles[p].<span class="number">1</span>));
                     }
                 }
             }
 
-            <span class="kw">for </span>p <span class="kw">in </span><span class="number">0</span>..structure.temporary_positions.len() {
-                <span class="self">self</span>.remove_particle(structure.temporary_positions[p]).unwrap();
+            <span class="kw">for </span>p <span class="kw">in </span><span class="number">0</span>..structure.fillings.len() {
+                <span class="self">self</span>.remove_particle(structure.fillings[p]);
             }
 
-            structure.particle_indices.clear();
-            structure.temporary_positions.clear();
+            structure.particles.clear();
+            structure.fillings.clear();
             <span class="kw">let </span><span class="kw-2">mut </span>potential_holes = FxHashMap::default();
 
             <span class="kw">for </span>(particle, original_position) <span class="kw">in </span><span class="kw-2">&amp;mut </span>particles_to_move {
-                <span class="kw">let </span>offset = original_position.as_vec2() - structure.center;
+                <span class="kw">let </span>offset = <span class="kw-2">*</span>original_position;
                 <span class="kw">let </span>offset_after_rotation = Vec2::new(
                     offset.x * rotation.cos() - offset.y * rotation.sin(), <span class="comment">// fmt
                     </span>offset.x * rotation.sin() + offset.y * rotation.cos(),
                 );
                 <span class="kw">let </span>position = (position + offset_after_rotation).as_ivec2();
 
-                <span class="kw">let </span>chunk = <span class="self">self</span>.get_chunk(position).unwrap();
-                <span class="kw">let </span><span class="kw-2">mut </span>chunk = chunk.write().unwrap();
-
-                <span class="kw">let </span>blocking_particle = chunk.get_particle(position);
-                <span class="kw">let </span>blocking_particle_state = blocking_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
-
-                <span class="kw">if </span>blocking_particle.is_none() || blocking_particle_state == ParticleState::Fluid {
-                    <span class="kw">if </span>blocking_particle.is_some() {
-                        <span class="self">self</span>.displace_fluid(position, <span class="kw-2">&amp;</span>forbidden_for_fluid);
-                    }
-
-                    chunk.add_particle(position, <span class="kw-2">*</span>particle);
-                    structure.particle_indices.push((StructureData::Position(position), <span class="kw-2">*</span>original_position));
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(chunk) = <span class="self">self</span>.get_chunk(position) {
+                    <span class="kw">let </span>chunk = chunk.write();
+                    <span class="kw">let </span>blocking_particle = chunk.get_particle(position);
+                    <span class="kw">let </span>blocking_particle_state = blocking_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
                     drop(chunk);
 
-                    <span class="kw">for </span>neighbour_offset <span class="kw">in </span>[IVec2::new(<span class="number">1</span>, <span class="number">0</span>), IVec2::new(-<span class="number">1</span>, <span class="number">0</span>), IVec2::new(<span class="number">0</span>, <span class="number">1</span>), IVec2::new(<span class="number">0</span>, -<span class="number">1</span>)] {
-                        <span class="kw">let </span>neighbour_position = position + neighbour_offset;
-                        <span class="kw">let </span>neighbour_chunk = <span class="self">self</span>.get_chunk(neighbour_position).unwrap();
-                        <span class="kw">let </span>neighbour_chunk = neighbour_chunk.read().unwrap();
+                    <span class="kw">if </span>blocking_particle_state == ParticleState::Unknown || blocking_particle_state == ParticleState::Fluid {
+                        <span class="kw">if </span>blocking_particle_state == ParticleState::Fluid {
+                            <span class="self">self</span>.displace_fluid(position, <span class="kw-2">&amp;</span>forbidden_for_fluid);
+                        }
 
-                        <span class="kw">let </span>neighbour_particle = neighbour_chunk.get_particle(neighbour_position);
-                        <span class="kw">let </span>neighbour_particle_state = neighbour_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
+                        <span class="self">self</span>.add_particle(position, <span class="kw-2">*</span>particle);
 
-                        <span class="kw">if </span>neighbour_particle.is_none() || neighbour_particle_state == ParticleState::Fluid {
-                            <span class="kw">let </span>key = neighbour_position.x | (neighbour_position.y &lt;&lt; <span class="number">16</span>);
-                            <span class="kw">if let </span><span class="prelude-val">Some</span>(data) = potential_holes.get_mut(<span class="kw-2">&amp;</span>key) {
-                                <span class="kw-2">*</span>data += <span class="number">1</span>;
-                            } <span class="kw">else </span>{
-                                potential_holes.insert(key, <span class="number">1</span>);
+                        structure.particles.push((StructureData::Position(position), <span class="kw-2">*</span>original_position));
+
+                        <span class="kw">for </span>neighbour_offset <span class="kw">in </span>[IVec2::new(<span class="number">1</span>, <span class="number">0</span>), IVec2::new(-<span class="number">1</span>, <span class="number">0</span>), IVec2::new(<span class="number">0</span>, <span class="number">1</span>), IVec2::new(<span class="number">0</span>, -<span class="number">1</span>)] {
+                            <span class="kw">let </span>neighbour_position = position + neighbour_offset;
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(neighbour_chunk) = <span class="self">self</span>.get_chunk(neighbour_position) {
+                                <span class="kw">let </span>neighbour_chunk = neighbour_chunk.read();
+
+                                <span class="kw">let </span>neighbour_particle = neighbour_chunk.get_particle(neighbour_position);
+                                <span class="kw">let </span>neighbour_particle_state = neighbour_particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
+
+                                <span class="kw">if </span>neighbour_particle.is_none() || neighbour_particle_state == ParticleState::Fluid {
+                                    <span class="kw">let </span>key = neighbour_position.x | (neighbour_position.y &lt;&lt; <span class="number">16</span>);
+                                    <span class="kw">if let </span><span class="prelude-val">Some</span>(data) = potential_holes.get_mut(<span class="kw-2">&amp;</span>key) {
+                                        <span class="kw-2">*</span>data += <span class="number">1</span>;
+                                    } <span class="kw">else </span>{
+                                        potential_holes.insert(key, <span class="number">1</span>);
+                                    }
+                                }
                             }
                         }
+                    } <span class="kw">else </span>{
+                        structure.particles.push((StructureData::Particle(<span class="kw-2">*</span>particle), <span class="kw-2">*</span>original_position));
                     }
                 } <span class="kw">else </span>{
-                    structure.particle_indices.push((StructureData::Particle(<span class="kw-2">*</span>particle), <span class="kw-2">*</span>original_position));
+                    structure.particles.push((StructureData::Particle(<span class="kw-2">*</span>particle), <span class="kw-2">*</span>original_position));
                 }
             }
 
             <span class="kw">for </span>(key, filled_sides) <span class="kw">in </span><span class="kw-2">&amp;</span>potential_holes {
                 <span class="kw">if </span><span class="kw-2">*</span>filled_sides == <span class="number">4 </span>{
-                    <span class="comment">/*let position = IVec2::new(key &amp; 0xffff, key &gt;&gt; 16);
-                    let chunk = self.get_chunk(position).unwrap();
-                    let chunk = chunk.read().unwrap();
+                    <span class="kw">let </span>position = IVec2::new(key &amp; <span class="number">0xffff</span>, key &gt;&gt; <span class="number">16</span>);
+                    <span class="kw">let </span>chunk = <span class="self">self</span>.get_chunk(position).unwrap();
+                    <span class="kw">let </span>chunk = chunk.read();
 
-                    if let Some(particle) = chunk.get_particle(position) {
-                        if particle.state == ParticleState::Fluid {
-                            self.displace_fluid(position, &amp;forbidden_for_fluid);
-                        }
-                    }
+                    <span class="kw">let </span>particle = chunk.get_particle(position);
+                    <span class="kw">let </span>particle_state = particle.map(|p| p.state).unwrap_or(ParticleState::Unknown);
                     drop(chunk);
 
-                    let chunk = self.get_chunk(position + IVec2::new(0, 1)).unwrap();
-                    let chunk = chunk.read().unwrap();
+                    <span class="kw">if </span>particle_state == ParticleState::Fluid {
+                        <span class="self">self</span>.displace_fluid(position, <span class="kw-2">&amp;</span>forbidden_for_fluid);
+                    }
 
-                    let neighbour_particle = chunk.get_particle(position + IVec2::new(0, 1));
-                    if let Some(neighbour_particle) = neighbour_particle {
-                        let temporary_particle = neighbour_particle;
-                        if !self.particle_exists(position) {
-                            self.add_particle(position, *temporary_particle);
-                            structure.temporary_positions.push(position);
+                    <span class="kw">let </span>chunk = <span class="self">self</span>.get_chunk(position + IVec2::new(<span class="number">0</span>, <span class="number">1</span>)).unwrap();
+                    <span class="kw">let </span>chunk = chunk.read();
+
+                    <span class="kw">let </span>neighbour_particle = chunk.get_particle(position + IVec2::new(<span class="number">0</span>, <span class="number">1</span>));
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(neighbour_particle) = neighbour_particle.cloned() {
+                        <span class="kw">let </span>temporary_particle = neighbour_particle;
+                        drop(chunk);
+
+                        <span class="kw">if </span>!<span class="self">self</span>.particle_exists(position) {
+                            <span class="self">self</span>.add_particle(position, temporary_particle);
+                            structure.fillings.push(position);
                         }
-                    }*/
-                </span>}
+                    }
+                }
             }
 
             last_id = <span class="prelude-val">Some</span>(id);

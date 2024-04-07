@@ -169,7 +169,7 @@
 
 <span class="kw">fn </span>process_config_show(_tokens: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], core: <span class="kw-2">&amp;</span>Core) {
     <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::default();
-    <span class="kw">let </span>config = core.config.read().unwrap();
+    <span class="kw">let </span>config = core.config.read();
 
     data.push(<span class="macro">format!</span>(<span class="string">" - endpoint: {}"</span>, config.data.endpoint));
     data.push(<span class="macro">format!</span>(<span class="string">" - lobby tick: {} ms"</span>, config.data.lobby_tick));
@@ -178,7 +178,7 @@
     data.push(<span class="macro">format!</span>(<span class="string">" - packet delay variation: {} ms"</span>, config.data.packet_delay_variation));
     data.push(<span class="string">" - workers:"</span>.to_string());
 
-    <span class="kw">for </span>worker <span class="kw">in </span><span class="kw-2">&amp;</span>core.config.read().unwrap().data.workers {
+    <span class="kw">for </span>worker <span class="kw">in </span><span class="kw-2">&amp;</span>core.config.read().data.workers {
         data.push(<span class="macro">format!</span>(
             <span class="string">"   - {} {} ({}), {}, {}"</span>,
             worker.id,
@@ -197,7 +197,7 @@
 
 <span class="kw">fn </span>process_config_reload(_tokens: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], core: <span class="kw-2">&amp;mut </span>Core) {
     <span class="macro">println!</span>(<span class="string">"Reloading configuration file"</span>);
-    core.config.write().unwrap().reload();
+    core.config.write().reload();
     <span class="macro">println!</span>(<span class="string">"Configuration reloaded"</span>);
 }
 
@@ -215,12 +215,12 @@
 
 <span class="kw">fn </span>process_clients_list(_tokens: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], core: <span class="kw-2">&amp;</span>Core) {
     <span class="kw">let </span><span class="kw-2">mut </span>data = Vec::default();
-    <span class="kw">let </span>clients = core.clients.read().unwrap();
+    <span class="kw">let </span>clients = core.clients.read();
 
     <span class="kw">for </span>client <span class="kw">in </span>clients.iter() {
         <span class="kw">let </span>id = client.<span class="number">1</span>.id;
         <span class="kw">let </span>address = client.<span class="number">1</span>.address;
-        <span class="kw">let </span>ping = client.<span class="number">1</span>.ping.read().unwrap();
+        <span class="kw">let </span>ping = client.<span class="number">1</span>.ping.read();
         <span class="kw">let </span>online_time = (Instant::now() - client.<span class="number">1</span>.join_time).as_secs() / <span class="number">60</span>;
 
         data.push(<span class="macro">format!</span>(<span class="string">"{}, {}, ping {}, online {} minutes"</span>, id, address, ping, online_time));
@@ -255,12 +255,12 @@
 
 <span class="kw">fn </span>process_workers_status(_tokens: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], core: <span class="kw-2">&amp;</span>Core) {
     <span class="kw">let </span><span class="kw-2">mut </span>output = Vec::default();
-    <span class="kw">let </span>manager = core.workers.read().unwrap();
+    <span class="kw">let </span>manager = core.workers.read();
 
     <span class="kw">for </span>worker <span class="kw">in </span><span class="kw-2">&amp;</span>manager.workers {
         <span class="kw">let </span>enabled = <span class="kw">if </span>worker.definition.enabled { <span class="string">"enabled" </span>} <span class="kw">else </span>{ <span class="string">"disabled" </span>};
-        <span class="kw">if </span><span class="kw-2">*</span>worker.websocket.status.read().unwrap() == ConnectionStatus::Connected {
-            <span class="kw">let </span>ping = <span class="kw-2">*</span>worker.websocket.ping.read().unwrap();
+        <span class="kw">if </span><span class="kw-2">*</span>worker.websocket.status.read() == ConnectionStatus::Connected {
+            <span class="kw">let </span>ping = <span class="kw-2">*</span>worker.websocket.ping.read();
             output.push(<span class="macro">format!</span>(
                 <span class="string">"{}, {} ({}) - {}, connected, ping {} ms"</span>,
                 worker.definition.id, worker.definition.name, worker.definition.flag, enabled, ping

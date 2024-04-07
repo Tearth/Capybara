@@ -120,11 +120,11 @@
 
 <span class="kw">impl </span>LobbyNetworkContext {
     <span class="kw">pub fn </span>process(<span class="kw-2">&amp;mut </span><span class="self">self</span>, now: Instant) {
-        <span class="kw">if </span><span class="macro">matches!</span>(<span class="kw-2">*</span><span class="self">self</span>.hub_websocket.status.read().unwrap(), ConnectionStatus::Disconnected | ConnectionStatus::Error) {
+        <span class="kw">if </span><span class="macro">matches!</span>(<span class="kw-2">*</span><span class="self">self</span>.hub_websocket.status.read(), ConnectionStatus::Disconnected | ConnectionStatus::Error) {
             <span class="self">self</span>.hub_websocket.connect(HUB_ENDPOINT);
         }
 
-        <span class="kw">if </span><span class="kw-2">*</span><span class="self">self</span>.hub_websocket.status.read().unwrap() == ConnectionStatus::Connected {
+        <span class="kw">if </span><span class="kw-2">*</span><span class="self">self</span>.hub_websocket.status.read() == ConnectionStatus::Connected {
             <span class="kw">if </span><span class="self">self</span>.hub_websocket.has_connected() {
                 <span class="self">self</span>.hub_websocket.send_packet(Packet::from_object(PACKET_PLAYER_NAME_REQUEST, <span class="kw-2">&amp;</span>PacketPlayerNameRequest {}));
                 <span class="self">self</span>.hub_websocket.send_packet(Packet::from_object(PACKET_SERVER_LIST_REQUEST, <span class="kw-2">&amp;</span>PacketServerListRequest {}));
@@ -169,7 +169,7 @@
         <span class="kw">if let </span><span class="prelude-val">Some</span>(last_ping_timestamp) = <span class="self">self</span>.last_ping_timestamp {
             <span class="kw">if </span>(now - last_ping_timestamp).as_millis() &gt;= SERVER_PING_INTERVAL <span class="kw">as </span>u128 {
                 <span class="kw">for </span>server <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.servers {
-                    <span class="kw">if </span><span class="kw-2">*</span>server.websocket.status.read().unwrap() == ConnectionStatus::Connected {
+                    <span class="kw">if </span><span class="kw-2">*</span>server.websocket.status.read() == ConnectionStatus::Connected {
                         server.websocket.send_ping();
                     } <span class="kw">else </span>{
                         <span class="macro">info!</span>(<span class="string">"Server {} is disconnected, restarting connection"</span>, server.name);

@@ -109,11 +109,11 @@
 <span class="kw">use </span>capybara::network::server::client::WebSocketConnectedClient;
 <span class="kw">use </span>capybara::network::server::client::WebSocketConnectedClientSlim;
 <span class="kw">use </span>capybara::network::server::listener::WebSocketListener;
+<span class="kw">use </span>capybara::parking_lot::RwLock;
 <span class="kw">use </span>futures_channel::mpsc;
 <span class="kw">use </span>futures_util::StreamExt;
 <span class="kw">use </span>simple_base::<span class="kw-2">*</span>;
 <span class="kw">use </span>std::sync::Arc;
-<span class="kw">use </span>std::sync::RwLock;
 <span class="kw">use </span>std::time::Duration;
 <span class="kw">use </span>tokio::select;
 <span class="kw">use </span>tokio::time;
@@ -154,28 +154,28 @@
                     <span class="macro">error_continue!</span>(<span class="string">"Failed to run client runtime ({})"</span>, err);
                 }
 
-                room.write().unwrap().initialize_client(client.to_slim());
-                clients.write().unwrap().insert(client.id, client);
+                room.write().initialize_client(client.to_slim());
+                clients.write().insert(client.id, client);
             }
         };
         <span class="kw">let </span>read_frames = <span class="kw">async </span>{
             <span class="kw">while let </span><span class="prelude-val">Some</span>((id, frame)) = packet_event_rx.next().<span class="kw">await </span>{
-                queue.write().unwrap().push(QueuePacket::new(id, frame));
+                queue.write().push(QueuePacket::new(id, frame));
             }
         };
         <span class="kw">let </span>process_disconnection = <span class="kw">async </span>{
             <span class="kw">while let </span><span class="prelude-val">Some</span>(id) = disconnection_event_rx.next().<span class="kw">await </span>{
-                clients.write().unwrap().remove(<span class="kw-2">&amp;</span>id);
+                clients.write().remove(<span class="kw-2">&amp;</span>id);
             }
         };
         <span class="kw">let </span>tick = <span class="kw">async </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>interval = time::interval(Duration::from_millis(TICK));
             <span class="kw">loop </span>{
-                <span class="kw">let </span>clients = clients.read().unwrap().iter().map(|p| (p.<span class="number">1</span>.to_slim())).collect::&lt;Vec&lt;WebSocketConnectedClientSlim&gt;&gt;();
-                <span class="kw">let </span>packets = queue.write().unwrap().clone();
+                <span class="kw">let </span>clients = clients.read().iter().map(|p| (p.<span class="number">1</span>.to_slim())).collect::&lt;Vec&lt;WebSocketConnectedClientSlim&gt;&gt;();
+                <span class="kw">let </span>packets = queue.write().clone();
 
-                queue.write().unwrap().clear();
-                room.write().unwrap().tick(clients, packets);
+                queue.write().clear();
+                room.write().tick(clients, packets);
 
                 interval.tick().<span class="kw">await</span>;
             }

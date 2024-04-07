@@ -91,6 +91,10 @@
 <a href="#89" id="89">89</a>
 <a href="#90" id="90">90</a>
 <a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::assets::RawTexture;
 <span class="kw">use </span><span class="kw">crate</span>::error_return;
 <span class="kw">use </span><span class="kw">crate</span>::glam::IVec2;
@@ -103,24 +107,39 @@
 <span class="kw">use </span><span class="kw">crate</span>::renderer::texture::Texture;
 <span class="kw">use </span><span class="kw">crate</span>::utils::color::Vec4Utils;
 
-<span class="kw">pub struct </span>Canvas&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32&gt; {
+<span class="kw">pub struct </span>Canvas {
     <span class="kw">pub </span>chunk_position: IVec2,
     <span class="kw">pub </span>shape: <span class="prelude-ty">Option</span>&lt;Shape&gt;,
     <span class="kw">pub </span>texture_id: usize,
     <span class="kw">pub </span>texture_data: Vec&lt;u8&gt;,
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) chunk_size: i32,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) particle_size: i32,
 }
 
-<span class="kw">impl</span>&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32&gt; Canvas&lt;CHUNK_SIZE, PARTICLE_SIZE&gt; {
+<span class="kw">impl </span>Canvas {
+    <span class="kw">pub fn </span>new(chunk_size: i32, particle_size: i32) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            chunk_position: Default::default(),
+            shape: Default::default(),
+            texture_id: Default::default(),
+            texture_data: [<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">255</span>].repeat((chunk_size * chunk_size) <span class="kw">as </span>usize),
+
+            chunk_size,
+            particle_size,
+        }
+    }
+
     <span class="kw">pub fn </span>initialize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, renderer: <span class="kw-2">&amp;mut </span>RendererContext, chunk_position: IVec2) {
         <span class="kw">let </span>name = <span class="macro">format!</span>(<span class="string">"canvas_{}_{}"</span>, chunk_position.x, chunk_position.y);
-        <span class="kw">let </span>size = Vec2::new(CHUNK_SIZE <span class="kw">as </span>f32, CHUNK_SIZE <span class="kw">as </span>f32);
+        <span class="kw">let </span>size = Vec2::new(<span class="self">self</span>.chunk_size <span class="kw">as </span>f32, <span class="self">self</span>.chunk_size <span class="kw">as </span>f32);
 
         <span class="kw">let </span>raw = RawTexture::new(<span class="kw-2">&amp;</span>name, <span class="string">""</span>, size, <span class="kw-2">&amp;</span><span class="self">self</span>.texture_data);
         <span class="kw">let </span>texture = Texture::new(renderer, <span class="kw-2">&amp;</span>raw).expect(<span class="string">"Failed to create texture"</span>);
         <span class="self">self</span>.texture_id = renderer.textures.store(texture);
 
         <span class="kw">let </span>white = Vec4::ONE.to_rgb_packed();
-        <span class="kw">let </span>width_real = (CHUNK_SIZE * PARTICLE_SIZE) <span class="kw">as </span>f32;
+        <span class="kw">let </span>width_real = (<span class="self">self</span>.chunk_size * <span class="self">self</span>.particle_size) <span class="kw">as </span>f32;
 
         <span class="kw">let </span>canvas_left_bottom = Vec2::new(<span class="number">0.0</span>, <span class="number">0.0</span>);
         <span class="kw">let </span>canvas_right_bottom = Vec2::new(width_real, <span class="number">0.0</span>);
@@ -145,13 +164,13 @@
             <span class="prelude-val">Some</span>(shape) =&gt; shape,
             <span class="prelude-val">None </span>=&gt; <span class="macro">error_return!</span>(<span class="string">"Canvas shape is not initialized"</span>),
         };
-        shape.position = <span class="self">self</span>.chunk_position.as_vec2() * (CHUNK_SIZE * PARTICLE_SIZE) <span class="kw">as </span>f32;
+        shape.position = <span class="self">self</span>.chunk_position.as_vec2() * (<span class="self">self</span>.chunk_size * <span class="self">self</span>.particle_size) <span class="kw">as </span>f32;
 
         renderer.draw_shape(shape);
     }
 
     <span class="kw">pub fn </span>set_particle(<span class="kw-2">&amp;mut </span><span class="self">self</span>, position: IVec2, color: Vec4) {
-        <span class="kw">let </span>index = <span class="self">self</span>.position_to_texture_index(position &amp; (CHUNK_SIZE - <span class="number">1</span>));
+        <span class="kw">let </span>index = <span class="self">self</span>.position_to_texture_index(position &amp; (<span class="self">self</span>.chunk_size - <span class="number">1</span>));
         <span class="self">self</span>.texture_data[index * <span class="number">4 </span>+ <span class="number">0</span>] = (color.x * <span class="number">255.0</span>) <span class="kw">as </span>u8;
         <span class="self">self</span>.texture_data[index * <span class="number">4 </span>+ <span class="number">1</span>] = (color.y * <span class="number">255.0</span>) <span class="kw">as </span>u8;
         <span class="self">self</span>.texture_data[index * <span class="number">4 </span>+ <span class="number">2</span>] = (color.z * <span class="number">255.0</span>) <span class="kw">as </span>u8;
@@ -168,18 +187,7 @@
     }
 
     <span class="kw">pub fn </span>position_to_texture_index(<span class="kw-2">&amp;</span><span class="self">self</span>, position: IVec2) -&gt; usize {
-        (position.x + position.y * CHUNK_SIZE) <span class="kw">as </span>usize
-    }
-}
-
-<span class="kw">impl</span>&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32&gt; Default <span class="kw">for </span>Canvas&lt;CHUNK_SIZE, PARTICLE_SIZE&gt; {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            chunk_position: Default::default(),
-            shape: Default::default(),
-            texture_id: Default::default(),
-            texture_data: [<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">255</span>].repeat((CHUNK_SIZE * CHUNK_SIZE) <span class="kw">as </span>usize),
-        }
+        (position.x + position.y * <span class="self">self</span>.chunk_size) <span class="kw">as </span>usize
     }
 }
 </code></pre></div></section></main></body></html>

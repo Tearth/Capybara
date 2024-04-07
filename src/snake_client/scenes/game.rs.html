@@ -287,7 +287,7 @@
         <span class="self">self</span>.debug_profiler.stop(<span class="string">"input"</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>command = <span class="prelude-val">None</span>;
-        <span class="kw">let </span>output = state.ui.inner.read().unwrap().run(input, |context| {
+        <span class="kw">let </span>output = state.ui.inner.read().run(input, |context| {
             <span class="kw">let </span>center = context.screen_rect().center();
 
             <span class="kw">if </span><span class="self">self</span>.exit_menu_visible {
@@ -325,7 +325,7 @@
                 .resizable(<span class="bool-val">false</span>)
                 .show(context, |ui| {
                     ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
-                        <span class="kw">let </span>text = <span class="macro">format!</span>(<span class="string">"{}, ping {} ms"</span>, <span class="self">self</span>.network.server_name, <span class="self">self</span>.network.server_websocket.ping.read().unwrap());
+                        <span class="kw">let </span>text = <span class="macro">format!</span>(<span class="string">"{}, ping {} ms"</span>, <span class="self">self</span>.network.server_name, <span class="self">self</span>.network.server_websocket.ping.read());
 
                         ui.add_space(<span class="number">5.0</span>);
                         ui.label(RichText::new(text).heading().color(Color32::from_rgb(<span class="number">255</span>, <span class="number">255</span>, <span class="number">255</span>)));

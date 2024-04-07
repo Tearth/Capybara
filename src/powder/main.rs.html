@@ -331,6 +331,39 @@
 <a href="#329" id="329">329</a>
 <a href="#330" id="330">330</a>
 <a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
 </pre></div><pre class="rust"><code><span class="attr">#![allow(clippy::collapsible_if)]
 
 </span><span class="kw">use </span><span class="kw">crate</span>::core::selector::Selector;
@@ -356,10 +389,11 @@
 <span class="kw">use </span>capybara::fast_gpu;
 <span class="kw">use </span>capybara::glam::IVec2;
 <span class="kw">use </span>capybara::glam::Vec4;
+<span class="kw">use </span>capybara::parking_lot::RwLock;
 <span class="kw">use </span>capybara::powder::chunk::ParticleState;
 <span class="kw">use </span>capybara::powder::simulation::PowderSimulation;
 <span class="kw">use </span>capybara::powder::ParticleDefinition;
-<span class="kw">use </span>capybara::rustc_hash::FxHashSet;
+<span class="kw">use </span>capybara::rustc_hash::FxHashMap;
 <span class="kw">use </span>capybara::scene::FrameCommand;
 <span class="kw">use </span>capybara::scene::Scene;
 <span class="kw">use </span>capybara::ui::debug::DebugWindow;
@@ -372,9 +406,7 @@
 <span class="kw">use </span>capybara::window::MouseButton;
 <span class="kw">use </span>capybara::window::MouseWheelDirection;
 <span class="kw">use </span>capybara::window::WindowStyle;
-<span class="kw">use </span>std::rc::Rc;
 <span class="kw">use </span>std::sync::Arc;
-<span class="kw">use </span>std::sync::RwLock;
 
 <span class="kw">pub mod </span>core;
 
@@ -385,9 +417,8 @@
     assets: AssetsLoader,
 }
 
-<span class="attr">#[derive(Default)]
-</span><span class="kw">struct </span>MainScene {
-    <span class="kw">pub </span>simulation: PowderSimulation&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;,
+<span class="kw">struct </span>MainScene {
+    <span class="kw">pub </span>simulation: PowderSimulation,
     <span class="kw">pub </span>selector: Selector,
 
     <span class="kw">pub </span>rigidbody_mode: bool,
@@ -411,19 +442,34 @@
                 density: <span class="number">3.0</span>,
                 ..Default::default()
             },
-            ParticleDefinition { name: <span class="string">"Stone"</span>.to_string(), state: ParticleState::Solid, color: Vec4::new(<span class="number">0.3</span>, <span class="number">0.3</span>, <span class="number">0.3</span>, <span class="number">1.0</span>), ..Default::default() },
+            ParticleDefinition {
+                name: <span class="string">"Stone"</span>.to_string(),
+                state: ParticleState::Solid,
+                color: Vec4::new(<span class="number">0.3</span>, <span class="number">0.3</span>, <span class="number">0.3</span>, <span class="number">1.0</span>),
+                mass: <span class="number">4.0</span>,
+                ..Default::default()
+            },
             ParticleDefinition {
                 name: <span class="string">"Water"</span>.to_string(),
                 state: ParticleState::Fluid,
                 color: Vec4::new(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>),
+                mass: <span class="number">0.0</span>,
                 density: <span class="number">1.0</span>,
+                displacement: <span class="number">0.6</span>,
+                drag: <span class="number">0.5</span>,
                 compressibility: <span class="number">0.1</span>,
                 fluidity: <span class="number">4</span>,
                 extensibility: <span class="number">0.80</span>,
                 hpressure_gradient_length: <span class="number">10.0</span>,
                 hpressure_gradient_end: Vec4::new(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.3</span>, <span class="number">1.0</span>),
             },
-            ParticleDefinition { name: <span class="string">"Wood"</span>.to_string(), state: ParticleState::Solid, color: Vec4::new(<span class="number">0.7</span>, <span class="number">0.4</span>, <span class="number">0.15</span>, <span class="number">1.0</span>), ..Default::default() },
+            ParticleDefinition {
+                name: <span class="string">"Wood"</span>.to_string(),
+                state: ParticleState::Solid,
+                color: Vec4::new(<span class="number">0.7</span>, <span class="number">0.4</span>, <span class="number">0.15</span>, <span class="number">1.0</span>),
+                mass: <span class="number">0.5</span>,
+                ..Default::default()
+            },
         ];
 
         <span class="self">self</span>.simulation.definitions = Arc::new(RwLock::new(definitions));
@@ -467,13 +513,16 @@
                 <span class="kw">if </span>button == MouseButton::Left {
                     <span class="kw">if </span><span class="self">self</span>.rigidbody_mode {
                         <span class="kw">let </span><span class="kw-2">mut </span>last_position = <span class="prelude-val">None</span>;
-                        <span class="kw">let </span><span class="kw-2">mut </span>points = FxHashSet::default();
+                        <span class="kw">let </span><span class="kw-2">mut </span>points = FxHashMap::default();
 
                         <span class="kw">while let </span><span class="prelude-val">Some</span>(position) = <span class="self">self</span>.selector.get_next_selected_particle(last_position) {
                             <span class="kw">if let </span><span class="prelude-val">Some</span>(chunk) = <span class="self">self</span>.simulation.get_chunk(position) {
-                                <span class="kw">let </span>chunk = chunk.read().unwrap();
+                                <span class="kw">let </span>chunk = chunk.read();
                                 <span class="kw">if let </span><span class="prelude-val">Some</span>(particle) = chunk.get_particle(position) {
-                                    points.insert(particle.position);
+                                    <span class="kw">if </span>!particle.structure {
+                                        <span class="kw">let </span>definition = <span class="kw-2">&amp;</span><span class="self">self</span>.simulation.definitions.read()[particle.r#type];
+                                        points.insert(particle.position, definition.mass);
+                                    }
                                 }
                             }
                             last_position = <span class="prelude-val">Some</span>(position);
@@ -512,7 +561,7 @@
         <span class="kw">if </span>!<span class="self">self</span>.initialized &amp;&amp; state.global.assets.load(<span class="string">"./data/data0.zip"</span>) == AssetsLoadingStatus::Finished {
             state.ui.instantiate_assets(<span class="kw-2">&amp;</span>state.global.assets, <span class="prelude-val">None</span>);
 
-            <span class="kw">let </span><span class="kw-2">mut </span>style = (<span class="kw-2">*</span>state.ui.inner.read().unwrap().style()).clone();
+            <span class="kw">let </span><span class="kw-2">mut </span>style = (<span class="kw-2">*</span>state.ui.inner.read().style()).clone();
             style.text_styles = [
                 (TextStyle::Heading, (FontId { size: <span class="number">32.0</span>, family: FontFamily::Monospace })),
                 (TextStyle::Body, (FontId { size: <span class="number">20.0</span>, family: FontFamily::Monospace })),
@@ -521,7 +570,7 @@
             ]
             .into();
             style.visuals.widgets.noninteractive.fg_stroke = Stroke::new(<span class="number">1.0</span>, Color32::from_rgb(<span class="number">240</span>, <span class="number">240</span>, <span class="number">240</span>));
-            state.ui.inner.read().unwrap().set_style(style);
+            state.ui.inner.read().set_style(style);
 
             <span class="self">self</span>.initialized = <span class="bool-val">true</span>;
         }
@@ -559,7 +608,7 @@
         <span class="self">self</span>.debug_profiler.stop(<span class="string">"input"</span>);
 
         <span class="kw">let </span>output =
-            state.ui.inner.read().unwrap().run(input, |context| {
+            state.ui.inner.read().run(input, |context| {
                 <span class="kw">if </span><span class="self">self</span>.debug_enabled {
                     <span class="self">self</span>.debug_window.show(context, <span class="kw-2">&amp;mut </span><span class="self">self</span>.debug_console, <span class="kw-2">&amp;</span><span class="self">self</span>.debug_profiler, <span class="kw-2">&amp;mut </span><span class="self">self</span>.debug_collector);
                 }
@@ -577,7 +626,7 @@
 
                                 <span class="kw">if </span><span class="self">self</span>.simulation.is_position_valid(selector_position) {
                                     <span class="kw">if let </span><span class="prelude-val">Some</span>(chunk) = <span class="self">self</span>.simulation.get_chunk(selector_position) {
-                                        <span class="kw">let </span>chunk = chunk.read().unwrap();
+                                        <span class="kw">let </span>chunk = chunk.read();
                                         <span class="kw">let </span>particle = chunk.get_particle(selector_position);
                                         <span class="kw">if let </span><span class="prelude-val">Some</span>(particle) = particle {
                                             ui.add(Label::new(<span class="macro">format!</span>(<span class="string">"velocity: {:.2} {:.2}"</span>, particle.velocity.x, particle.velocity.y)));
@@ -593,7 +642,7 @@
 
                 SidePanel::right(<span class="string">"panel-right"</span>).frame(Frame::none()).resizable(<span class="bool-val">false</span>).show_separator_line(<span class="bool-val">false</span>).show(context, |ui| {
                     <span class="kw">let </span>size = egui::Vec2::new(<span class="number">100.0</span>, <span class="number">0.0</span>);
-                    <span class="kw">let </span>definitions = <span class="self">self</span>.simulation.definitions.read().unwrap();
+                    <span class="kw">let </span>definitions = <span class="self">self</span>.simulation.definitions.read();
 
                     <span class="kw">for </span>(r#type, definition) <span class="kw">in </span>definitions.iter().enumerate() {
                         <span class="kw">let </span>selected = <span class="self">self</span>.selector.particle_type == r#type;
@@ -647,6 +696,23 @@
                 <span class="string">"test" </span>=&gt; <span class="self">self</span>.debug_console.apply_output(<span class="string">"Test"</span>),
                 <span class="kw">_ </span>=&gt; <span class="self">self</span>.debug_console.apply_output(<span class="string">"Invalid command"</span>),
             }
+        }
+    }
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>MainScene {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            simulation: PowderSimulation::new(CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER),
+            selector: Default::default(),
+            rigidbody_mode: Default::default(),
+            initialized: Default::default(),
+            force_all_chunks: Default::default(),
+            debug_enabled: Default::default(),
+            debug_window: Default::default(),
+            debug_console: Default::default(),
+            debug_collector: Default::default(),
+            debug_profiler: Default::default(),
         }
     }
 }

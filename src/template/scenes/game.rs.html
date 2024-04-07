@@ -228,7 +228,7 @@
         <span class="self">self</span>.debug_profiler.start(<span class="string">"frame"</span>);
 
         <span class="kw">if </span><span class="self">self</span>.debug_enabled {
-            <span class="self">self</span>.debug_collector.collect(<span class="kw-2">&amp;</span>state.window, <span class="kw-2">&amp;</span>state.renderer, delta);
+            <span class="self">self</span>.debug_collector.collect(state.window, state.renderer, delta);
             <span class="self">self</span>.process_console();
         }
         <span class="self">self</span>.debug_profiler.stop(<span class="string">"frame"</span>);
@@ -241,7 +241,7 @@
         <span class="self">self</span>.debug_profiler.stop(<span class="string">"input"</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>command = <span class="prelude-val">None</span>;
-        <span class="kw">let </span>output = state.ui.inner.read().unwrap().run(input, |context| {
+        <span class="kw">let </span>output = state.ui.inner.read().run(input, |context| {
             <span class="kw">let </span>center = context.screen_rect().center();
 
             <span class="kw">if </span><span class="self">self</span>.exit_menu_visible {

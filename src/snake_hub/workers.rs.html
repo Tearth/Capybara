@@ -78,7 +78,7 @@
     <span class="kw">pub fn </span>send_pings(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">for </span>worker <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.workers {
             <span class="kw">if </span>worker.definition.enabled {
-                <span class="kw">if </span><span class="kw-2">*</span>worker.websocket.status.read().unwrap() != ConnectionStatus::Connected {
+                <span class="kw">if </span><span class="kw-2">*</span>worker.websocket.status.read() != ConnectionStatus::Connected {
                     <span class="macro">error!</span>(<span class="string">"Worker {} is disconnected, restarting connection"</span>, worker.definition.name);
 
                     worker.websocket = WebSocketClient::default();

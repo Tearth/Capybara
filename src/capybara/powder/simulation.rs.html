@@ -378,7 +378,19 @@
 <a href="#376" id="376">376</a>
 <a href="#377" id="377">377</a>
 <a href="#378" id="378">378</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="self">self</span>::chunk::Chunk;
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>parking_lot::RwLock;
+<span class="kw">use </span>parking_lot::RwLockReadGuard;
+
+<span class="kw">use </span><span class="self">self</span>::chunk::Chunk;
 <span class="kw">use </span><span class="self">self</span>::chunk::ParticleData;
 <span class="kw">use </span><span class="self">self</span>::features::gravity;
 <span class="kw">use </span><span class="self">self</span>::features::liquidity;
@@ -397,17 +409,18 @@
 <span class="kw">use </span><span class="kw">crate</span>::rustc_hash::FxHashSet;
 <span class="kw">use </span><span class="kw">crate</span>::utils::storage::Storage;
 <span class="kw">use </span>std::cell::RefCell;
-<span class="kw">use </span>std::mem;
 <span class="kw">use </span>std::rc::Rc;
 <span class="kw">use </span>std::sync::Arc;
-<span class="kw">use </span>std::sync::RwLock;
-<span class="kw">use </span>std::sync::RwLockReadGuard;
 
-<span class="kw">pub struct </span>PowderSimulation&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt; {
+<span class="kw">pub struct </span>PowderSimulation {
     <span class="kw">pub </span>definitions: Arc&lt;RwLock&lt;Vec&lt;ParticleDefinition&gt;&gt;&gt;,
-    <span class="kw">pub </span>chunks: FxHashMap&lt;IVec2, Arc&lt;RwLock&lt;Chunk&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;&gt;&gt;&gt;,
+    <span class="kw">pub </span>chunks: FxHashMap&lt;IVec2, Arc&lt;RwLock&lt;Chunk&gt;&gt;&gt;,
     <span class="kw">pub </span>structures: Storage&lt;Rc&lt;RefCell&lt;Structure&gt;&gt;&gt;,
     <span class="kw">pub </span>gravity: Vec2,
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) chunk_size: i32,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) particle_size: i32,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) pixels_per_meter: i32,
 
     <span class="kw">pub </span>debug: PowderSimulationDebugSettings,
 }
@@ -422,46 +435,68 @@
     gravity: Vec2,
 }
 
-<span class="kw">impl</span>&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt; PowderSimulation&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt; {
+<span class="kw">impl </span>PowderSimulation {
+    <span class="kw">pub fn </span>new(chunk_size: i32, particle_size: i32, pixels_per_meter: i32) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            definitions: Default::default(),
+            chunks: Default::default(),
+            structures: Default::default(),
+            gravity: Vec2::new(<span class="number">0.0</span>, -<span class="number">160.0</span>),
+
+            chunk_size,
+            particle_size,
+            pixels_per_meter,
+
+            debug: PowderSimulationDebugSettings {
+                chunk_active_color: Vec4::new(<span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>),
+                chunk_inactive_color: Vec4::new(<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>),
+            },
+        }
+    }
+
     <span class="kw">pub fn </span>logic(<span class="kw-2">&amp;mut </span><span class="self">self</span>, renderer: <span class="kw-2">&amp;mut </span>RendererContext, physics: <span class="kw-2">&amp;mut </span>PhysicsContext, force_all_chunks: bool, delta: f32) {
         <span class="kw">for </span>(chunk_position, chunk) <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.chunks {
-            <span class="kw">let </span><span class="kw-2">mut </span>chunk = chunk.write().unwrap();
+            <span class="kw">let </span><span class="kw-2">mut </span>chunk = chunk.write();
 
             <span class="kw">if </span>!chunk.initialized {
                 chunk.initialize(renderer, <span class="kw-2">*</span>chunk_position);
             }
-
-            <span class="kw">if </span>chunk.dirty {
-                chunk.update(physics);
-            }
         }
 
-        <span class="kw">let </span>chunks_to_process = <span class="self">self</span>.chunks.iter().filter(|p| force_all_chunks || p.<span class="number">1</span>.read().unwrap().active).map(|p| <span class="kw-2">*</span>p.<span class="number">0</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+        <span class="kw">let </span>chunks_to_process = <span class="self">self</span>.chunks.iter().filter(|p| force_all_chunks || p.<span class="number">1</span>.read().active).map(|p| <span class="kw-2">*</span>p.<span class="number">0</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="kw">for </span>chunk <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.chunks.values_mut() {
-            chunk.write().unwrap().active = <span class="bool-val">false</span>;
+            chunk.write().active = <span class="bool-val">false</span>;
         }
 
         <span class="self">self</span>.process_solid(<span class="kw-2">&amp;</span>chunks_to_process);
         <span class="self">self</span>.process_powder(<span class="kw-2">&amp;</span>chunks_to_process, delta);
         <span class="self">self</span>.process_fluid(<span class="kw-2">&amp;</span>chunks_to_process, delta);
+
+        <span class="kw">for </span>chunk <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.chunks.values() {
+            <span class="kw">let </span><span class="kw-2">mut </span>chunk = chunk.write();
+
+            <span class="kw">if </span>chunk.dirty {
+                chunk.update(physics);
+            }
+        }
     }
 
     <span class="kw">pub fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, renderer: <span class="kw-2">&amp;mut </span>RendererContext) {
         <span class="kw">for </span>chunk <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.chunks.values_mut() {
-            chunk.write().unwrap().draw(renderer);
+            chunk.write().draw(renderer);
         }
     }
 
     <span class="kw">pub fn </span>draw_debug(<span class="kw-2">&amp;mut </span><span class="self">self</span>, renderer: <span class="kw-2">&amp;mut </span>RendererContext) {
         <span class="kw">for </span>chunk <span class="kw">in </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.chunks.values_mut() {
-            chunk.write().unwrap().draw_debug(renderer, <span class="kw-2">&amp;</span><span class="self">self</span>.debug);
+            chunk.write().draw_debug(renderer, <span class="kw-2">&amp;</span><span class="self">self</span>.debug);
         }
     }
 
     <span class="kw">pub fn </span>process&lt;D, F&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, data: D, multithreaded: bool, chunks_to_process: <span class="kw-2">&amp;</span>[IVec2], <span class="kw-2">mut </span>f: F)
     <span class="kw">where
         </span>D: Copy + Send + Sync,
-        F: FnMut(LocalChunksGuards&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;, RwLockReadGuard&lt;Vec&lt;ParticleDefinition&gt;&gt;, D) + Copy + Send + Sync,
+        F: FnMut(LocalChunksGuards, RwLockReadGuard&lt;Vec&lt;ParticleDefinition&gt;&gt;, D) + Copy + Send + Sync,
     {
         <span class="kw">let </span>offsets = [
             <span class="comment">// Inner
@@ -509,11 +544,10 @@
                 }
             }
 
-            <span class="kw">let </span><span class="kw-2">mut </span>runner = <span class="kw">move </span>|local: Arc&lt;RwLock&lt;LocalChunksArcs&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;&gt;&gt;,
-                                   definitions: Arc&lt;RwLock&lt;Vec&lt;ParticleDefinition&gt;&gt;&gt;| {
-                <span class="kw">let </span>local = local.write().unwrap();
+            <span class="kw">let </span><span class="kw-2">mut </span>runner = <span class="kw">move </span>|local: Arc&lt;RwLock&lt;LocalChunksArcs&gt;&gt;, definitions: Arc&lt;RwLock&lt;Vec&lt;ParticleDefinition&gt;&gt;&gt;| {
+                <span class="kw">let </span>local = local.write();
                 <span class="kw">let </span>local = LocalChunksGuards::new(<span class="kw-2">&amp;</span>local);
-                <span class="kw">let </span>definitions = definitions.read().unwrap();
+                <span class="kw">let </span>definitions = definitions.read();
 
                 f(local, definitions, data);
             };
@@ -543,10 +577,8 @@
         <span class="self">self</span>.process(ProcessData { gravity: <span class="self">self</span>.gravity }, <span class="bool-val">true</span>, chunks_to_process, |<span class="kw-2">mut </span>local, definitions, data| {
             <span class="kw">let </span><span class="kw-2">mut </span>last_id = <span class="prelude-val">None</span>;
             <span class="kw">while let </span><span class="prelude-val">Some</span>(id) = local.chunks[<span class="number">0</span>].powder.get_next_id(last_id) {
-                <span class="kw">let </span>particle: <span class="kw-2">&amp;mut </span>ParticleData = <span class="kw">unsafe </span>{ mem::transmute(local.chunks[<span class="number">0</span>].powder.get_unchecked_mut(id)) };
-
-                gravity::simulate(<span class="kw-2">&amp;mut </span>local, <span class="kw-2">&amp;</span>definitions, particle, data.gravity, delta);
-                velocity::simulate(<span class="kw-2">&amp;mut </span>local, particle, delta);
+                gravity::simulate(<span class="kw-2">&amp;mut </span>local, <span class="kw-2">&amp;</span>definitions, id, ParticleState::Powder, data.gravity, delta);
+                velocity::simulate(<span class="kw-2">&amp;mut </span>local, id, ParticleState::Powder, delta);
                 last_id = <span class="prelude-val">Some</span>(id);
             }
         });
@@ -556,10 +588,8 @@
         <span class="self">self</span>.process(ProcessData { gravity: <span class="self">self</span>.gravity }, <span class="bool-val">true</span>, chunks_to_process, |<span class="kw-2">mut </span>local, definitions, data| {
             <span class="kw">let </span><span class="kw-2">mut </span>last_id = <span class="prelude-val">None</span>;
             <span class="kw">while let </span><span class="prelude-val">Some</span>(id) = local.chunks[<span class="number">0</span>].fluid.get_next_id(last_id) {
-                <span class="kw">let </span>particle: <span class="kw-2">&amp;mut </span>ParticleData = <span class="kw">unsafe </span>{ mem::transmute(local.chunks[<span class="number">0</span>].fluid.get_unchecked_mut(id)) };
-
-                gravity::simulate(<span class="kw-2">&amp;mut </span>local, <span class="kw-2">&amp;</span>definitions, particle, data.gravity, delta);
-                velocity::simulate(<span class="kw-2">&amp;mut </span>local, particle, delta);
+                gravity::simulate(<span class="kw-2">&amp;mut </span>local, <span class="kw-2">&amp;</span>definitions, id, ParticleState::Fluid, data.gravity, delta);
+                velocity::simulate(<span class="kw-2">&amp;mut </span>local, id, ParticleState::Fluid, delta);
                 last_id = <span class="prelude-val">Some</span>(id);
             }
         });
@@ -570,14 +600,14 @@
             <span class="self">self</span>.process(ProcessData { gravity: <span class="self">self</span>.gravity }, <span class="bool-val">true</span>, chunks_to_process, |<span class="kw-2">mut </span>local, definitions, _data| {
                 <span class="kw">let </span><span class="kw-2">mut </span>last_id = <span class="prelude-val">None</span>;
                 <span class="kw">let </span><span class="kw-2">mut </span>needs_more_substeps = <span class="bool-val">false</span>;
-                <span class="kw">let </span>current_substep = <span class="kw-2">*</span>substep.read().unwrap();
+                <span class="kw">let </span>current_substep = <span class="kw-2">*</span>substep.read();
 
                 <span class="kw">while let </span><span class="prelude-val">Some</span>(id) = local.chunks[<span class="number">0</span>].fluid.get_next_id(last_id) {
-                    <span class="kw">let </span>center_particle: <span class="kw-2">&amp;mut </span>ParticleData = <span class="kw">unsafe </span>{ mem::transmute(local.chunks[<span class="number">0</span>].fluid.get_unchecked_mut(id)) };
+                    <span class="kw">let </span>center_particle = local.chunks[<span class="number">0</span>].fluid.get_unchecked_mut(id);
                     <span class="kw">let </span>definition = <span class="kw-2">&amp;</span>definitions[center_particle.r#type];
 
                     <span class="kw">if </span>current_substep &lt; definition.fluidity {
-                        liquidity::simulate(<span class="kw-2">&amp;mut </span>local, <span class="kw-2">&amp;</span>definitions, center_particle);
+                        liquidity::simulate(<span class="kw-2">&amp;mut </span>local, <span class="kw-2">&amp;</span>definitions, id);
                     }
 
                     <span class="kw">if </span>current_substep + <span class="number">1 </span>&lt; definition.fluidity {
@@ -589,51 +619,56 @@
 
                 <span class="comment">// No more fluid particles with enough fluidity to perform next substep
                 </span><span class="kw">if </span>needs_more_substeps {
-                    <span class="kw-2">*</span>done.write().unwrap() = <span class="bool-val">false</span>;
+                    <span class="kw-2">*</span>done.write() = <span class="bool-val">false</span>;
                 }
             });
 
-            <span class="kw">if </span><span class="kw-2">*</span>done.read().unwrap() {
+            <span class="kw">if </span><span class="kw-2">*</span>done.read() {
                 <span class="kw">break</span>;
             }
 
-            <span class="kw-2">*</span>substep.write().unwrap() += <span class="number">1</span>;
+            <span class="kw-2">*</span>substep.write() += <span class="number">1</span>;
         }
     }
 
     <span class="kw">pub fn </span>displace_fluid(<span class="kw-2">&amp;mut </span><span class="self">self</span>, position: IVec2, forbidden: <span class="kw-2">&amp;</span>FxHashSet&lt;IVec2&gt;) {
         <span class="kw">let </span>chunk = <span class="self">self</span>.get_chunk(position).unwrap();
-        <span class="kw">let </span>chunk = chunk.read().unwrap();
+        <span class="kw">let </span>chunk = chunk.read();
         <span class="kw">let </span>particle_center = chunk.get_particle(position).expect(<span class="string">"Particle is not a fluid"</span>);
 
         <span class="kw">let </span>particle_type = particle_center.r#type;
+        <span class="kw">let </span>particle_hpressure = particle_center.hpressure;
         <span class="kw">let </span><span class="kw-2">mut </span>available_neighbours = Vec::new();
+        drop(chunk);
 
         <span class="kw">for </span>neighbour_offset <span class="kw">in </span>[IVec2::new(<span class="number">1</span>, <span class="number">0</span>), IVec2::new(-<span class="number">1</span>, <span class="number">0</span>), IVec2::new(<span class="number">0</span>, <span class="number">1</span>), IVec2::new(<span class="number">0</span>, -<span class="number">1</span>)] {
-            <span class="kw">let </span>neighbour_position = particle_center.position + neighbour_offset;
-            <span class="kw">let </span>particle_neighbour = chunk.get_particle(neighbour_position);
+            <span class="kw">let </span>neighbour_position = position + neighbour_offset;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(chunk) = <span class="self">self</span>.get_chunk(neighbour_position) {
+                <span class="kw">let </span>chunk = chunk.write();
+                <span class="kw">let </span>particle_neighbour = chunk.get_particle(neighbour_position);
 
-            <span class="kw">if </span>forbidden.contains(<span class="kw-2">&amp;</span>neighbour_position) {
-                <span class="kw">continue</span>;
-            }
-
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(particle_neighbour) = particle_neighbour {
-                <span class="kw">if </span>particle_center.r#type == particle_neighbour.r#type {
-                    available_neighbours.push((neighbour_position, <span class="bool-val">false</span>));
+                <span class="kw">if </span>forbidden.contains(<span class="kw-2">&amp;</span>neighbour_position) {
+                    <span class="kw">continue</span>;
                 }
-            } <span class="kw">else </span>{
-                available_neighbours.push((neighbour_position, <span class="bool-val">true</span>));
+
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(particle_neighbour) = particle_neighbour {
+                    <span class="kw">if </span>particle_type == particle_neighbour.r#type {
+                        available_neighbours.push((neighbour_position, <span class="bool-val">false</span>));
+                    }
+                } <span class="kw">else </span>{
+                    available_neighbours.push((neighbour_position, <span class="bool-val">true</span>));
+                }
             }
         }
 
-        <span class="kw">let </span>average_hpressure = particle_center.hpressure / available_neighbours.len() <span class="kw">as </span>f32;
+        <span class="kw">let </span>average_hpressure = particle_hpressure / available_neighbours.len() <span class="kw">as </span>f32;
 
         <span class="kw">if </span>!available_neighbours.is_empty() {
             <span class="kw">for </span>(neighbour_position, empty) <span class="kw">in </span>available_neighbours {
                 <span class="kw">let </span>neighbour_chunk = <span class="self">self</span>.get_chunk(neighbour_position).unwrap();
-                <span class="kw">let </span><span class="kw-2">mut </span>neighbour_chunk = neighbour_chunk.write().unwrap();
+                <span class="kw">let </span><span class="kw-2">mut </span>neighbour_chunk = neighbour_chunk.write();
                 <span class="kw">if </span>empty {
-                    <span class="self">self</span>.add_particle(
+                    neighbour_chunk.add_particle(
                         neighbour_position,
                         ParticleData {
                             r#type: particle_type,
@@ -680,23 +715,24 @@
             <span class="macro">error_return!</span>(<span class="string">"Chunk with position {} already exists"</span>, chunk_position);
         }
 
-        <span class="self">self</span>.chunks.insert(chunk_position, Arc::new(RwLock::new(Chunk::default())));
+        <span class="self">self</span>.chunks
+            .insert(chunk_position, Arc::new(RwLock::new(Chunk::new(<span class="self">self</span>.chunk_size, <span class="self">self</span>.particle_size, <span class="self">self</span>.pixels_per_meter))));
     }
 
     <span class="kw">pub fn </span>remove_chunk(<span class="kw-2">&amp;mut </span><span class="self">self</span>, renderer: <span class="kw-2">&amp;mut </span>RendererContext, chunk_position: IVec2) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(chunk) = <span class="self">self</span>.chunks.get(<span class="kw-2">&amp;</span>chunk_position) {
-            renderer.textures.remove(chunk.read().unwrap().canvas.texture_id);
+            renderer.textures.remove(chunk.read().canvas.texture_id);
             <span class="self">self</span>.chunks.remove(<span class="kw-2">&amp;</span>chunk_position);
         } <span class="kw">else </span>{
             <span class="macro">error_return!</span>(<span class="string">"Chunk with position {} does not exists"</span>, chunk_position);
         }
     }
 
-    <span class="kw">pub fn </span>get_chunk(<span class="kw-2">&amp;</span><span class="self">self</span>, position: IVec2) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;RwLock&lt;Chunk&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;&gt;&gt;&gt; {
+    <span class="kw">pub fn </span>get_chunk(<span class="kw-2">&amp;</span><span class="self">self</span>, position: IVec2) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;RwLock&lt;Chunk&gt;&gt;&gt; {
         <span class="self">self</span>.chunks.get(<span class="kw-2">&amp;</span>(chunk::get_chunk_key(position))).cloned()
     }
 
-    <span class="kw">pub fn </span>get_chunk_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, position: IVec2) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;RwLock&lt;Chunk&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;&gt;&gt;&gt; {
+    <span class="kw">pub fn </span>get_chunk_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, position: IVec2) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;RwLock&lt;Chunk&gt;&gt;&gt; {
         <span class="self">self</span>.chunks.get_mut(<span class="kw-2">&amp;</span>(chunk::get_chunk_key(position))).cloned()
     }
 
@@ -706,14 +742,14 @@
         }
 
         <span class="kw">let </span>chunk = <span class="self">self</span>.get_chunk_mut(position).unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">"Chunk not found"</span>));
-        <span class="kw">let </span><span class="kw-2">mut </span>chunk = chunk.write().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>chunk = chunk.write();
 
         chunk.add_particle(position, particle);
     }
 
     <span class="kw">pub fn </span>remove_particle(<span class="kw-2">&amp;mut </span><span class="self">self</span>, position: IVec2) -&gt; <span class="prelude-ty">Option</span>&lt;ParticleData&gt; {
         <span class="kw">let </span>chunk = <span class="self">self</span>.get_chunk_mut(position).unwrap_or_else(|| <span class="macro">panic!</span>(<span class="string">"Chunk not found"</span>));
-        <span class="kw">let </span><span class="kw-2">mut </span>chunk = chunk.write().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>chunk = chunk.write();
 
         chunk.remove_particle(position)
     }
@@ -722,7 +758,7 @@
         <span class="kw">let </span>chunk = <span class="self">self</span>.get_chunk(position);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(chunk) = chunk {
-            chunk.write().unwrap().particle_exists(position)
+            chunk.read().particle_exists(position)
         } <span class="kw">else </span>{
             <span class="bool-val">false
         </span>}
@@ -730,24 +766,6 @@
 
     <span class="kw">pub fn </span>is_position_valid(<span class="kw-2">&amp;</span><span class="self">self</span>, position: IVec2) -&gt; bool {
         <span class="self">self</span>.get_chunk(position).is_some()
-    }
-}
-
-<span class="kw">impl</span>&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt; Default
-    <span class="kw">for </span>PowderSimulation&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;
-{
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            definitions: Default::default(),
-            chunks: Default::default(),
-            structures: Default::default(),
-            gravity: Vec2::new(<span class="number">0.0</span>, -<span class="number">160.0</span>),
-
-            debug: PowderSimulationDebugSettings {
-                chunk_active_color: Vec4::new(<span class="number">0.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>),
-                chunk_inactive_color: Vec4::new(<span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>),
-            },
-        }
     }
 }
 

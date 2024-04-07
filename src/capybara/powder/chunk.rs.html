@@ -227,8 +227,23 @@
 <a href="#225" id="225">225</a>
 <a href="#226" id="226">226</a>
 <a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="self">self</span>::simulation::PowderSimulationDebugSettings;
-
 <span class="kw">use </span><span class="kw">super</span>::canvas::Canvas;
 <span class="kw">use super</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::glam::IVec2;
@@ -238,13 +253,13 @@
 <span class="kw">use </span><span class="kw">crate</span>::renderer::shape::Shape;
 <span class="kw">use </span><span class="kw">crate</span>::utils::storage::Storage;
 <span class="kw">use </span>rapier2d::geometry::ColliderHandle;
-<span class="kw">use </span>rustc_hash::FxHashSet;
+<span class="kw">use </span>rustc_hash::FxHashMap;
 
-<span class="kw">pub struct </span>Chunk&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt; {
+<span class="kw">pub struct </span>Chunk {
     <span class="kw">pub </span>initialized: bool,
     <span class="kw">pub </span>active: bool,
     <span class="kw">pub </span>dirty: bool,
-    <span class="kw">pub </span>canvas: Canvas&lt;CHUNK_SIZE, PARTICLE_SIZE&gt;,
+    <span class="kw">pub </span>canvas: Canvas,
     <span class="kw">pub </span>solid_collider: <span class="prelude-ty">Option</span>&lt;ColliderHandle&gt;,
     <span class="kw">pub </span>position: IVec2,
 
@@ -252,6 +267,10 @@
     <span class="kw">pub </span>solid: Storage&lt;ParticleData&gt;,
     <span class="kw">pub </span>powder: Storage&lt;ParticleData&gt;,
     <span class="kw">pub </span>fluid: Storage&lt;ParticleData&gt;,
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) chunk_size: i32,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) particle_size: i32,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) pixels_per_meter: i32,
 }
 
 <span class="attr">#[derive(Copy, Clone, Debug, Default, PartialEq)]
@@ -282,7 +301,27 @@
     Fluid,
 }
 
-<span class="kw">impl</span>&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt; Chunk&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt; {
+<span class="kw">impl </span>Chunk {
+    <span class="kw">pub fn </span>new(chunk_size: i32, particle_size: i32, pixels_per_meter: i32) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            initialized: <span class="bool-val">false</span>,
+            active: <span class="bool-val">false</span>,
+            dirty: <span class="bool-val">false</span>,
+            canvas: Canvas::new(chunk_size, particle_size),
+            solid_collider: <span class="prelude-val">None</span>,
+            position: Default::default(),
+
+            particles: [ParticleIndex::default()].repeat((chunk_size * chunk_size) <span class="kw">as </span>usize),
+            solid: Default::default(),
+            powder: Default::default(),
+            fluid: Default::default(),
+
+            chunk_size,
+            particle_size,
+            pixels_per_meter,
+        }
+    }
+
     <span class="kw">pub fn </span>initialize(<span class="kw-2">&amp;mut </span><span class="self">self</span>, renderer: <span class="kw-2">&amp;mut </span>RendererContext, chunk_position: IVec2) {
         <span class="self">self</span>.canvas.initialize(renderer, chunk_position);
         <span class="self">self</span>.position = chunk_position;
@@ -295,14 +334,16 @@
         }
 
         <span class="kw">if </span>!<span class="self">self</span>.solid.is_empty() {
-            <span class="kw">let </span><span class="kw-2">mut </span>points = FxHashSet::default();
+            <span class="kw">let </span><span class="kw-2">mut </span>points = FxHashMap::default();
             <span class="kw">for </span>particle <span class="kw">in </span><span class="self">self</span>.solid.iter() {
                 <span class="kw">if </span>!particle.structure {
-                    points.insert(particle.position);
+                    points.insert(particle.position, <span class="number">0.0</span>);
                 }
             }
 
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(collider) = physics::create_collider::&lt;PARTICLE_SIZE, PIXELS_PER_METER&gt;(<span class="kw-2">&amp;mut </span>points) {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw-2">mut </span>collider, center)) = physics::create_collider(<span class="kw-2">&amp;mut </span>points, <span class="self">self</span>.particle_size, <span class="self">self</span>.pixels_per_meter) {
+                collider.set_translation(center.into());
+
                 <span class="kw">let </span>handle = physics.colliders.insert(collider);
                 <span class="self">self</span>.solid_collider = <span class="prelude-val">Some</span>(handle);
             }
@@ -317,7 +358,7 @@
     }
 
     <span class="kw">pub fn </span>draw_debug(<span class="kw-2">&amp;mut </span><span class="self">self</span>, renderer: <span class="kw-2">&amp;mut </span>RendererContext, settings: <span class="kw-2">&amp;</span>PowderSimulationDebugSettings) {
-        <span class="kw">let </span>size = Vec2::ONE * CHUNK_SIZE <span class="kw">as </span>f32 * PARTICLE_SIZE <span class="kw">as </span>f32;
+        <span class="kw">let </span>size = Vec2::ONE * <span class="self">self</span>.chunk_size <span class="kw">as </span>f32 * <span class="self">self</span>.particle_size <span class="kw">as </span>f32;
         <span class="kw">let </span>left_bottom = <span class="self">self</span>.position.as_vec2() * size;
         <span class="kw">let </span>right_top = (<span class="self">self</span>.position + IVec2::ONE).as_vec2() * size;
         <span class="kw">let </span>color = <span class="kw">if </span><span class="self">self</span>.active { settings.chunk_active_color } <span class="kw">else </span>{ settings.chunk_inactive_color };
@@ -385,12 +426,7 @@
         <span class="kw">let </span>particle = <span class="self">self</span>.particles[index];
 
         <span class="kw">if </span>particle.present {
-            <span class="kw">match </span>particle.state {
-                ParticleState::Solid =&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.solid.get_unchecked(particle.id)),
-                ParticleState::Powder =&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.powder.get_unchecked(particle.id)),
-                ParticleState::Fluid =&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.fluid.get_unchecked(particle.id)),
-                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-            }
+            <span class="prelude-val">Some</span>(<span class="self">self</span>.get_storage(particle.state).get_unchecked(particle.id))
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>}
@@ -401,15 +437,28 @@
         <span class="kw">let </span>particle = <span class="self">self</span>.particles[index];
 
         <span class="kw">if </span>particle.present {
-            <span class="kw">match </span>particle.state {
-                ParticleState::Solid =&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.solid.get_unchecked_mut(particle.id)),
-                ParticleState::Powder =&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.powder.get_unchecked_mut(particle.id)),
-                ParticleState::Fluid =&gt; <span class="prelude-val">Some</span>(<span class="self">self</span>.fluid.get_unchecked_mut(particle.id)),
-                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-            }
+            <span class="prelude-val">Some</span>(<span class="self">self</span>.get_storage_mut(particle.state).get_unchecked_mut(particle.id))
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>}
+    }
+
+    <span class="kw">pub fn </span>get_storage(<span class="kw-2">&amp;</span><span class="self">self</span>, state: ParticleState) -&gt; <span class="kw-2">&amp;</span>Storage&lt;ParticleData&gt; {
+        <span class="kw">match </span>state {
+            ParticleState::Solid =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.solid,
+            ParticleState::Powder =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.powder,
+            ParticleState::Fluid =&gt; <span class="kw-2">&amp;</span><span class="self">self</span>.fluid,
+            ParticleState::Unknown =&gt; <span class="macro">panic!</span>(<span class="string">"Invalid storage"</span>),
+        }
+    }
+
+    <span class="kw">pub fn </span>get_storage_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, state: ParticleState) -&gt; <span class="kw-2">&amp;mut </span>Storage&lt;ParticleData&gt; {
+        <span class="kw">match </span>state {
+            ParticleState::Solid =&gt; <span class="kw-2">&amp;mut </span><span class="self">self</span>.solid,
+            ParticleState::Powder =&gt; <span class="kw-2">&amp;mut </span><span class="self">self</span>.powder,
+            ParticleState::Fluid =&gt; <span class="kw-2">&amp;mut </span><span class="self">self</span>.fluid,
+            ParticleState::Unknown =&gt; <span class="macro">panic!</span>(<span class="string">"Invalid storage"</span>),
+        }
     }
 
     <span class="kw">pub fn </span>particle_exists(<span class="kw-2">&amp;</span><span class="self">self</span>, position: IVec2) -&gt; bool {
@@ -421,24 +470,7 @@
     }
 
     <span class="kw">fn </span>position_to_index(<span class="kw-2">&amp;</span><span class="self">self</span>, position: IVec2) -&gt; usize {
-        ((position.x &amp; (CHUNK_SIZE - <span class="number">1</span>)) + (position.y &amp; (CHUNK_SIZE - <span class="number">1</span>)) * CHUNK_SIZE) <span class="kw">as </span>usize
-    }
-}
-
-<span class="kw">impl</span>&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt; Default <span class="kw">for </span>Chunk&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt; {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            initialized: <span class="bool-val">false</span>,
-            active: <span class="bool-val">false</span>,
-            dirty: <span class="bool-val">false</span>,
-            canvas: Default::default(),
-            solid_collider: <span class="prelude-val">None</span>,
-            position: Default::default(),
-            particles: [ParticleIndex::default()].repeat((CHUNK_SIZE * CHUNK_SIZE) <span class="kw">as </span>usize),
-            solid: Default::default(),
-            powder: Default::default(),
-            fluid: Default::default(),
-        }
+        ((position.x &amp; (<span class="self">self</span>.chunk_size - <span class="number">1</span>)) + (position.y &amp; (<span class="self">self</span>.chunk_size - <span class="number">1</span>)) * <span class="self">self</span>.chunk_size) <span class="kw">as </span>usize
     }
 }
 

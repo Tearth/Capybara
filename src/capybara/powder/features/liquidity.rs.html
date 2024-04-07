@@ -174,17 +174,16 @@
 <a href="#172" id="172">172</a>
 <a href="#173" id="173">173</a>
 <a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::powder::chunk::ParticleData;
 <span class="kw">use </span><span class="kw">crate</span>::powder::local::LocalChunksGuards;
 <span class="kw">use </span><span class="kw">crate</span>::powder::ParticleDefinition;
 <span class="kw">use </span>glam::IVec2;
-<span class="kw">use </span>std::mem;
 
-<span class="kw">pub fn </span>simulate&lt;<span class="kw">const </span>CHUNK_SIZE: i32, <span class="kw">const </span>PARTICLE_SIZE: i32, <span class="kw">const </span>PIXELS_PER_METER: i32&gt;(
-    local: <span class="kw-2">&amp;mut </span>LocalChunksGuards&lt;CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER&gt;,
-    definitions: <span class="kw-2">&amp;</span>[ParticleDefinition],
-    center_particle: <span class="kw-2">&amp;mut </span>ParticleData,
-) {
+<span class="kw">pub fn </span>simulate(local: <span class="kw-2">&amp;mut </span>LocalChunksGuards, definitions: <span class="kw-2">&amp;</span>[ParticleDefinition], particle_id: usize) {
+    <span class="kw">let </span>center_particle = local.chunks[<span class="number">0</span>].fluid.get_unchecked(particle_id);
     <span class="kw">let </span>definition = <span class="kw-2">&amp;</span>definitions[center_particle.r#type];
 
     <span class="kw">let </span>center_position = center_particle.position;
@@ -195,15 +194,15 @@
     <span class="kw">let </span>center_type = center_particle.r#type;
     <span class="kw">let </span><span class="kw-2">mut </span>center_hpressure = center_particle.hpressure;
 
-    <span class="kw">let </span><span class="kw-2">mut </span>left_particle: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>ParticleData&gt; = <span class="kw">unsafe </span>{ mem::transmute(local.get_particle_mut(left_position)) };
+    <span class="kw">let </span>left_particle = local.get_particle(left_position);
     <span class="kw">let </span><span class="kw-2">mut </span>left_type = left_particle.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
     <span class="kw">let </span><span class="kw-2">mut </span>left_hpressure = left_particle.as_ref().map(|p| p.hpressure).unwrap_or(<span class="number">0.0</span>);
 
-    <span class="kw">let </span><span class="kw-2">mut </span>right_particle: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>ParticleData&gt; = <span class="kw">unsafe </span>{ mem::transmute(local.get_particle_mut(right_position)) };
+    <span class="kw">let </span>right_particle = local.get_particle(right_position);
     <span class="kw">let </span><span class="kw-2">mut </span>right_type = right_particle.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
     <span class="kw">let </span><span class="kw-2">mut </span>right_hpressure = right_particle.as_ref().map(|p| p.hpressure).unwrap_or(<span class="number">0.0</span>);
 
-    <span class="kw">let </span><span class="kw-2">mut </span>top_particle: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>ParticleData&gt; = <span class="kw">unsafe </span>{ mem::transmute(local.get_particle_mut(top_position)) };
+    <span class="kw">let </span>top_particle = local.get_particle(top_position);
     <span class="kw">let </span><span class="kw-2">mut </span>top_type = top_particle.as_ref().map(|p| p.r#type).unwrap_or(usize::MAX);
     <span class="kw">let </span><span class="kw-2">mut </span>top_hpressure = top_particle.as_ref().map(|p| p.hpressure).unwrap_or(<span class="number">0.0</span>);
 
@@ -244,11 +243,12 @@
         } <span class="kw">else if </span>left_type == center_type {
             left_hpressure = average_hpressure;
         }
+
         <span class="kw">if </span>right_type == usize::MAX {
             local.add_particle(right_position, particle);
             right_type = center_type;
             right_hpressure = average_hpressure;
-        } <span class="kw">else if </span>left_type == center_type {
+        } <span class="kw">else if </span>right_type == center_type {
             right_hpressure = average_hpressure;
         }
 
@@ -295,55 +295,61 @@
     // -----------------------------
 
     </span><span class="kw">const </span>HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK: f32 = <span class="number">0.001</span>;
+
+    <span class="kw">let </span>center_particle = local.chunks[<span class="number">0</span>].fluid.get_unchecked_mut(particle_id);
+    <span class="kw">let </span>particle_hpressure = center_particle.hpressure;
     <span class="kw">let </span>center_hpressure_ratio = f32::min(<span class="number">1.0</span>, center_hpressure / definition.hpressure_gradient_length);
     <span class="kw">let </span>center_color = definition.color * (<span class="number">1.0 </span>- center_hpressure_ratio) + definition.hpressure_gradient_end * center_hpressure_ratio;
 
-    <span class="kw">if </span>(center_particle.hpressure - center_hpressure).abs() &gt; HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
+    center_particle.hpressure = center_hpressure;
+
+    <span class="kw">if </span>(particle_hpressure - center_hpressure).abs() &gt; HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
         local.mark_chunk_as_active(center_position);
         local.mark_chunk_as_active(center_position + IVec2::new(<span class="number">0</span>, -<span class="number">1</span>));
     }
-
-    center_particle.hpressure = center_hpressure;
     local.set_particle_color(center_position, center_color);
 
     <span class="kw">if </span>left_type == center_type {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(particle) = <span class="kw-2">&amp;mut </span>left_particle {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(particle) = local.get_particle_mut(left_position) {
+            <span class="kw">let </span>particle_hpressure = particle.hpressure;
             <span class="kw">let </span>left_hpressure_ratio = f32::min(<span class="number">1.0</span>, left_hpressure / definition.hpressure_gradient_length);
             <span class="kw">let </span>left_color = definition.color * (<span class="number">1.0 </span>- left_hpressure_ratio) + definition.hpressure_gradient_end * left_hpressure_ratio;
 
-            <span class="kw">if </span>(particle.hpressure - left_hpressure).abs() &gt; HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
+            particle.hpressure = left_hpressure;
+
+            <span class="kw">if </span>(particle_hpressure - left_hpressure).abs() &gt; HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
                 local.mark_chunk_as_active(left_position);
             }
-
-            particle.hpressure = left_hpressure;
             local.set_particle_color(left_position, left_color);
         }
     }
 
     <span class="kw">if </span>right_type == center_type {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(particle) = <span class="kw-2">&amp;mut </span>right_particle {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(particle) = local.get_particle_mut(right_position) {
+            <span class="kw">let </span>particle_hpressure = particle.hpressure;
             <span class="kw">let </span>right_hpressure_ratio = f32::min(<span class="number">1.0</span>, right_hpressure / definition.hpressure_gradient_length);
             <span class="kw">let </span>right_color = definition.color * (<span class="number">1.0 </span>- right_hpressure_ratio) + definition.hpressure_gradient_end * right_hpressure_ratio;
 
-            <span class="kw">if </span>(particle.hpressure - right_hpressure).abs() &gt; HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
+            particle.hpressure = right_hpressure;
+
+            <span class="kw">if </span>(particle_hpressure - right_hpressure).abs() &gt; HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
                 local.mark_chunk_as_active(right_position);
             }
-
-            particle.hpressure = right_hpressure;
             local.set_particle_color(right_position, right_color);
         }
     }
 
     <span class="kw">if </span>top_type == center_type {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(particle) = <span class="kw-2">&amp;mut </span>top_particle {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(particle) = local.get_particle_mut(top_position) {
+            <span class="kw">let </span>particle_hpressure = particle.hpressure;
             <span class="kw">let </span>top_hpressure_ratio = f32::min(<span class="number">1.0</span>, top_hpressure / definition.hpressure_gradient_length);
             <span class="kw">let </span>top_color = definition.color * (<span class="number">1.0 </span>- top_hpressure_ratio) + definition.hpressure_gradient_end * top_hpressure_ratio;
 
-            <span class="kw">if </span>(particle.hpressure - top_hpressure).abs() &gt; HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
+            particle.hpressure = top_hpressure;
+
+            <span class="kw">if </span>(particle_hpressure - top_hpressure).abs() &gt; HPRESSURE_DIFFERENCE_TO_ACTIVATE_CHUNK {
                 local.mark_chunk_as_active(top_position);
             }
-
-            particle.hpressure = top_hpressure;
             local.set_particle_color(top_position, top_color);
         }
     }

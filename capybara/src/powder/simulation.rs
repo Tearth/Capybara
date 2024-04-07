@@ -23,11 +23,15 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
 
-pub struct PowderSimulation<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> {
+pub struct PowderSimulation {
     pub definitions: Arc<RwLock<Vec<ParticleDefinition>>>,
-    pub chunks: FxHashMap<IVec2, Arc<RwLock<Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>>>,
+    pub chunks: FxHashMap<IVec2, Arc<RwLock<Chunk>>>,
     pub structures: Storage<Rc<RefCell<Structure>>>,
     pub gravity: Vec2,
+
+    pub(crate) chunk_size: i32,
+    pub(crate) particle_size: i32,
+    pub(crate) pixels_per_meter: i32,
 
     pub debug: PowderSimulationDebugSettings,
 }
@@ -42,7 +46,25 @@ pub struct ProcessData {
     gravity: Vec2,
 }
 
-impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
+impl PowderSimulation {
+    pub fn new(chunk_size: i32, particle_size: i32, pixels_per_meter: i32) -> Self {
+        Self {
+            definitions: Default::default(),
+            chunks: Default::default(),
+            structures: Default::default(),
+            gravity: Vec2::new(0.0, -160.0),
+
+            chunk_size,
+            particle_size,
+            pixels_per_meter,
+
+            debug: PowderSimulationDebugSettings {
+                chunk_active_color: Vec4::new(0.0, 1.0, 0.0, 1.0),
+                chunk_inactive_color: Vec4::new(1.0, 0.0, 0.0, 1.0),
+            },
+        }
+    }
+
     pub fn logic(&mut self, renderer: &mut RendererContext, physics: &mut PhysicsContext, force_all_chunks: bool, delta: f32) {
         for (chunk_position, chunk) in &mut self.chunks {
             let mut chunk = chunk.write();
@@ -85,7 +107,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
     pub fn process<D, F>(&mut self, data: D, multithreaded: bool, chunks_to_process: &[IVec2], mut f: F)
     where
         D: Copy + Send + Sync,
-        F: FnMut(LocalChunksGuards<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>, RwLockReadGuard<Vec<ParticleDefinition>>, D) + Copy + Send + Sync,
+        F: FnMut(LocalChunksGuards, RwLockReadGuard<Vec<ParticleDefinition>>, D) + Copy + Send + Sync,
     {
         let offsets = [
             // Inner
@@ -133,8 +155,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
                 }
             }
 
-            let mut runner = move |local: Arc<RwLock<LocalChunksArcs<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>>,
-                                   definitions: Arc<RwLock<Vec<ParticleDefinition>>>| {
+            let mut runner = move |local: Arc<RwLock<LocalChunksArcs>>, definitions: Arc<RwLock<Vec<ParticleDefinition>>>| {
                 let local = local.write();
                 let local = LocalChunksGuards::new(&local);
                 let definitions = definitions.read();
@@ -304,7 +325,8 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             error_return!("Chunk with position {} already exists", chunk_position);
         }
 
-        self.chunks.insert(chunk_position, Arc::new(RwLock::new(Chunk::default())));
+        self.chunks
+            .insert(chunk_position, Arc::new(RwLock::new(Chunk::new(self.chunk_size, self.particle_size, self.pixels_per_meter))));
     }
 
     pub fn remove_chunk(&mut self, renderer: &mut RendererContext, chunk_position: IVec2) {
@@ -316,11 +338,11 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         }
     }
 
-    pub fn get_chunk(&self, position: IVec2) -> Option<Arc<RwLock<Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>>> {
+    pub fn get_chunk(&self, position: IVec2) -> Option<Arc<RwLock<Chunk>>> {
         self.chunks.get(&(chunk::get_chunk_key(position))).cloned()
     }
 
-    pub fn get_chunk_mut(&mut self, position: IVec2) -> Option<Arc<RwLock<Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>>> {
+    pub fn get_chunk_mut(&mut self, position: IVec2) -> Option<Arc<RwLock<Chunk>>> {
         self.chunks.get_mut(&(chunk::get_chunk_key(position))).cloned()
     }
 
@@ -354,24 +376,6 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
 
     pub fn is_position_valid(&self, position: IVec2) -> bool {
         self.get_chunk(position).is_some()
-    }
-}
-
-impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> Default
-    for PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>
-{
-    fn default() -> Self {
-        Self {
-            definitions: Default::default(),
-            chunks: Default::default(),
-            structures: Default::default(),
-            gravity: Vec2::new(0.0, -160.0),
-
-            debug: PowderSimulationDebugSettings {
-                chunk_active_color: Vec4::new(0.0, 1.0, 0.0, 1.0),
-                chunk_inactive_color: Vec4::new(1.0, 0.0, 0.0, 1.0),
-            },
-        }
     }
 }
 

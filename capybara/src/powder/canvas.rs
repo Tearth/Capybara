@@ -10,24 +10,39 @@ use crate::renderer::sprite::TextureId;
 use crate::renderer::texture::Texture;
 use crate::utils::color::Vec4Utils;
 
-pub struct Canvas<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32> {
+pub struct Canvas {
     pub chunk_position: IVec2,
     pub shape: Option<Shape>,
     pub texture_id: usize,
     pub texture_data: Vec<u8>,
+
+    pub(crate) chunk_size: i32,
+    pub(crate) particle_size: i32,
 }
 
-impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32> Canvas<CHUNK_SIZE, PARTICLE_SIZE> {
+impl Canvas {
+    pub fn new(chunk_size: i32, particle_size: i32) -> Self {
+        Self {
+            chunk_position: Default::default(),
+            shape: Default::default(),
+            texture_id: Default::default(),
+            texture_data: [0, 0, 0, 255].repeat((chunk_size * chunk_size) as usize),
+
+            chunk_size,
+            particle_size,
+        }
+    }
+
     pub fn initialize(&mut self, renderer: &mut RendererContext, chunk_position: IVec2) {
         let name = format!("canvas_{}_{}", chunk_position.x, chunk_position.y);
-        let size = Vec2::new(CHUNK_SIZE as f32, CHUNK_SIZE as f32);
+        let size = Vec2::new(self.chunk_size as f32, self.chunk_size as f32);
 
         let raw = RawTexture::new(&name, "", size, &self.texture_data);
         let texture = Texture::new(renderer, &raw).expect("Failed to create texture");
         self.texture_id = renderer.textures.store(texture);
 
         let white = Vec4::ONE.to_rgb_packed();
-        let width_real = (CHUNK_SIZE * PARTICLE_SIZE) as f32;
+        let width_real = (self.chunk_size * self.particle_size) as f32;
 
         let canvas_left_bottom = Vec2::new(0.0, 0.0);
         let canvas_right_bottom = Vec2::new(width_real, 0.0);
@@ -52,13 +67,13 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32> Canvas<CHUNK_SIZE, PARTICL
             Some(shape) => shape,
             None => error_return!("Canvas shape is not initialized"),
         };
-        shape.position = self.chunk_position.as_vec2() * (CHUNK_SIZE * PARTICLE_SIZE) as f32;
+        shape.position = self.chunk_position.as_vec2() * (self.chunk_size * self.particle_size) as f32;
 
         renderer.draw_shape(shape);
     }
 
     pub fn set_particle(&mut self, position: IVec2, color: Vec4) {
-        let index = self.position_to_texture_index(position & (CHUNK_SIZE - 1));
+        let index = self.position_to_texture_index(position & (self.chunk_size - 1));
         self.texture_data[index * 4 + 0] = (color.x * 255.0) as u8;
         self.texture_data[index * 4 + 1] = (color.y * 255.0) as u8;
         self.texture_data[index * 4 + 2] = (color.z * 255.0) as u8;
@@ -75,17 +90,6 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32> Canvas<CHUNK_SIZE, PARTICL
     }
 
     pub fn position_to_texture_index(&self, position: IVec2) -> usize {
-        (position.x + position.y * CHUNK_SIZE) as usize
-    }
-}
-
-impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32> Default for Canvas<CHUNK_SIZE, PARTICLE_SIZE> {
-    fn default() -> Self {
-        Self {
-            chunk_position: Default::default(),
-            shape: Default::default(),
-            texture_id: Default::default(),
-            texture_data: [0, 0, 0, 255].repeat((CHUNK_SIZE * CHUNK_SIZE) as usize),
-        }
+        (position.x + position.y * self.chunk_size) as usize
     }
 }

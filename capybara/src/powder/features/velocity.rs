@@ -3,12 +3,7 @@ use crate::powder::local::LocalChunksGuards;
 use glam::IVec2;
 use glam::Vec2;
 
-pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>(
-    local: &mut LocalChunksGuards<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>,
-    particle_id: usize,
-    state: ParticleState,
-    delta: f32,
-) {
+pub fn simulate(local: &mut LocalChunksGuards, particle_id: usize, state: ParticleState, delta: f32) {
     // let definition = database.get_unchecked(particle.r#type);
     let particle = local.chunks[0].get_storage(state).get_unchecked(particle_id);
 

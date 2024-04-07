@@ -10,11 +10,11 @@ use crate::utils::storage::Storage;
 use rapier2d::geometry::ColliderHandle;
 use rustc_hash::FxHashMap;
 
-pub struct Chunk<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> {
+pub struct Chunk {
     pub initialized: bool,
     pub active: bool,
     pub dirty: bool,
-    pub canvas: Canvas<CHUNK_SIZE, PARTICLE_SIZE>,
+    pub canvas: Canvas,
     pub solid_collider: Option<ColliderHandle>,
     pub position: IVec2,
 
@@ -22,6 +22,10 @@ pub struct Chunk<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_P
     pub solid: Storage<ParticleData>,
     pub powder: Storage<ParticleData>,
     pub fluid: Storage<ParticleData>,
+
+    pub(crate) chunk_size: i32,
+    pub(crate) particle_size: i32,
+    pub(crate) pixels_per_meter: i32,
 }
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
@@ -52,7 +56,27 @@ pub enum ParticleState {
     Fluid,
 }
 
-impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
+impl Chunk {
+    pub fn new(chunk_size: i32, particle_size: i32, pixels_per_meter: i32) -> Self {
+        Self {
+            initialized: false,
+            active: false,
+            dirty: false,
+            canvas: Canvas::new(chunk_size, particle_size),
+            solid_collider: None,
+            position: Default::default(),
+
+            particles: [ParticleIndex::default()].repeat((chunk_size * chunk_size) as usize),
+            solid: Default::default(),
+            powder: Default::default(),
+            fluid: Default::default(),
+
+            chunk_size,
+            particle_size,
+            pixels_per_meter,
+        }
+    }
+
     pub fn initialize(&mut self, renderer: &mut RendererContext, chunk_position: IVec2) {
         self.canvas.initialize(renderer, chunk_position);
         self.position = chunk_position;
@@ -72,7 +96,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
                 }
             }
 
-            if let Some(collider) = physics::create_collider::<PARTICLE_SIZE, PIXELS_PER_METER>(&mut points) {
+            if let Some(collider) = physics::create_collider(&mut points, self.particle_size, self.pixels_per_meter) {
                 let handle = physics.colliders.insert(collider);
                 self.solid_collider = Some(handle);
             }
@@ -87,7 +111,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
     }
 
     pub fn draw_debug(&mut self, renderer: &mut RendererContext, settings: &PowderSimulationDebugSettings) {
-        let size = Vec2::ONE * CHUNK_SIZE as f32 * PARTICLE_SIZE as f32;
+        let size = Vec2::ONE * self.chunk_size as f32 * self.particle_size as f32;
         let left_bottom = self.position.as_vec2() * size;
         let right_top = (self.position + IVec2::ONE).as_vec2() * size;
         let color = if self.active { settings.chunk_active_color } else { settings.chunk_inactive_color };
@@ -199,24 +223,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
     }
 
     fn position_to_index(&self, position: IVec2) -> usize {
-        ((position.x & (CHUNK_SIZE - 1)) + (position.y & (CHUNK_SIZE - 1)) * CHUNK_SIZE) as usize
-    }
-}
-
-impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> Default for Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
-    fn default() -> Self {
-        Self {
-            initialized: false,
-            active: false,
-            dirty: false,
-            canvas: Default::default(),
-            solid_collider: None,
-            position: Default::default(),
-            particles: [ParticleIndex::default()].repeat((CHUNK_SIZE * CHUNK_SIZE) as usize),
-            solid: Default::default(),
-            powder: Default::default(),
-            fluid: Default::default(),
-        }
+        ((position.x & (self.chunk_size - 1)) + (position.y & (self.chunk_size - 1)) * self.chunk_size) as usize
     }
 }
 

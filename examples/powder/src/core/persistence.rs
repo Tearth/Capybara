@@ -10,12 +10,7 @@ use capybara::powder::simulation::PowderSimulation;
 use capybara::renderer::context::RendererContext;
 use std::fs::File;
 
-pub fn load(
-    path: &str,
-    simulation: &mut PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>,
-    renderer: &mut RendererContext,
-    physics: &mut PhysicsContext,
-) {
+pub fn load(path: &str, simulation: &mut PowderSimulation, renderer: &mut RendererContext, physics: &mut PhysicsContext) {
     let mut file = File::open(path).unwrap();
     let mut particles_count = file.read_u32::<LittleEndian>().unwrap();
 
@@ -37,7 +32,7 @@ pub fn load(
     }
 }
 
-pub fn save(path: &str, simulation: &mut PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>) {
+pub fn save(path: &str, simulation: &mut PowderSimulation) {
     /*let mut file = File::create(path).unwrap();
     file.write_u32::<LittleEndian>(simulation.particles_count);
 

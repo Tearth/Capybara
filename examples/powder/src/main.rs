@@ -28,7 +28,6 @@ use capybara::powder::chunk::ParticleState;
 use capybara::powder::simulation::PowderSimulation;
 use capybara::powder::ParticleDefinition;
 use capybara::rustc_hash::FxHashMap;
-use capybara::rustc_hash::FxHashSet;
 use capybara::scene::FrameCommand;
 use capybara::scene::Scene;
 use capybara::ui::debug::DebugWindow;
@@ -52,9 +51,8 @@ struct GlobalData {
     assets: AssetsLoader,
 }
 
-#[derive(Default)]
 struct MainScene {
-    pub simulation: PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>,
+    pub simulation: PowderSimulation,
     pub selector: Selector,
 
     pub rigidbody_mode: bool,
@@ -332,6 +330,23 @@ impl MainScene {
                 "test" => self.debug_console.apply_output("Test"),
                 _ => self.debug_console.apply_output("Invalid command"),
             }
+        }
+    }
+}
+
+impl Default for MainScene {
+    fn default() -> Self {
+        Self {
+            simulation: PowderSimulation::new(CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER),
+            selector: Default::default(),
+            rigidbody_mode: Default::default(),
+            initialized: Default::default(),
+            force_all_chunks: Default::default(),
+            debug_enabled: Default::default(),
+            debug_window: Default::default(),
+            debug_console: Default::default(),
+            debug_collector: Default::default(),
+            debug_profiler: Default::default(),
         }
     }
 }

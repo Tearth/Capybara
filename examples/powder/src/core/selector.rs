@@ -41,7 +41,7 @@ impl Selector {
         self.shape = None;
     }
 
-    pub fn fill_selection(&self, simulation: &mut PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>) {
+    pub fn fill_selection(&self, simulation: &mut PowderSimulation) {
         let mut last_position = None;
         let mut particles = Vec::new();
 
@@ -72,7 +72,7 @@ impl Selector {
         }
     }
 
-    pub fn clear_selection(&mut self, simulation: &mut PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>) {
+    pub fn clear_selection(&mut self, simulation: &mut PowderSimulation) {
         let mut last_position = None;
 
         while let Some(position) = self.get_next_selected_particle(last_position) {

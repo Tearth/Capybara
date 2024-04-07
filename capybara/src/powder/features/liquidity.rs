@@ -3,11 +3,7 @@ use crate::powder::local::LocalChunksGuards;
 use crate::powder::ParticleDefinition;
 use glam::IVec2;
 
-pub fn simulate<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>(
-    local: &mut LocalChunksGuards<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>,
-    definitions: &[ParticleDefinition],
-    particle_id: usize,
-) {
+pub fn simulate(local: &mut LocalChunksGuards, definitions: &[ParticleDefinition], particle_id: usize) {
     let center_particle = local.chunks[0].fluid.get_unchecked(particle_id);
     let definition = &definitions[center_particle.r#type];
 

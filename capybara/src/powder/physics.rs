@@ -11,7 +11,7 @@ use rapier2d::geometry::ColliderBuilder;
 use rapier2d::geometry::SharedShape;
 use rustc_hash::FxHashMap;
 
-impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
+impl PowderSimulation {
     pub fn apply_forces(&mut self, physics: &mut PhysicsContext) {
         let mut last_id = None;
         while let Some(id) = self.structures.get_next_id(last_id) {
@@ -42,7 +42,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
 
                     drag_average /= neighbours_count as f32;
 
-                    let position = (position.as_vec2() * PARTICLE_SIZE as f32 + PARTICLE_SIZE as f32 / 2.0) / PIXELS_PER_METER as f32;
+                    let position = (position.as_vec2() * self.particle_size as f32 + self.particle_size as f32 / 2.0) / self.pixels_per_meter as f32;
                     let drag = f32::max(1.0, rigidbody.velocity_at_point(&position.into()).magnitude() * drag_average);
                     rigidbody.apply_impulse_at_point((force * drag).into(), position.into(), true);
                 }
@@ -53,11 +53,13 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
     }
 }
 
-pub fn create_rigidbody<const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>(
+pub fn create_rigidbody(
     physics: &mut PhysicsContext,
     points: &mut FxHashMap<IVec2, f32>,
+    particle_size: i32,
+    pixels_per_meter: i32,
 ) -> Option<RigidBodyHandle> {
-    if let Some(collider) = self::create_collider::<PARTICLE_SIZE, PIXELS_PER_METER>(points) {
+    if let Some(collider) = self::create_collider(points, particle_size, pixels_per_meter) {
         let rigidbody = RigidBodyBuilder::dynamic().build();
         let rigidbody_handle = physics.rigidbodies.insert(rigidbody);
         physics.colliders.insert_with_parent(collider, rigidbody_handle, &mut physics.rigidbodies);
@@ -68,7 +70,7 @@ pub fn create_rigidbody<const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>(
     }
 }
 
-pub fn create_collider<const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>(points: &mut FxHashMap<IVec2, f32>) -> Option<Collider> {
+pub fn create_collider(points: &mut FxHashMap<IVec2, f32>, particle_size: i32, pixels_per_meter: i32) -> Option<Collider> {
     let mut areas = Vec::new();
     let mut shapes = Vec::new();
 
@@ -135,7 +137,7 @@ pub fn create_collider<const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>(po
     }
 
     let mut total_mass = 0.0;
-    let particle_size = PARTICLE_SIZE as f32 / PIXELS_PER_METER as f32;
+    let particle_size = particle_size as f32 / pixels_per_meter as f32;
 
     for (position, size, mass) in areas {
         let half = size.as_vec2() * particle_size / 2.0;

@@ -8,16 +8,16 @@ use parking_lot::RwLock;
 use parking_lot::RwLockWriteGuard;
 use std::sync::Arc;
 
-pub struct LocalChunksArcs<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> {
-    pub chunks: Vec<Arc<RwLock<Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>>>,
+pub struct LocalChunksArcs {
+    pub chunks: Vec<Arc<RwLock<Chunk>>>,
 }
 
-pub struct LocalChunksGuards<'a, const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> {
-    pub chunks: Vec<RwLockWriteGuard<'a, Chunk<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>>>,
+pub struct LocalChunksGuards<'a> {
+    pub chunks: Vec<RwLockWriteGuard<'a, Chunk>>,
 }
 
-impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> LocalChunksArcs<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
-    pub fn new(simulation: &PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>, chunk_position: IVec2) -> Self {
+impl LocalChunksArcs {
+    pub fn new(simulation: &PowderSimulation, chunk_position: IVec2) -> Self {
         let mut chunks = Vec::new();
         let offsets = [
             IVec2::new(0, -1),
@@ -42,10 +42,8 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
     }
 }
 
-impl<'a, const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32>
-    LocalChunksGuards<'a, CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>
-{
-    pub fn new(arcs: &'a LocalChunksArcs<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER>) -> Self {
+impl<'a> LocalChunksGuards<'a> {
+    pub fn new(arcs: &'a LocalChunksArcs) -> Self {
         let mut chunks = Vec::new();
 
         for chunk in &arcs.chunks {

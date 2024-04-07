@@ -25,7 +25,7 @@ pub enum StructureData {
     Particle(ParticleData),
 }
 
-impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i32> PowderSimulation<CHUNK_SIZE, PARTICLE_SIZE, PIXELS_PER_METER> {
+impl PowderSimulation {
     pub fn create_structure(&mut self, physics: &mut PhysicsContext, points: &mut FxHashMap<IVec2, f32>) {
         let mut chunks_to_update = FxHashSet::default();
 
@@ -47,10 +47,10 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
         }
 
         let particles = points.iter().map(|(p, _)| (StructureData::Position(*p), *p)).collect::<Vec<(StructureData, IVec2)>>();
-        if let Some(rigidbody_handle) = physics::create_rigidbody::<PARTICLE_SIZE, PIXELS_PER_METER>(physics, points) {
+        if let Some(rigidbody_handle) = physics::create_rigidbody(physics, points, self.particle_size, self.pixels_per_meter) {
             let rigidbody = physics.rigidbodies.get(rigidbody_handle).unwrap();
             let translation = Vec2::from(rigidbody.position().translation);
-            let center = translation * PIXELS_PER_METER as f32;
+            let center = translation * self.pixels_per_meter as f32;
 
             let structure = Structure { rigidbody_handle, particles, fillings: Vec::new(), center };
             self.structures.store(Rc::new(RefCell::new(structure)));
@@ -67,7 +67,7 @@ impl<const CHUNK_SIZE: i32, const PARTICLE_SIZE: i32, const PIXELS_PER_METER: i3
             let mut forbidden_for_fluid = FxHashSet::default();
 
             let rigidbody = physics.rigidbodies.get(structure.rigidbody_handle).unwrap();
-            let position = Vec2::from(rigidbody.position().translation) * PIXELS_PER_METER as f32 / PARTICLE_SIZE as f32;
+            let position = Vec2::from(rigidbody.position().translation) * self.pixels_per_meter as f32 / self.particle_size as f32;
             let rotation = rigidbody.rotation().angle();
 
             for p in 0..structure.particles.len() {

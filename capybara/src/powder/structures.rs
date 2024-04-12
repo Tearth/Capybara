@@ -14,7 +14,7 @@ use std::rc::Rc;
 #[derive(Clone, Default)]
 pub struct Structure {
     pub rigidbody_handle: RigidBodyHandle,
-    pub particles: Vec<(StructureData, Vec2)>,
+    pub particles: Vec<(StructureData, Vec2, f32)>,
     pub fillings: Vec<IVec2>,
 }
 
@@ -51,8 +51,8 @@ impl PowderSimulation {
             let center = physics::physics_position_to_position(translation, self.particle_size, self.pixels_per_meter);
             let particles = points
                 .iter()
-                .map(|(p, _)| (StructureData::Position(*p), (*p).as_vec2() + Vec2::new(0.5, 0.5) - center))
-                .collect::<Vec<(StructureData, Vec2)>>();
+                .map(|(p, mass)| (StructureData::Position(*p), (*p).as_vec2() + Vec2::new(0.5, 0.5) - center, *mass))
+                .collect::<Vec<(StructureData, Vec2, f32)>>();
 
             let structure = Structure { rigidbody_handle, particles, fillings: Vec::new() };
             self.structures.store(Rc::new(RefCell::new(structure)));
@@ -71,18 +71,22 @@ impl PowderSimulation {
             let rigidbody = physics.rigidbodies.get(structure.rigidbody_handle).unwrap();
             let position = physics::physics_position_to_position(rigidbody.position().translation.into(), self.particle_size, self.pixels_per_meter);
             let rotation = rigidbody.rotation().angle();
+            let mut update_rigidbody = false;
 
             for p in 0..structure.particles.len() {
+                let (_, original_position, mass) = &structure.particles[p];
                 match structure.particles[p].clone().0 {
                     StructureData::Position(position) => {
                         if let Some(particle) = self.remove_particle(position) {
                             forbidden_for_fluid.insert(position);
-                            particles_to_move.push((particle, structure.particles[p].1));
+                            particles_to_move.push((particle, *original_position, *mass));
+                        } else {
+                            update_rigidbody = true;
                         }
                     }
                     StructureData::Particle(particle) => {
                         forbidden_for_fluid.insert(particle.position);
-                        particles_to_move.push((particle, structure.particles[p].1));
+                        particles_to_move.push((particle, *original_position, *mass));
                     }
                 }
             }
@@ -95,7 +99,7 @@ impl PowderSimulation {
             structure.fillings.clear();
             let mut potential_holes = FxHashMap::default();
 
-            for (particle, original_position) in &mut particles_to_move {
+            for (particle, original_position, mass) in &mut particles_to_move {
                 let offset = *original_position;
                 let offset_after_rotation = Vec2::new(
                     offset.x * rotation.cos() - offset.y * rotation.sin(), // fmt
@@ -116,7 +120,7 @@ impl PowderSimulation {
 
                         self.add_particle(position, *particle);
 
-                        structure.particles.push((StructureData::Position(position), *original_position));
+                        structure.particles.push((StructureData::Position(position), *original_position, *mass));
 
                         for neighbour_offset in [IVec2::new(1, 0), IVec2::new(-1, 0), IVec2::new(0, 1), IVec2::new(0, -1)] {
                             let neighbour_position = position + neighbour_offset;
@@ -137,10 +141,10 @@ impl PowderSimulation {
                             }
                         }
                     } else {
-                        structure.particles.push((StructureData::Particle(*particle), *original_position));
+                        structure.particles.push((StructureData::Particle(*particle), *original_position, *mass));
                     }
                 } else {
-                    structure.particles.push((StructureData::Particle(*particle), *original_position));
+                    structure.particles.push((StructureData::Particle(*particle), *original_position, *mass));
                 }
             }
 
@@ -172,6 +176,10 @@ impl PowderSimulation {
                         }
                     }
                 }
+            }
+
+            if update_rigidbody {
+                physics::update_rigidbody(physics, &mut structure, self.particle_size, self.pixels_per_meter);
             }
 
             last_id = Some(id);

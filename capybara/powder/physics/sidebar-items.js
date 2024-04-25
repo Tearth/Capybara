@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["create_collider","create_rigidbody","physics_position_to_position","position_to_physics_position"]};
+window.SIDEBAR_ITEMS = {"fn":["create_collider","create_rigidbody","physics_position_to_position","position_to_physics_position","update_rigidbody"]};
